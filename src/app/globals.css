@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Astra Astrology — design tokens
+
+   The palette matches the transactional emails the backend sends, so a person
+   moving from their inbox to the app sees one brand: deep indigo through
+   violet, with gold for anything celestial or premium.
+   ========================================================================== */
+
+@theme {
+  /* --- brand: indigo → violet ------------------------------------------ */
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #6d28d9;
+  --color-brand-700: #5b21b6;
+  --color-brand-800: #4c1d95;
+  --color-brand-900: #2b1b6b;
+  --color-brand-950: #1a1040;
+
+  /* --- gold: accents, ratings, premium --------------------------------- */
+  --color-gold-50: #fffbeb;
+  --color-gold-100: #fef3c7;
+  --color-gold-200: #fde68a;
+  --color-gold-300: #fcd34d;
+  --color-gold-400: #fbbf24;
+  --color-gold-500: #f59e0b;
+  --color-gold-600: #d97706;
+  --color-gold-700: #b45309;
+
+  /* --- night: the sky behind everything -------------------------------- */
+  --color-night-700: #1c1640;
+  --color-night-800: #130e2e;
+  --color-night-900: #0b0920;
+  --color-night-950: #060513;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-card: 1rem;
+
+  --shadow-soft: 0 1px 2px rgb(16 12 48 / 0.04), 0 8px 24px -12px rgb(16 12 48 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(16 12 48 / 0.06), 0 16px 40px -16px rgb(16 12 48 / 0.22);
+  --shadow-glow: 0 0 0 1px rgb(139 92 246 / 0.18), 0 12px 36px -12px rgb(109 40 217 / 0.4);
+}
+
+/* --------------------------------------------------------------------------
+   Semantic surfaces. Components reference these, never raw palette steps, so
+   dark mode is one block rather than a hundred conditionals.
+   -------------------------------------------------------------------------- */
+:root {
+  --background: #fbfaff;
+  --surface: #ffffff;
+  --surface-muted: #f6f4fd;
+  --surface-raised: #ffffff;
+  --border: #e8e4f5;
+  --border-strong: #d6cff0;
+  --foreground: #1a1430;
+  --muted-foreground: #6b6485;
+  --ring: #8b5cf6;
+}
+
+.dark {
+  --background: #0b0920;
+  --surface: #130e2e;
+  --surface-muted: #1a1440;
+  --surface-raised: #1c1640;
+  --border: #2a2156;
+  --border-strong: #392d70;
+  --foreground: #f2effc;
+  --muted-foreground: #a79fc4;
+  --ring: #a78bfa;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-ring: var(--ring);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* One focus style everywhere, rather than the browser default per control. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-200);
+    color: var(--color-brand-900);
+  }
+}
+
+@layer utilities {
+  /* The night sky behind hero sections and auth pages. */
+  .bg-cosmos {
+    background-color: var(--color-night-900);
+    background-image:
+      radial-gradient(900px 500px at 15% -10%, rgb(109 40 217 / 0.45), transparent 60%),
+      radial-gradient(700px 420px at 85% 0%, rgb(168 85 247 / 0.32), transparent 60%),
+      radial-gradient(600px 400px at 50% 110%, rgb(43 27 107 / 0.6), transparent 60%);
+  }
+
+  /* Faint starfield, drawn rather than loaded so it costs nothing. */
+  .bg-stars::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(1.5px 1.5px at 20% 30%, rgb(255 255 255 / 0.9), transparent),
+      radial-gradient(1.5px 1.5px at 70% 20%, rgb(255 255 255 / 0.7), transparent),
+      radial-gradient(1px 1px at 40% 70%, rgb(255 255 255 / 0.8), transparent),
+      radial-gradient(1px 1px at 85% 60%, rgb(255 255 255 / 0.6), transparent),
+      radial-gradient(1.5px 1.5px at 10% 80%, rgb(255 255 255 / 0.5), transparent),
+      radial-gradient(1px 1px at 60% 90%, rgb(255 255 255 / 0.7), transparent),
+      radial-gradient(1px 1px at 95% 35%, rgb(255 255 255 / 0.5), transparent);
+  }
+
+  .text-gradient-brand {
+    background-image: linear-gradient(
+      135deg,
+      var(--color-brand-400),
+      var(--color-brand-200) 45%,
+      var(--color-gold-300)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .card-surface {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-soft);
+  }
+
+  /* Skeletons and "loading" states. */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--surface-muted) 25%,
+      var(--border) 37%,
+      var(--surface-muted) 63%
+    );
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
