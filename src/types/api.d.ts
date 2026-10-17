@@ -441,6 +441,227 @@ export interface paths {
         patch: operations["update_astrologer_api_v1_admin_astrologers__astrologer_id__patch"];
         trace?: never;
     };
+    "/api/v1/wallet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My balance and recent activity */
+        get: operations["my_wallet_api_v1_wallet_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wallet/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My transaction history */
+        get: operations["my_transactions_api_v1_wallet_transactions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wallet/recharge/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preset amounts, limits and the public checkout key */
+        get: operations["recharge_options_api_v1_wallet_recharge_options_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wallet/recharge/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open a Razorpay order for a recharge */
+        post: operations["create_recharge_order_api_v1_wallet_recharge_order_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wallet/recharge/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm a payment the browser just completed */
+        post: operations["verify_recharge_api_v1_wallet_recharge_verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wallets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All wallets */
+        get: operations["list_wallets_api_v1_admin_wallets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wallets/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every movement across all wallets */
+        get: operations["list_all_transactions_api_v1_admin_wallets_transactions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wallets/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recharge attempts, including the ones that never completed */
+        get: operations["list_payments_api_v1_admin_wallets_payments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wallets/payments/{order_id}/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask Razorpay what happened to a stuck order */
+        post: operations["reconcile_payment_api_v1_admin_wallets_payments__order_id__reconcile_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wallets/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One user's wallet */
+        get: operations["get_wallet_api_v1_admin_wallets__user_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wallets/{user_id}/adjust": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Move money by hand — recorded with the admin who did it */
+        post: operations["adjust_wallet_api_v1_admin_wallets__user_id__adjust_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wallets/{user_id}/freeze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Freeze or unfreeze a wallet */
+        post: operations["freeze_wallet_api_v1_admin_wallets__user_id__freeze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/wallets/{user_id}/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rebuild the balance from the ledger and report any drift */
+        post: operations["reconcile_wallet_api_v1_admin_wallets__user_id__reconcile_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -548,6 +769,67 @@ export interface components {
             /** Is Default */
             is_default?: boolean | null;
         };
+        /** AdjustWalletRequest */
+        AdjustWalletRequest: {
+            direction: components["schemas"]["TransactionDirection"];
+            /** Amount Paise */
+            amount_paise: number;
+            /** Reason */
+            reason: string;
+        };
+        /** AdminTransactionOut */
+        AdminTransactionOut: {
+            /** Id */
+            id: string;
+            direction: components["schemas"]["TransactionDirection"];
+            reason: components["schemas"]["TransactionReason"];
+            /** Amount Paise */
+            amount_paise: number;
+            /** Balance After Paise */
+            balance_after_paise: number;
+            /** Currency */
+            currency: string;
+            /** Note */
+            note?: string | null;
+            ref?: components["schemas"]["TransactionRefOut"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** User Id */
+            user_id: string;
+            /** User Email */
+            user_email?: string | null;
+            /** Created By */
+            created_by?: string | null;
+            /** Amount Rupees */
+            readonly amount_rupees: number;
+        };
+        /** AdminWalletOut */
+        AdminWalletOut: {
+            /** User Id */
+            user_id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Balance Paise */
+            balance_paise: number;
+            /** Currency */
+            currency: string;
+            /** Is Frozen */
+            is_frozen: boolean;
+            /** Frozen Reason */
+            frozen_reason?: string | null;
+            /** Last Transaction At */
+            last_transaction_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** ApiResponse[Address] */
         ApiResponse_Address_: {
             /**
@@ -618,6 +900,20 @@ export interface components {
             message: string;
             data?: components["schemas"]["AuthResult"] | null;
         };
+        /** ApiResponse[CreateOrderResponse] */
+        ApiResponse_CreateOrderResponse_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["CreateOrderResponse"] | null;
+        };
         /** ApiResponse[EmailAvailability] */
         ApiResponse_EmailAvailability_: {
             /**
@@ -674,6 +970,34 @@ export interface components {
             message: string;
             data?: components["schemas"]["OtpSentResult"] | null;
         };
+        /** ApiResponse[Paginated[AdminTransactionOut]] */
+        ApiResponse_Paginated_AdminTransactionOut__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["Paginated_AdminTransactionOut_"] | null;
+        };
+        /** ApiResponse[Paginated[AdminWalletOut]] */
+        ApiResponse_Paginated_AdminWalletOut__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["Paginated_AdminWalletOut_"] | null;
+        };
         /** ApiResponse[Paginated[AstrologerPublic]] */
         ApiResponse_Paginated_AstrologerPublic__: {
             /**
@@ -687,6 +1011,76 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["Paginated_AstrologerPublic_"] | null;
+        };
+        /** ApiResponse[Paginated[PaymentOrderOut]] */
+        ApiResponse_Paginated_PaymentOrderOut__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["Paginated_PaymentOrderOut_"] | null;
+        };
+        /** ApiResponse[Paginated[TransactionOut]] */
+        ApiResponse_Paginated_TransactionOut__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["Paginated_TransactionOut_"] | null;
+        };
+        /** ApiResponse[PaymentOrderOut] */
+        ApiResponse_PaymentOrderOut_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["PaymentOrderOut"] | null;
+        };
+        /** ApiResponse[RechargeOptions] */
+        ApiResponse_RechargeOptions_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["RechargeOptions"] | null;
+        };
+        /** ApiResponse[ReconcileResult] */
+        ApiResponse_ReconcileResult_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["ReconcileResult"] | null;
         };
         /** ApiResponse[UserProfile] */
         ApiResponse_UserProfile_: {
@@ -715,6 +1109,48 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["UserPublic"] | null;
+        };
+        /** ApiResponse[VerifyPaymentResponse] */
+        ApiResponse_VerifyPaymentResponse_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["VerifyPaymentResponse"] | null;
+        };
+        /** ApiResponse[WalletBalance] */
+        ApiResponse_WalletBalance_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["WalletBalance"] | null;
+        };
+        /** ApiResponse[WalletSummary] */
+        ApiResponse_WalletSummary_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["WalletSummary"] | null;
         };
         /** ApiResponse[list[Address]] */
         ApiResponse_list_Address__: {
@@ -1220,6 +1656,33 @@ export interface components {
          * @enum {string}
          */
         ConsultationMode: "chat" | "call" | "video";
+        /** CreateOrderRequest */
+        CreateOrderRequest: {
+            /**
+             * Amount Paise
+             * @description Amount in paise. ₹500 is 50000.
+             */
+            amount_paise: number;
+        };
+        /** CreateOrderResponse */
+        CreateOrderResponse: {
+            /** Razorpay Order Id */
+            razorpay_order_id: string;
+            /** Amount Paise */
+            amount_paise: number;
+            /** Currency */
+            currency: string;
+            /** Key Id */
+            key_id: string;
+            /** Receipt */
+            receipt: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Contact */
+            contact?: string | null;
+        };
         /**
          * CurrentLocation
          * @description Where the person is now. Panchang is calculated for this, not for birth.
@@ -1319,6 +1782,13 @@ export interface components {
              * Format: email
              */
             email: string;
+        };
+        /** FreezeWalletRequest */
+        FreezeWalletRequest: {
+            /** Frozen */
+            frozen: boolean;
+            /** Reason */
+            reason?: string | null;
         };
         /**
          * GalleryImage
@@ -1462,10 +1932,34 @@ export interface components {
             /** Has Prev */
             has_prev: boolean;
         };
+        /** Paginated[AdminTransactionOut] */
+        Paginated_AdminTransactionOut_: {
+            /** Items */
+            items: components["schemas"]["AdminTransactionOut"][];
+            meta: components["schemas"]["PageMeta"];
+        };
+        /** Paginated[AdminWalletOut] */
+        Paginated_AdminWalletOut_: {
+            /** Items */
+            items: components["schemas"]["AdminWalletOut"][];
+            meta: components["schemas"]["PageMeta"];
+        };
         /** Paginated[AstrologerPublic] */
         Paginated_AstrologerPublic_: {
             /** Items */
             items: components["schemas"]["AstrologerPublic"][];
+            meta: components["schemas"]["PageMeta"];
+        };
+        /** Paginated[PaymentOrderOut] */
+        Paginated_PaymentOrderOut_: {
+            /** Items */
+            items: components["schemas"]["PaymentOrderOut"][];
+            meta: components["schemas"]["PageMeta"];
+        };
+        /** Paginated[TransactionOut] */
+        Paginated_TransactionOut_: {
+            /** Items */
+            items: components["schemas"]["TransactionOut"][];
             meta: components["schemas"]["PageMeta"];
         };
         /**
@@ -1481,6 +1975,42 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** PaymentOrderOut */
+        PaymentOrderOut: {
+            /** Id */
+            id: string;
+            /** User Id */
+            user_id: string;
+            /** Razorpay Order Id */
+            razorpay_order_id: string;
+            /** Razorpay Payment Id */
+            razorpay_payment_id?: string | null;
+            /** Receipt */
+            receipt: string;
+            /** Amount Paise */
+            amount_paise: number;
+            /** Currency */
+            currency: string;
+            status: components["schemas"]["PaymentOrderStatus"];
+            /** Method */
+            method?: string | null;
+            /** Failure Reason */
+            failure_reason?: string | null;
+            /** Verified Via */
+            verified_via?: string | null;
+            /** Paid At */
+            paid_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * PaymentOrderStatus
+         * @enum {string}
+         */
+        PaymentOrderStatus: "created" | "paid" | "failed" | "expired";
         /**
          * ProfileCompleteness
          * @description What the client still needs before each feature can run.
@@ -1587,6 +2117,39 @@ export interface components {
              */
             count: number;
         };
+        /** RechargeOptions */
+        RechargeOptions: {
+            /** Packs */
+            packs: components["schemas"]["RechargePack"][];
+            /** Min Paise */
+            min_paise: number;
+            /** Max Paise */
+            max_paise: number;
+            /** Currency */
+            currency: string;
+            /** Key Id */
+            key_id: string;
+            /** Enabled */
+            enabled: boolean;
+        };
+        /** RechargePack */
+        RechargePack: {
+            /** Amount Paise */
+            amount_paise: number;
+            /** Amount Rupees */
+            amount_rupees: number;
+        };
+        /** ReconcileResult */
+        ReconcileResult: {
+            /** Credited Paise */
+            credited_paise: number;
+            /** Debited Paise */
+            debited_paise: number;
+            /** Ledger Balance Paise */
+            ledger_balance_paise: number;
+            /** Drift Paise */
+            drift_paise: number;
+        };
         /** ResendOtpRequest */
         ResendOtpRequest: {
             /**
@@ -1640,6 +2203,52 @@ export interface components {
              * Format: date-time
              */
             refresh_expires_at: string;
+        };
+        /**
+         * TransactionDirection
+         * @enum {string}
+         */
+        TransactionDirection: "credit" | "debit";
+        /** TransactionOut */
+        TransactionOut: {
+            /** Id */
+            id: string;
+            direction: components["schemas"]["TransactionDirection"];
+            reason: components["schemas"]["TransactionReason"];
+            /** Amount Paise */
+            amount_paise: number;
+            /** Balance After Paise */
+            balance_after_paise: number;
+            /** Currency */
+            currency: string;
+            /** Note */
+            note?: string | null;
+            ref?: components["schemas"]["TransactionRefOut"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Amount Rupees */
+            readonly amount_rupees: number;
+        };
+        /**
+         * TransactionReason
+         * @description Why money moved. Every future money feature already has its slot here,
+         *     so adding payouts or coupons later needs no schema change.
+         * @enum {string}
+         */
+        TransactionReason: "recharge" | "consultation" | "refund" | "adjustment" | "bonus" | "payout" | "reversal";
+        /** TransactionRefOut */
+        TransactionRefOut: {
+            /** Razorpay Order Id */
+            razorpay_order_id?: string | null;
+            /** Razorpay Payment Id */
+            razorpay_payment_id?: string | null;
+            /** Razorpay Refund Id */
+            razorpay_refund_id?: string | null;
+            /** Session Id */
+            session_id?: string | null;
         };
         /**
          * UserProfile
@@ -1758,6 +2367,52 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /**
+         * VerifyPaymentRequest
+         * @description Exactly the three fields Razorpay Checkout hands back.
+         */
+        VerifyPaymentRequest: {
+            /** Razorpay Order Id */
+            razorpay_order_id: string;
+            /** Razorpay Payment Id */
+            razorpay_payment_id: string;
+            /** Razorpay Signature */
+            razorpay_signature: string;
+        };
+        /** VerifyPaymentResponse */
+        VerifyPaymentResponse: {
+            status: components["schemas"]["PaymentOrderStatus"];
+            /** Credited */
+            credited: boolean;
+            /** Amount Paise */
+            amount_paise: number;
+            /** Balance Paise */
+            balance_paise: number;
+        };
+        /** WalletBalance */
+        WalletBalance: {
+            /** Balance Paise */
+            balance_paise: number;
+            /** Currency */
+            currency: string;
+            /** Is Frozen */
+            is_frozen: boolean;
+            /** Frozen Reason */
+            frozen_reason?: string | null;
+            /** Last Transaction At */
+            last_transaction_at?: string | null;
+            /** Balance Rupees */
+            readonly balance_rupees: number;
+        };
+        /**
+         * WalletSummary
+         * @description What the wallet screen needs in one call.
+         */
+        WalletSummary: {
+            wallet: components["schemas"]["WalletBalance"];
+            /** Recent */
+            recent: components["schemas"]["TransactionOut"][];
         };
     };
     responses: never;
@@ -2778,6 +3433,410 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponse_AstrologerProfile_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_wallet_api_v1_wallet_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_WalletSummary_"];
+                };
+            };
+        };
+    };
+    my_transactions_api_v1_wallet_transactions_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                reason?: components["schemas"]["TransactionReason"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_Paginated_TransactionOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recharge_options_api_v1_wallet_recharge_options_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_RechargeOptions_"];
+                };
+            };
+        };
+    };
+    create_recharge_order_api_v1_wallet_recharge_order_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_CreateOrderResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verify_recharge_api_v1_wallet_recharge_verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyPaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_VerifyPaymentResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_wallets_api_v1_admin_wallets_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                search?: string | null;
+                frozen?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_Paginated_AdminWalletOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_all_transactions_api_v1_admin_wallets_transactions_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                user_id?: components["schemas"]["PydanticObjectId"] | null;
+                reason?: components["schemas"]["TransactionReason"] | null;
+                direction?: components["schemas"]["TransactionDirection"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_Paginated_AdminTransactionOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_payments_api_v1_admin_wallets_payments_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                status?: components["schemas"]["PaymentOrderStatus"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_Paginated_PaymentOrderOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reconcile_payment_api_v1_admin_wallets_payments__order_id__reconcile_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_PaymentOrderOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_wallet_api_v1_admin_wallets__user_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_WalletBalance_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    adjust_wallet_api_v1_admin_wallets__user_id__adjust_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjustWalletRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_WalletBalance_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    freeze_wallet_api_v1_admin_wallets__user_id__freeze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FreezeWalletRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_WalletBalance_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reconcile_wallet_api_v1_admin_wallets__user_id__reconcile_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ReconcileResult_"];
                 };
             };
             /** @description Validation Error */

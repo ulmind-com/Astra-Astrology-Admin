@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CreditCard,
   LayoutDashboard,
   Lock,
   LogOut,
@@ -9,7 +10,9 @@ import {
   Sparkles,
   Sun,
   UserRound,
+  Receipt,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -27,6 +30,9 @@ type NavItem = { href: string; label: string; icon: React.ComponentType<{ classN
 const ADMIN_NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/astrologers", label: "Astrologers", icon: Users },
+  { href: "/wallets", label: "Wallets", icon: Wallet },
+  { href: "/transactions", label: "Transactions", icon: Receipt },
+  { href: "/payments", label: "Payments", icon: CreditCard },
 ];
 
 const ASTROLOGER_NAV: NavItem[] = [

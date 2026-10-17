@@ -6,6 +6,8 @@ import type {
   Address,
   AddressInput,
   AddressUpdate,
+  AdminTransaction,
+  AdminWallet,
   AstrologerAdminUpdate,
   AstrologerCreate,
   AstrologerCreated,
@@ -15,15 +17,27 @@ import type {
   AuthResult,
   AvailabilityUpdate,
   ConsultationMode,
+  CreateOrderResponse,
   EmailAvailability,
   GalleryUploadResult,
   HealthStatus,
   OtpSentResult,
+  PageMeta,
   PaginatedAstrologers,
+  PaymentOrder,
+  PaymentOrderStatus,
   ProfileUpdate,
+  RechargeOptions,
+  ReconcileResult,
   Skill,
+  TransactionDirection,
+  TransactionReason,
   UserProfile,
   UserPublic,
+  VerifyPaymentResponse,
+  WalletBalance,
+  WalletSummary,
+  WalletTransaction,
 } from "@/types";
 
 // ------------------------------------------------------------------- auth
@@ -170,4 +184,67 @@ export const adminApi = {
 // ----------------------------------------------------------------- health
 export const healthApi = {
   check: () => api.get<HealthStatus>(endpoints.health, { auth: false }),
+};
+
+// ----------------------------------------------------------------- wallet
+export const walletApi = {
+  summary: () => api.get<WalletSummary>(endpoints.wallet.summary),
+
+  transactions: (params: { page?: number; limit?: number; reason?: TransactionReason } = {}) =>
+    api.get<{ items: WalletTransaction[]; meta: PageMeta }>(endpoints.wallet.transactions, {
+      query: { page: params.page, limit: params.limit, reason: params.reason },
+    }),
+
+  rechargeOptions: () => api.get<RechargeOptions>(endpoints.wallet.rechargeOptions),
+
+  createOrder: (amount_paise: number) =>
+    api.post<CreateOrderResponse>(endpoints.wallet.rechargeOrder, { amount_paise }),
+
+  verify: (body: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }) => api.post<VerifyPaymentResponse>(endpoints.wallet.rechargeVerify, body),
+};
+
+// ---------------------------------------------------------- admin: wallets
+export const adminWalletApi = {
+  list: (params: { page?: number; limit?: number; search?: string; frozen?: boolean } = {}) =>
+    api.get<{ items: AdminWallet[]; meta: PageMeta }>(endpoints.admin.wallets, {
+      query: params,
+    }),
+
+  get: (userId: string) => api.get<WalletBalance>(endpoints.admin.wallet(userId)),
+
+  transactions: (
+    params: {
+      page?: number;
+      limit?: number;
+      user_id?: string;
+      reason?: TransactionReason;
+      direction?: TransactionDirection;
+    } = {},
+  ) =>
+    api.get<{ items: AdminTransaction[]; meta: PageMeta }>(endpoints.admin.walletTransactions, {
+      query: params,
+    }),
+
+  adjust: (
+    userId: string,
+    body: { direction: TransactionDirection; amount_paise: number; reason: string },
+  ) => api.post<WalletBalance>(endpoints.admin.walletAdjust(userId), body),
+
+  freeze: (userId: string, body: { frozen: boolean; reason?: string | null }) =>
+    api.post<WalletBalance>(endpoints.admin.walletFreeze(userId), body),
+
+  reconcile: (userId: string) =>
+    api.post<ReconcileResult>(endpoints.admin.walletReconcile(userId), {}),
+
+  payments: (params: { page?: number; limit?: number; status?: PaymentOrderStatus } = {}) =>
+    api.get<{ items: PaymentOrder[]; meta: PageMeta }>(endpoints.admin.payments, {
+      query: params,
+    }),
+
+  reconcilePayment: (orderId: string) =>
+    api.post<PaymentOrder>(endpoints.admin.paymentReconcile(orderId), {}),
 };

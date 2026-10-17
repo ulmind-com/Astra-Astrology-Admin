@@ -139,3 +139,55 @@ export const COMMON_LANGUAGES = [
   "Assamese",
   "Urdu",
 ];
+
+// ------------------------------------------------------------------ wallet
+export type WalletBalance = S["WalletBalance"];
+export type WalletSummary = S["WalletSummary"];
+export type WalletTransaction = S["TransactionOut"];
+export type TransactionDirection = S["TransactionDirection"];
+export type TransactionReason = S["TransactionReason"];
+export type RechargeOptions = S["RechargeOptions"];
+export type RechargePack = S["RechargePack"];
+export type CreateOrderResponse = S["CreateOrderResponse"];
+export type VerifyPaymentResponse = S["VerifyPaymentResponse"];
+export type PaymentOrder = S["PaymentOrderOut"];
+export type PaymentOrderStatus = S["PaymentOrderStatus"];
+export type AdminWallet = S["AdminWalletOut"];
+export type AdminTransaction = S["AdminTransactionOut"];
+export type ReconcileResult = S["ReconcileResult"];
+
+/** What a ledger row is called on screen. */
+export const TRANSACTION_REASON_LABELS: Record<TransactionReason, string> = {
+  recharge: "Recharge",
+  consultation: "Consultation",
+  refund: "Refund",
+  adjustment: "Adjustment",
+  bonus: "Bonus",
+  payout: "Payout",
+  reversal: "Reversal",
+};
+
+export const PAYMENT_STATUS_LABELS: Record<PaymentOrderStatus, string> = {
+  created: "Started",
+  paid: "Paid",
+  failed: "Failed",
+  expired: "Expired",
+};
+
+/**
+ * Money crosses the wire as integer paise and is only turned into rupees here,
+ * so the two apps can never disagree about what a balance means.
+ */
+export function formatPaise(paise: number): string {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: paise % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(paise / 100);
+}
+
+export function rupeesToPaise(rupees: number): number {
+  // Rounded, never truncated: 0.1 + 0.2 in floating point is 0.30000000000000004.
+  return Math.round(rupees * 100);
+}
