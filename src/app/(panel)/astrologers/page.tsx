@@ -159,7 +159,7 @@ export default function AstrologersListPage() {
                           {!astrologer.is_listed && <Badge>Unlisted</Badge>}
                           {astrologer.is_featured && <Badge tone="gold">Featured</Badge>}
                           {astrologer.must_change_password && (
-                            <Badge tone="blue">Password not set</Badge>
+                            <Badge tone="blue">Initial password</Badge>
                           )}
                         </div>
                       </td>

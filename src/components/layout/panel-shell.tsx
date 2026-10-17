@@ -2,6 +2,7 @@
 
 import {
   LayoutDashboard,
+  Lock,
   LogOut,
   Menu,
   Moon,
@@ -28,7 +29,10 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/astrologers", label: "Astrologers", icon: Users },
 ];
 
-const ASTROLOGER_NAV: NavItem[] = [{ href: "/me", label: "My profile", icon: UserRound }];
+const ASTROLOGER_NAV: NavItem[] = [
+  { href: "/me", label: "My profile", icon: UserRound },
+  { href: "/me/password", label: "Password", icon: Lock },
+];
 
 export function PanelShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -39,6 +43,11 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
   React.useEffect(() => setOpen(false), [pathname]);
 
   const nav = user?.role === "astrologer" ? ASTROLOGER_NAV : ADMIN_NAV;
+
+  // "/me" is a prefix of "/me/password", so match the most specific item only.
+  const activeHref = nav
+    .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
   const sidebar = (
     <div className="flex h-full flex-col">
@@ -56,7 +65,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
 
       <nav className="flex-1 space-y-1 p-3">
         {nav.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active = item.href === activeHref;
           return (
             <Link
               key={item.href}

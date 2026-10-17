@@ -12,6 +12,31 @@ import { apiBase } from "@/lib/env";
 import { session } from "@/lib/session";
 import type { ApiEnvelope, ApiErrorBody, ValidationDetail } from "@/types";
 
+/**
+ * Pydantic prefixes a custom validator's message with "Value error, ". Useful
+ * in a stack trace, noise next to a form field.
+ */
+function tidyMessage(message: string): string {
+  const cleaned = message.replace(/^Value error,\s*/i, "");
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
+
+/**
+ * A 401 normally means the token is gone, so the session ends. These codes mean
+ * something else: a password or Google credential the user just typed was wrong.
+ * Ending the session there would sign someone out for a typo.
+ */
+const CREDENTIAL_CODES = new Set([
+  "invalid_password",
+  "password_not_set",
+  "invalid_id_token",
+  "user_not_found",
+]);
+
+function endsSession(status: number, code: string | undefined): boolean {
+  return status === 401 && !(code && CREDENTIAL_CODES.has(code));
+}
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
@@ -34,7 +59,7 @@ export class ApiError extends Error {
   get fieldErrors(): Record<string, string> {
     if (!Array.isArray(this.details)) return {};
     return Object.fromEntries(
-      (this.details as ValidationDetail[]).map((d) => [d.field, d.message]),
+      (this.details as ValidationDetail[]).map((d) => [d.field, tidyMessage(d.message)]),
     );
   }
 
@@ -117,7 +142,7 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
   if (!response.ok) {
     const error = payload as ApiErrorBody | null;
 
-    if (response.status === 401 && auth) {
+    if (auth && endsSession(response.status, error?.error_code)) {
       session.clear();
       onUnauthorized.forEach((fn) => fn());
     }
@@ -163,7 +188,7 @@ export async function apiFetchEnvelope<T>(
 
   if (!response.ok) {
     const error = payload as ApiErrorBody | null;
-    if (response.status === 401 && auth) {
+    if (auth && endsSession(response.status, error?.error_code)) {
       session.clear();
       onUnauthorized.forEach((fn) => fn());
     }
