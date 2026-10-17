@@ -662,6 +662,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Platform settings */
+        get: operations["read_settings_api_v1_admin_settings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change how many coins a rupee buys */
+        patch: operations["update_settings_api_v1_admin_settings_patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/settings/coin-rate-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every change to the coin rate */
+        get: operations["coin_rate_history_api_v1_admin_settings_coin_rate_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -772,8 +807,8 @@ export interface components {
         /** AdjustWalletRequest */
         AdjustWalletRequest: {
             direction: components["schemas"]["TransactionDirection"];
-            /** Amount Paise */
-            amount_paise: number;
+            /** Amount Coins */
+            amount_coins: number;
             /** Reason */
             reason: string;
         };
@@ -783,14 +818,16 @@ export interface components {
             id: string;
             direction: components["schemas"]["TransactionDirection"];
             reason: components["schemas"]["TransactionReason"];
-            /** Amount Paise */
-            amount_paise: number;
-            /** Balance After Paise */
-            balance_after_paise: number;
-            /** Currency */
-            currency: string;
+            /** Amount Coins */
+            amount_coins: number;
+            /** Balance After Coins */
+            balance_after_coins: number;
             /** Note */
             note?: string | null;
+            /** Amount Paise */
+            amount_paise?: number | null;
+            /** Coins Per Rupee */
+            coins_per_rupee?: number | null;
             ref?: components["schemas"]["TransactionRefOut"];
             /**
              * Created At
@@ -803,8 +840,6 @@ export interface components {
             user_email?: string | null;
             /** Created By */
             created_by?: string | null;
-            /** Amount Rupees */
-            readonly amount_rupees: number;
         };
         /** AdminWalletOut */
         AdminWalletOut: {
@@ -814,10 +849,8 @@ export interface components {
             name: string;
             /** Email */
             email: string;
-            /** Balance Paise */
-            balance_paise: number;
-            /** Currency */
-            currency: string;
+            /** Balance Coins */
+            balance_coins: number;
             /** Is Frozen */
             is_frozen: boolean;
             /** Frozen Reason */
@@ -1054,6 +1087,20 @@ export interface components {
             message: string;
             data?: components["schemas"]["PaymentOrderOut"] | null;
         };
+        /** ApiResponse[PlatformSettingsOut] */
+        ApiResponse_PlatformSettingsOut_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["PlatformSettingsOut"] | null;
+        };
         /** ApiResponse[RechargeOptions] */
         ApiResponse_RechargeOptions_: {
             /**
@@ -1181,6 +1228,21 @@ export interface components {
             message: string;
             /** Data */
             data?: components["schemas"]["AstrologerProfile"][] | null;
+        };
+        /** ApiResponse[list[CoinRateChangeOut]] */
+        ApiResponse_list_CoinRateChangeOut__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            /** Data */
+            data?: components["schemas"]["CoinRateChangeOut"][] | null;
         };
         /**
          * AstrologerAdminUpdate
@@ -1651,6 +1713,34 @@ export interface components {
              */
             new_password: string;
         };
+        /** CoinRateChangeOut */
+        CoinRateChangeOut: {
+            /** From Rate */
+            from_rate: number;
+            /** To Rate */
+            to_rate: number;
+            /** Changed By */
+            changed_by?: string | null;
+            /** Changed By Email */
+            changed_by_email?: string | null;
+            /** Note */
+            note?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** CoinRateUpdate */
+        CoinRateUpdate: {
+            /**
+             * Coins Per Rupee
+             * @description How many coins one rupee buys. A whole number, so a whole-rupee recharge can never produce a fractional coin.
+             */
+            coins_per_rupee: number;
+            /** Note */
+            note?: string | null;
+        };
         /**
          * ConsultationMode
          * @enum {string}
@@ -1670,6 +1760,10 @@ export interface components {
             razorpay_order_id: string;
             /** Amount Paise */
             amount_paise: number;
+            /** Coins */
+            coins: number;
+            /** Coins Per Rupee */
+            coins_per_rupee: number;
             /** Currency */
             currency: string;
             /** Key Id */
@@ -1989,6 +2083,10 @@ export interface components {
             receipt: string;
             /** Amount Paise */
             amount_paise: number;
+            /** Coins */
+            coins: number;
+            /** Coins Per Rupee */
+            coins_per_rupee: number;
             /** Currency */
             currency: string;
             status: components["schemas"]["PaymentOrderStatus"];
@@ -2011,6 +2109,16 @@ export interface components {
          * @enum {string}
          */
         PaymentOrderStatus: "created" | "paid" | "failed" | "expired";
+        /** PlatformSettingsOut */
+        PlatformSettingsOut: {
+            /** Coins Per Rupee */
+            coins_per_rupee: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /**
          * ProfileCompleteness
          * @description What the client still needs before each feature can run.
@@ -2127,6 +2235,8 @@ export interface components {
             max_paise: number;
             /** Currency */
             currency: string;
+            /** Coins Per Rupee */
+            coins_per_rupee: number;
             /** Key Id */
             key_id: string;
             /** Enabled */
@@ -2138,17 +2248,19 @@ export interface components {
             amount_paise: number;
             /** Amount Rupees */
             amount_rupees: number;
+            /** Coins */
+            coins: number;
         };
         /** ReconcileResult */
         ReconcileResult: {
-            /** Credited Paise */
-            credited_paise: number;
-            /** Debited Paise */
-            debited_paise: number;
-            /** Ledger Balance Paise */
-            ledger_balance_paise: number;
-            /** Drift Paise */
-            drift_paise: number;
+            /** Credited Coins */
+            credited_coins: number;
+            /** Debited Coins */
+            debited_coins: number;
+            /** Ledger Balance Coins */
+            ledger_balance_coins: number;
+            /** Drift Coins */
+            drift_coins: number;
         };
         /** ResendOtpRequest */
         ResendOtpRequest: {
@@ -2215,22 +2327,22 @@ export interface components {
             id: string;
             direction: components["schemas"]["TransactionDirection"];
             reason: components["schemas"]["TransactionReason"];
-            /** Amount Paise */
-            amount_paise: number;
-            /** Balance After Paise */
-            balance_after_paise: number;
-            /** Currency */
-            currency: string;
+            /** Amount Coins */
+            amount_coins: number;
+            /** Balance After Coins */
+            balance_after_coins: number;
             /** Note */
             note?: string | null;
+            /** Amount Paise */
+            amount_paise?: number | null;
+            /** Coins Per Rupee */
+            coins_per_rupee?: number | null;
             ref?: components["schemas"]["TransactionRefOut"];
             /**
              * Created At
              * Format: date-time
              */
             created_at: string;
-            /** Amount Rupees */
-            readonly amount_rupees: number;
         };
         /**
          * TransactionReason
@@ -2387,23 +2499,21 @@ export interface components {
             credited: boolean;
             /** Amount Paise */
             amount_paise: number;
-            /** Balance Paise */
-            balance_paise: number;
+            /** Coins */
+            coins: number;
+            /** Balance Coins */
+            balance_coins: number;
         };
         /** WalletBalance */
         WalletBalance: {
-            /** Balance Paise */
-            balance_paise: number;
-            /** Currency */
-            currency: string;
+            /** Balance Coins */
+            balance_coins: number;
             /** Is Frozen */
             is_frozen: boolean;
             /** Frozen Reason */
             frozen_reason?: string | null;
             /** Last Transaction At */
             last_transaction_at?: string | null;
-            /** Balance Rupees */
-            readonly balance_rupees: number;
         };
         /**
          * WalletSummary
@@ -3837,6 +3947,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponse_ReconcileResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_settings_api_v1_admin_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_PlatformSettingsOut_"];
+                };
+            };
+        };
+    };
+    update_settings_api_v1_admin_settings_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CoinRateUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_PlatformSettingsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    coin_rate_history_api_v1_admin_settings_coin_rate_history_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_list_CoinRateChangeOut__"];
                 };
             };
             /** @description Validation Error */

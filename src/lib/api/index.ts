@@ -16,6 +16,7 @@ import type {
   AstrologerUpdate,
   AuthResult,
   AvailabilityUpdate,
+  CoinRateChange,
   ConsultationMode,
   CreateOrderResponse,
   EmailAvailability,
@@ -26,6 +27,7 @@ import type {
   PaginatedAstrologers,
   PaymentOrder,
   PaymentOrderStatus,
+  PlatformSettings,
   ProfileUpdate,
   RechargeOptions,
   ReconcileResult,
@@ -231,7 +233,7 @@ export const adminWalletApi = {
 
   adjust: (
     userId: string,
-    body: { direction: TransactionDirection; amount_paise: number; reason: string },
+    body: { direction: TransactionDirection; amount_coins: number; reason: string },
   ) => api.post<WalletBalance>(endpoints.admin.walletAdjust(userId), body),
 
   freeze: (userId: string, body: { frozen: boolean; reason?: string | null }) =>
@@ -247,4 +249,14 @@ export const adminWalletApi = {
 
   reconcilePayment: (orderId: string) =>
     api.post<PaymentOrder>(endpoints.admin.paymentReconcile(orderId), {}),
+};
+
+// --------------------------------------------------------- admin: settings
+export const adminSettingsApi = {
+  get: () => api.get<PlatformSettings>(endpoints.admin.settings),
+
+  setCoinRate: (coins_per_rupee: number, note?: string) =>
+    api.patch<PlatformSettings>(endpoints.admin.settings, { coins_per_rupee, note }),
+
+  coinRateHistory: () => api.get<CoinRateChange[]>(endpoints.admin.coinRateHistory),
 };

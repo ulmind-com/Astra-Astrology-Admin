@@ -174,6 +174,9 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentOrderStatus, string> = {
   expired: "Expired",
 };
 
+export type PlatformSettings = S["PlatformSettingsOut"];
+export type CoinRateChange = S["CoinRateChangeOut"];
+
 /**
  * Money crosses the wire as integer paise and is only turned into rupees here,
  * so the two apps can never disagree about what a balance means.
@@ -190,4 +193,17 @@ export function formatPaise(paise: number): string {
 export function rupeesToPaise(rupees: number): number {
   // Rounded, never truncated: 0.1 + 0.2 in floating point is 0.30000000000000004.
   return Math.round(rupees * 100);
+}
+
+/**
+ * Coins are what the wallet actually holds. They are never shown as a rupee
+ * value, because the admin can change the rate and coins already bought keep
+ * the rate they were bought at — so there is no one rupee figure for a balance.
+ */
+export function formatCoins(coins: number): string {
+  return new Intl.NumberFormat("en-IN").format(coins);
+}
+
+export function coinWord(coins: number): string {
+  return coins === 1 ? "coin" : "coins";
 }

@@ -11,6 +11,7 @@ import {
   Sun,
   UserRound,
   Receipt,
+  Settings,
   Users,
   Wallet,
   X,
@@ -33,6 +34,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/wallets", label: "Wallets", icon: Wallet },
   { href: "/transactions", label: "Transactions", icon: Receipt },
   { href: "/payments", label: "Payments", icon: CreditCard },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 const ASTROLOGER_NAV: NavItem[] = [

@@ -52,5 +52,7 @@ export const endpoints = {
     walletTransactions: "/admin/wallets/transactions",
     payments: "/admin/wallets/payments",
     paymentReconcile: (orderId: string) => `/admin/wallets/payments/${orderId}/reconcile`,
+    settings: "/admin/settings",
+    coinRateHistory: "/admin/settings/coin-rate-history",
   },
 } as const;

@@ -22,7 +22,12 @@ import { adminWalletApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { formatDateTime } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
-import { PAYMENT_STATUS_LABELS, formatPaise, type PaymentOrderStatus } from "@/types";
+import {
+  PAYMENT_STATUS_LABELS,
+  formatCoins,
+  formatPaise,
+  type PaymentOrderStatus,
+} from "@/types";
 
 const TONE: Record<PaymentOrderStatus, "green" | "red" | "gold" | undefined> = {
   paid: "green",
@@ -122,8 +127,11 @@ export default function PaymentsPage() {
                         <p className="text-xs text-red-500">{order.failure_reason}</p>
                       )}
                     </td>
-                    <td className="px-3 py-3 text-right font-semibold tabular-nums">
-                      {formatPaise(order.amount_paise)}
+                    <td className="px-3 py-3 text-right tabular-nums">
+                      <p className="font-semibold">{formatPaise(order.amount_paise)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatCoins(order.coins)} coins at {order.coins_per_rupee}/₹
+                      </p>
                     </td>
                     <td className="px-3 py-3">
                       <Badge tone={TONE[order.status]}>

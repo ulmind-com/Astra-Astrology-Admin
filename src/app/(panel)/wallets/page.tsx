@@ -26,8 +26,8 @@ import { ApiError } from "@/lib/api/client";
 import { formatDateTime } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
 import {
-  formatPaise,
-  rupeesToPaise,
+  coinWord,
+  formatCoins,
   type AdminWallet,
   type TransactionDirection,
 } from "@/types";
@@ -76,9 +76,9 @@ export default function WalletsPage() {
     onSuccess: (result) => {
       void refresh();
       toast.success(
-        result.drift_paise === 0
+        result.drift_coins === 0
           ? "Balance matches the ledger."
-          : `Repaired a drift of ${formatPaise(Math.abs(result.drift_paise))}.`,
+          : `Repaired a drift of ${formatCoins(Math.abs(result.drift_coins))} coins.`,
       );
     },
     onError: (e: ApiError) => toast.error(e.message),
@@ -90,7 +90,7 @@ export default function WalletsPage() {
     <>
       <PanelHeader
         title="Wallets"
-        description="Balances are derived from the ledger, so they can always be rebuilt."
+        description="Balances are in coins, derived from the ledger, so they can always be rebuilt."
       />
 
       <Card className="mb-6">
@@ -142,7 +142,7 @@ export default function WalletsPage() {
                       )}
                     </td>
                     <td className="px-3 py-3 text-right font-semibold tabular-nums">
-                      {formatPaise(wallet.balance_paise)}
+                      {formatCoins(wallet.balance_coins)}
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap text-muted-foreground">
                       {wallet.last_transaction_at
@@ -226,13 +226,15 @@ function AdjustModal({
     mutationFn: () =>
       adminWalletApi.adjust(wallet!.user_id, {
         direction,
-        amount_paise: rupeesToPaise(Number(amount)),
+        amount_coins: Number(amount),
         reason: reason.trim(),
       }),
     onSuccess: (balance) => {
       onDone();
       onClose();
-      toast.success(`Balance is now ${formatPaise(balance.balance_paise)}.`);
+      toast.success(
+        `Balance is now ${formatCoins(balance.balance_coins)} ${coinWord(balance.balance_coins)}.`,
+      );
     },
     onError: (e: ApiError) => {
       setFieldError(e.message);
@@ -243,9 +245,9 @@ function AdjustModal({
     event.preventDefault();
     setFieldError(null);
 
-    const rupees = Number(amount);
-    if (!amount.trim() || Number.isNaN(rupees) || rupees <= 0) {
-      setFieldError("Enter an amount.");
+    const coins = Number(amount);
+    if (!amount.trim() || !Number.isInteger(coins) || coins <= 0) {
+      setFieldError("Enter a whole number of coins.");
       return;
     }
     if (reason.trim().length < 3) {
@@ -262,7 +264,7 @@ function AdjustModal({
       title="Adjust wallet"
       description={
         wallet
-          ? `${wallet.name} · balance ${formatPaise(wallet.balance_paise)}`
+          ? `${wallet.name} · ${formatCoins(wallet.balance_coins)} ${coinWord(wallet.balance_coins)}`
           : undefined
       }
     >
@@ -272,16 +274,16 @@ function AdjustModal({
             value={direction}
             onChange={(e) => setDirection(e.target.value as TransactionDirection)}
           >
-            <option value="credit">Credit — add money</option>
-            <option value="debit">Debit — take money out</option>
+            <option value="credit">Credit — add coins</option>
+            <option value="debit">Debit — take coins out</option>
           </Select>
         </Field>
 
-        <Field label="Amount (₹)" required>
+        <Field label="Coins" required hint="The wallet holds coins, not rupees.">
           <Input
             type="number"
             min={1}
-            step="0.01"
+            step={1}
             placeholder="500"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}

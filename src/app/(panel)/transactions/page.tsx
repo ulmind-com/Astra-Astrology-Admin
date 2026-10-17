@@ -21,6 +21,7 @@ import { cn, formatDateTime } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
 import {
   TRANSACTION_REASON_LABELS,
+  formatCoins,
   formatPaise,
   type TransactionDirection,
   type TransactionReason,
@@ -130,6 +131,13 @@ export default function TransactionsPage() {
                         {txn.created_by && (
                           <p className="text-xs text-muted-foreground">by an admin</p>
                         )}
+                        {txn.amount_paise != null && (
+                          <p className="text-xs text-muted-foreground">
+                            paid {formatPaise(txn.amount_paise)}
+                            {txn.coins_per_rupee != null &&
+                              ` at ${txn.coins_per_rupee}/₹`}
+                          </p>
+                        )}
                       </td>
                       <td
                         className={cn(
@@ -143,11 +151,11 @@ export default function TransactionsPage() {
                           ) : (
                             <ArrowUpRight className="size-3.5" />
                           )}
-                          {formatPaise(txn.amount_paise)}
+                          {formatCoins(txn.amount_coins)}
                         </span>
                       </td>
                       <td className="px-5 py-3 text-right tabular-nums text-muted-foreground">
-                        {formatPaise(txn.balance_after_paise)}
+                        {formatCoins(txn.balance_after_coins)}
                       </td>
                     </tr>
                   );
