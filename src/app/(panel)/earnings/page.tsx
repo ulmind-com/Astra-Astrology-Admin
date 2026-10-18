@@ -116,7 +116,7 @@ export default function EarningsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Recent</CardTitle>
-            <CardDescription>Every minute you have been paid for.</CardDescription>
+            <CardDescription>One line per consultation.</CardDescription>
           </CardHeader>
 
           {!recent.data || recent.data.length === 0 ? (
@@ -134,6 +134,7 @@ export default function EarningsPage() {
                   <tr>
                     <th className="px-5 py-3 font-medium">When</th>
                     <th className="px-3 py-3 font-medium">Type</th>
+                    <th className="px-3 py-3 font-medium text-right">Length</th>
                     <th className="px-5 py-3 font-medium text-right">Credited</th>
                   </tr>
                 </thead>
@@ -150,6 +151,9 @@ export default function EarningsPage() {
                             <Icon className="size-3.5 text-muted-foreground" />
                             {MODE_LABELS[row.mode]}
                           </span>
+                        </td>
+                        <td className="px-3 py-3 text-right tabular-nums text-muted-foreground">
+                          {row.minutes} min
                         </td>
                         <td className="px-5 py-3 text-right font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
                           +{formatEarning(row.earning_paise)}
@@ -210,7 +214,7 @@ export default function EarningsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Recent</CardTitle>
-          <CardDescription>Each minute, and how it was split.</CardDescription>
+          <CardDescription>Each consultation, and how it was split.</CardDescription>
         </CardHeader>
 
         {!platformRecent.data || platformRecent.data.length === 0 ? (
@@ -229,6 +233,7 @@ export default function EarningsPage() {
                   <th className="px-5 py-3 font-medium">When</th>
                   <th className="px-3 py-3 font-medium">Astrologer</th>
                   <th className="px-3 py-3 font-medium">Type</th>
+                  <th className="px-3 py-3 font-medium text-right">Length</th>
                   <th className="px-3 py-3 font-medium text-right">Gross</th>
                   <th className="px-3 py-3 font-medium text-right">Commission</th>
                   <th className="px-5 py-3 font-medium text-right">Paid out</th>
@@ -242,6 +247,9 @@ export default function EarningsPage() {
                     </td>
                     <td className="px-3 py-3">{row.astrologer_name ?? "—"}</td>
                     <td className="px-3 py-3">{MODE_LABELS[row.mode]}</td>
+                    <td className="px-3 py-3 text-right tabular-nums text-muted-foreground">
+                      {row.minutes} min
+                    </td>
                     <td className="px-3 py-3 text-right tabular-nums">
                       {formatEarning(row.gross_paise)}
                     </td>

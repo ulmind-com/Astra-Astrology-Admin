@@ -127,7 +127,7 @@ export type DirectoryFilters = {
   online_only?: boolean;
   featured_only?: boolean;
   min_experience?: number;
-  max_rate?: number;
+  max_coins_per_minute?: number;
   page?: number;
   limit?: number;
 };

@@ -52,7 +52,7 @@ export default function NewAstrologerPage() {
     chat: "",
     call: "",
     video: "",
-    commission_percent: "50",
+    commission_percent: "",
     is_listed: true,
     is_featured: false,
   });
@@ -108,7 +108,7 @@ export default function NewAstrologerPage() {
         call_coins_per_minute: optional(form.call),
         video_coins_per_minute: optional(form.video),
       },
-      commission_percent: number(form.commission_percent),
+      commission_percent: optional(form.commission_percent),
       is_listed: form.is_listed,
       is_featured: form.is_featured,
       display_order: 0,

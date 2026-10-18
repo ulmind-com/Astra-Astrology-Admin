@@ -1960,11 +1960,8 @@ export interface components {
             rates?: components["schemas"]["RateCard"];
             /** Modes Enabled */
             modes_enabled?: components["schemas"]["ConsultationMode"][] | null;
-            /**
-             * Commission Percent
-             * @default 50
-             */
-            commission_percent: number;
+            /** Commission Percent */
+            commission_percent?: number | null;
             /**
              * Is Listed
              * @default true
@@ -2047,7 +2044,7 @@ export interface components {
             /** Modes Enabled */
             modes_enabled: components["schemas"]["ConsultationMode"][];
             /** Commission Percent */
-            commission_percent: number;
+            commission_percent?: number | null;
             bank: components["schemas"]["BankDetails"];
             availability: components["schemas"]["Availability"];
             rating: components["schemas"]["RatingSummary"];
@@ -2626,7 +2623,10 @@ export interface components {
              */
             timezone?: string | null;
         };
-        /** EarningRow */
+        /**
+         * EarningRow
+         * @description One consultation, not one minute.
+         */
         EarningRow: {
             /** Id */
             id: string;
@@ -4271,8 +4271,8 @@ export interface operations {
                 online_only?: boolean;
                 featured_only?: boolean;
                 min_experience?: number | null;
-                /** @description Chat rate ceiling */
-                max_rate?: number | null;
+                /** @description Chat rate ceiling, in coins a minute */
+                max_coins_per_minute?: number | null;
                 page?: number;
                 limit?: number;
             };
