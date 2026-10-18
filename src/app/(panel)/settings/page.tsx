@@ -368,6 +368,7 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
     commission: String(settings.default_commission_percent),
     minMinutes: String(settings.min_session_minutes),
     maxMinutes: String(settings.max_session_minutes),
+    retentionDays: String(settings.chat_retention_days),
   });
   const [fieldError, setFieldError] = React.useState<string | null>(null);
 
@@ -383,6 +384,7 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
         default_commission_percent: Number(form.commission),
         min_session_minutes: Number(form.minMinutes),
         max_session_minutes: Number(form.maxMinutes),
+        chat_retention_days: Number(form.retentionDays),
       }),
     onSuccess: (updated) => {
       void queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
@@ -409,6 +411,11 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
     }
     if (Number(form.minMinutes) > Number(form.maxMinutes)) {
       setFieldError("The shortest session cannot be longer than the longest.");
+      return;
+    }
+    const retention = Number(form.retentionDays);
+    if (!Number.isInteger(retention) || retention < 0) {
+      setFieldError("Keep chats for a whole number of days, 0 or more.");
       return;
     }
     save.mutate();
@@ -492,6 +499,40 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
                 onChange={set("maxMinutes")}
               />
             </Field>
+          </div>
+
+          {/* ------------------------------------------------ chat history */}
+          <div className="rounded-xl border border-border bg-surface-muted/40 p-4">
+            <Field
+              label="Keep chat messages for (days)"
+              required
+              className="w-44"
+              hint={
+                Number(form.retentionDays) === 0
+                  ? "Deleted the moment a chat ends."
+                  : `Deleted ${form.retentionDays} day(s) after a chat ends.`
+              }
+            >
+              <Input
+                type="number"
+                min={0}
+                step={1}
+                value={form.retentionDays}
+                onChange={set("retentionDays")}
+              />
+            </Field>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+              Messages are removed by the database itself once this long has
+              passed — the session and what it cost are always kept. Changing
+              this re-dates chats that have already finished, so shortening it
+              clears out old messages too.
+              {Number(form.retentionDays) === 0 && (
+                <span className="mt-1 block text-warning">
+                  With 0 days there is nothing left to check if someone
+                  disputes what was said or what they were charged.
+                </span>
+              )}
+            </p>
           </div>
 
           {grossPaise > 0 && (

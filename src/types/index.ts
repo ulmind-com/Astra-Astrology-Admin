@@ -243,7 +243,6 @@ export function formatDuration(seconds: number): string {
 export type Chat = S["ChatOut"];
 export type ChatSession = S["ChatSessionOut"];
 export type ChatStatus = S["ChatStatus"];
-export type FirebaseCredentials = S["FirebaseCredentials"];
 
 export const LIVE_CHAT_STATUSES: ChatStatus[] = ["requested", "active"];
 

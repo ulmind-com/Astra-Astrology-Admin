@@ -275,6 +275,7 @@ export const adminSettingsApi = {
     default_commission_percent?: number;
     min_session_minutes?: number;
     max_session_minutes?: number;
+    chat_retention_days?: number;
   }) => api.patch<PlatformSettings>(endpoints.admin.consultationDefaults, body),
 
   earnings: () => api.get<AdminEarningsSummary>(endpoints.admin.earnings),

@@ -247,33 +247,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/users/me/realtime-token": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * A Firebase token, so this browser can subscribe to live updates
-         * @description Bridges our own JWT to a Firebase identity.
-         *
-         *     The public half of the live mirror — astrologer cards, platform settings —
-         *     needs no sign-in. This is for the half that is personal: a wallet document
-         *     is readable only by the uid it is named after, and Firestore can only check
-         *     that if the browser is signed in to Firebase as that person.
-         *
-         *     Minted per request and short-lived, never stored.
-         */
-        get: operations["realtime_token_api_v1_users_me_realtime_token_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/users/me/addresses": {
         parameters: {
             query?: never;
@@ -343,54 +316,6 @@ export interface paths {
         head?: never;
         /** Go online or offline, and toggle chat and call */
         patch: operations["update_my_availability_api_v1_astrologers_me_availability_patch"];
-        trace?: never;
-    };
-    "/api/v1/astrologers/me/presence/beat": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * My panel is open
-         * @description Sent by an open panel every `beat_seconds`.
-         *
-         *     This is what actually puts an astrologer on the directory: opening the
-         *     panel is the act of going online, and the moment the beats stop — tab
-         *     closed, laptop shut, connection lost — they fall off it on their own.
-         */
-        post: operations["presence_beat_api_v1_astrologers_me_presence_beat_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/astrologers/me/presence/offline": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * My panel is closing
-         * @description The tidy exit, sent as the tab unloads.
-         *
-         *     Only an optimisation: if it never arrives — the browser was killed, the
-         *     network died — the heartbeat lapses and the TTL does the same job a few
-         *     seconds later. Nothing depends on this call being delivered.
-         */
-        post: operations["presence_offline_api_v1_astrologers_me_presence_offline_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/api/v1/astrologers/me/image": {
@@ -1135,6 +1060,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/chats/{session_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The conversation so far
+         * @description Loads a chat window from cold.
+         *
+         *     Messages are removed some time after a chat ends — how long is the admin's
+         *     to set — so an old conversation may legitimately come back empty. The
+         *     session itself, and what it cost, is kept either way.
+         */
+        get: operations["get_messages_api_v1_chats__session_id__messages_get"];
+        put?: never;
+        /**
+         * Send a message
+         * @description Refused once the chat has ended — the check is here, not in the browser.
+         */
+        post: operations["send_message_api_v1_chats__session_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chats/{session_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark how far I have got
+         * @description What draws the second tick, and then the blue one.
+         */
+        post: operations["mark_read_api_v1_chats__session_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/astrologers/me/earnings": {
         parameters: {
             query?: never;
@@ -1608,20 +1581,6 @@ export interface components {
             message: string;
             data?: components["schemas"]["EmailAvailability"] | null;
         };
-        /** ApiResponse[FirebaseCredentials] */
-        ApiResponse_FirebaseCredentials_: {
-            /**
-             * Success
-             * @default true
-             */
-            success: boolean;
-            /**
-             * Message
-             * @default Success
-             */
-            message: string;
-            data?: components["schemas"]["FirebaseCredentials"] | null;
-        };
         /** ApiResponse[GalleryUploadResult] */
         ApiResponse_GalleryUploadResult_: {
             /**
@@ -1649,6 +1608,20 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["HealthStatus"] | null;
+        };
+        /** ApiResponse[MessageOut] */
+        ApiResponse_MessageOut_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["MessageOut"] | null;
         };
         /** ApiResponse[OtpSentResult] */
         ApiResponse_OtpSentResult_: {
@@ -1790,8 +1763,8 @@ export interface components {
             message: string;
             data?: components["schemas"]["PlatformSettingsOut"] | null;
         };
-        /** ApiResponse[PresenceState] */
-        ApiResponse_PresenceState_: {
+        /** ApiResponse[ReadMarkerOut] */
+        ApiResponse_ReadMarkerOut_: {
             /**
              * Success
              * @default true
@@ -1802,7 +1775,7 @@ export interface components {
              * @default Success
              */
             message: string;
-            data?: components["schemas"]["PresenceState"] | null;
+            data?: components["schemas"]["ReadMarkerOut"] | null;
         };
         /** ApiResponse[RechargeOptions] */
         ApiResponse_RechargeOptions_: {
@@ -1831,6 +1804,20 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["ReconcileResult"] | null;
+        };
+        /** ApiResponse[TranscriptOut] */
+        ApiResponse_TranscriptOut_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["TranscriptOut"] | null;
         };
         /** ApiResponse[Union[CallSessionOut, NoneType]] */
         ApiResponse_Union_CallSessionOut__NoneType__: {
@@ -2620,7 +2607,6 @@ export interface components {
         /** ChatSessionOut */
         ChatSessionOut: {
             chat: components["schemas"]["ChatOut"];
-            firebase?: components["schemas"]["FirebaseCredentials"] | null;
         };
         /**
          * ChatStatus
@@ -2676,6 +2662,8 @@ export interface components {
             min_session_minutes?: number | null;
             /** Max Session Minutes */
             max_session_minutes?: number | null;
+            /** Chat Retention Days */
+            chat_retention_days?: number | null;
         };
         /**
          * ConsultationMode
@@ -2877,21 +2865,6 @@ export interface components {
             extra_minutes: number;
         };
         /**
-         * FirebaseCredentials
-         * @description What the browser needs to reach Firestore as itself.
-         *
-         *     The custom token is short-lived and single-purpose: it only proves which
-         *     Firebase user this is, so the rules can check participation.
-         */
-        FirebaseCredentials: {
-            /** Custom Token */
-            custom_token: string;
-            /** Uid */
-            uid: string;
-            /** Project Id */
-            project_id: string;
-        };
-        /**
          * ForgotPasswordRequest
          * @description Step 1 of a password reset — the registered email address.
          */
@@ -2965,6 +2938,31 @@ export interface components {
          * @enum {string}
          */
         MaritalStatus: "single" | "engaged" | "married" | "divorced" | "widowed" | "undisclosed";
+        /** MarkProgressRequest */
+        MarkProgressRequest: {
+            /**
+             * Level
+             * @default read
+             * @enum {string}
+             */
+            level: "delivered" | "read";
+        };
+        /** MessageOut */
+        MessageOut: {
+            /** Id */
+            id: string;
+            /** Session Id */
+            session_id: string;
+            /** Sender Id */
+            sender_id: string;
+            /** Text */
+            text: string;
+            /**
+             * Sent At
+             * Format: date-time
+             */
+            sent_at: string;
+        };
         /** MessageResponse */
         MessageResponse: {
             /**
@@ -3166,29 +3164,13 @@ export interface components {
             min_session_minutes: number;
             /** Max Session Minutes */
             max_session_minutes: number;
+            /** Chat Retention Days */
+            chat_retention_days: number;
             /**
              * Updated At
              * Format: date-time
              */
             updated_at: string;
-        };
-        /**
-         * PresenceState
-         * @description What the panel needs to keep itself on the directory.
-         *
-         *     The cadence is sent back rather than hard-coded in the browser, so the
-         *     heartbeat interval and the TTL can be retuned on the server without
-         *     shipping a new frontend.
-         */
-        PresenceState: {
-            /** Is Online */
-            is_online: boolean;
-            /** Beat Seconds */
-            beat_seconds: number;
-            /** Ttl Seconds */
-            ttl_seconds: number;
-            /** Last Seen At */
-            last_seen_at?: string | null;
         };
         /**
          * ProfileCompleteness
@@ -3284,6 +3266,15 @@ export interface components {
              */
             count: number;
         };
+        /** ReadMarkerOut */
+        ReadMarkerOut: {
+            /** User Id */
+            user_id: string;
+            /** Delivered At */
+            delivered_at?: string | null;
+            /** Read At */
+            read_at?: string | null;
+        };
         /**
          * RechargeLimitsUpdate
          * @description Either may be sent on its own; the other keeps its current value.
@@ -3368,6 +3359,11 @@ export interface components {
             call_coins_per_minute: number;
             /** Video Coins Per Minute */
             video_coins_per_minute: number;
+        };
+        /** SendMessageRequest */
+        SendMessageRequest: {
+            /** Text */
+            text: string;
         };
         /**
          * SessionBilling
@@ -3486,6 +3482,20 @@ export interface components {
             razorpay_refund_id?: string | null;
             /** Session Id */
             session_id?: string | null;
+        };
+        /**
+         * TranscriptOut
+         * @description Everything a chat window needs to draw itself from cold.
+         *
+         *     Messages and markers together, because the ticks are worked out by
+         *     comparing the two and a window that had one without the other would show
+         *     the wrong state for a moment.
+         */
+        TranscriptOut: {
+            /** Messages */
+            messages: components["schemas"]["MessageOut"][];
+            /** Reads */
+            reads: components["schemas"]["ReadMarkerOut"][];
         };
         /**
          * UserProfile
@@ -4122,26 +4132,6 @@ export interface operations {
             };
         };
     };
-    realtime_token_api_v1_users_me_realtime_token_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponse_FirebaseCredentials_"];
-                };
-            };
-        };
-    };
     list_addresses_api_v1_users_me_addresses_get: {
         parameters: {
             query?: never;
@@ -4343,46 +4333,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    presence_beat_api_v1_astrologers_me_presence_beat_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponse_PresenceState_"];
-                };
-            };
-        };
-    };
-    presence_offline_api_v1_astrologers_me_presence_offline_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponse_PresenceState_"];
                 };
             };
         };
@@ -5873,6 +5823,107 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponse_ChatOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_messages_api_v1_chats__session_id__messages_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_TranscriptOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_message_api_v1_chats__session_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_MessageOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_read_api_v1_chats__session_id__read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkProgressRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ReadMarkerOut_"];
                 };
             };
             /** @description Validation Error */

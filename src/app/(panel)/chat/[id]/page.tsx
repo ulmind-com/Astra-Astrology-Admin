@@ -9,7 +9,7 @@ import { Alert, Avatar, Button, LoadingBlock } from "@/components/ui";
 import { useChat, useChatActions, useChatHeartbeat, useChatTimer } from "@/hooks/use-chat";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
-import { useRequireAuth } from "@/providers/auth-provider";
+import { useAuth, useRequireAuth } from "@/providers/auth-provider";
 import {
   CHAT_STATUS_LABELS,
   formatDuration,
@@ -22,6 +22,7 @@ export default function AstrologerChatPage() {
   const router = useRouter();
   const { ready } = useRequireAuth({ roles: ["astrologer"], signInPath: "/login" });
 
+  const { user } = useAuth();
   const { data, isLoading, error } = useChat(ready ? id : null);
   const { end } = useChatActions();
   const [confirming, setConfirming] = React.useState(false);
@@ -88,10 +89,10 @@ export default function AstrologerChatPage() {
       )}
 
       <div className="flex-1 overflow-hidden">
-        {data?.firebase ? (
+        {live ? (
           <ChatRoom
-            conversationId={chat.conversation_id}
-            firebase={data.firebase}
+            sessionId={chat.id}
+            myUserId={user?.id ?? ""}
             canSend={active}
             peerName={chat.peer?.name}
           />

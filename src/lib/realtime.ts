@@ -63,7 +63,13 @@ export type LiveMessage =
   | { type: "pong" }
   | { type: "astrologer"; data: LiveAstrologer }
   | { type: "settings"; data: LivePlatform }
-  | { type: "wallet"; data: { balance_coins: number } };
+  | { type: "wallet"; data: { balance_coins: number } }
+  // Chat traffic. Typed loosely here on purpose: the chat client owns the
+  // shape of a message, and repeating it in two places would be one more
+  // thing to keep in step.
+  | { type: "chat_message"; data: Record<string, string> }
+  | { type: "chat_read"; data: Record<string, string> }
+  | { type: "chat_ended"; data: { session_id: string; reason?: string | null } };
 
 /**
  * Whether this astrologer is actually at their desk.

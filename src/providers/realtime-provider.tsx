@@ -39,16 +39,27 @@ import { onSessionChange, session } from "@/lib/session";
 /** How often presence is re-judged against the clock. */
 const DECAY_MS = 5_000;
 
+/** Anything the socket carries that is about a chat rather than the market. */
+export type ChatEvent =
+  | { type: "chat_message"; data: Record<string, unknown> }
+  | { type: "chat_read"; data: Record<string, unknown> }
+  | { type: "chat_ended"; data: { session_id: string; reason?: string | null } };
+
+type ChatListener = (event: ChatEvent) => void;
+
 type RealtimeValue = {
   astrologers: Map<string, LiveAstrologer>;
   platform: LivePlatform | null;
   connected: boolean;
+  /** Subscribe to chat traffic. Returns the unsubscribe function. */
+  onChat: (listener: ChatListener) => () => void;
 };
 
 const RealtimeContext = React.createContext<RealtimeValue>({
   astrologers: new Map(),
   platform: null,
   connected: false,
+  onChat: () => () => {},
 });
 
 /** The shape of whatever a REST astrologer looks like, as far as patching cares. */
@@ -190,6 +201,17 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   // without being torn down and rebuilt every time one arrives.
   const latest = React.useRef<Map<string, LiveAstrologer>>(new Map());
 
+  // Chat traffic is handed straight to whoever is listening rather than kept
+  // in state: a chat window owns its own transcript, and storing every message
+  // here as well would mean two copies drifting apart.
+  const chatListeners = React.useRef<Set<ChatListener>>(new Set());
+  const onChat = React.useCallback((listener: ChatListener) => {
+    chatListeners.current.add(listener);
+    return () => {
+      chatListeners.current.delete(listener);
+    };
+  }, []);
+
   // Reopened whenever the session changes. The token is sent when the socket
   // is opened, so a socket opened as a visitor stays a visitor — signing in
   // would otherwise leave the new user with no wallet updates until they
@@ -235,6 +257,12 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           });
           break;
 
+        case "chat_message":
+        case "chat_read":
+        case "chat_ended":
+          chatListeners.current.forEach((listener) => listener(message as ChatEvent));
+          break;
+
         default:
           break;
       }
@@ -257,8 +285,8 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   }, [queryClient]);
 
   const value = React.useMemo(
-    () => ({ astrologers, platform, connected }),
-    [astrologers, platform, connected],
+    () => ({ astrologers, platform, connected, onChat }),
+    [astrologers, platform, connected, onChat],
   );
 
   return <RealtimeContext.Provider value={value}>{children}</RealtimeContext.Provider>;
@@ -277,4 +305,18 @@ export function usePlatform(): LivePlatform | null {
 export function useLiveAstrologer(id: string | undefined): LiveAstrologer | null {
   const { astrologers } = useRealtime();
   return id ? (astrologers.get(id) ?? null) : null;
+}
+
+/** Subscribe to chat traffic for as long as the component is mounted. */
+export function useChatEvents(listener: (event: ChatEvent) => void): void {
+  const { onChat } = useRealtime();
+
+  // Held in a ref so a listener that closes over changing state does not tear
+  // the subscription down and rebuild it on every render.
+  const ref = React.useRef(listener);
+  React.useEffect(() => {
+    ref.current = listener;
+  }, [listener]);
+
+  React.useEffect(() => onChat((event) => ref.current(event)), [onChat]);
 }

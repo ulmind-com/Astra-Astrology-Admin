@@ -66,6 +66,8 @@ export const endpoints = {
     end: (id: string) => `/chats/${id}/end`,
     extend: (id: string) => `/chats/${id}/extend`,
     heartbeat: (id: string) => `/chats/${id}/heartbeat`,
+    messages: (id: string) => `/chats/${id}/messages`,
+    read: (id: string) => `/chats/${id}/read`,
   },
 
   admin: {

@@ -7,17 +7,16 @@ import { DeliveryTicks } from "@/components/chat/delivery-ticks";
 import { Alert } from "@/components/ui";
 import {
   deliveryStateOf,
-  isChatConfigured,
+  loadTranscript,
   markProgress,
   sendMessage,
-  signInToChat,
-  watchMessages,
-  watchReads,
+  toMarker,
+  toMessage,
   type ChatMessage,
   type ReadMarker,
 } from "@/lib/chat";
 import { cn } from "@/lib/utils";
-import type { FirebaseCredentials } from "@/types";
+import { useChatEvents } from "@/providers/realtime-provider";
 
 /** "Today" and "Yesterday" read better than a date nobody needs to parse. */
 function dayLabel(date: Date): string {
@@ -36,14 +35,15 @@ function clockTime(date: Date): string {
 }
 
 export function ChatRoom({
-  conversationId,
-  firebase,
+  sessionId,
+  myUserId,
   canSend,
   peerName,
   closedNotice,
 }: {
-  conversationId: string;
-  firebase: FirebaseCredentials;
+  sessionId: string;
+  /** This person's own id, which is how their messages are told apart. */
+  myUserId: string;
   canSend: boolean;
   peerName?: string | null;
   closedNotice?: string;
@@ -61,71 +61,73 @@ export function ChatRoom({
   const boxRef = React.useRef<HTMLTextAreaElement>(null);
 
   // ----------------------------------------------------------- connect
+  //
+  // One request for the transcript, then the socket keeps it current. The
+  // socket is already open for the rest of the app, so joining a chat costs
+  // nothing more than a listener.
   React.useEffect(() => {
-    if (!isChatConfigured()) {
-      // NEXT_PUBLIC_* values are baked in when the server starts, so a dev
-      // server that was running before they were added will never see them.
-      setError(
-        "Chat is not configured in this build. If the Firebase keys were just " +
-          "added, restart the dev server so it picks them up.",
-      );
-      return;
-    }
-
-    let stopMessages: (() => void) | null = null;
-    let stopReads: (() => void) | null = null;
     let cancelled = false;
 
-    (async () => {
+    void (async () => {
       try {
-        await signInToChat(firebase.custom_token, firebase.uid);
+        const { messages: loaded, reads } = await loadTranscript(sessionId);
         if (cancelled) return;
-
-        stopMessages = await watchMessages(
-          conversationId,
-          (next) => {
-            if (cancelled) return;
-            setMessages(next);
-            setReady(true);
-          },
-          (err) => {
-            if (cancelled) return;
-            const code = (err as { code?: string }).code ?? "";
-            setError(
-              code === "permission-denied"
-                ? "This conversation is no longer open."
-                : "Could not reach the chat service. An ad blocker or privacy " +
-                    "extension may be blocking it — try again with it switched off.",
-            );
-          },
-        );
-
-        stopReads = await watchReads(conversationId, (next) => {
-          if (!cancelled) setMarkers(next);
-        });
-      } catch (err) {
-        if (cancelled) return;
-        const message = err instanceof Error ? err.message : "";
-        setError(
-          message.includes("blocked") || message.includes("network")
-            ? "Could not reach the chat service. An ad blocker or privacy " +
-                "extension may be blocking it — try again with it switched off."
-            : "Could not connect to the conversation.",
-        );
+        setMessages(loaded);
+        setMarkers(Object.fromEntries(reads.map((r) => [r.userId, r])));
+        setReady(true);
+      } catch {
+        if (!cancelled) setError("Could not load this conversation.");
       }
     })();
 
     return () => {
       cancelled = true;
-      stopMessages?.();
-      stopReads?.();
     };
-  }, [conversationId, firebase.custom_token, firebase.uid]);
+  }, [sessionId]);
+
+  useChatEvents(
+    React.useCallback(
+      (event) => {
+        const data = event.data as Record<string, string>;
+        if (data.session_id !== sessionId) return;
+
+        if (event.type === "chat_message") {
+          setMessages((current) => {
+            // The sender already added this optimistically, and the server
+            // echo arrives for both sides — so never add it twice.
+            if (current.some((m) => m.id === data.id)) return current;
+            const incoming = toMessage(data as never);
+            // Replace this browser's own pending copy rather than appending a
+            // duplicate beside it.
+            const pendingIndex = current.findIndex(
+              (m) => m.pending && m.senderId === incoming.senderId && m.text === incoming.text,
+            );
+            if (pendingIndex >= 0) {
+              const next = [...current];
+              next[pendingIndex] = incoming;
+              return next;
+            }
+            return [...current, incoming];
+          });
+        }
+
+        if (event.type === "chat_read") {
+          const marker = toMarker(data as never);
+          setMarkers((current) => ({ ...current, [marker.userId]: marker }));
+        }
+
+        if (event.type === "chat_ended") {
+          setMessages((current) => current);
+        }
+      },
+      [sessionId],
+    ),
+  );
 
   // ------------------------------------------------------------ receipts
   const lastIncoming = React.useMemo(
-    () => messages.filter((m) => m.senderUid !== firebase.uid).at(-1)?.id ?? null,
-    [messages, firebase.uid],
+    () => messages.filter((m) => m.senderId !== myUserId).at(-1)?.id ?? null,
+    [messages, myUserId],
   );
 
   React.useEffect(() => {
@@ -135,12 +137,12 @@ export function ChatRoom({
     // actually in front of someone. Marking read while the window is hidden
     // would be a lie the other person can see.
     const level = () => (document.visibilityState === "visible" ? "read" : "delivered");
-    const mark = () => void markProgress(conversationId, firebase.uid, level()).catch(() => {});
+    const mark = () => void markProgress(sessionId, level()).catch(() => {});
 
     mark();
     document.addEventListener("visibilitychange", mark);
     return () => document.removeEventListener("visibilitychange", mark);
-  }, [ready, lastIncoming, conversationId, firebase.uid]);
+  }, [ready, lastIncoming, sessionId]);
 
   // ------------------------------------------------------------ scrolling
   const scrollToBottom = React.useCallback((smooth = true) => {
@@ -166,10 +168,28 @@ export function ChatRoom({
 
     setSending(true);
     setDraft("");
+
+    // Shown straight away as pending, so typing feels immediate; the server's
+    // echo replaces it with the stored message a moment later.
+    const optimistic: ChatMessage = {
+      id: `pending-${Date.now()}`,
+      senderId: myUserId,
+      text,
+      sentAt: null,
+      pending: true,
+    };
+    setMessages((current) => [...current, optimistic]);
+    setAtBottom(true);
+
     try {
-      await sendMessage(conversationId, firebase.uid, text);
-      setAtBottom(true);
+      const saved = await sendMessage(sessionId, text);
+      setMessages((current) =>
+        current.some((m) => m.id === saved.id)
+          ? current.filter((m) => m.id !== optimistic.id)
+          : current.map((m) => (m.id === optimistic.id ? saved : m)),
+      );
     } catch {
+      setMessages((current) => current.filter((m) => m.id !== optimistic.id));
       setDraft(text); // never lose what they typed
       setError("That message did not send. The chat may have ended.");
     } finally {
@@ -186,8 +206,8 @@ export function ChatRoom({
     }
   }
 
-  const peerUid = Object.keys(markers).find((uid) => uid !== firebase.uid) ?? null;
-  const peerMarker = peerUid ? markers[peerUid] : null;
+  const peerId = Object.keys(markers).find((id) => id !== myUserId) ?? null;
+  const peerMarker = peerId ? markers[peerId] : null;
 
   let lastDay = "";
 
@@ -223,11 +243,11 @@ export function ChatRoom({
           ) : (
             <ul className="space-y-1">
               {messages.map((message, index) => {
-                const mine = message.senderUid === firebase.uid;
+                const mine = message.senderId === myUserId;
                 const previous = messages[index - 1];
                 // Group runs from the same person so the thread reads as turns
                 // rather than a wall of identical bubbles.
-                const grouped = previous?.senderUid === message.senderUid;
+                const grouped = previous?.senderId === message.senderId;
 
                 const day = message.sentAt ? dayLabel(message.sentAt) : "";
                 const newDay = Boolean(day) && day !== lastDay;
