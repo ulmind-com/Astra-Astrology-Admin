@@ -20,10 +20,13 @@ export function CallRoom({
   credentials,
   onLeave,
   className,
+  audioOnly = false,
 }: {
   credentials: CallCredentials;
   onLeave: () => void;
   className?: string;
+  /** A voice call is the same room with the camera left off. */
+  audioOnly?: boolean;
 }) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -60,8 +63,12 @@ export function CallRoom({
           showRoomDetailsButton: false,
           showUserList: false,
           showTextChat: false,
-          turnOnCameraWhenJoining: true,
+          turnOnCameraWhenJoining: !audioOnly,
           turnOnMicrophoneWhenJoining: true,
+          // On a voice call the camera button is hidden rather than merely
+          // off, so nobody turns their camera on by accident.
+          showMyCameraToggleButton: !audioOnly,
+          showAudioVideoSettingsButton: !audioOnly,
           // Leaving the room is reported to our server too — the room is the
           // pipe, but the session is ours.
           onLeaveRoom: () => leaveRef.current(),
@@ -90,7 +97,7 @@ export function CallRoom({
     // Re-joining on a changed token would drop the live call, so this runs
     // once per room.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [credentials.room_id]);
+  }, [credentials.room_id, audioOnly]);
 
   if (error) {
     return (

@@ -63,7 +63,12 @@ export default function AstrologerCallPage() {
 
       <div className="relative flex-1">
         {connected && data?.credentials ? (
-          <CallRoom credentials={data.credentials} onLeave={hangUp} className="absolute inset-0" />
+          <CallRoom
+            credentials={data.credentials}
+            onLeave={hangUp}
+            className="absolute inset-0"
+            audioOnly={call.mode === "call"}
+          />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
             <span className="flex size-16 items-center justify-center rounded-full bg-white/10">
