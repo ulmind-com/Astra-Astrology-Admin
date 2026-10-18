@@ -76,5 +76,6 @@ export const endpoints = {
     paymentReconcile: (orderId: string) => `/admin/wallets/payments/${orderId}/reconcile`,
     settings: "/admin/settings",
     coinRateHistory: "/admin/settings/coin-rate-history",
+    rechargeLimits: "/admin/settings/recharge-limits",
   },
 } as const;

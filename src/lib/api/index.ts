@@ -263,6 +263,11 @@ export const adminSettingsApi = {
     api.patch<PlatformSettings>(endpoints.admin.settings, { coins_per_rupee, note }),
 
   coinRateHistory: () => api.get<CoinRateChange[]>(endpoints.admin.coinRateHistory),
+
+  setRechargeLimits: (body: {
+    min_recharge_paise?: number;
+    max_recharge_paise?: number;
+  }) => api.patch<PlatformSettings>(endpoints.admin.rechargeLimits, body),
 };
 
 // ------------------------------------------------------------------- calls

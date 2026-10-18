@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Coins, History, Loader2 } from "lucide-react";
+import { Coins, History, Loader2, Wallet } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -24,7 +24,7 @@ import { adminSettingsApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { formatDateTime } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
-import { coinWord, formatCoins } from "@/types";
+import { coinWord, formatCoins, type PlatformSettings } from "@/types";
 
 const EXAMPLES = [100, 500, 1000];
 
@@ -82,6 +82,9 @@ export default function SettingsPage() {
   if (!ready) return <LoadingBlock />;
   if (isLoading) return <LoadingBlock label="Loading settings…" />;
   if (error) return <Alert tone="error">{(error as ApiError).message}</Alert>;
+  // Everything below reads the loaded settings, so narrow once here rather
+  // than guarding each field.
+  if (!settings) return null;
 
   const preview = Number(rate) >= 1 && Number.isInteger(Number(rate)) ? Number(rate) : null;
   const changed = settings && preview !== null && preview !== settings.coins_per_rupee;
@@ -172,6 +175,8 @@ export default function SettingsPage() {
         </CardBody>
       </Card>
 
+      <RechargeLimitsCard settings={settings} />
+
       <Card>
         <CardHeader>
           <CardTitle>
@@ -221,5 +226,120 @@ export default function SettingsPage() {
         )}
       </Card>
     </>
+  );
+}
+
+/**
+ * What a user may top up.
+ *
+ * Kept next to the coin rate because the two are read together: a minimum of
+ * ₹200 at 5 coins per rupee means nobody can buy fewer than 1,000 coins, and
+ * that is the number worth checking before saving.
+ */
+function RechargeLimitsCard({ settings }: { settings: PlatformSettings }) {
+  const queryClient = useQueryClient();
+
+  const [min, setMin] = React.useState(String(settings.min_recharge_paise / 100));
+  const [max, setMax] = React.useState(String(settings.max_recharge_paise / 100));
+  const [fieldError, setFieldError] = React.useState<string | null>(null);
+
+  const save = useMutation({
+    mutationFn: () =>
+      adminSettingsApi.setRechargeLimits({
+        min_recharge_paise: Number(min) * 100,
+        max_recharge_paise: Number(max) * 100,
+      }),
+    onSuccess: (updated) => {
+      void queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
+      toast.success(
+        `Recharges are now ₹${updated.min_recharge_paise / 100} to ₹${
+          updated.max_recharge_paise / 100
+        }.`,
+      );
+    },
+    onError: (e: ApiError) => setFieldError(e.message),
+  });
+
+  function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setFieldError(null);
+
+    const lo = Number(min);
+    const hi = Number(max);
+    if (!Number.isInteger(lo) || lo < 1 || !Number.isInteger(hi) || hi < 1) {
+      setFieldError("Use whole rupees, 1 or more.");
+      return;
+    }
+    if (lo > hi) {
+      setFieldError("The smallest recharge cannot be more than the largest.");
+      return;
+    }
+    save.mutate();
+  }
+
+  const changed =
+    Number(min) * 100 !== settings.min_recharge_paise ||
+    Number(max) * 100 !== settings.max_recharge_paise;
+
+  const minCoins = Number(min) >= 1 ? Number(min) * settings.coins_per_rupee : null;
+
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle>
+          <span className="flex items-center gap-2">
+            <Wallet className="size-4 text-brand-500" />
+            Recharge limits
+          </span>
+        </CardTitle>
+        <CardDescription>
+          What a user may add to their wallet in one go. They are told the
+          minimum before they type an amount.
+        </CardDescription>
+      </CardHeader>
+
+      <CardBody>
+        <form onSubmit={submit} className="space-y-4">
+          <div className="flex flex-wrap gap-4">
+            <Field label="Smallest recharge (₹)" required className="w-44">
+              <Input
+                type="number"
+                min={1}
+                step={1}
+                value={min}
+                onChange={(e) => setMin(e.target.value)}
+              />
+            </Field>
+            <Field label="Largest recharge (₹)" required className="w-44">
+              <Input
+                type="number"
+                min={1}
+                step={1}
+                value={max}
+                onChange={(e) => setMax(e.target.value)}
+              />
+            </Field>
+          </div>
+
+          {minCoins !== null && (
+            <p className="text-sm text-muted-foreground">
+              At {settings.coins_per_rupee} {coinWord(settings.coins_per_rupee)} per ₹1,
+              the smallest recharge buys{" "}
+              <strong className="text-brand-600 dark:text-brand-300">
+                {formatCoins(minCoins)} {coinWord(minCoins)}
+              </strong>
+              .
+            </p>
+          )}
+
+          {fieldError && <Alert tone="error">{fieldError}</Alert>}
+
+          <Button type="submit" disabled={save.isPending || !changed}>
+            {save.isPending && <Loader2 className="size-4 animate-spin" />}
+            {changed ? "Save limits" : "Saved"}
+          </Button>
+        </form>
+      </CardBody>
+    </Card>
   );
 }

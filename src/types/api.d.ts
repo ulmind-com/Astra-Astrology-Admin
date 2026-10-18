@@ -680,6 +680,23 @@ export interface paths {
         patch: operations["update_settings_api_v1_admin_settings_patch"];
         trace?: never;
     };
+    "/api/v1/admin/settings/recharge-limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set the smallest and largest recharge */
+        patch: operations["update_recharge_limits_api_v1_admin_settings_recharge_limits_patch"];
+        trace?: never;
+    };
     "/api/v1/admin/settings/coin-rate-history": {
         parameters: {
             query?: never;
@@ -2678,6 +2695,10 @@ export interface components {
         PlatformSettingsOut: {
             /** Coins Per Rupee */
             coins_per_rupee: number;
+            /** Min Recharge Paise */
+            min_recharge_paise: number;
+            /** Max Recharge Paise */
+            max_recharge_paise: number;
             /**
              * Updated At
              * Format: date-time
@@ -2789,6 +2810,16 @@ export interface components {
              * @default 0
              */
             count: number;
+        };
+        /**
+         * RechargeLimitsUpdate
+         * @description Either may be sent on its own; the other keeps its current value.
+         */
+        RechargeLimitsUpdate: {
+            /** Min Recharge Paise */
+            min_recharge_paise?: number | null;
+            /** Max Recharge Paise */
+            max_recharge_paise?: number | null;
         };
         /** RechargeOptions */
         RechargeOptions: {
@@ -4567,6 +4598,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CoinRateUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_PlatformSettingsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_recharge_limits_api_v1_admin_settings_recharge_limits_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RechargeLimitsUpdate"];
             };
         };
         responses: {
