@@ -45,7 +45,12 @@ export function ChatRoom({
 
   React.useEffect(() => {
     if (!isChatConfigured()) {
-      setError("Chat is not configured in this build.");
+      // NEXT_PUBLIC_* values are baked in when the server starts, so a dev
+      // server that was running before they were added will never see them.
+      setError(
+        "Chat is not configured in this build. If the Firebase keys were just " +
+          "added, restart the dev server so it picks them up.",
+      );
       return;
     }
 
@@ -65,16 +70,31 @@ export function ChatRoom({
               setReady(true);
             }
           },
-          () => {
-            if (!cancelled) {
-              // Almost always the rules refusing a closed conversation, which
-              // is the system working rather than breaking.
-              setError("This conversation is no longer open.");
-            }
+          (err) => {
+            if (cancelled) return;
+            // A refusal from the rules means the conversation is closed — the
+            // system working. Anything else is usually a blocked request: ad
+            // blockers and strict privacy modes routinely stop requests to
+            // firestore.googleapis.com, and the page then looks broken for a
+            // reason that has nothing to do with the app.
+            const code = (err as { code?: string }).code ?? "";
+            setError(
+              code === "permission-denied"
+                ? "This conversation is no longer open."
+                : "Could not reach the chat service. An ad blocker or privacy " +
+                    "extension may be blocking it — try again with it switched off.",
+            );
           },
         );
-      } catch {
-        if (!cancelled) setError("Could not connect to the conversation.");
+      } catch (err) {
+        if (cancelled) return;
+        const message = err instanceof Error ? err.message : "";
+        setError(
+          message.includes("blocked") || message.includes("network")
+            ? "Could not reach the chat service. An ad blocker or privacy " +
+                "extension may be blocking it — try again with it switched off."
+            : "Could not connect to the conversation.",
+        );
       }
     })();
 
