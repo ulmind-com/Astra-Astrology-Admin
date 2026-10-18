@@ -31,8 +31,8 @@ import {
 } from "@/components/ui";
 import { adminApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
-import { formatDateTime } from "@/lib/utils";
-import type { AstrologerAdminUpdate, Skill } from "@/types";
+import { cn, formatDateTime } from "@/lib/utils";
+import { MODE_LABELS, type AstrologerAdminUpdate, type ConsultationMode, type Skill } from "@/types";
 import { useRequireAuth } from "@/providers/auth-provider";
 
 export default function EditAstrologerPage() {
@@ -69,6 +69,7 @@ export default function EditAstrologerPage() {
     display_order: "0",
   });
   const [skills, setSkills] = React.useState<Skill[]>([]);
+  const [modes, setModes] = React.useState<ConsultationMode[]>([]);
   const [languages, setLanguages] = React.useState<string[]>([]);
   const [specialisations, setSpecialisations] = React.useState<string[]>([]);
   const [qualifications, setQualifications] = React.useState<string[]>([]);
@@ -99,6 +100,7 @@ export default function EditAstrologerPage() {
       display_order: String(astrologer.display_order),
     });
     setSkills(astrologer.skills);
+    setModes(astrologer.modes_enabled);
     setLanguages(astrologer.languages);
     setSpecialisations(astrologer.specialisations);
     setQualifications(astrologer.qualifications);
@@ -140,6 +142,7 @@ export default function EditAstrologerPage() {
       tagline: form.tagline.trim() || null,
       bio: form.bio.trim() || null,
       skills,
+      modes_enabled: modes,
       languages,
       specialisations,
       qualifications,
@@ -285,6 +288,39 @@ export default function EditAstrologerPage() {
 
             <Field label="Specialities">
               <SkillPicker value={skills} onChange={setSkills} />
+            </Field>
+
+            <Field
+              label="Consultation types"
+              hint="What this astrologer can be booked for. Unticked means people cannot start that kind of session at all."
+            >
+              <div className="flex flex-wrap gap-2">
+                {(["chat", "call", "video"] as ConsultationMode[]).map((mode) => {
+                  const on = modes.includes(mode);
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() =>
+                        setModes((current) =>
+                          current.includes(mode)
+                            ? current.filter((m) => m !== mode)
+                            : [...current, mode],
+                        )
+                      }
+                      className={cn(
+                        "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
+                        on
+                          ? "border-brand-500 bg-brand-500 text-white"
+                          : "border-border bg-surface hover:border-border-strong",
+                      )}
+                    >
+                      {MODE_LABELS[mode]}
+                    </button>
+                  );
+                })}
+              </div>
             </Field>
 
             <Field label="Languages">

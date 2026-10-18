@@ -91,7 +91,12 @@ export default function AstrologerPanelPage() {
   });
 
   const availability = useMutation({
-    mutationFn: (next: { is_online?: boolean; is_available_for_chat?: boolean; is_available_for_call?: boolean }) =>
+    mutationFn: (next: {
+      is_online?: boolean;
+      is_available_for_chat?: boolean;
+      is_available_for_call?: boolean;
+      is_available_for_video?: boolean;
+    }) =>
       astrologerApi.setAvailability(next),
     onSuccess: (updated) => queryClient.setQueryData(ME_KEY, updated),
     onError: (e: ApiError) => toast.error(e.message),
@@ -213,6 +218,16 @@ export default function AstrologerPanelPage() {
             onChange={(next) => availability.mutate({ is_available_for_call: next })}
             label="Available for calls"
           />
+          {/* Only shown when an admin has enabled video for this account —
+              a toggle for something you cannot be booked for is noise. */}
+          {profile.modes_enabled.includes("video") && (
+            <Switch
+              checked={profile.availability.is_available_for_video}
+              disabled={availability.isPending}
+              onChange={(next) => availability.mutate({ is_available_for_video: next })}
+              label="Available for video calls"
+            />
+          )}
         </CardBody>
       </Card>
 

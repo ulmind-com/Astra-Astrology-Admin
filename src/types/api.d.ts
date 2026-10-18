@@ -1759,6 +1759,11 @@ export interface components {
              */
             is_available_for_call: boolean;
             /**
+             * Is Available For Video
+             * @default true
+             */
+            is_available_for_video: boolean;
+            /**
              * Is Busy
              * @default false
              */
@@ -1774,6 +1779,8 @@ export interface components {
             is_available_for_chat?: boolean | null;
             /** Is Available For Call */
             is_available_for_call?: boolean | null;
+            /** Is Available For Video */
+            is_available_for_video?: boolean | null;
             /** Is Busy */
             is_busy?: boolean | null;
         };
