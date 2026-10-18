@@ -65,12 +65,12 @@ export default function AstrologersListPage() {
       />
 
       <div className="relative mb-5 max-w-sm">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name"
-          className="pl-9"
+          placeholder="Search by name…"
+          className="pl-10 h-10"
           aria-label="Search astrologers"
         />
       </div>
@@ -102,32 +102,32 @@ export default function AstrologersListPage() {
       ) : (
         <Card className={isFetching ? "opacity-70" : undefined}>
           <CardBody className="p-0">
-            {/* A table on wide screens; the same rows stack on a phone. */}
+            {/* Wide table for desktop */}
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
-                <thead className="border-b border-border text-left text-xs text-muted-foreground">
-                  <tr>
-                    <th className="px-5 py-3 font-medium">Astrologer</th>
-                    <th className="px-3 py-3 font-medium">Specialities</th>
-                    <th className="px-3 py-3 font-medium">Chat coins/min</th>
-                    <th className="px-3 py-3 font-medium">Status</th>
-                    <th className="px-5 py-3 font-medium">Added</th>
+                <thead>
+                  <tr className="border-b border-border/60 bg-surface-muted/30">
+                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Astrologer</th>
+                    <th className="px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Specialities</th>
+                    <th className="px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Chat coins/min</th>
+                    <th className="px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Status</th>
+                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Added</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border/50">
                   {data.map((astrologer) => (
-                    <tr key={astrologer.id} className="transition-colors hover:bg-surface-muted">
-                      <td className="px-5 py-3">
+                    <tr key={astrologer.id} className="transition-all duration-150 hover:bg-surface-muted/60 group">
+                      <td className="px-5 py-3.5">
                         <Link
                           href={`/astrologers/${astrologer.id}`}
                           className="flex items-center gap-3"
                         >
-                          <div className="relative">
+                          <div className="relative shrink-0">
                             <Avatar
                               src={astrologer.profile_image_url}
                               name={astrologer.display_name}
                             />
-                            <span className="absolute -right-0.5 -bottom-0.5 rounded-full bg-surface p-0.5">
+                            <span className="absolute -right-0.5 -bottom-0.5 rounded-full bg-surface-solid p-[3px]">
                               <StatusDot
                                 online={astrologer.availability.is_online}
                                 busy={astrologer.availability.is_busy}
@@ -135,14 +135,14 @@ export default function AstrologersListPage() {
                             </span>
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate font-medium">{astrologer.display_name}</p>
+                            <p className="truncate font-semibold text-foreground group-hover:text-brand-300 transition-colors">{astrologer.display_name}</p>
                             <p className="truncate text-xs text-muted-foreground">
                               {astrologer.email}
                             </p>
                           </div>
                         </Link>
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="px-3 py-3.5">
                         <div className="flex max-w-xs flex-wrap gap-1">
                           {astrologer.skills.slice(0, 2).map((skill) => (
                             <Badge key={skill} tone="brand">
@@ -154,13 +154,13 @@ export default function AstrologersListPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      <td className="px-3 py-3.5 whitespace-nowrap font-medium text-foreground">
                         {astrologer.rates.chat_coins_per_minute ?? defaults?.default_chat_coins_per_minute ?? "—"}
                         {astrologer.rates.chat_coins_per_minute == null && (
-                          <span className="ml-1 text-xs text-muted-foreground">default</span>
+                          <span className="ml-1 text-xs text-muted-foreground">(default)</span>
                         )}
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="px-3 py-3.5">
                         <div className="flex flex-wrap gap-1">
                           <Badge tone={astrologer.status === "active" ? "green" : "red"}>
                             {astrologer.status}
@@ -168,11 +168,11 @@ export default function AstrologersListPage() {
                           {!astrologer.is_listed && <Badge>Unlisted</Badge>}
                           {astrologer.is_featured && <Badge tone="gold">Featured</Badge>}
                           {astrologer.must_change_password && (
-                            <Badge tone="blue">Initial password</Badge>
+                            <Badge tone="blue">Initial pwd</Badge>
                           )}
                         </div>
                       </td>
-                      <td className="px-5 py-3 whitespace-nowrap text-muted-foreground">
+                      <td className="px-5 py-3.5 whitespace-nowrap text-sm text-muted-foreground">
                         {formatDate(astrologer.created_at)}
                       </td>
                     </tr>

@@ -40,39 +40,38 @@
   --color-night-900: #150a2b;
   --color-night-950: #0b0518;
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist-sans), "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display), "Cinzel", ui-serif, Georgia, serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  --radius-card: 1rem;
+  --radius-card: 1.125rem;
 
   /* Shadows read as glow here: on a dark page a drop shadow is invisible,
      so depth comes from a violet halo instead. */
-  --shadow-soft: 0 1px 2px rgb(5 2 15 / 0.5), 0 10px 30px -16px rgb(88 28 160 / 0.55);
-  --shadow-lift: 0 4px 10px rgb(5 2 15 / 0.55), 0 24px 60px -24px rgb(124 58 237 / 0.5);
-  --shadow-glow: 0 0 0 1px rgb(168 85 247 / 0.35), 0 16px 48px -16px rgb(147 51 234 / 0.55);
+  --shadow-soft: 0 1px 3px rgb(5 2 15 / 0.6), 0 8px 24px -12px rgb(88 28 160 / 0.5);
+  --shadow-lift: 0 4px 16px rgb(5 2 15 / 0.65), 0 20px 56px -20px rgb(124 58 237 / 0.55);
+  --shadow-glow: 0 0 0 1px rgb(168 85 247 / 0.4), 0 12px 40px -12px rgb(147 51 234 / 0.65);
+  --shadow-gold: 0 0 0 1px rgb(251 191 36 / 0.3), 0 8px 32px -8px rgb(245 158 11 / 0.5);
 }
 
 /* --------------------------------------------------------------------------
    Semantic surfaces. Components reference these, never raw palette steps.
-   Panels are translucent so the nebula behind them shows through — that is
-   what makes the whole product read as one continuous sky.
    -------------------------------------------------------------------------- */
 :root,
 .dark {
   color-scheme: dark;
 
-  --background: #150a2b;
-  --surface: rgb(45 20 82 / 0.55);
-  --surface-muted: rgb(62 30 108 / 0.5);
-  --surface-raised: rgb(58 27 102 / 0.72);
-  --surface-solid: #241043;
+  --background: #120826;
+  --surface: rgb(38 16 72 / 0.6);
+  --surface-muted: rgb(55 24 98 / 0.52);
+  --surface-raised: rgb(54 22 96 / 0.78);
+  --surface-solid: #1e0d3a;
 
-  --border: rgb(168 85 247 / 0.2);
-  --border-strong: rgb(192 132 252 / 0.42);
+  --border: rgb(168 85 247 / 0.22);
+  --border-strong: rgb(192 132 252 / 0.48);
 
-  --foreground: #f4ecff;
-  --muted-foreground: #bda6e0;
+  --foreground: #f0e8ff;
+  --muted-foreground: #b89ed6;
   --ring: #c084fc;
 
   /* Status, tuned for a dark page rather than borrowed from a light one. */
@@ -111,6 +110,7 @@
 @layer base {
   * {
     border-color: var(--border);
+    box-sizing: border-box;
   }
 
   html {
@@ -118,39 +118,41 @@
     background-color: var(--color-night-900);
   }
 
-  /* The sky itself: stars over nebulae over a deep gradient, all painted on
-     the body and all attachment:fixed, so they hold still while the page
-     scrolls over them. These are background *images* on the element rather
-     than a pseudo-element behind it — a negative z-index would put them
-     behind the body's own background colour, where nothing would show.
-
-     Drawn in CSS, so the backdrop costs no requests and no extra bytes. */
   body {
     color: var(--foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
 
     background-color: var(--background);
     background-attachment: fixed;
     background-repeat: no-repeat;
     background-image:
-      /* stars */
-      radial-gradient(1.6px 1.6px at 12% 18%, rgb(255 255 255 / 0.9), transparent),
-      radial-gradient(1.2px 1.2px at 27% 62%, rgb(233 213 255 / 0.75), transparent),
-      radial-gradient(1.6px 1.6px at 41% 9%, rgb(255 255 255 / 0.7), transparent),
-      radial-gradient(1px 1px at 55% 44%, rgb(255 255 255 / 0.8), transparent),
-      radial-gradient(1.4px 1.4px at 68% 77%, rgb(216 180 254 / 0.8), transparent),
-      radial-gradient(1px 1px at 79% 24%, rgb(255 255 255 / 0.65), transparent),
-      radial-gradient(1.6px 1.6px at 88% 58%, rgb(255 255 255 / 0.75), transparent),
-      radial-gradient(1px 1px at 33% 88%, rgb(255 255 255 / 0.6), transparent),
-      radial-gradient(1.2px 1.2px at 95% 85%, rgb(233 213 255 / 0.7), transparent),
-      radial-gradient(1px 1px at 6% 46%, rgb(255 255 255 / 0.55), transparent),
-      /* nebulae */
-      radial-gradient(1200px 700px at 8% -8%, rgb(147 51 234 / 0.45), transparent 62%),
-      radial-gradient(900px 560px at 92% 4%, rgb(168 85 247 / 0.32), transparent 60%),
-      radial-gradient(900px 620px at 50% 108%, rgb(109 40 217 / 0.4), transparent 62%),
+      /* stars — more spread out for a richer sky */
+      radial-gradient(1.8px 1.8px at 7% 14%, rgb(255 255 255 / 0.95), transparent),
+      radial-gradient(1.2px 1.2px at 18% 72%, rgb(233 213 255 / 0.8), transparent),
+      radial-gradient(1.6px 1.6px at 29% 38%, rgb(255 255 255 / 0.7), transparent),
+      radial-gradient(1px 1px at 42% 8%, rgb(255 255 255 / 0.85), transparent),
+      radial-gradient(1.4px 1.4px at 53% 55%, rgb(216 180 254 / 0.85), transparent),
+      radial-gradient(1px 1px at 61% 82%, rgb(255 255 255 / 0.65), transparent),
+      radial-gradient(1.6px 1.6px at 74% 22%, rgb(255 255 255 / 0.75), transparent),
+      radial-gradient(1.2px 1.2px at 82% 66%, rgb(233 213 255 / 0.7), transparent),
+      radial-gradient(1px 1px at 90% 40%, rgb(255 255 255 / 0.6), transparent),
+      radial-gradient(1.4px 1.4px at 96% 88%, rgb(216 180 254 / 0.75), transparent),
+      radial-gradient(1px 1px at 35% 92%, rgb(255 255 255 / 0.5), transparent),
+      radial-gradient(1.2px 1.2px at 47% 30%, rgb(255 255 255 / 0.6), transparent),
+      /* nebulae — deeper, more dramatic */
+      radial-gradient(1400px 800px at 5% -10%, rgb(139 44 234 / 0.5), transparent 60%),
+      radial-gradient(1000px 600px at 95% 2%, rgb(168 85 247 / 0.35), transparent 58%),
+      radial-gradient(800px 500px at 50% 105%, rgb(99 30 207 / 0.45), transparent 62%),
+      radial-gradient(600px 400px at 25% 50%, rgb(109 40 217 / 0.12), transparent 60%),
       /* the sky it all sits on */
-      linear-gradient(180deg, #1d0d3a 0%, #150a2b 45%, #0f0720 100%);
+      linear-gradient(175deg, #1a0935 0%, #120826 40%, #0c0520 100%);
+  }
+
+  h1, h2, h3 {
+    letter-spacing: -0.02em;
   }
 
   h1 {
@@ -161,28 +163,29 @@
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
+    border-radius: 4px;
   }
 
   ::selection {
-    background-color: var(--color-brand-500);
+    background-color: var(--color-brand-600);
     color: #ffffff;
   }
 
-  /* A native dropdown paints its list with the OS palette, so the options
-     need the dark surface spelled out or they open as white-on-white. */
+  /* A native dropdown paints its list with the OS palette */
   option {
     background-color: var(--surface-solid);
     color: var(--foreground);
   }
 
-  /* Scrollbars, so a pale gutter does not cut through the sky. */
+  /* Styled scrollbars */
   * {
     scrollbar-color: var(--color-brand-700) transparent;
+    scrollbar-width: thin;
   }
 
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -190,133 +193,220 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: rgb(126 34 206 / 0.6);
-    border: 2px solid transparent;
+    background-color: rgb(126 34 206 / 0.55);
     border-radius: 999px;
-    background-clip: padding-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: rgb(168 85 247 / 0.8);
+    background-color: rgb(168 85 247 / 0.85);
   }
 }
 
 @layer utilities {
-  /* A deeper patch of sky, for heroes and panels that should sit forward of
-     the page background. */
+  /* A deeper patch of sky, for heroes and panels */
   .bg-cosmos {
     background-color: var(--color-night-900);
     background-image:
-      radial-gradient(900px 500px at 15% -10%, rgb(147 51 234 / 0.5), transparent 60%),
-      radial-gradient(700px 420px at 85% 0%, rgb(192 132 252 / 0.3), transparent 60%),
-      radial-gradient(600px 400px at 50% 110%, rgb(76 29 122 / 0.7), transparent 60%);
+      radial-gradient(1000px 600px at 12% -12%, rgb(139 44 234 / 0.55), transparent 58%),
+      radial-gradient(800px 480px at 88% -4%, rgb(192 132 252 / 0.32), transparent 58%),
+      radial-gradient(700px 450px at 50% 112%, rgb(70 25 115 / 0.75), transparent 60%);
   }
 
-  /* Faint starfield for a single section, independent of the page backdrop. */
+  /* Faint starfield for a single section */
   .bg-stars::before {
     content: "";
     position: absolute;
     inset: 0;
     pointer-events: none;
     background-image:
-      radial-gradient(1.5px 1.5px at 20% 30%, rgb(255 255 255 / 0.9), transparent),
-      radial-gradient(1.5px 1.5px at 70% 20%, rgb(255 255 255 / 0.7), transparent),
-      radial-gradient(1px 1px at 40% 70%, rgb(255 255 255 / 0.8), transparent),
-      radial-gradient(1px 1px at 85% 60%, rgb(255 255 255 / 0.6), transparent),
-      radial-gradient(1.5px 1.5px at 10% 80%, rgb(255 255 255 / 0.5), transparent),
-      radial-gradient(1px 1px at 60% 90%, rgb(255 255 255 / 0.7), transparent),
-      radial-gradient(1px 1px at 95% 35%, rgb(255 255 255 / 0.5), transparent);
+      radial-gradient(1.5px 1.5px at 15% 25%, rgb(255 255 255 / 0.9), transparent),
+      radial-gradient(1.5px 1.5px at 72% 18%, rgb(255 255 255 / 0.75), transparent),
+      radial-gradient(1px 1px at 38% 65%, rgb(255 255 255 / 0.8), transparent),
+      radial-gradient(1px 1px at 88% 58%, rgb(255 255 255 / 0.65), transparent),
+      radial-gradient(1.5px 1.5px at 8% 82%, rgb(255 255 255 / 0.55), transparent),
+      radial-gradient(1px 1px at 55% 92%, rgb(255 255 255 / 0.7), transparent),
+      radial-gradient(1px 1px at 93% 32%, rgb(255 255 255 / 0.5), transparent),
+      radial-gradient(1.2px 1.2px at 48% 42%, rgb(233 213 255 / 0.6), transparent),
+      radial-gradient(1px 1px at 25% 58%, rgb(255 255 255 / 0.45), transparent);
   }
 
   .text-gradient-brand {
     background-image: linear-gradient(
-      135deg,
-      var(--color-brand-300),
-      var(--color-brand-200) 40%,
-      var(--color-gold-300)
+      130deg,
+      var(--color-brand-200),
+      var(--color-brand-300) 35%,
+      var(--color-gold-300) 65%,
+      var(--color-gold-200)
     );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
-  /* The standard panel: translucent violet over the sky, with a lit edge. */
+  .text-gradient-gold {
+    background-image: linear-gradient(
+      135deg,
+      var(--color-gold-200),
+      var(--color-gold-300) 50%,
+      var(--color-gold-200)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* The standard panel: translucent violet over the sky */
   .card-surface {
     background-color: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(14px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
   }
 
-  /* A panel that should catch the eye — the lit rim of the reference art. */
+  .card-surface:hover {
+    border-color: rgb(168 85 247 / 0.32);
+  }
+
+  /* A panel that should catch the eye */
   .card-glow {
-    border-color: rgb(192 132 252 / 0.45);
-    box-shadow: var(--shadow-glow);
+    border-color: rgb(192 132 252 / 0.5) !important;
+    box-shadow: var(--shadow-glow) !important;
   }
 
-  /* The gradient pill from the reference: primary actions and nothing else,
-     so the eye always knows where the next step is. */
+  /* Stat card with a subtle left accent */
+  .card-stat {
+    background: linear-gradient(135deg, rgb(45 16 82 / 0.7), rgb(30 10 58 / 0.8));
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(16px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-stat::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 3px;
+    background-image: linear-gradient(180deg, transparent, rgb(168 85 247 / 0.8), transparent);
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* The gradient pill */
   .btn-cosmic {
-    background-image: linear-gradient(135deg, #a855f7 0%, #9333ea 45%, #7c3aed 100%);
-    box-shadow: 0 8px 24px -10px rgb(168 85 247 / 0.9), inset 0 1px 0 rgb(255 255 255 / 0.22);
+    background-image: linear-gradient(135deg, #b06ef8 0%, #9333ea 45%, #7c3aed 100%);
+    box-shadow: 0 6px 20px -8px rgb(168 85 247 / 0.85), inset 0 1px 0 rgb(255 255 255 / 0.2);
+    transition: all 0.2s ease;
   }
 
   .btn-cosmic:hover:not(:disabled) {
-    background-image: linear-gradient(135deg, #b96ffb 0%, #a855f7 45%, #8b5cf6 100%);
-    box-shadow: 0 10px 30px -10px rgb(192 132 252 / 0.95), inset 0 1px 0 rgb(255 255 255 / 0.28);
+    background-image: linear-gradient(135deg, #c07dfb 0%, #a855f7 45%, #8b5cf6 100%);
+    box-shadow: 0 8px 28px -8px rgb(192 132 252 / 1), inset 0 1px 0 rgb(255 255 255 / 0.28);
+    transform: translateY(-1px);
   }
 
-  /* The ringed circular icon badges the reference uses for its feature row. */
+  .btn-cosmic:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  /* The ringed circular icon badge */
   .medallion {
-    background-image: radial-gradient(circle at 32% 28%, rgb(192 132 252 / 0.5), rgb(46 16 101 / 0.95));
-    border: 1px solid rgb(192 132 252 / 0.5);
-    box-shadow: 0 0 0 4px rgb(147 51 234 / 0.12), 0 12px 30px -14px rgb(168 85 247 / 0.8);
+    background-image: radial-gradient(circle at 30% 26%, rgb(200 140 255 / 0.45), rgb(42 12 92 / 0.96));
+    border: 1px solid rgb(192 132 252 / 0.55);
+    box-shadow: 0 0 0 4px rgb(147 51 234 / 0.14), 0 8px 24px -12px rgb(168 85 247 / 0.85);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
 
-  /* The thin lit rule that sits under the reference's navigation. */
+  .medallion-gold {
+    background-image: radial-gradient(circle at 30% 26%, rgb(253 211 77 / 0.4), rgb(80 32 0 / 0.96));
+    border: 1px solid rgb(251 191 36 / 0.5);
+    box-shadow: 0 0 0 4px rgb(245 158 11 / 0.12), 0 8px 24px -12px rgb(251 191 36 / 0.6);
+  }
+
+  /* The thin lit rule under navigation */
   .hairline {
     background-image: linear-gradient(
       90deg,
       transparent,
-      rgb(192 132 252 / 0.55) 20%,
-      rgb(233 213 255 / 0.75) 50%,
-      rgb(192 132 252 / 0.55) 80%,
+      rgb(192 132 252 / 0.45) 15%,
+      rgb(233 213 255 / 0.8) 50%,
+      rgb(192 132 252 / 0.45) 85%,
       transparent
     );
   }
 
-  /* Decorative planets. Purely ornamental, so they are aria-hidden wherever
-     they are used and never carry meaning. */
+  /* Decorative planets */
   .orb {
     border-radius: 9999px;
-    background-image: radial-gradient(circle at 32% 28%, #e9d5ff, #a855f7 38%, #6d28d9 68%, #3b0f70 100%);
-    box-shadow: inset -14px -18px 36px rgb(10 4 24 / 0.7), 0 0 70px -8px rgb(168 85 247 / 0.55);
+    background-image: radial-gradient(circle at 30% 26%, #ede0ff, #a855f7 36%, #6d28d9 66%, #380f6e 100%);
+    box-shadow: inset -16px -20px 40px rgb(8 3 20 / 0.75), 0 0 80px -10px rgb(168 85 247 / 0.6);
   }
 
   .orb-gold {
-    background-image: radial-gradient(circle at 32% 28%, #fde68a, #f59e0b 42%, #c2410c 72%, #6b2109 100%);
-    box-shadow: inset -10px -14px 28px rgb(20 6 2 / 0.7), 0 0 50px -12px rgb(251 191 36 / 0.55);
+    background-image: radial-gradient(circle at 30% 26%, #fef3c7, #f59e0b 40%, #b45309 70%, #5a1b02 100%);
+    box-shadow: inset -10px -14px 28px rgb(15 4 1 / 0.75), 0 0 60px -14px rgb(251 191 36 / 0.6);
   }
 
   .glow-text {
-    text-shadow: 0 0 24px rgb(192 132 252 / 0.55);
+    text-shadow: 0 0 32px rgb(192 132 252 / 0.6), 0 0 64px rgb(147 51 234 / 0.3);
   }
 
   .font-display {
     font-family: var(--font-display);
   }
 
-  /* Skeletons and "loading" states. */
+  /* Icon container with colored background */
+  .icon-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .icon-box-brand {
+    background: linear-gradient(135deg, rgb(168 85 247 / 0.25), rgb(109 40 217 / 0.35));
+    border: 1px solid rgb(168 85 247 / 0.3);
+    color: var(--color-brand-300);
+    box-shadow: 0 0 0 3px rgb(147 51 234 / 0.1);
+  }
+
+  .icon-box-gold {
+    background: linear-gradient(135deg, rgb(245 158 11 / 0.2), rgb(180 83 9 / 0.3));
+    border: 1px solid rgb(251 191 36 / 0.3);
+    color: var(--color-gold-300);
+    box-shadow: 0 0 0 3px rgb(245 158 11 / 0.1);
+  }
+
+  .icon-box-green {
+    background: linear-gradient(135deg, rgb(16 185 129 / 0.18), rgb(5 150 105 / 0.25));
+    border: 1px solid rgb(52 211 153 / 0.28);
+    color: var(--color-success);
+    box-shadow: 0 0 0 3px rgb(16 185 129 / 0.1);
+  }
+
+  .icon-box-blue {
+    background: linear-gradient(135deg, rgb(14 165 233 / 0.18), rgb(2 132 199 / 0.25));
+    border: 1px solid rgb(125 211 252 / 0.28);
+    color: var(--color-info);
+    box-shadow: 0 0 0 3px rgb(14 165 233 / 0.1);
+  }
+
+  /* Skeletons and loading states */
   .shimmer {
     background: linear-gradient(
       90deg,
-      rgb(62 30 108 / 0.5) 25%,
-      rgb(126 34 206 / 0.45) 37%,
-      rgb(62 30 108 / 0.5) 63%
+      rgb(55 22 98 / 0.5) 25%,
+      rgb(108 32 192 / 0.4) 37%,
+      rgb(55 22 98 / 0.5) 63%
     );
     background-size: 400% 100%;
-    animation: shimmer 1.4s ease-in-out infinite;
+    animation: shimmer 1.5s ease-in-out infinite;
   }
 
   @keyframes shimmer {
@@ -324,14 +414,93 @@
     100% { background-position: 0 50%; }
   }
 
-  /* Slow drift for the decorative orbs. */
+  /* Slow drift for the decorative orbs */
   @keyframes float-slow {
-    0%, 100% { transform: translateY(0) }
-    50% { transform: translateY(-18px) }
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    33% { transform: translateY(-14px) rotate(1deg); }
+    66% { transform: translateY(-8px) rotate(-0.5deg); }
+  }
+
+  @keyframes float-gentle {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
   }
 
   .animate-float-slow {
-    animation: float-slow 11s ease-in-out infinite;
+    animation: float-slow 12s ease-in-out infinite;
+  }
+
+  .animate-float-gentle {
+    animation: float-gentle 8s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgb(168 85 247 / 0.4); }
+    50% { box-shadow: 0 0 0 8px rgb(168 85 247 / 0); }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2.5s ease-in-out infinite;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+
+  /* Decorative ring */
+  .ring-cosmic {
+    box-shadow: 0 0 0 1px rgb(168 85 247 / 0.25), 0 0 0 4px rgb(147 51 234 / 0.1);
+  }
+
+  /* Section divider */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgb(168 85 247 / 0.3) 30%, rgb(192 132 252 / 0.5) 50%, rgb(168 85 247 / 0.3) 70%, transparent);
+  }
+
+  /* Number badge for stats */
+  .stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    background-image: linear-gradient(135deg, #f0e8ff, #d8b4fe);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .stat-number-gold {
+    background-image: linear-gradient(135deg, #fef3c7, #fbbf24);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .stat-number-green {
+    background-image: linear-gradient(135deg, #a7f3d0, #34d399);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .stat-number-blue {
+    background-image: linear-gradient(135deg, #bae6fd, #7dd3fc);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Sidebar nav item active state */
+  .nav-active {
+    background: linear-gradient(135deg, rgb(168 85 247 / 0.25), rgb(109 40 217 / 0.2));
+    border: 1px solid rgb(168 85 247 / 0.35);
+    color: var(--color-brand-200);
+    box-shadow: 0 0 0 3px rgb(147 51 234 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.08);
   }
 }
 

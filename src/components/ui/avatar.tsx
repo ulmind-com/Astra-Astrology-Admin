@@ -26,7 +26,9 @@ export function Avatar({
     <span
       className={cn(
         "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full",
-        "bg-brand-500/20 font-semibold text-brand-200 ring-1 ring-brand-400/30",
+        "bg-gradient-to-br from-brand-700/60 to-brand-900/80",
+        "font-semibold text-brand-200 ring-1 ring-brand-400/35",
+        "shadow-[0_0_12px_-4px_rgb(168_85_247/0.4)]",
         className,
       )}
       style={{ width: px, height: px, fontSize: px * 0.36 }}
@@ -38,7 +40,6 @@ export function Avatar({
           width={px}
           height={px}
           className="size-full object-cover"
-          // Cloudinary hosts these; a broken URL falls back to initials.
           onError={() => setFailed(true)}
           unoptimized
         />

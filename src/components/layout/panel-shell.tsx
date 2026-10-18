@@ -56,26 +56,34 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
 
   const nav = user?.role === "astrologer" ? ASTROLOGER_NAV : ADMIN_NAV;
 
-  // "/me" is a prefix of "/me/password", so match the most specific item only.
   const activeHref = nav
     .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
     .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
   const sidebar = (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center gap-2 border-b border-border px-5">
-        <span className="medallion flex size-9 items-center justify-center rounded-xl text-brand-100">
+      {/* Logo */}
+      <div className="relative flex h-16 items-center gap-3 border-b border-border/60 px-5">
+        <span className="medallion flex size-9 shrink-0 items-center justify-center rounded-xl text-brand-100 shadow-[0_0_16px_-4px_rgb(168_85_247/0.7)]">
           <Sparkles className="size-4" />
         </span>
         <div className="min-w-0">
-          <p className="truncate font-display text-sm font-semibold leading-tight tracking-wide">Astra Astrology</p>
-          <p className="text-[11px] leading-tight text-muted-foreground">
+          <p className="truncate font-display text-sm font-bold leading-tight tracking-wide text-foreground">
+            Astra Astrology
+          </p>
+          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/80">
             {user ? ROLE_LABELS[user.role] : "Panel"}
           </p>
         </div>
+        {/* Subtle hairline accent */}
+        <div className="hairline absolute inset-x-0 bottom-0 h-px" aria-hidden />
       </div>
 
-      <nav className="flex-1 space-y-1 p-3">
+      {/* Nav items */}
+      <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
+        <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+          Navigation
+        </p>
         {nav.map((item) => {
           const active = item.href === activeHref;
           return (
@@ -84,34 +92,47 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                 active
-                  ? "btn-cosmic text-white"
+                  ? "nav-active"
                   : "text-muted-foreground hover:bg-surface-muted hover:text-foreground",
               )}
             >
-              <item.icon className="size-4" />
+              <span
+                className={cn(
+                  "flex size-7 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
+                  active
+                    ? "bg-brand-500/25 text-brand-200"
+                    : "text-muted-foreground group-hover:text-foreground",
+                )}
+              >
+                <item.icon className="size-4" />
+              </span>
               {item.label}
+              {active && (
+                <span className="ml-auto size-1.5 rounded-full bg-brand-400" />
+              )}
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t border-border p-3">
-        <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+      {/* User footer */}
+      <div className="border-t border-border/60 p-3">
+        <div className="mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 bg-surface-muted/40">
           <Avatar src={user?.avatar_url} name={user?.full_name} size="sm" />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{user?.full_name}</p>
-            <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
+            <p className="truncate text-xs font-semibold text-foreground">{user?.full_name}</p>
+            <p className="truncate text-[10px] text-muted-foreground">{user?.email}</p>
           </div>
         </div>
         <Button
           variant="ghost"
           size="sm"
-          className="mt-1 w-full justify-start text-danger hover:bg-danger/15"
+          className="w-full justify-start gap-2 text-danger hover:bg-danger/10 hover:text-danger rounded-xl"
           onClick={() => signOut()}
         >
-          <LogOut className="size-4" />
+          <LogOut className="size-3.5" />
           Sign out
         </Button>
       </div>
@@ -120,48 +141,62 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-dvh">
-      <aside className="hidden w-64 shrink-0 border-r border-border bg-night-950/60 backdrop-blur-xl lg:block">
+      {/* Desktop sidebar */}
+      <aside className="hidden w-64 shrink-0 border-r border-border/60 bg-night-950/70 backdrop-blur-2xl lg:block">
         <div className="sticky top-0 h-dvh">{sidebar}</div>
       </aside>
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer overlay */}
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
-            className="absolute inset-0 bg-night-950/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-night-950/75 backdrop-blur-sm"
             onClick={() => setOpen(false)}
             aria-label="Close menu"
           />
-          <aside className="absolute inset-y-0 left-0 w-64 border-r border-border bg-night-900 shadow-glow">
+          <aside className="absolute inset-y-0 left-0 w-64 border-r border-border/60 bg-night-900 shadow-glow">
             {sidebar}
           </aside>
         </div>
       )}
 
+      {/* Main content area */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border bg-night-950/55 px-4 backdrop-blur-xl">
+        {/* Top bar */}
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border/60 bg-night-950/60 px-4 backdrop-blur-xl">
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="lg:hidden rounded-xl"
             onClick={() => setOpen(true)}
             aria-label="Open menu"
           >
             <Menu className="size-5" />
           </Button>
 
+          {/* Breadcrumb hint */}
+          <div className="hidden items-center gap-2 text-sm text-muted-foreground lg:flex">
+            <Sparkles className="size-3.5 text-brand-400" />
+            <span className="font-medium text-foreground capitalize">
+              {activeHref?.replace("/", "") || "Dashboard"}
+            </span>
+          </div>
+
           <div className="ml-auto flex items-center gap-2">
-            {user && <Badge tone="brand">{ROLE_LABELS[user.role]}</Badge>}
+            {user && (
+              <Badge tone="brand" className="hidden sm:inline-flex">
+                {ROLE_LABELS[user.role]}
+              </Badge>
+            )}
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
 
-        <footer className="mt-auto flex justify-center border-t border-border px-4 py-6">
+        <footer className="mt-auto flex justify-center border-t border-border/60 px-4 py-5">
           <UlmindCredit />
         </footer>
 
-        {/* Rings on every panel page, since a call can arrive at any time. */}
         <IncomingCallWatcher />
       </div>
     </div>
@@ -178,12 +213,14 @@ export function PanelHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+    <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h1 className="font-display text-2xl font-bold tracking-tight">{title}</h1>
-        {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">{title}</h1>
+        {description && (
+          <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{description}</p>
+        )}
       </div>
-      {action}
+      {action && <div className="shrink-0">{action}</div>}
     </header>
   );
 }

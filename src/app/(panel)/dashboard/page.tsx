@@ -8,6 +8,7 @@ import {
   Plus,
   Star,
   Users,
+  ArrowUpRight,
 } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
@@ -31,8 +32,23 @@ import { ApiError } from "@/lib/api/client";
 import { formatDateTime } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
 
+type StatTone = "brand" | "green" | "blue" | "gold";
+
+const ICON_BOX_CLASSES: Record<StatTone, string> = {
+  brand: "icon-box-brand",
+  green: "icon-box-green",
+  blue: "icon-box-blue",
+  gold: "icon-box-gold",
+};
+
+const STAT_NUMBER_CLASSES: Record<StatTone, string> = {
+  brand: "stat-number",
+  green: "stat-number-green",
+  blue: "stat-number-blue",
+  gold: "stat-number-gold",
+};
+
 export default function DashboardPage() {
-  // An astrologer landing here gets sent to their own screen.
   const { ready } = useRequireAuth({ roles: ["admin", "super_admin"], signInPath: "/login" });
 
   const { data: astrologers, isLoading, error } = useQuery({
@@ -57,11 +73,11 @@ export default function DashboardPage() {
   const listed = list.filter((a) => a.is_listed).length;
   const featured = list.filter((a) => a.is_featured).length;
 
-  const stats = [
-    { label: "Astrologers", value: list.length, icon: Users, tone: "brand" as const },
-    { label: "Online now", value: online, icon: Activity, tone: "green" as const },
-    { label: "In directory", value: listed, icon: CircleCheck, tone: "blue" as const },
-    { label: "Featured", value: featured, icon: Star, tone: "gold" as const },
+  const stats: { label: string; value: number; icon: React.ComponentType<{ className?: string }>; tone: StatTone; sub?: string }[] = [
+    { label: "Total astrologers", value: list.length, icon: Users, tone: "brand", sub: "All registered" },
+    { label: "Online now", value: online, icon: Activity, tone: "green", sub: "Available now" },
+    { label: "In directory", value: listed, icon: CircleCheck, tone: "blue", sub: "Publicly listed" },
+    { label: "Featured", value: featured, icon: Star, tone: "gold", sub: "Promoted picks" },
   ];
 
   const recent = [...list]
@@ -72,7 +88,7 @@ export default function DashboardPage() {
     <>
       <PanelHeader
         title="Dashboard"
-        description="How the platform looks right now."
+        description="A real-time view of the platform — astrologers, availability and system health."
         action={
           <Link href="/astrologers/new">
             <Button>
@@ -83,31 +99,42 @@ export default function DashboardPage() {
         }
       />
 
+      {/* ── Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardBody className="flex items-center gap-4">
-              <span className="flex size-11 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-200">
+          <div key={stat.label} className="card-stat group p-5 transition-all duration-300 hover:card-glow hover:-translate-y-0.5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70 mb-2">
+                  {stat.label}
+                </p>
+                <p className={`text-3xl font-extrabold leading-none ${STAT_NUMBER_CLASSES[stat.tone]}`}>
+                  {stat.value}
+                </p>
+                {stat.sub && (
+                  <p className="mt-1.5 text-xs text-muted-foreground">{stat.sub}</p>
+                )}
+              </div>
+              <span className={`icon-box flex size-11 shrink-0 items-center justify-center rounded-xl ${ICON_BOX_CLASSES[stat.tone]}`}>
                 <stat.icon className="size-5" />
               </span>
-              <div>
-                <p className="text-2xl font-bold leading-none">{stat.value}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{stat.label}</p>
-              </div>
-            </CardBody>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+      {/* ── Main content */}
+      <div className="mt-6 grid gap-5 lg:grid-cols-3">
+        {/* Recently added */}
         <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Recently added</CardTitle>
             <Link
               href="/astrologers"
-              className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300"
+              className="inline-flex items-center gap-1 text-sm font-medium text-brand-300 hover:text-brand-200 transition-colors"
             >
               View all
+              <ArrowUpRight className="size-3.5" />
             </Link>
           </CardHeader>
           <CardBody className="pt-0">
@@ -126,19 +153,19 @@ export default function DashboardPage() {
                 }
               />
             ) : (
-              <ul className="divide-y divide-border">
+              <ul className="divide-y divide-border/60">
                 {recent.map((astrologer) => (
                   <li key={astrologer.id}>
                     <Link
                       href={`/astrologers/${astrologer.id}`}
-                      className="flex items-center gap-3 py-3 transition-colors hover:bg-surface-muted"
+                      className="flex items-center gap-3.5 rounded-xl px-2 py-3.5 transition-all duration-200 hover:bg-surface-muted group"
                     >
-                      <div className="relative">
+                      <div className="relative shrink-0">
                         <Avatar
                           src={astrologer.profile_image_url}
                           name={astrologer.display_name}
                         />
-                        <span className="absolute -right-0.5 -bottom-0.5 rounded-full bg-surface p-0.5">
+                        <span className="absolute -right-0.5 -bottom-0.5 rounded-full bg-surface-solid p-[3px]">
                           <StatusDot
                             online={astrologer.availability.is_online}
                             busy={astrologer.availability.is_busy}
@@ -146,7 +173,9 @@ export default function DashboardPage() {
                         </span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{astrologer.display_name}</p>
+                        <p className="truncate text-sm font-semibold text-foreground group-hover:text-brand-300 transition-colors">
+                          {astrologer.display_name}
+                        </p>
                         <p className="truncate text-xs text-muted-foreground">
                           {astrologer.email}
                         </p>
@@ -161,6 +190,7 @@ export default function DashboardPage() {
                           </Badge>
                         )}
                       </div>
+                      <ArrowUpRight className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                     </Link>
                   </li>
                 ))}
@@ -169,41 +199,53 @@ export default function DashboardPage() {
           </CardBody>
         </Card>
 
+        {/* System health */}
         <Card>
           <CardHeader>
-            <CardTitle>System</CardTitle>
+            <CardTitle>System health</CardTitle>
+            {health && (
+              <Badge tone={health.status === "ok" ? "green" : "red"}>
+                {health.status === "ok" ? "● All good" : "● Degraded"}
+              </Badge>
+            )}
           </CardHeader>
-          <CardBody className="space-y-2.5 pt-0">
+          <CardBody className="space-y-3 pt-0">
             {health ? (
               <>
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Status</span>
-                  <Badge tone={health.status === "ok" ? "green" : "red"}>
-                    {health.status}
-                  </Badge>
-                </div>
                 {Object.entries(health.services ?? {}).map(([name, up]) => (
-                  <div key={name} className="flex items-center justify-between text-sm">
-                    <span className="capitalize text-muted-foreground">{name}</span>
+                  <div
+                    key={name}
+                    className="flex items-center justify-between rounded-lg bg-surface-muted/40 px-3 py-2.5 text-sm"
+                  >
+                    <span className="capitalize font-medium text-foreground/80">{name}</span>
                     {up ? (
-                      <span className="inline-flex items-center gap-1.5 text-success">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
                         <CircleCheck className="size-3.5" />
                         Connected
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                         <CircleSlash className="size-3.5" />
-                        Not configured
+                        Not set
                       </span>
                     )}
                   </div>
                 ))}
-                <p className="pt-2 text-xs text-muted-foreground">
-                  Environment: {health.environment} · v{health.version}
-                </p>
+                <div className="pt-1 border-t border-border/60">
+                  <p className="text-xs text-muted-foreground">
+                    Environment: <span className="font-medium text-foreground/70">{health.environment}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Version: <span className="font-medium text-foreground/70">v{health.version}</span>
+                  </p>
+                </div>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">Checking…</p>
+              <div className="flex flex-col gap-2">
+                <div className="shimmer h-10 rounded-lg" />
+                <div className="shimmer h-10 rounded-lg" />
+                <div className="shimmer h-10 rounded-lg" />
+              </div>
             )}
           </CardBody>
         </Card>
