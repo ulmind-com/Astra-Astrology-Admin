@@ -1,6 +1,6 @@
 "use client";
 
-import { Phone, PhoneOff, Video } from "lucide-react";
+import { Clock, Phone, PhoneOff, Video } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 
@@ -8,8 +8,14 @@ import { CallRoom } from "@/components/call/call-room";
 import { Alert, Avatar, Button, LoadingBlock } from "@/components/ui";
 import { useCall, useCallActions, useCallHeartbeat, useCallTimer } from "@/hooks/use-call";
 import { ApiError } from "@/lib/api/client";
+import { cn } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
-import { CALL_STATUS_LABELS, formatDuration, isCallLive } from "@/types";
+import {
+  CALL_STATUS_LABELS,
+  formatDuration,
+  isCallLive,
+  type SessionBilling,
+} from "@/types";
 
 export default function AstrologerCallPage() {
   const { id } = useParams<{ id: string }>();
@@ -55,6 +61,12 @@ export default function AstrologerCallPage() {
         <div className="absolute inset-0 bg-cosmos" />
       )}
 
+      {connected && call.billing && (
+        <div className="absolute inset-x-0 top-16 z-10 px-3">
+          <BookedTime billing={call.billing} elapsedSeconds={seconds} onDark />
+        </div>
+      )}
+
       {connected ? (
         <header className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-3 bg-gradient-to-b from-black/70 to-transparent px-4 py-3">
           <div className="min-w-0 flex-1">
@@ -93,6 +105,48 @@ export default function AstrologerCallPage() {
             Back to my profile
           </Button>
         </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * What the astrologer needs to know about the clock.
+ *
+ * They are not paying, so no coins here — only how long was booked and how
+ * much of it is left, which is what decides whether to start a new topic.
+ */
+function BookedTime({
+  billing,
+  elapsedSeconds,
+  onDark = false,
+}: {
+  billing: SessionBilling;
+  elapsedSeconds: number;
+  onDark?: boolean;
+}) {
+  const lastMinute = billing.minutes_remaining <= 1;
+
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 rounded-xl px-3 py-2 text-xs",
+        lastMinute
+          ? "bg-amber-500/15 text-amber-600 dark:text-amber-300"
+          : onDark
+            ? "bg-white/10 text-white/80"
+            : "bg-surface-muted text-muted-foreground",
+      )}
+    >
+      <span className="flex items-center gap-1.5">
+        <Clock className="size-3.5 shrink-0" />
+        Booked for {billing.requested_minutes} min
+      </span>
+      <span className={cn("font-medium", lastMinute && "text-amber-500")}>
+        {formatDuration(elapsedSeconds)} in · {billing.minutes_remaining} min left
+      </span>
+      {lastMinute && (
+        <span className="ml-auto">Wrapping up — they may add more time.</span>
       )}
     </div>
   );

@@ -18,7 +18,7 @@ import {
   LoadingBlock,
   StatusDot,
 } from "@/components/ui";
-import { adminApi } from "@/lib/api";
+import { adminApi, adminSettingsApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { formatDate } from "@/lib/utils";
 import { SKILL_LABELS } from "@/types";
@@ -33,6 +33,12 @@ export default function AstrologersListPage() {
     const timer = setTimeout(() => setDebounced(search), 350);
     return () => clearTimeout(timer);
   }, [search]);
+
+  const { data: defaults } = useQuery({
+    queryKey: ["admin", "settings"],
+    queryFn: adminSettingsApi.get,
+    enabled: ready,
+  });
 
   const { data, isLoading, isFetching, error } = useQuery({
     queryKey: ["admin", "astrologers", debounced],
@@ -149,7 +155,10 @@ export default function AstrologersListPage() {
                         </div>
                       </td>
                       <td className="px-3 py-3 whitespace-nowrap">
-                        {astrologer.rates.chat_coins_per_minute ?? "default"}
+                        {astrologer.rates.chat_coins_per_minute ?? defaults?.default_chat_coins_per_minute ?? "—"}
+                        {astrologer.rates.chat_coins_per_minute == null && (
+                          <span className="ml-1 text-xs text-muted-foreground">default</span>
+                        )}
                       </td>
                       <td className="px-3 py-3">
                         <div className="flex flex-wrap gap-1">

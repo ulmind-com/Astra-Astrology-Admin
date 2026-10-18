@@ -873,6 +873,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calls/{session_id}/extend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Buy more time on a call that is running */
+        post: operations["extend_call_api_v1_calls__session_id__extend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/calls/{session_id}/heartbeat": {
         parameters: {
             query?: never;
@@ -1003,6 +1020,23 @@ export interface paths {
         put?: never;
         /** End the chat */
         post: operations["end_chat_api_v1_chats__session_id__end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chats/{session_id}/extend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Buy more time on a chat that is running */
+        post: operations["extend_chat_api_v1_chats__session_id__extend_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2720,6 +2754,11 @@ export interface components {
             /** Reason */
             reason?: string | null;
         };
+        /** ExtendRequest */
+        ExtendRequest: {
+            /** Extra Minutes */
+            extra_minutes: number;
+        };
         /**
          * FirebaseCredentials
          * @description What the browser needs to reach Firestore as itself.
@@ -3197,7 +3236,11 @@ export interface components {
         };
         /**
          * SessionBilling
-         * @description What this session costs and how far it has got.
+         * @description Everything the session screen shows, worked out on the server.
+         *
+         *     The client could compute most of this from a start time and a rate, but it
+         *     would drift — and would be wrong at exactly the moment it matters, which is
+         *     the minute before someone is cut off.
          */
         SessionBilling: {
             /** Coins Per Minute */
@@ -3208,10 +3251,16 @@ export interface components {
             minutes_charged: number;
             /** Coins Charged */
             coins_charged: number;
+            /** Minutes Remaining */
+            minutes_remaining: number;
             /** Balance Coins */
             balance_coins: number;
             /** Minutes Left */
             minutes_left: number;
+            /** Can Extend */
+            can_extend: boolean;
+            /** Max Extend Minutes */
+            max_extend_minutes: number;
         };
         /**
          * Skill
@@ -5297,6 +5346,41 @@ export interface operations {
             };
         };
     };
+    extend_call_api_v1_calls__session_id__extend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtendRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_CallOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     heartbeat_api_v1_calls__session_id__heartbeat_post: {
         parameters: {
             query?: never;
@@ -5518,6 +5602,41 @@ export interface operations {
         requestBody?: {
             content: {
                 "application/json": components["schemas"]["EndChatRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ChatOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extend_chat_api_v1_chats__session_id__extend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtendRequest"];
             };
         };
         responses: {

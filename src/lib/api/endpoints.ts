@@ -52,6 +52,7 @@ export const endpoints = {
     accept: (id: string) => `/calls/${id}/accept`,
     decline: (id: string) => `/calls/${id}/decline`,
     end: (id: string) => `/calls/${id}/end`,
+    extend: (id: string) => `/calls/${id}/extend`,
     heartbeat: (id: string) => `/calls/${id}/heartbeat`,
   },
 
@@ -63,6 +64,7 @@ export const endpoints = {
     accept: (id: string) => `/chats/${id}/accept`,
     decline: (id: string) => `/chats/${id}/decline`,
     end: (id: string) => `/chats/${id}/end`,
+    extend: (id: string) => `/chats/${id}/extend`,
     heartbeat: (id: string) => `/chats/${id}/heartbeat`,
   },
 

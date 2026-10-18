@@ -46,6 +46,16 @@ export default function EditAstrologerPage() {
     queryFn: adminSettingsApi.get,
   });
 
+  // What the platform charges for a mode — shown wherever this astrologer has
+  // no rate of their own, so a blank box reads as "follows the platform"
+  // rather than as a missing value.
+  const platformRate = (mode: "chat" | "call" | "video") =>
+    mode === "chat"
+      ? defaults?.default_chat_coins_per_minute
+      : mode === "call"
+        ? defaults?.default_call_coins_per_minute
+        : defaults?.default_video_coins_per_minute;
+
   const { data: astrologer, isLoading, error } = useQuery({
     queryKey: ["admin", "astrologer", id],
     queryFn: () => adminApi.getAstrologer(id),
@@ -365,13 +375,9 @@ export default function EditAstrologerPage() {
                   htmlFor={mode}
                   hint={
                     defaults
-                      ? `Default ${
-                          mode === "chat"
-                            ? defaults.default_chat_coins_per_minute
-                            : mode === "call"
-                              ? defaults.default_call_coins_per_minute
-                              : defaults.default_video_coins_per_minute
-                        }`
+                      ? form[mode].trim() === ""
+                        ? `Using platform rate (${platformRate(mode)})`
+                        : `Their own — platform charges ${platformRate(mode)}`
                       : undefined
                   }
                 >
@@ -380,7 +386,8 @@ export default function EditAstrologerPage() {
                     type="number"
                     min={1}
                     step={1}
-                    placeholder="Default"
+                    // The actual default, so an empty box says what it means.
+                    placeholder={defaults ? String(platformRate(mode)) : "Default"}
                     value={form[mode]}
                     onChange={set(mode)}
                   />
@@ -388,13 +395,31 @@ export default function EditAstrologerPage() {
               ))}
             </div>
 
+            <button
+              type="button"
+              onClick={() =>
+                setForm((f) => ({
+                  ...f,
+                  chat: "",
+                  call: "",
+                  video: "",
+                  commission_percent: "",
+                }))
+              }
+              className="text-xs font-medium text-brand-600 underline dark:text-brand-300"
+            >
+              Use the platform rates and commission
+            </button>
+
             <Field
               label="Commission %"
               htmlFor="commission"
               error={errors.commission_percent}
               hint={
                 defaults
-                  ? `Default ${defaults.default_commission_percent}% — leave empty to use it`
+                  ? form.commission_percent.trim() === ""
+                    ? `Using platform commission (${defaults.default_commission_percent}%)`
+                    : `Their own deal — platform takes ${defaults.default_commission_percent}%`
                   : "Leave empty to use the platform default"
               }
             >
@@ -404,7 +429,9 @@ export default function EditAstrologerPage() {
                 min={0}
                 max={100}
                 step="0.5"
-                placeholder="Default"
+                placeholder={
+                  defaults ? String(defaults.default_commission_percent) : "Default"
+                }
                 value={form.commission_percent}
                 onChange={set("commission_percent")}
                 className="max-w-32"

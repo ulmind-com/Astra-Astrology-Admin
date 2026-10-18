@@ -305,6 +305,9 @@ export const callApi = {
 
   heartbeat: (id: string) => api.post<Call>(endpoints.calls.heartbeat(id), {}),
 
+  extend: (id: string, extra_minutes: number) =>
+    api.post<Call>(endpoints.calls.extend(id), { extra_minutes }),
+
   history: (params: { page?: number; limit?: number } = {}) =>
     api.get<{ items: Call[]; meta: PageMeta }>(endpoints.calls.history, { query: params }),
 };
@@ -325,6 +328,9 @@ export const chatApi = {
   end: (id: string, reason?: string) => api.post<Chat>(endpoints.chats.end(id), { reason }),
 
   heartbeat: (id: string) => api.post<Chat>(endpoints.chats.heartbeat(id), {}),
+
+  extend: (id: string, extra_minutes: number) =>
+    api.post<Chat>(endpoints.chats.extend(id), { extra_minutes }),
 
   history: (params: { page?: number; limit?: number } = {}) =>
     api.get<{ items: Chat[]; meta: PageMeta }>(endpoints.chats.history, { query: params }),
