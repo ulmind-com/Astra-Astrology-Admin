@@ -1,12 +1,13 @@
 "use client";
 
-import { Phone, PhoneOff, Video } from "lucide-react";
+import { MessageCircle, Phone, PhoneOff, Video } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
 import { Avatar, Button } from "@/components/ui";
 import { useActiveCall, useCallActions } from "@/hooks/use-call";
+import { useActiveChat, useChatActions } from "@/hooks/use-chat";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/providers/auth-provider";
 
@@ -25,15 +26,77 @@ export function IncomingCallWatcher() {
   const { data } = useActiveCall(isAstrologer);
   const { accept, decline } = useCallActions();
 
+  const { data: chatData } = useActiveChat(isAstrologer);
+  const chatActions = useChatActions();
+
   const call = data?.call;
   const ringing = call?.status === "ringing";
 
-  // Once answered, the call has its own screen.
+  const chat = chatData?.chat;
+  const chatWaiting = chat?.status === "requested";
+
+  // Once answered, each has its own screen.
   React.useEffect(() => {
     if (call?.status === "active") router.push(`/call/${call.id}`);
   }, [call?.status, call?.id, router]);
 
-  if (!isAstrologer || !ringing || !call) return null;
+  React.useEffect(() => {
+    if (chat?.status === "active") router.push(`/chat/${chat.id}`);
+  }, [chat?.status, chat?.id, router]);
+
+  if (!isAstrologer) return null;
+
+  // A call interrupts; a chat can wait. If both somehow arrive, the call wins.
+  if (!ringing && chatWaiting && chat) {
+    return (
+      <div className="fixed inset-x-0 bottom-0 z-50 p-4 sm:inset-auto sm:right-6 sm:top-6 sm:w-80">
+        <div className="card-surface overflow-hidden rounded-2xl border border-border shadow-2xl">
+          <div className="bg-cosmos px-5 py-4 text-white">
+            <p className="flex items-center gap-2 text-xs text-white/70">
+              <MessageCircle className="size-3.5" />
+              Chat request
+            </p>
+            <div className="mt-3 flex items-center gap-3">
+              <Avatar src={chat.peer?.avatar_url} name={chat.peer?.name} size="md" />
+              <div className="min-w-0">
+                <p className="truncate font-semibold">{chat.peer?.name ?? "Someone"}</p>
+                <p className="text-xs text-white/60">wants to chat</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-2 p-4">
+            <Button
+              variant="secondary"
+              className="flex-1"
+              disabled={chatActions.decline.isPending}
+              onClick={() =>
+                chatActions.decline.mutate(chat.id, {
+                  onError: (e: Error) => toast.error((e as ApiError).message),
+                })
+              }
+            >
+              Decline
+            </Button>
+            <Button
+              className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700"
+              disabled={chatActions.accept.isPending}
+              onClick={() =>
+                chatActions.accept.mutate(chat.id, {
+                  onSuccess: () => router.push(`/chat/${chat.id}`),
+                  onError: (e: Error) => toast.error((e as ApiError).message),
+                })
+              }
+            >
+              Accept
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!ringing || !call) return null;
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 p-4 sm:inset-auto sm:right-6 sm:top-6 sm:w-80">

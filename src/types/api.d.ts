@@ -833,6 +833,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/chats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask an astrologer for a chat */
+        post: operations["start_chat_api_v1_chats_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chats/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The chat I am in, if any */
+        get: operations["my_active_chat_api_v1_chats_active_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chats/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My chats */
+        get: operations["chat_history_api_v1_chats_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chats/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One chat */
+        get: operations["get_chat_api_v1_chats__session_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chats/{session_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept (astrologer) */
+        post: operations["accept_chat_api_v1_chats__session_id__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chats/{session_id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline (astrologer) */
+        post: operations["decline_chat_api_v1_chats__session_id__decline_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chats/{session_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End the chat */
+        post: operations["end_chat_api_v1_chats__session_id__end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chats/{session_id}/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** I am still here */
+        post: operations["heartbeat_api_v1_chats__session_id__heartbeat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1097,6 +1233,34 @@ export interface components {
             message: string;
             data?: components["schemas"]["CallSessionOut"] | null;
         };
+        /** ApiResponse[ChatOut] */
+        ApiResponse_ChatOut_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["ChatOut"] | null;
+        };
+        /** ApiResponse[ChatSessionOut] */
+        ApiResponse_ChatSessionOut_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["ChatSessionOut"] | null;
+        };
         /** ApiResponse[CreateOrderResponse] */
         ApiResponse_CreateOrderResponse_: {
             /**
@@ -1223,6 +1387,20 @@ export interface components {
             message: string;
             data?: components["schemas"]["Paginated_CallOut_"] | null;
         };
+        /** ApiResponse[Paginated[ChatOut]] */
+        ApiResponse_Paginated_ChatOut__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["Paginated_ChatOut_"] | null;
+        };
         /** ApiResponse[Paginated[PaymentOrderOut]] */
         ApiResponse_Paginated_PaymentOrderOut__: {
             /**
@@ -1320,6 +1498,20 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["CallSessionOut"] | null;
+        };
+        /** ApiResponse[Union[ChatSessionOut, NoneType]] */
+        ApiResponse_Union_ChatSessionOut__NoneType__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["ChatSessionOut"] | null;
         };
         /** ApiResponse[UserProfile] */
         ApiResponse_UserProfile_: {
@@ -1998,6 +2190,57 @@ export interface components {
              */
             new_password: string;
         };
+        /** ChatOut */
+        ChatOut: {
+            /** Id */
+            id: string;
+            /** Conversation Id */
+            conversation_id: string;
+            status: components["schemas"]["ChatStatus"];
+            /** User Id */
+            user_id: string;
+            /** Astrologer Id */
+            astrologer_id: string;
+            /** Astrologer User Id */
+            astrologer_user_id: string;
+            peer?: components["schemas"]["CallPeer"] | null;
+            /** Started At */
+            started_at?: string | null;
+            /** Ended At */
+            ended_at?: string | null;
+            /**
+             * Duration Seconds
+             * @default 0
+             */
+            duration_seconds: number;
+            /**
+             * Message Count
+             * @default 0
+             */
+            message_count: number;
+            ended_by?: components["schemas"]["CallParty"] | null;
+            /** End Reason */
+            end_reason?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ChatSessionOut */
+        ChatSessionOut: {
+            chat: components["schemas"]["ChatOut"];
+            firebase?: components["schemas"]["FirebaseCredentials"] | null;
+        };
+        /**
+         * ChatStatus
+         * @description Where a chat is in its life.
+         *
+         *     Mirrors a call's states but with names that read right for a conversation:
+         *     nothing "rings", it waits to be picked up.
+         * @enum {string}
+         */
+        ChatStatus: "requested" | "active" | "ended" | "declined" | "missed" | "cancelled";
         /** CoinRateChangeOut */
         CoinRateChangeOut: {
             /** From Rate */
@@ -2155,6 +2398,26 @@ export interface components {
         EndCallRequest: {
             /** Reason */
             reason?: string | null;
+        };
+        /** EndChatRequest */
+        EndChatRequest: {
+            /** Reason */
+            reason?: string | null;
+        };
+        /**
+         * FirebaseCredentials
+         * @description What the browser needs to reach Firestore as itself.
+         *
+         *     The custom token is short-lived and single-purpose: it only proves which
+         *     Firebase user this is, so the rules can check participation.
+         */
+        FirebaseCredentials: {
+            /** Custom Token */
+            custom_token: string;
+            /** Uid */
+            uid: string;
+            /** Project Id */
+            project_id: string;
         };
         /**
          * ForgotPasswordRequest
@@ -2338,6 +2601,12 @@ export interface components {
         Paginated_CallOut_: {
             /** Items */
             items: components["schemas"]["CallOut"][];
+            meta: components["schemas"]["PageMeta"];
+        };
+        /** Paginated[ChatOut] */
+        Paginated_ChatOut_: {
+            /** Items */
+            items: components["schemas"]["ChatOut"][];
             meta: components["schemas"]["PageMeta"];
         };
         /** Paginated[PaymentOrderOut] */
@@ -2596,6 +2865,11 @@ export interface components {
             astrologer_id: string;
             /** @default video */
             mode: components["schemas"]["ConsultationMode"];
+        };
+        /** StartChatRequest */
+        StartChatRequest: {
+            /** Astrologer Id */
+            astrologer_id: string;
         };
         /** TokenPair */
         TokenPair: {
@@ -4578,6 +4852,250 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponse_CallOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_chat_api_v1_chats_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartChatRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ChatSessionOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_active_chat_api_v1_chats_active_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_Union_ChatSessionOut__NoneType__"];
+                };
+            };
+        };
+    };
+    chat_history_api_v1_chats_history_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_Paginated_ChatOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_chat_api_v1_chats__session_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ChatSessionOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_chat_api_v1_chats__session_id__accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ChatSessionOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decline_chat_api_v1_chats__session_id__decline_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ChatOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_chat_api_v1_chats__session_id__end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["EndChatRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ChatOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    heartbeat_api_v1_chats__session_id__heartbeat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ChatOut_"];
                 };
             };
             /** @description Validation Error */

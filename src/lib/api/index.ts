@@ -18,6 +18,8 @@ import type {
   AvailabilityUpdate,
   Call,
   CallSession,
+  Chat,
+  ChatSession,
   CoinRateChange,
   ConsultationMode,
   CreateOrderResponse,
@@ -282,4 +284,25 @@ export const callApi = {
 
   history: (params: { page?: number; limit?: number } = {}) =>
     api.get<{ items: Call[]; meta: PageMeta }>(endpoints.calls.history, { query: params }),
+};
+
+// -------------------------------------------------------------------- chat
+export const chatApi = {
+  start: (astrologer_id: string) =>
+    api.post<ChatSession>(endpoints.chats.start, { astrologer_id }),
+
+  active: () => api.get<ChatSession | null>(endpoints.chats.active),
+
+  get: (id: string) => api.get<ChatSession>(endpoints.chats.detail(id)),
+
+  accept: (id: string) => api.post<ChatSession>(endpoints.chats.accept(id), {}),
+
+  decline: (id: string) => api.post<Chat>(endpoints.chats.decline(id), {}),
+
+  end: (id: string, reason?: string) => api.post<Chat>(endpoints.chats.end(id), { reason }),
+
+  heartbeat: (id: string) => api.post<Chat>(endpoints.chats.heartbeat(id), {}),
+
+  history: (params: { page?: number; limit?: number } = {}) =>
+    api.get<{ items: Chat[]; meta: PageMeta }>(endpoints.chats.history, { query: params }),
 };

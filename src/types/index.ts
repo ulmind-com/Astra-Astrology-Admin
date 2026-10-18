@@ -237,3 +237,24 @@ export function formatDuration(seconds: number): string {
   const s = seconds % 60;
   return `${m}:${String(s).padStart(2, "0")}`;
 }
+
+// -------------------------------------------------------------------- chat
+export type Chat = S["ChatOut"];
+export type ChatSession = S["ChatSessionOut"];
+export type ChatStatus = S["ChatStatus"];
+export type FirebaseCredentials = S["FirebaseCredentials"];
+
+export const LIVE_CHAT_STATUSES: ChatStatus[] = ["requested", "active"];
+
+export function isChatLive(status: ChatStatus): boolean {
+  return LIVE_CHAT_STATUSES.includes(status);
+}
+
+export const CHAT_STATUS_LABELS: Record<ChatStatus, string> = {
+  requested: "Waiting for the astrologer",
+  active: "In progress",
+  ended: "Ended",
+  declined: "Declined",
+  missed: "Not picked up",
+  cancelled: "Cancelled",
+};

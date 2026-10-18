@@ -52,6 +52,17 @@ export const endpoints = {
     heartbeat: (id: string) => `/calls/${id}/heartbeat`,
   },
 
+  chats: {
+    start: "/chats",
+    active: "/chats/active",
+    history: "/chats/history",
+    detail: (id: string) => `/chats/${id}`,
+    accept: (id: string) => `/chats/${id}/accept`,
+    decline: (id: string) => `/chats/${id}/decline`,
+    end: (id: string) => `/chats/${id}/end`,
+    heartbeat: (id: string) => `/chats/${id}/heartbeat`,
+  },
+
   admin: {
     astrologers: "/admin/astrologers",
     astrologer: (id: string) => `/admin/astrologers/${id}`,
