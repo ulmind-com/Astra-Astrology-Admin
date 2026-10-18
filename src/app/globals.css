@@ -118,53 +118,43 @@
     background-color: var(--color-night-900);
   }
 
+  /* The sky itself: stars over nebulae over a deep gradient, all painted on
+     the body and all attachment:fixed, so they hold still while the page
+     scrolls over them. These are background *images* on the element rather
+     than a pseudo-element behind it — a negative z-index would put them
+     behind the body's own background colour, where nothing would show.
+
+     Drawn in CSS, so the backdrop costs no requests and no extra bytes. */
   body {
-    position: relative;
-    background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-  }
 
-  /* The sky itself: nebulae, then stars, both fixed so they stay put while
-     the page scrolls over them. Drawn in CSS, so the backdrop costs no
-     requests and no bytes beyond this file. */
-  body::before,
-  body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-  }
-
-  body::before {
+    background-color: var(--background);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     background-image:
-      radial-gradient(1200px 700px at 8% -8%, rgb(147 51 234 / 0.4), transparent 62%),
-      radial-gradient(900px 560px at 92% 4%, rgb(168 85 247 / 0.28), transparent 60%),
-      radial-gradient(900px 620px at 50% 108%, rgb(109 40 217 / 0.36), transparent 62%),
-      linear-gradient(180deg, #1a0b33 0%, #150a2b 45%, #0f0720 100%);
-  }
-
-  body::after {
-    opacity: 0.75;
-    background-image:
+      /* stars */
       radial-gradient(1.6px 1.6px at 12% 18%, rgb(255 255 255 / 0.9), transparent),
       radial-gradient(1.2px 1.2px at 27% 62%, rgb(233 213 255 / 0.75), transparent),
       radial-gradient(1.6px 1.6px at 41% 9%, rgb(255 255 255 / 0.7), transparent),
       radial-gradient(1px 1px at 55% 44%, rgb(255 255 255 / 0.8), transparent),
       radial-gradient(1.4px 1.4px at 68% 77%, rgb(216 180 254 / 0.8), transparent),
-      radial-gradient(1px 1px at 79% 24%, rgb(255 255 255 / 0.6), transparent),
+      radial-gradient(1px 1px at 79% 24%, rgb(255 255 255 / 0.65), transparent),
       radial-gradient(1.6px 1.6px at 88% 58%, rgb(255 255 255 / 0.75), transparent),
       radial-gradient(1px 1px at 33% 88%, rgb(255 255 255 / 0.6), transparent),
       radial-gradient(1.2px 1.2px at 95% 85%, rgb(233 213 255 / 0.7), transparent),
-      radial-gradient(1px 1px at 6% 46%, rgb(255 255 255 / 0.55), transparent);
-    background-size: 1000px 1000px;
+      radial-gradient(1px 1px at 6% 46%, rgb(255 255 255 / 0.55), transparent),
+      /* nebulae */
+      radial-gradient(1200px 700px at 8% -8%, rgb(147 51 234 / 0.45), transparent 62%),
+      radial-gradient(900px 560px at 92% 4%, rgb(168 85 247 / 0.32), transparent 60%),
+      radial-gradient(900px 620px at 50% 108%, rgb(109 40 217 / 0.4), transparent 62%),
+      /* the sky it all sits on */
+      linear-gradient(180deg, #1d0d3a 0%, #150a2b 45%, #0f0720 100%);
   }
 
-  h1, h2, h3 {
+  h1 {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
   }
 
   /* One focus style everywhere, rather than the browser default per control. */
@@ -279,7 +269,7 @@
 
   /* The ringed circular icon badges the reference uses for its feature row. */
   .medallion {
-    background-image: radial-gradient(circle at 32% 28%, rgb(192 132 252 / 0.45), rgb(46 16 101 / 0.9));
+    background-image: radial-gradient(circle at 32% 28%, rgb(192 132 252 / 0.5), rgb(46 16 101 / 0.95));
     border: 1px solid rgb(192 132 252 / 0.5);
     box-shadow: 0 0 0 4px rgb(147 51 234 / 0.12), 0 12px 30px -14px rgb(168 85 247 / 0.8);
   }
@@ -300,12 +290,12 @@
      they are used and never carry meaning. */
   .orb {
     border-radius: 9999px;
-    background-image: radial-gradient(circle at 30% 26%, rgb(216 180 254 / 0.95), rgb(109 40 217 / 0.85) 45%, rgb(30 10 60 / 0.95));
-    box-shadow: inset -12px -16px 32px rgb(10 4 24 / 0.75), 0 0 60px -10px rgb(168 85 247 / 0.5);
+    background-image: radial-gradient(circle at 32% 28%, #e9d5ff, #a855f7 38%, #6d28d9 68%, #3b0f70 100%);
+    box-shadow: inset -14px -18px 36px rgb(10 4 24 / 0.7), 0 0 70px -8px rgb(168 85 247 / 0.55);
   }
 
   .orb-gold {
-    background-image: radial-gradient(circle at 32% 28%, rgb(253 230 138 / 0.95), rgb(217 119 6 / 0.85) 48%, rgb(60 20 10 / 0.95));
+    background-image: radial-gradient(circle at 32% 28%, #fde68a, #f59e0b 42%, #c2410c 72%, #6b2109 100%);
     box-shadow: inset -10px -14px 28px rgb(20 6 2 / 0.7), 0 0 50px -12px rgb(251 191 36 / 0.55);
   }
 
