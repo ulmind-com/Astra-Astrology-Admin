@@ -132,3 +132,88 @@ export async function sendMessage(
     sentAt: serverTimestamp(),
   });
 }
+
+// ---------------------------------------------------------------- receipts
+
+export type ReadMarker = {
+  uid: string;
+  deliveredAt: Date | null;
+  readAt: Date | null;
+};
+
+/** How far a message has got, WhatsApp-style. */
+export type DeliveryState = "pending" | "sent" | "delivered" | "read";
+
+/**
+ * Works out a message's tick from the other person's markers.
+ *
+ * The comparison is against *their* timestamps rather than anything stored on
+ * the message, which is why marking a long conversation read costs one small
+ * write instead of one per message.
+ */
+export function deliveryStateOf(
+  message: ChatMessage,
+  peerMarker: ReadMarker | null,
+): DeliveryState {
+  if (message.pending || !message.sentAt) return "pending";
+  if (!peerMarker) return "sent";
+  if (peerMarker.readAt && peerMarker.readAt >= message.sentAt) return "read";
+  if (peerMarker.deliveredAt && peerMarker.deliveredAt >= message.sentAt) return "delivered";
+  return "sent";
+}
+
+/** Subscribes to both participants' read markers. */
+export async function watchReads(
+  conversationId: string,
+  onChange: (markers: Record<string, ReadMarker>) => void,
+): Promise<() => void> {
+  const { collection, onSnapshot } = await import("firebase/firestore");
+  const db = await getDb();
+
+  return onSnapshot(
+    collection(db, "conversations", conversationId, "reads"),
+    (snapshot) => {
+      const markers: Record<string, ReadMarker> = {};
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        markers[doc.id] = {
+          uid: doc.id,
+          deliveredAt: data.deliveredAt?.toDate?.() ?? null,
+          readAt: data.readAt?.toDate?.() ?? null,
+        };
+      });
+      onChange(markers);
+    },
+    () => {
+      /* receipts are a nicety — never break the chat over them */
+    },
+  );
+}
+
+/**
+ * Says how far this person has got.
+ *
+ * `delivered` means their app has the messages; `read` means they were
+ * actually looking. Both are written with the server's clock, which the rules
+ * insist on — otherwise a wrong device clock could mark a message read before
+ * it was sent.
+ */
+export async function markProgress(
+  conversationId: string,
+  uid: string,
+  level: "delivered" | "read",
+): Promise<void> {
+  const { doc, serverTimestamp, setDoc } = await import("firebase/firestore");
+  const db = await getDb();
+
+  // Reading implies delivery, so that writes both and avoids a state where a
+  // message shows blue ticks without ever having shown grey ones.
+  const payload =
+    level === "read"
+      ? { deliveredAt: serverTimestamp(), readAt: serverTimestamp() }
+      : { deliveredAt: serverTimestamp() };
+
+  await setDoc(doc(db, "conversations", conversationId, "reads", uid), payload, {
+    merge: true,
+  });
+}

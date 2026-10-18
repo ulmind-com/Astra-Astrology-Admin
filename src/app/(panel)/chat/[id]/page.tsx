@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 
@@ -18,6 +18,7 @@ export default function AstrologerChatPage() {
 
   const { data, isLoading, error } = useChat(ready ? id : null);
   const { end } = useChatActions();
+  const [confirming, setConfirming] = React.useState(false);
 
   const chat = data?.chat;
   const live = chat ? isChatLive(chat.status) : false;
@@ -31,24 +32,41 @@ export default function AstrologerChatPage() {
   if (!chat) return null;
 
   return (
-    <div className="flex h-[calc(100dvh-8rem)] flex-col overflow-hidden rounded-2xl border border-border bg-surface">
+    <div className="flex h-[calc(100dvh-7rem)] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
       <header className="flex items-center gap-3 border-b border-border px-4 py-3">
         <Avatar src={chat.peer?.avatar_url} name={chat.peer?.name} size="sm" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{chat.peer?.name ?? "Caller"}</p>
-          <p className="text-xs text-muted-foreground">
-            {active ? formatDuration(seconds) : CHAT_STATUS_LABELS[chat.status]}
+          <p className="truncate text-sm font-semibold leading-tight">
+            {chat.peer?.name ?? "Caller"}
+          </p>
+          <p className="flex items-center gap-1.5 text-xs leading-tight text-muted-foreground">
+            {active ? (
+              <>
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+                {formatDuration(seconds)}
+              </>
+            ) : (
+              CHAT_STATUS_LABELS[chat.status]
+            )}
           </p>
         </div>
+
         {live ? (
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => end.mutate({ id })}
+            onClick={() => {
+              if (!confirming) {
+                setConfirming(true);
+                setTimeout(() => setConfirming(false), 4000);
+                return;
+              }
+              end.mutate({ id });
+            }}
             disabled={end.isPending}
+            className={confirming ? "bg-red-600 text-white hover:bg-red-700" : undefined}
           >
-            <X className="size-4" />
-            End
+            {confirming ? "Tap to confirm" : "End chat"}
           </Button>
         ) : (
           <Button size="sm" variant="secondary" onClick={() => router.replace("/me")}>
@@ -63,15 +81,22 @@ export default function AstrologerChatPage() {
             conversationId={chat.conversation_id}
             firebase={data.firebase}
             canSend={active}
+            peerName={chat.peer?.name}
           />
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
-            <p className="font-semibold">{CHAT_STATUS_LABELS[chat.status]}</p>
-            {chat.duration_seconds > 0 && (
-              <p className="text-sm text-muted-foreground">
-                Lasted {formatDuration(chat.duration_seconds)} · {chat.message_count} messages
-              </p>
-            )}
+          <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+            <span className="flex size-16 items-center justify-center rounded-full bg-surface-muted">
+              <MessageSquare className="size-6 text-muted-foreground" />
+            </span>
+            <div>
+              <p className="text-lg font-semibold">{CHAT_STATUS_LABELS[chat.status]}</p>
+              {chat.duration_seconds > 0 && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {formatDuration(chat.duration_seconds)} · {chat.message_count}{" "}
+                  {chat.message_count === 1 ? "message" : "messages"}
+                </p>
+              )}
+            </div>
             <Button variant="secondary" onClick={() => router.replace("/me")}>
               Back to my profile
             </Button>
