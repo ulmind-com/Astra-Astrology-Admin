@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { Avatar, Button } from "@/components/ui";
 import { useActiveCall, useCallActions } from "@/hooks/use-call";
+import { useAlertOn, useLoopingSound } from "@/hooks/use-sound";
 import { useActiveChat, useChatActions } from "@/hooks/use-chat";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/providers/auth-provider";
@@ -34,6 +35,14 @@ export function IncomingCallWatcher() {
 
   const chat = chatData?.chat;
   const chatWaiting = chat?.status === "requested";
+
+  // A ringing call rings, for as long as it is ringing. Stops by itself the
+  // moment it is answered, declined, or the caller gives up.
+  useLoopingSound("ring", ringing);
+
+  // A chat has no ringing state — someone is simply waiting — so it gets one
+  // alert rather than a tone that would have to be silenced by hand.
+  useAlertOn("notify", chatWaiting ? chat?.id : null);
 
   // Once answered, each has its own screen.
   React.useEffect(() => {
