@@ -6,9 +6,7 @@ import {
   Lock,
   LogOut,
   Menu,
-  Moon,
   Sparkles,
-  Sun,
   UserRound,
   Receipt,
   Settings,
@@ -26,7 +24,6 @@ import { Avatar, Badge, Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { ROLE_LABELS } from "@/types";
 import { useAuth } from "@/providers/auth-provider";
-import { useTheme } from "@/providers/theme-provider";
 
 type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }> };
 
@@ -49,7 +46,6 @@ const ASTROLOGER_NAV: NavItem[] = [
 export function PanelShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
-  const { theme, toggle } = useTheme();
   const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => setOpen(false), [pathname]);
@@ -64,11 +60,11 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
   const sidebar = (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center gap-2 border-b border-border px-5">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-brand-600 text-white">
+        <span className="medallion flex size-9 items-center justify-center rounded-xl text-brand-100">
           <Sparkles className="size-4" />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold leading-tight">Astra Astrology</p>
+          <p className="truncate font-display text-sm font-semibold leading-tight tracking-wide">Astra Astrology</p>
           <p className="text-[11px] leading-tight text-muted-foreground">
             {user ? ROLE_LABELS[user.role] : "Panel"}
           </p>
@@ -86,7 +82,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 active
-                  ? "bg-brand-600 text-white"
+                  ? "btn-cosmic text-white"
                   : "text-muted-foreground hover:bg-surface-muted hover:text-foreground",
               )}
             >
@@ -108,7 +104,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
         <Button
           variant="ghost"
           size="sm"
-          className="mt-1 w-full justify-start text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+          className="mt-1 w-full justify-start text-danger hover:bg-danger/15"
           onClick={() => signOut()}
         >
           <LogOut className="size-4" />
@@ -120,7 +116,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-dvh">
-      <aside className="hidden w-64 shrink-0 border-r border-border bg-surface lg:block">
+      <aside className="hidden w-64 shrink-0 border-r border-border bg-night-950/60 backdrop-blur-xl lg:block">
         <div className="sticky top-0 h-dvh">{sidebar}</div>
       </aside>
 
@@ -128,18 +124,18 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
-            className="absolute inset-0 bg-night-950/50"
+            className="absolute inset-0 bg-night-950/70 backdrop-blur-sm"
             onClick={() => setOpen(false)}
             aria-label="Close menu"
           />
-          <aside className="absolute inset-y-0 left-0 w-64 border-r border-border bg-surface">
+          <aside className="absolute inset-y-0 left-0 w-64 border-r border-border bg-night-900 shadow-glow">
             {sidebar}
           </aside>
         </div>
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-lg">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border bg-night-950/55 px-4 backdrop-blur-xl">
           <Button
             variant="ghost"
             size="icon"
@@ -152,9 +148,6 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
 
           <div className="ml-auto flex items-center gap-2">
             {user && <Badge tone="brand">{ROLE_LABELS[user.role]}</Badge>}
-            <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
-              {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </Button>
           </div>
         </header>
 
@@ -179,7 +172,7 @@ export function PanelHeader({
   return (
     <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight">{title}</h1>
         {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       </div>
       {action}

@@ -25,13 +25,10 @@ export function Skeleton({ className }: { className?: string }) {
 type AlertTone = "info" | "warning" | "error" | "success";
 
 const ALERT_TONES: Record<AlertTone, string> = {
-  info: "border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200",
-  warning:
-    "border-gold-200 bg-gold-50 text-gold-800 dark:border-gold-500/30 dark:bg-gold-500/10 dark:text-gold-200",
-  error:
-    "border-red-200 bg-red-50 text-red-900 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200",
-  success:
-    "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200",
+  info: "border-info/30 bg-info-surface text-info",
+  warning: "border-warning/30 bg-warning-surface text-warning",
+  error: "border-danger/35 bg-danger-surface text-danger",
+  success: "border-success/30 bg-success-surface text-success",
 };
 
 export function Alert({
@@ -72,9 +69,9 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border px-6 py-16 text-center">
-      <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-surface-muted">
-        <Icon className="size-5 text-muted-foreground" />
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border-strong/60 px-6 py-16 text-center">
+      <span className="medallion mb-4 flex size-12 items-center justify-center rounded-full">
+        <Icon className="size-5 text-brand-200" />
       </span>
       <p className="font-semibold text-foreground">{title}</p>
       {description && (

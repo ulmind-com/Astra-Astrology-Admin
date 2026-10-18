@@ -38,7 +38,7 @@ export function DeliveryTicks({
   }
   return (
     <CheckCheck
-      className={cn("size-3.5", state === "read" ? "text-sky-300" : "opacity-70", className)}
+      className={cn("size-3.5", state === "read" ? "text-info" : "opacity-70", className)}
       aria-label={label}
     />
   );

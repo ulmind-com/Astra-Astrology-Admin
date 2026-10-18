@@ -155,7 +155,7 @@ export default function EarningsPage() {
                         <td className="px-3 py-3 text-right tabular-nums text-muted-foreground">
                           {row.minutes} min
                         </td>
-                        <td className="px-5 py-3 text-right font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                        <td className="px-5 py-3 text-right font-semibold tabular-nums text-success">
                           +{formatEarning(row.earning_paise)}
                         </td>
                       </tr>

@@ -68,7 +68,7 @@ export default function AdminLoginPage() {
           <p className="mt-1 text-sm text-brand-100/70">Admin & astrologer panel</p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/95 p-6 shadow-lift backdrop-blur dark:bg-surface/95">
+        <div className="rounded-2xl border border-border-strong bg-surface-raised p-6 shadow-glow backdrop-blur-xl">
           {error && (
             <Alert tone="error" className="mb-5">
               {error.message}

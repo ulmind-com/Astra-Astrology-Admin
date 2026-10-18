@@ -102,7 +102,7 @@ export function CallRoom({
   if (error) {
     return (
       <div className="flex h-full w-full items-center justify-center p-6 text-center">
-        <p className="max-w-sm text-sm text-red-500">{error}</p>
+        <p className="max-w-sm text-sm text-danger">{error}</p>
       </div>
     );
   }

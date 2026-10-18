@@ -26,7 +26,7 @@ export function Avatar({
     <span
       className={cn(
         "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full",
-        "bg-brand-100 font-semibold text-brand-700 dark:bg-brand-900 dark:text-brand-200",
+        "bg-brand-500/20 font-semibold text-brand-200 ring-1 ring-brand-400/30",
         className,
       )}
       style={{ width: px, height: px, fontSize: px * 0.36 }}

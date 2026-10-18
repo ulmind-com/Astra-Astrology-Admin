@@ -186,7 +186,7 @@ export default function DashboardPage() {
                   <div key={name} className="flex items-center justify-between text-sm">
                     <span className="capitalize text-muted-foreground">{name}</span>
                     {up ? (
-                      <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                      <span className="inline-flex items-center gap-1.5 text-success">
                         <CircleCheck className="size-3.5" />
                         Connected
                       </span>

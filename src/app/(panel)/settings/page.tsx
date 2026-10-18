@@ -502,7 +502,7 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
               <p>
                 {videoRate} {coinWord(videoRate)} ={" "}
                 <strong>{formatEarning(grossPaise)}</strong> · astrologer gets{" "}
-                <strong className="text-emerald-600 dark:text-emerald-400">
+                <strong className="text-success">
                   {formatEarning(astrologerPaise)}
                 </strong>
                 , you keep{" "}

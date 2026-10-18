@@ -48,7 +48,7 @@ export default function AstrologerChatPage() {
           <p className="flex items-center gap-1.5 text-xs leading-tight text-muted-foreground">
             {active ? (
               <>
-                <span className="size-1.5 rounded-full bg-emerald-500" />
+                <span className="size-1.5 rounded-full bg-success" />
                 {formatDuration(seconds)}
               </>
             ) : (
@@ -70,7 +70,7 @@ export default function AstrologerChatPage() {
               end.mutate({ id });
             }}
             disabled={end.isPending}
-            className={confirming ? "bg-red-600 text-white hover:bg-red-700" : undefined}
+            className={confirming ? "bg-rose-600 text-white hover:bg-rose-500" : undefined}
           >
             {confirming ? "Tap to confirm" : "End chat"}
           </Button>
@@ -141,7 +141,7 @@ function BookedTime({
       className={cn(
         "flex items-center gap-3 rounded-xl px-3 py-2 text-xs",
         lastMinute
-          ? "bg-amber-500/15 text-amber-600 dark:text-amber-300"
+          ? "bg-warning-surface text-warning"
           : onDark
             ? "bg-white/10 text-white/80"
             : "bg-surface-muted text-muted-foreground",
@@ -151,7 +151,7 @@ function BookedTime({
         <Clock className="size-3.5 shrink-0" />
         Booked for {billing.requested_minutes} min
       </span>
-      <span className={cn("font-medium", lastMinute && "text-amber-500")}>
+      <span className={cn("font-medium", lastMinute && "text-warning")}>
         {formatDuration(elapsedSeconds)} in · {billing.minutes_remaining} min left
       </span>
       {lastMinute && (

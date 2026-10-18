@@ -132,7 +132,7 @@ export default function NewAstrologerPage() {
         <Card className="max-w-xl">
           <CardBody className="space-y-5">
             <div className="flex items-start gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-success-surface text-success ring-1 ring-success/30">
                 <MailCheck className="size-5" />
               </span>
               <div>

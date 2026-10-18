@@ -142,7 +142,7 @@ export default function TransactionsPage() {
                       <td
                         className={cn(
                           "px-3 py-3 text-right font-semibold tabular-nums whitespace-nowrap",
-                          isCredit ? "text-emerald-600" : "text-amber-600",
+                          isCredit ? "text-success" : "text-warning",
                         )}
                       >
                         <span className="inline-flex items-center gap-1">

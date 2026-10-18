@@ -8,21 +8,22 @@ import { cn } from "@/lib/utils";
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline";
 type Size = "sm" | "md" | "lg" | "icon";
 
+// Primary is the one gradient pill on a screen — the reference design uses it
+// sparingly, and so does this, so the next step is always obvious.
 const VARIANTS: Record<Variant, string> = {
-  primary:
-    "bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-800 disabled:bg-brand-300",
+  primary: "btn-cosmic text-white",
   secondary:
-    "bg-surface-muted text-foreground border border-border hover:border-border-strong hover:bg-surface",
+    "bg-surface-muted text-foreground border border-border hover:border-border-strong hover:bg-surface-raised",
   outline:
     "border border-border-strong bg-transparent text-foreground hover:bg-surface-muted",
   ghost: "bg-transparent text-muted-foreground hover:bg-surface-muted hover:text-foreground",
-  danger: "bg-red-600 text-white hover:bg-red-700 active:bg-red-800 disabled:bg-red-300",
+  danger: "bg-danger-surface text-danger border border-danger/40 hover:bg-danger/25",
 };
 
 const SIZES: Record<Size, string> = {
-  sm: "h-8 px-3 text-xs gap-1.5",
-  md: "h-10 px-4 text-sm gap-2",
-  lg: "h-12 px-6 text-base gap-2",
+  sm: "h-8 px-3.5 text-xs gap-1.5",
+  md: "h-10 px-5 text-sm gap-2",
+  lg: "h-12 px-7 text-base gap-2",
   icon: "h-10 w-10 p-0",
 };
 
@@ -42,8 +43,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       // A loading button stays disabled, so a double click cannot fire twice.
       disabled={disabled || loading}
       className={cn(
-        "inline-flex items-center justify-center rounded-lg font-medium",
-        "transition-colors disabled:cursor-not-allowed disabled:opacity-70",
+        "inline-flex items-center justify-center rounded-full font-medium",
+        "transition-all disabled:cursor-not-allowed disabled:opacity-60",
         VARIANTS[variant],
         SIZES[size],
         className,

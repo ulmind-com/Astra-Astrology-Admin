@@ -72,7 +72,7 @@ export default function AstrologerCallPage() {
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{call.peer?.name}</p>
             <p className="flex items-center gap-1.5 text-xs text-white/70">
-              <span className="size-1.5 rounded-full bg-emerald-400" />
+              <span className="size-1.5 rounded-full bg-success" />
               {formatDuration(seconds)}
             </p>
           </div>
@@ -80,7 +80,7 @@ export default function AstrologerCallPage() {
             size="sm"
             onClick={hangUp}
             disabled={end.isPending}
-            className="pointer-events-auto bg-red-600 text-white hover:bg-red-700"
+            className="pointer-events-auto bg-rose-600 text-white hover:bg-rose-500"
           >
             <PhoneOff className="size-4" />
             End
@@ -132,7 +132,7 @@ function BookedTime({
       className={cn(
         "flex items-center gap-3 rounded-xl px-3 py-2 text-xs",
         lastMinute
-          ? "bg-amber-500/15 text-amber-600 dark:text-amber-300"
+          ? "bg-warning-surface text-warning"
           : onDark
             ? "bg-white/10 text-white/80"
             : "bg-surface-muted text-muted-foreground",
@@ -142,7 +142,7 @@ function BookedTime({
         <Clock className="size-3.5 shrink-0" />
         Booked for {billing.requested_minutes} min
       </span>
-      <span className={cn("font-medium", lastMinute && "text-amber-500")}>
+      <span className={cn("font-medium", lastMinute && "text-warning")}>
         {formatDuration(elapsedSeconds)} in · {billing.minutes_remaining} min left
       </span>
       {lastMinute && (

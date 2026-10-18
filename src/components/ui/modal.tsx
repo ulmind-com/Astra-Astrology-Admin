@@ -55,8 +55,8 @@ export function Modal({
       ref={ref}
       aria-labelledby="modal-title"
       className={cn(
-        "m-auto w-[calc(100vw-2rem)] rounded-2xl border border-border bg-surface p-0",
-        "text-foreground shadow-lift backdrop:bg-night-950/60 backdrop:backdrop-blur-sm",
+        "m-auto w-[calc(100vw-2rem)] rounded-2xl border border-border-strong bg-surface-raised p-0 backdrop-blur-xl",
+        "text-foreground shadow-glow backdrop:bg-night-950/75 backdrop:backdrop-blur-sm",
         widths[size],
       )}
       // Clicking the backdrop (but not the panel) closes it.

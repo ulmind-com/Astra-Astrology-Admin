@@ -124,7 +124,7 @@ export default function PaymentsPage() {
                         <p className="text-xs text-muted-foreground">{order.method}</p>
                       )}
                       {order.failure_reason && (
-                        <p className="text-xs text-red-500">{order.failure_reason}</p>
+                        <p className="text-xs text-danger">{order.failure_reason}</p>
                       )}
                     </td>
                     <td className="px-3 py-3 text-right tabular-nums">

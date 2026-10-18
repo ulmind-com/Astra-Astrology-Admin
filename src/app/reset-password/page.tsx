@@ -160,7 +160,7 @@ function ResetPasswordForm() {
 export default function Page() {
   return (
     <div className="bg-stars flex min-h-dvh items-center justify-center bg-cosmos px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/95 p-6 shadow-lift dark:bg-surface/95">
+      <div className="w-full max-w-sm rounded-2xl border border-border-strong bg-surface-raised p-6 shadow-glow backdrop-blur-xl">
         <React.Suspense fallback={<LoadingBlock />}>
           <ResetPasswordForm />
         </React.Suspense>

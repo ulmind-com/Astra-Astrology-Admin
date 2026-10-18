@@ -495,9 +495,9 @@ export default function EditAstrologerPage() {
           </CardFooter>
         </Card>
 
-        <Card className="border-red-200 dark:border-red-500/30">
+        <Card className="border-danger/35">
           <CardHeader>
-            <CardTitle className="text-red-700 dark:text-red-400">Deactivate</CardTitle>
+            <CardTitle className="text-danger">Deactivate</CardTitle>
             <CardDescription>
               Suspends the account and removes them from the directory. Their history is
               kept, so this is not a delete.

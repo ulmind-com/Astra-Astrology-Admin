@@ -4,12 +4,14 @@ import { cn } from "@/lib/utils";
 
 type Tone = "brand" | "gold" | "green" | "red" | "neutral" | "blue";
 
+// Tinted glass rather than a solid chip: on the night sky a filled pastel
+// badge reads as a hole punched in the page.
 const TONES: Record<Tone, string> = {
-  brand: "bg-brand-100 text-brand-800 dark:bg-brand-900/50 dark:text-brand-200",
-  gold: "bg-gold-100 text-gold-700 dark:bg-gold-500/15 dark:text-gold-300",
-  green: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
-  red: "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300",
-  blue: "bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300",
+  brand: "bg-brand-500/18 text-brand-200 border border-brand-400/35",
+  gold: "bg-gold-500/15 text-gold-300 border border-gold-400/30",
+  green: "bg-success-surface text-success border border-success/30",
+  red: "bg-danger-surface text-danger border border-danger/30",
+  blue: "bg-info-surface text-info border border-info/30",
   neutral: "bg-surface-muted text-muted-foreground border border-border",
 };
 
@@ -32,11 +34,11 @@ export function Badge({
 
 /** The green/grey dot used for an astrologer's online state. */
 export function StatusDot({ online, busy }: { online: boolean; busy?: boolean }) {
-  const tone = busy ? "bg-gold-500" : online ? "bg-emerald-500" : "bg-slate-400";
+  const tone = busy ? "bg-gold-400" : online ? "bg-success" : "bg-brand-300/35";
   return (
     <span className="relative flex size-2.5" aria-hidden>
       {online && !busy && (
-        <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-60" />
       )}
       <span className={cn("relative inline-flex size-2.5 rounded-full", tone)} />
     </span>

@@ -3,24 +3,25 @@
 /* ==========================================================================
    Astra Astrology — design tokens
 
-   The palette matches the transactional emails the backend sends, so a person
-   moving from their inbox to the app sees one brand: deep indigo through
-   violet, with gold for anything celestial or premium.
+   One theme, everywhere: a night sky in deep violet, lit by nebula glows,
+   with gold for anything celestial or premium. The app does not have a light
+   mode — the brand is the dark sky, and a white page breaks it — so these
+   tokens are unconditional rather than split across :root and .dark.
    ========================================================================== */
 
 @theme {
-  /* --- brand: indigo → violet ------------------------------------------ */
-  --color-brand-50: #f5f3ff;
-  --color-brand-100: #ede9fe;
-  --color-brand-200: #ddd6fe;
-  --color-brand-300: #c4b5fd;
-  --color-brand-400: #a78bfa;
-  --color-brand-500: #8b5cf6;
-  --color-brand-600: #6d28d9;
-  --color-brand-700: #5b21b6;
-  --color-brand-800: #4c1d95;
-  --color-brand-900: #2b1b6b;
-  --color-brand-950: #1a1040;
+  /* --- brand: violet, the colour of the whole product ------------------ */
+  --color-brand-50: #faf5ff;
+  --color-brand-100: #f3e8ff;
+  --color-brand-200: #e9d5ff;
+  --color-brand-300: #d8b4fe;
+  --color-brand-400: #c084fc;
+  --color-brand-500: #a855f7;
+  --color-brand-600: #9333ea;
+  --color-brand-700: #7e22ce;
+  --color-brand-800: #6b21a8;
+  --color-brand-900: #4c1d7a;
+  --color-brand-950: #2e1065;
 
   /* --- gold: accents, ratings, premium --------------------------------- */
   --color-gold-50: #fffbeb;
@@ -33,47 +34,56 @@
   --color-gold-700: #b45309;
 
   /* --- night: the sky behind everything -------------------------------- */
-  --color-night-700: #1c1640;
-  --color-night-800: #130e2e;
-  --color-night-900: #0b0920;
-  --color-night-950: #060513;
+  --color-night-600: #3b1f66;
+  --color-night-700: #2c1550;
+  --color-night-800: #1f0e3c;
+  --color-night-900: #150a2b;
+  --color-night-950: #0b0518;
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), "Cinzel", ui-serif, Georgia, serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --radius-card: 1rem;
 
-  --shadow-soft: 0 1px 2px rgb(16 12 48 / 0.04), 0 8px 24px -12px rgb(16 12 48 / 0.12);
-  --shadow-lift: 0 2px 4px rgb(16 12 48 / 0.06), 0 16px 40px -16px rgb(16 12 48 / 0.22);
-  --shadow-glow: 0 0 0 1px rgb(139 92 246 / 0.18), 0 12px 36px -12px rgb(109 40 217 / 0.4);
+  /* Shadows read as glow here: on a dark page a drop shadow is invisible,
+     so depth comes from a violet halo instead. */
+  --shadow-soft: 0 1px 2px rgb(5 2 15 / 0.5), 0 10px 30px -16px rgb(88 28 160 / 0.55);
+  --shadow-lift: 0 4px 10px rgb(5 2 15 / 0.55), 0 24px 60px -24px rgb(124 58 237 / 0.5);
+  --shadow-glow: 0 0 0 1px rgb(168 85 247 / 0.35), 0 16px 48px -16px rgb(147 51 234 / 0.55);
 }
 
 /* --------------------------------------------------------------------------
-   Semantic surfaces. Components reference these, never raw palette steps, so
-   dark mode is one block rather than a hundred conditionals.
+   Semantic surfaces. Components reference these, never raw palette steps.
+   Panels are translucent so the nebula behind them shows through — that is
+   what makes the whole product read as one continuous sky.
    -------------------------------------------------------------------------- */
-:root {
-  --background: #fbfaff;
-  --surface: #ffffff;
-  --surface-muted: #f6f4fd;
-  --surface-raised: #ffffff;
-  --border: #e8e4f5;
-  --border-strong: #d6cff0;
-  --foreground: #1a1430;
-  --muted-foreground: #6b6485;
-  --ring: #8b5cf6;
-}
-
+:root,
 .dark {
-  --background: #0b0920;
-  --surface: #130e2e;
-  --surface-muted: #1a1440;
-  --surface-raised: #1c1640;
-  --border: #2a2156;
-  --border-strong: #392d70;
-  --foreground: #f2effc;
-  --muted-foreground: #a79fc4;
-  --ring: #a78bfa;
+  color-scheme: dark;
+
+  --background: #150a2b;
+  --surface: rgb(45 20 82 / 0.55);
+  --surface-muted: rgb(62 30 108 / 0.5);
+  --surface-raised: rgb(58 27 102 / 0.72);
+  --surface-solid: #241043;
+
+  --border: rgb(168 85 247 / 0.2);
+  --border-strong: rgb(192 132 252 / 0.42);
+
+  --foreground: #f4ecff;
+  --muted-foreground: #bda6e0;
+  --ring: #c084fc;
+
+  /* Status, tuned for a dark page rather than borrowed from a light one. */
+  --success: #34d399;
+  --success-surface: rgb(16 185 129 / 0.14);
+  --danger: #fb7185;
+  --danger-surface: rgb(244 63 94 / 0.15);
+  --warning: #fbbf24;
+  --warning-surface: rgb(245 158 11 / 0.15);
+  --info: #7dd3fc;
+  --info-surface: rgb(14 165 233 / 0.15);
 }
 
 @theme inline {
@@ -81,11 +91,21 @@
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
   --color-surface-raised: var(--surface-raised);
+  --color-surface-solid: var(--surface-solid);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-foreground: var(--foreground);
   --color-muted-foreground: var(--muted-foreground);
   --color-ring: var(--ring);
+
+  --color-success: var(--success);
+  --color-success-surface: var(--success-surface);
+  --color-danger: var(--danger);
+  --color-danger-surface: var(--danger-surface);
+  --color-warning: var(--warning);
+  --color-warning-surface: var(--warning-surface);
+  --color-info: var(--info);
+  --color-info-surface: var(--info-surface);
 }
 
 @layer base {
@@ -95,13 +115,56 @@
 
   html {
     -webkit-text-size-adjust: 100%;
+    background-color: var(--color-night-900);
   }
 
   body {
+    position: relative;
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* The sky itself: nebulae, then stars, both fixed so they stay put while
+     the page scrolls over them. Drawn in CSS, so the backdrop costs no
+     requests and no bytes beyond this file. */
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  body::before {
+    background-image:
+      radial-gradient(1200px 700px at 8% -8%, rgb(147 51 234 / 0.4), transparent 62%),
+      radial-gradient(900px 560px at 92% 4%, rgb(168 85 247 / 0.28), transparent 60%),
+      radial-gradient(900px 620px at 50% 108%, rgb(109 40 217 / 0.36), transparent 62%),
+      linear-gradient(180deg, #1a0b33 0%, #150a2b 45%, #0f0720 100%);
+  }
+
+  body::after {
+    opacity: 0.75;
+    background-image:
+      radial-gradient(1.6px 1.6px at 12% 18%, rgb(255 255 255 / 0.9), transparent),
+      radial-gradient(1.2px 1.2px at 27% 62%, rgb(233 213 255 / 0.75), transparent),
+      radial-gradient(1.6px 1.6px at 41% 9%, rgb(255 255 255 / 0.7), transparent),
+      radial-gradient(1px 1px at 55% 44%, rgb(255 255 255 / 0.8), transparent),
+      radial-gradient(1.4px 1.4px at 68% 77%, rgb(216 180 254 / 0.8), transparent),
+      radial-gradient(1px 1px at 79% 24%, rgb(255 255 255 / 0.6), transparent),
+      radial-gradient(1.6px 1.6px at 88% 58%, rgb(255 255 255 / 0.75), transparent),
+      radial-gradient(1px 1px at 33% 88%, rgb(255 255 255 / 0.6), transparent),
+      radial-gradient(1.2px 1.2px at 95% 85%, rgb(233 213 255 / 0.7), transparent),
+      radial-gradient(1px 1px at 6% 46%, rgb(255 255 255 / 0.55), transparent);
+    background-size: 1000px 1000px;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
   }
 
   /* One focus style everywhere, rather than the browser default per control. */
@@ -111,22 +174,55 @@
   }
 
   ::selection {
-    background-color: var(--color-brand-200);
-    color: var(--color-brand-900);
+    background-color: var(--color-brand-500);
+    color: #ffffff;
+  }
+
+  /* A native dropdown paints its list with the OS palette, so the options
+     need the dark surface spelled out or they open as white-on-white. */
+  option {
+    background-color: var(--surface-solid);
+    color: var(--foreground);
+  }
+
+  /* Scrollbars, so a pale gutter does not cut through the sky. */
+  * {
+    scrollbar-color: var(--color-brand-700) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgb(126 34 206 / 0.6);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(168 85 247 / 0.8);
   }
 }
 
 @layer utilities {
-  /* The night sky behind hero sections and auth pages. */
+  /* A deeper patch of sky, for heroes and panels that should sit forward of
+     the page background. */
   .bg-cosmos {
     background-color: var(--color-night-900);
     background-image:
-      radial-gradient(900px 500px at 15% -10%, rgb(109 40 217 / 0.45), transparent 60%),
-      radial-gradient(700px 420px at 85% 0%, rgb(168 85 247 / 0.32), transparent 60%),
-      radial-gradient(600px 400px at 50% 110%, rgb(43 27 107 / 0.6), transparent 60%);
+      radial-gradient(900px 500px at 15% -10%, rgb(147 51 234 / 0.5), transparent 60%),
+      radial-gradient(700px 420px at 85% 0%, rgb(192 132 252 / 0.3), transparent 60%),
+      radial-gradient(600px 400px at 50% 110%, rgb(76 29 122 / 0.7), transparent 60%);
   }
 
-  /* Faint starfield, drawn rather than loaded so it costs nothing. */
+  /* Faint starfield for a single section, independent of the page backdrop. */
   .bg-stars::before {
     content: "";
     position: absolute;
@@ -145,8 +241,8 @@
   .text-gradient-brand {
     background-image: linear-gradient(
       135deg,
-      var(--color-brand-400),
-      var(--color-brand-200) 45%,
+      var(--color-brand-300),
+      var(--color-brand-200) 40%,
       var(--color-gold-300)
     );
     -webkit-background-clip: text;
@@ -154,20 +250,80 @@
     color: transparent;
   }
 
+  /* The standard panel: translucent violet over the sky, with a lit edge. */
   .card-surface {
     background-color: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(14px);
+  }
+
+  /* A panel that should catch the eye — the lit rim of the reference art. */
+  .card-glow {
+    border-color: rgb(192 132 252 / 0.45);
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* The gradient pill from the reference: primary actions and nothing else,
+     so the eye always knows where the next step is. */
+  .btn-cosmic {
+    background-image: linear-gradient(135deg, #a855f7 0%, #9333ea 45%, #7c3aed 100%);
+    box-shadow: 0 8px 24px -10px rgb(168 85 247 / 0.9), inset 0 1px 0 rgb(255 255 255 / 0.22);
+  }
+
+  .btn-cosmic:hover:not(:disabled) {
+    background-image: linear-gradient(135deg, #b96ffb 0%, #a855f7 45%, #8b5cf6 100%);
+    box-shadow: 0 10px 30px -10px rgb(192 132 252 / 0.95), inset 0 1px 0 rgb(255 255 255 / 0.28);
+  }
+
+  /* The ringed circular icon badges the reference uses for its feature row. */
+  .medallion {
+    background-image: radial-gradient(circle at 32% 28%, rgb(192 132 252 / 0.45), rgb(46 16 101 / 0.9));
+    border: 1px solid rgb(192 132 252 / 0.5);
+    box-shadow: 0 0 0 4px rgb(147 51 234 / 0.12), 0 12px 30px -14px rgb(168 85 247 / 0.8);
+  }
+
+  /* The thin lit rule that sits under the reference's navigation. */
+  .hairline {
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgb(192 132 252 / 0.55) 20%,
+      rgb(233 213 255 / 0.75) 50%,
+      rgb(192 132 252 / 0.55) 80%,
+      transparent
+    );
+  }
+
+  /* Decorative planets. Purely ornamental, so they are aria-hidden wherever
+     they are used and never carry meaning. */
+  .orb {
+    border-radius: 9999px;
+    background-image: radial-gradient(circle at 30% 26%, rgb(216 180 254 / 0.95), rgb(109 40 217 / 0.85) 45%, rgb(30 10 60 / 0.95));
+    box-shadow: inset -12px -16px 32px rgb(10 4 24 / 0.75), 0 0 60px -10px rgb(168 85 247 / 0.5);
+  }
+
+  .orb-gold {
+    background-image: radial-gradient(circle at 32% 28%, rgb(253 230 138 / 0.95), rgb(217 119 6 / 0.85) 48%, rgb(60 20 10 / 0.95));
+    box-shadow: inset -10px -14px 28px rgb(20 6 2 / 0.7), 0 0 50px -12px rgb(251 191 36 / 0.55);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 24px rgb(192 132 252 / 0.55);
+  }
+
+  .font-display {
+    font-family: var(--font-display);
   }
 
   /* Skeletons and "loading" states. */
   .shimmer {
     background: linear-gradient(
       90deg,
-      var(--surface-muted) 25%,
-      var(--border) 37%,
-      var(--surface-muted) 63%
+      rgb(62 30 108 / 0.5) 25%,
+      rgb(126 34 206 / 0.45) 37%,
+      rgb(62 30 108 / 0.5) 63%
     );
     background-size: 400% 100%;
     animation: shimmer 1.4s ease-in-out infinite;
@@ -176,6 +332,16 @@
   @keyframes shimmer {
     0% { background-position: 100% 50%; }
     100% { background-position: 0 50%; }
+  }
+
+  /* Slow drift for the decorative orbs. */
+  @keyframes float-slow {
+    0%, 100% { transform: translateY(0) }
+    50% { transform: translateY(-18px) }
+  }
+
+  .animate-float-slow {
+    animation: float-slow 11s ease-in-out infinite;
   }
 }
 

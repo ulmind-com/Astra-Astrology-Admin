@@ -262,7 +262,7 @@ export default function AstrologerPanelPage() {
                 variant="ghost"
                 size="sm"
                 disabled={uploading}
-                className="text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+                className="text-danger hover:bg-danger/15"
                 onClick={async () => {
                   setUploading(true);
                   try {

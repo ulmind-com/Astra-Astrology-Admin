@@ -79,7 +79,7 @@ export function IncomingCallWatcher() {
               Decline
             </Button>
             <Button
-              className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700"
+              className="flex-1 bg-success text-white hover:bg-success"
               disabled={chatActions.accept.isPending}
               onClick={() =>
                 chatActions.accept.mutate(chat.id, {
@@ -130,7 +130,7 @@ export function IncomingCallWatcher() {
             Decline
           </Button>
           <Button
-            className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700"
+            className="flex-1 bg-success text-white hover:bg-success"
             disabled={accept.isPending}
             onClick={() =>
               accept.mutate(call.id, {
