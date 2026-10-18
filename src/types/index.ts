@@ -207,3 +207,33 @@ export function formatCoins(coins: number): string {
 export function coinWord(coins: number): string {
   return coins === 1 ? "coin" : "coins";
 }
+
+// ------------------------------------------------------------------- calls
+export type Call = S["CallOut"];
+export type CallCredentials = S["CallCredentials"];
+export type CallSession = S["CallSessionOut"];
+export type CallStatus = S["CallStatus"];
+export type CallParty = S["CallParty"];
+
+/** A call in one of these is still going on. */
+export const LIVE_CALL_STATUSES: CallStatus[] = ["ringing", "active"];
+
+export function isCallLive(status: CallStatus): boolean {
+  return LIVE_CALL_STATUSES.includes(status);
+}
+
+export const CALL_STATUS_LABELS: Record<CallStatus, string> = {
+  ringing: "Ringing",
+  active: "In progress",
+  ended: "Ended",
+  declined: "Declined",
+  missed: "Missed",
+  cancelled: "Cancelled",
+  failed: "Failed",
+};
+
+export function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}

@@ -697,6 +697,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ring an astrologer */
+        post: operations["start_call_api_v1_calls_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The call I am on, if any — for both sides */
+        get: operations["my_active_call_api_v1_calls_active_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My calls */
+        get: operations["call_history_api_v1_calls_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One call */
+        get: operations["get_call_api_v1_calls__session_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/{session_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Answer (astrologer) */
+        post: operations["accept_call_api_v1_calls__session_id__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/{session_id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline (astrologer) */
+        post: operations["decline_call_api_v1_calls__session_id__decline_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/{session_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hang up */
+        post: operations["end_call_api_v1_calls__session_id__end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/{session_id}/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** I am still on this call */
+        post: operations["heartbeat_api_v1_calls__session_id__heartbeat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -933,6 +1069,34 @@ export interface components {
             message: string;
             data?: components["schemas"]["AuthResult"] | null;
         };
+        /** ApiResponse[CallOut] */
+        ApiResponse_CallOut_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["CallOut"] | null;
+        };
+        /** ApiResponse[CallSessionOut] */
+        ApiResponse_CallSessionOut_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["CallSessionOut"] | null;
+        };
         /** ApiResponse[CreateOrderResponse] */
         ApiResponse_CreateOrderResponse_: {
             /**
@@ -1045,6 +1209,20 @@ export interface components {
             message: string;
             data?: components["schemas"]["Paginated_AstrologerPublic_"] | null;
         };
+        /** ApiResponse[Paginated[CallOut]] */
+        ApiResponse_Paginated_CallOut__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["Paginated_CallOut_"] | null;
+        };
         /** ApiResponse[Paginated[PaymentOrderOut]] */
         ApiResponse_Paginated_PaymentOrderOut__: {
             /**
@@ -1128,6 +1306,20 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["ReconcileResult"] | null;
+        };
+        /** ApiResponse[Union[CallSessionOut, NoneType]] */
+        ApiResponse_Union_CallSessionOut__NoneType__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["CallSessionOut"] | null;
         };
         /** ApiResponse[UserProfile] */
         ApiResponse_UserProfile_: {
@@ -1698,6 +1890,92 @@ export interface components {
             file: string;
         };
         /**
+         * CallCredentials
+         * @description Everything the SDK needs, and nothing it does not.
+         *
+         *     The ServerSecret is absent on purpose — it signs the token here and never
+         *     leaves the server.
+         */
+        CallCredentials: {
+            /** App Id */
+            app_id: number;
+            /** Token */
+            token: string;
+            /** Room Id */
+            room_id: string;
+            /** User Id */
+            user_id: string;
+            /** User Name */
+            user_name: string;
+            /** Server Url */
+            server_url?: string | null;
+            /** Server Url Backup */
+            server_url_backup?: string | null;
+        };
+        /** CallOut */
+        CallOut: {
+            /** Id */
+            id: string;
+            /** Room Id */
+            room_id: string;
+            mode: components["schemas"]["ConsultationMode"];
+            status: components["schemas"]["CallStatus"];
+            /** User Id */
+            user_id: string;
+            /** Astrologer Id */
+            astrologer_id: string;
+            /** Astrologer User Id */
+            astrologer_user_id: string;
+            peer?: components["schemas"]["CallPeer"] | null;
+            /** Started At */
+            started_at?: string | null;
+            /** Ended At */
+            ended_at?: string | null;
+            /**
+             * Duration Seconds
+             * @default 0
+             */
+            duration_seconds: number;
+            ended_by?: components["schemas"]["CallParty"] | null;
+            /** End Reason */
+            end_reason?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * CallParty
+         * @enum {string}
+         */
+        CallParty: "user" | "astrologer" | "system";
+        /**
+         * CallPeer
+         * @description Who is on the other end, for the call screen.
+         */
+        CallPeer: {
+            /** Name */
+            name: string;
+            /** Avatar Url */
+            avatar_url?: string | null;
+        };
+        /** CallSessionOut */
+        CallSessionOut: {
+            call: components["schemas"]["CallOut"];
+            credentials?: components["schemas"]["CallCredentials"] | null;
+        };
+        /**
+         * CallStatus
+         * @description Where a call is in its life.
+         *
+         *     Every path out of `RINGING` is recorded separately, because "the astrologer
+         *     said no" and "the astrologer never picked up" mean different things to the
+         *     person waiting, and later to whoever is paid.
+         * @enum {string}
+         */
+        CallStatus: "ringing" | "active" | "ended" | "declined" | "missed" | "cancelled" | "failed";
+        /**
          * ChangePasswordRequest
          * @description Changing the password while signed in.
          */
@@ -1865,6 +2143,11 @@ export interface components {
             email: string;
             /** Code */
             code: string;
+        };
+        /** EndCallRequest */
+        EndCallRequest: {
+            /** Reason */
+            reason?: string | null;
         };
         /**
          * ForgotPasswordRequest
@@ -2042,6 +2325,12 @@ export interface components {
         Paginated_AstrologerPublic_: {
             /** Items */
             items: components["schemas"]["AstrologerPublic"][];
+            meta: components["schemas"]["PageMeta"];
+        };
+        /** Paginated[CallOut] */
+        Paginated_CallOut_: {
+            /** Items */
+            items: components["schemas"]["CallOut"][];
             meta: components["schemas"]["PageMeta"];
         };
         /** Paginated[PaymentOrderOut] */
@@ -2294,6 +2583,13 @@ export interface components {
          * @enum {string}
          */
         Skill: "vedic_astrology" | "numerology" | "tarot" | "vastu" | "palmistry" | "face_reading" | "kp_astrology" | "lal_kitab" | "nadi" | "prashna" | "love_relationship" | "career_business" | "finance_wealth";
+        /** StartCallRequest */
+        StartCallRequest: {
+            /** Astrologer Id */
+            astrologer_id: string;
+            /** @default video */
+            mode: components["schemas"]["ConsultationMode"];
+        };
         /** TokenPair */
         TokenPair: {
             /** Access Token */
@@ -4031,6 +4327,250 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponse_list_CoinRateChangeOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_call_api_v1_calls_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartCallRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_CallSessionOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_active_call_api_v1_calls_active_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_Union_CallSessionOut__NoneType__"];
+                };
+            };
+        };
+    };
+    call_history_api_v1_calls_history_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_Paginated_CallOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_call_api_v1_calls__session_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_CallSessionOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_call_api_v1_calls__session_id__accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_CallSessionOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decline_call_api_v1_calls__session_id__decline_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_CallOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_call_api_v1_calls__session_id__end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["EndCallRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_CallOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    heartbeat_api_v1_calls__session_id__heartbeat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_CallOut_"];
                 };
             };
             /** @description Validation Error */

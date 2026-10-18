@@ -12,6 +12,7 @@
     "@hookform/resolvers": "^5.9.1",
     "@tanstack/react-query": "^5.104.2",
     "@tanstack/react-query-devtools": "^5.104.2",
+    "@zegocloud/zego-uikit-prebuilt": "^2.18.5",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "lucide-react": "^1.57.0",

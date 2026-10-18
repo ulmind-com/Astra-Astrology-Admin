@@ -20,6 +20,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 
+import { IncomingCallWatcher } from "@/components/call/incoming-call";
 import { Avatar, Badge, Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { ROLE_LABELS } from "@/types";
@@ -155,6 +156,9 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
         </header>
 
         <main className="flex-1 p-4 sm:p-6">{children}</main>
+
+        {/* Rings on every panel page, since a call can arrive at any time. */}
+        <IncomingCallWatcher />
       </div>
     </div>
   );

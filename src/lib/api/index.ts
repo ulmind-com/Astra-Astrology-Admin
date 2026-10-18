@@ -16,6 +16,8 @@ import type {
   AstrologerUpdate,
   AuthResult,
   AvailabilityUpdate,
+  Call,
+  CallSession,
   CoinRateChange,
   ConsultationMode,
   CreateOrderResponse,
@@ -259,4 +261,25 @@ export const adminSettingsApi = {
     api.patch<PlatformSettings>(endpoints.admin.settings, { coins_per_rupee, note }),
 
   coinRateHistory: () => api.get<CoinRateChange[]>(endpoints.admin.coinRateHistory),
+};
+
+// ------------------------------------------------------------------- calls
+export const callApi = {
+  start: (astrologer_id: string, mode: ConsultationMode = "video") =>
+    api.post<CallSession>(endpoints.calls.start, { astrologer_id, mode }),
+
+  active: () => api.get<CallSession | null>(endpoints.calls.active),
+
+  get: (id: string) => api.get<CallSession>(endpoints.calls.detail(id)),
+
+  accept: (id: string) => api.post<CallSession>(endpoints.calls.accept(id), {}),
+
+  decline: (id: string) => api.post<Call>(endpoints.calls.decline(id), {}),
+
+  end: (id: string, reason?: string) => api.post<Call>(endpoints.calls.end(id), { reason }),
+
+  heartbeat: (id: string) => api.post<Call>(endpoints.calls.heartbeat(id), {}),
+
+  history: (params: { page?: number; limit?: number } = {}) =>
+    api.get<{ items: Call[]; meta: PageMeta }>(endpoints.calls.history, { query: params }),
 };

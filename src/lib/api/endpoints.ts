@@ -41,6 +41,17 @@ export const endpoints = {
     rechargeVerify: "/wallet/recharge/verify",
   },
 
+  calls: {
+    start: "/calls",
+    active: "/calls/active",
+    history: "/calls/history",
+    detail: (id: string) => `/calls/${id}`,
+    accept: (id: string) => `/calls/${id}/accept`,
+    decline: (id: string) => `/calls/${id}/decline`,
+    end: (id: string) => `/calls/${id}/end`,
+    heartbeat: (id: string) => `/calls/${id}/heartbeat`,
+  },
+
   admin: {
     astrologers: "/admin/astrologers",
     astrologer: (id: string) => `/admin/astrologers/${id}`,
