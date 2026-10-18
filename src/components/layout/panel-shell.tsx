@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CalendarDays,
   CreditCard,
   LayoutDashboard,
   Lock,
@@ -19,6 +20,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 
+import { AppointmentReminder } from "@/components/appointments/reminder";
 import { IncomingCallWatcher } from "@/components/call/incoming-call";
 import { Avatar, Badge, Button } from "@/components/ui";
 import { UlmindCredit } from "@/components/ulmind-credit";
@@ -40,6 +42,7 @@ const ADMIN_NAV: NavItem[] = [
 
 const ASTROLOGER_NAV: NavItem[] = [
   { href: "/me", label: "My profile", icon: UserRound },
+  { href: "/appointments", label: "Appointments", icon: CalendarDays },
   { href: "/earnings", label: "Earnings", icon: TrendingUp },
   { href: "/me/password", label: "Password", icon: Lock },
 ];

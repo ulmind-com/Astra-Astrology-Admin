@@ -4,6 +4,9 @@ import { api, apiFetch } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import type {
   Address,
+  AvailabilityWindow,
+  AppointmentCard,
+  Appointment,
   AddressInput,
   AddressUpdate,
   AdminEarningRow,
@@ -276,6 +279,10 @@ export const adminSettingsApi = {
     min_session_minutes?: number;
     max_session_minutes?: number;
     chat_retention_days?: number;
+    appointment_commission_percent?: number;
+    min_appointment_minutes?: number;
+    max_appointment_minutes?: number;
+    appointment_booking_days_ahead?: number;
   }) => api.patch<PlatformSettings>(endpoints.admin.consultationDefaults, body),
 
   earnings: () => api.get<AdminEarningsSummary>(endpoints.admin.earnings),
@@ -343,4 +350,27 @@ export const earningsApi = {
 
   recent: (limit = 50) =>
     api.get<EarningRow[]>(endpoints.astrologers.myEarningsRecent, { query: { limit } }),
+};
+
+// ------------------------------------------------------------ appointments
+export const appointmentApi = {
+  /** The astrologer's own price card. */
+  card: () => api.get<AppointmentCard>(endpoints.appointments.myCard),
+
+  updateCard: (body: { enabled?: boolean; price_paise?: number; block_minutes?: number }) =>
+    api.patch<AppointmentCard>(endpoints.appointments.myCard, body),
+
+  windows: (days = 60) =>
+    api.get<AvailabilityWindow[]>(endpoints.appointments.myWindows, { query: { days } }),
+
+  addWindow: (starts_at: string, ends_at: string) =>
+    api.post<AvailabilityWindow>(endpoints.appointments.myWindows, { starts_at, ends_at }),
+
+  removeWindow: (id: string) => api.delete<null>(endpoints.appointments.myWindow(id)),
+
+  schedule: (upcoming_only = true) =>
+    api.get<Appointment[]>(endpoints.appointments.mySchedule, { query: { upcoming_only } }),
+
+  cancel: (id: string, reason?: string) =>
+    api.post<Appointment>(endpoints.appointments.cancel(id), { reason: reason ?? null }),
 };

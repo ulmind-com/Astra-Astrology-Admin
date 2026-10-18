@@ -166,6 +166,7 @@ export const TRANSACTION_REASON_LABELS: Record<TransactionReason, string> = {
   bonus: "Bonus",
   payout: "Payout",
   reversal: "Reversal",
+  appointment_deposit: "Appointment booking",
 };
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentOrderStatus, string> = {
@@ -277,3 +278,19 @@ export function formatEarning(paise: number): string {
     maximumFractionDigits: 2,
   }).format(paise / 100);
 }
+
+// ------------------------------------------------------------- appointments
+export type Appointment = S["AppointmentOut"];
+export type AppointmentQuote = S["AppointmentQuote"];
+export type AppointmentStatus = S["AppointmentStatus"];
+export type AppointmentCard = S["AppointmentCardOut"];
+export type AvailabilityWindow = S["WindowOut"];
+export type AppointmentDayView = S["DayView"];
+
+/** What a booking's state is called on screen. */
+export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
+  booked: "Booked",
+  cancelled: "Cancelled",
+  completed: "Completed",
+  missed: "Missed",
+};

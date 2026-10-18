@@ -427,6 +427,188 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/appointments/me/card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What I charge for an appointment */
+        get: operations["my_card_api_v1_appointments_me_card_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set what I charge */
+        patch: operations["update_my_card_api_v1_appointments_me_card_patch"];
+        trace?: never;
+    };
+    "/api/v1/appointments/me/windows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The hours I have opened */
+        get: operations["my_windows_api_v1_appointments_me_windows_get"];
+        put?: never;
+        /**
+         * Open some hours for booking
+         * @description Adds one stretch of one day.
+         *
+         *     Overlapping an existing window is refused rather than merged: two windows
+         *     that overlap are almost always a mistake, and silently joining them would
+         *     open hours the astrologer never chose.
+         */
+        post: operations["add_window_api_v1_appointments_me_windows_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments/me/windows/{window_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Close hours I had opened
+         * @description Refused if anything is booked inside it, which would strand the booking.
+         */
+        delete: operations["remove_window_api_v1_appointments_me_windows__window_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments/me/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My appointments */
+        get: operations["my_schedule_api_v1_appointments_me_schedule_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments/astrologers/{astrologer_id}/day": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What is open and what is taken on one day */
+        get: operations["day_api_v1_appointments_astrologers__astrologer_id__day_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments/quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** What a booking of this length would cost */
+        post: operations["quote_api_v1_appointments_quote_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Book an appointment */
+        post: operations["book_api_v1_appointments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My appointments */
+        get: operations["mine_api_v1_appointments_mine_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments/{appointment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One appointment */
+        get: operations["one_api_v1_appointments__appointment_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments/{appointment_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel — the deposit is not returned */
+        post: operations["cancel_api_v1_appointments__appointment_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/astrologers": {
         parameters: {
             query?: never;
@@ -1413,6 +1595,48 @@ export interface components {
             message: string;
             data?: components["schemas"]["AdminEarningsSummary"] | null;
         };
+        /** ApiResponse[AppointmentCardOut] */
+        ApiResponse_AppointmentCardOut_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["AppointmentCardOut"] | null;
+        };
+        /** ApiResponse[AppointmentOut] */
+        ApiResponse_AppointmentOut_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["AppointmentOut"] | null;
+        };
+        /** ApiResponse[AppointmentQuote] */
+        ApiResponse_AppointmentQuote_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["AppointmentQuote"] | null;
+        };
         /** ApiResponse[AstrologerCreated] */
         ApiResponse_AstrologerCreated_: {
             /**
@@ -1552,6 +1776,20 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["CreateOrderResponse"] | null;
+        };
+        /** ApiResponse[DayView] */
+        ApiResponse_DayView_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["DayView"] | null;
         };
         /** ApiResponse[EarningsSummary] */
         ApiResponse_EarningsSummary_: {
@@ -1917,6 +2155,20 @@ export interface components {
             message: string;
             data?: components["schemas"]["WalletSummary"] | null;
         };
+        /** ApiResponse[WindowOut] */
+        ApiResponse_WindowOut_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["WindowOut"] | null;
+        };
         /** ApiResponse[list[Address]] */
         ApiResponse_list_Address__: {
             /**
@@ -1946,6 +2198,21 @@ export interface components {
             message: string;
             /** Data */
             data?: components["schemas"]["AdminEarningRow"][] | null;
+        };
+        /** ApiResponse[list[AppointmentOut]] */
+        ApiResponse_list_AppointmentOut__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            /** Data */
+            data?: components["schemas"]["AppointmentOut"][] | null;
         };
         /** ApiResponse[list[AstrologerProfile]] */
         ApiResponse_list_AstrologerProfile__: {
@@ -1992,6 +2259,146 @@ export interface components {
             /** Data */
             data?: components["schemas"]["EarningRow"][] | null;
         };
+        /** ApiResponse[list[WindowOut]] */
+        ApiResponse_list_WindowOut__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            /** Data */
+            data?: components["schemas"]["WindowOut"][] | null;
+        };
+        /**
+         * AppointmentCard
+         * @description What this astrologer charges for a scheduled appointment.
+         *
+         *     Priced per block — "thirty minutes for two hundred and fifty rupees" is
+         *     how people quote this — and any other length is worked out pro rata from
+         *     it, so a forty-minute booking does not need its own price.
+         *
+         *     In paise, like every other amount on the platform, because a price held as
+         *     rupees-and-a-fraction eventually rounds somewhere it should not.
+         */
+        AppointmentCard: {
+            /**
+             * Enabled
+             * @default false
+             */
+            enabled: boolean;
+            /**
+             * Price Paise
+             * @default 0
+             */
+            price_paise: number;
+            /**
+             * Block Minutes
+             * @default 30
+             */
+            block_minutes: number;
+        };
+        /** AppointmentCardOut */
+        AppointmentCardOut: {
+            /** Enabled */
+            enabled: boolean;
+            /** Price Paise */
+            price_paise: number;
+            /** Block Minutes */
+            block_minutes: number;
+        };
+        /**
+         * AppointmentCardUpdate
+         * @description What the astrologer charges, quoted per block.
+         */
+        AppointmentCardUpdate: {
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Price Paise */
+            price_paise?: number | null;
+            /** Block Minutes */
+            block_minutes?: number | null;
+        };
+        /** AppointmentOut */
+        AppointmentOut: {
+            /** Id */
+            id: string;
+            status: components["schemas"]["AppointmentStatus"];
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            /** Minutes */
+            minutes: number;
+            /** Price Paise */
+            price_paise: number;
+            /** Commission Percent */
+            commission_percent: number;
+            /** Deposit Paise */
+            deposit_paise: number;
+            /** Deposit Coins */
+            deposit_coins: number;
+            /** Balance Due Paise */
+            balance_due_paise: number;
+            /** Cancelled At */
+            cancelled_at?: string | null;
+            /** Cancel Reason */
+            cancel_reason?: string | null;
+            /** User Note */
+            user_note?: string | null;
+            peer?: components["schemas"]["AppointmentPeer"] | null;
+        };
+        /** AppointmentPeer */
+        AppointmentPeer: {
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Avatar Url */
+            avatar_url?: string | null;
+        };
+        /**
+         * AppointmentQuote
+         * @description What a booking of this length would cost, before committing to it.
+         */
+        AppointmentQuote: {
+            /** Minutes */
+            minutes: number;
+            /** Price Paise */
+            price_paise: number;
+            /** Commission Percent */
+            commission_percent: number;
+            /** Deposit Paise */
+            deposit_paise: number;
+            /** Deposit Coins */
+            deposit_coins: number;
+            /** Balance Due Paise */
+            balance_due_paise: number;
+            /** Balance Coins */
+            balance_coins: number;
+            /** Can Afford */
+            can_afford: boolean;
+        };
+        /**
+         * AppointmentStatus
+         * @description Where a booking is in its life.
+         *
+         *     There is no "paid" state: the deposit is taken as the booking is made, so
+         *     a booking that exists has been paid for. What remains is whether it still
+         *     stands, has been called off, or is behind us.
+         * @enum {string}
+         */
+        AppointmentStatus: "booked" | "cancelled" | "completed" | "missed";
         /**
          * AstrologerAdminUpdate
          * @description Everything the astrologer can change, plus what only the platform can.
@@ -2233,6 +2640,7 @@ export interface components {
             rates: components["schemas"]["ResolvedRates"];
             /** Modes Enabled */
             modes_enabled: components["schemas"]["ConsultationMode"][];
+            appointment: components["schemas"]["AppointmentCard"];
             availability: components["schemas"]["Availability"];
             rating: components["schemas"]["RatingSummary"];
             /** Total Consultations */
@@ -2463,6 +2871,20 @@ export interface components {
              */
             file: string;
         };
+        /** BookRequest */
+        BookRequest: {
+            /** Astrologer Id */
+            astrologer_id: string;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /** Minutes */
+            minutes: number;
+            /** Note */
+            note?: string | null;
+        };
         /**
          * CallCredentials
          * @description Everything the SDK needs, and nothing it does not.
@@ -2550,6 +2972,11 @@ export interface components {
          * @enum {string}
          */
         CallStatus: "ringing" | "active" | "ended" | "declined" | "missed" | "cancelled" | "failed";
+        /** CancelRequest */
+        CancelRequest: {
+            /** Reason */
+            reason?: string | null;
+        };
         /**
          * ChangePasswordRequest
          * @description Changing the password while signed in.
@@ -2664,6 +3091,14 @@ export interface components {
             max_session_minutes?: number | null;
             /** Chat Retention Days */
             chat_retention_days?: number | null;
+            /** Appointment Commission Percent */
+            appointment_commission_percent?: number | null;
+            /** Min Appointment Minutes */
+            min_appointment_minutes?: number | null;
+            /** Max Appointment Minutes */
+            max_appointment_minutes?: number | null;
+            /** Appointment Booking Days Ahead */
+            appointment_booking_days_ahead?: number | null;
         };
         /**
          * ConsultationMode
@@ -2761,6 +3196,22 @@ export interface components {
              * @example Asia/Kolkata
              */
             timezone?: string | null;
+        };
+        /**
+         * DayView
+         * @description Open hours and what is already gone, so a chooser can see both.
+         */
+        DayView: {
+            /** Windows */
+            windows: components["schemas"]["Range"][];
+            /** Booked */
+            booked: components["schemas"]["Range"][];
+            /** Slot Minutes */
+            slot_minutes: number;
+            /** Min Minutes */
+            min_minutes: number;
+            /** Max Minutes */
+            max_minutes: number;
         };
         /**
          * EarningRow
@@ -3166,6 +3617,14 @@ export interface components {
             max_session_minutes: number;
             /** Chat Retention Days */
             chat_retention_days: number;
+            /** Appointment Commission Percent */
+            appointment_commission_percent: number;
+            /** Min Appointment Minutes */
+            min_appointment_minutes: number;
+            /** Max Appointment Minutes */
+            max_appointment_minutes: number;
+            /** Appointment Booking Days Ahead */
+            appointment_booking_days_ahead: number;
             /**
              * Updated At
              * Format: date-time
@@ -3233,6 +3692,26 @@ export interface components {
         };
         /** @example 5eb7cf5a86d9755df3a6c593 */
         PydanticObjectId: string;
+        /** QuoteRequest */
+        QuoteRequest: {
+            /** Astrologer Id */
+            astrologer_id: string;
+            /** Minutes */
+            minutes: number;
+        };
+        /** Range */
+        Range: {
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+        };
         /**
          * RateCard
          * @description What this astrologer charges, in **coins per started minute**.
@@ -3471,7 +3950,7 @@ export interface components {
          *     so adding payouts or coupons later needs no schema change.
          * @enum {string}
          */
-        TransactionReason: "recharge" | "consultation" | "refund" | "adjustment" | "bonus" | "payout" | "reversal";
+        TransactionReason: "recharge" | "consultation" | "refund" | "adjustment" | "bonus" | "payout" | "reversal" | "appointment_deposit";
         /** TransactionRefOut */
         TransactionRefOut: {
             /** Razorpay Order Id */
@@ -3658,6 +4137,42 @@ export interface components {
             wallet: components["schemas"]["WalletBalance"];
             /** Recent */
             recent: components["schemas"]["TransactionOut"][];
+        };
+        /**
+         * WindowInput
+         * @description One stretch of a day the astrologer will take bookings in.
+         */
+        WindowInput: {
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+        };
+        /** WindowOut */
+        WindowOut: {
+            /** Id */
+            id: string;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
         };
     };
     responses: never;
@@ -4547,6 +5062,382 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponse_ConsultationQuote_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_card_api_v1_appointments_me_card_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_AppointmentCardOut_"];
+                };
+            };
+        };
+    };
+    update_my_card_api_v1_appointments_me_card_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppointmentCardUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_AppointmentCardOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_windows_api_v1_appointments_me_windows_get: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_list_WindowOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_window_api_v1_appointments_me_windows_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WindowInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_WindowOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_window_api_v1_appointments_me_windows__window_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                window_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_schedule_api_v1_appointments_me_schedule_get: {
+        parameters: {
+            query?: {
+                upcoming_only?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_list_AppointmentOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    day_api_v1_appointments_astrologers__astrologer_id__day_get: {
+        parameters: {
+            query: {
+                /** @description The day, as YYYY-MM-DD */
+                on: string;
+            };
+            header?: never;
+            path: {
+                astrologer_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_DayView_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    quote_api_v1_appointments_quote_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_AppointmentQuote_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    book_api_v1_appointments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_AppointmentOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mine_api_v1_appointments_mine_get: {
+        parameters: {
+            query?: {
+                upcoming_only?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_list_AppointmentOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    one_api_v1_appointments__appointment_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appointment_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_AppointmentOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_api_v1_appointments__appointment_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appointment_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_AppointmentOut_"];
                 };
             };
             /** @description Validation Error */

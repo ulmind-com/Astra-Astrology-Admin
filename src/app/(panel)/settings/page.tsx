@@ -369,6 +369,10 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
     minMinutes: String(settings.min_session_minutes),
     maxMinutes: String(settings.max_session_minutes),
     retentionDays: String(settings.chat_retention_days),
+    apptCommission: String(settings.appointment_commission_percent),
+    apptMin: String(settings.min_appointment_minutes),
+    apptMax: String(settings.max_appointment_minutes),
+    apptDaysAhead: String(settings.appointment_booking_days_ahead),
   });
   const [fieldError, setFieldError] = React.useState<string | null>(null);
 
@@ -385,6 +389,10 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
         min_session_minutes: Number(form.minMinutes),
         max_session_minutes: Number(form.maxMinutes),
         chat_retention_days: Number(form.retentionDays),
+        appointment_commission_percent: Number(form.apptCommission),
+        min_appointment_minutes: Number(form.apptMin),
+        max_appointment_minutes: Number(form.apptMax),
+        appointment_booking_days_ahead: Number(form.apptDaysAhead),
       }),
     onSuccess: (updated) => {
       void queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
@@ -416,6 +424,22 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
     const retention = Number(form.retentionDays);
     if (!Number.isInteger(retention) || retention < 0) {
       setFieldError("Keep chats for a whole number of days, 0 or more.");
+      return;
+    }
+    const apptCommission = Number(form.apptCommission);
+    if (Number.isNaN(apptCommission) || apptCommission < 0 || apptCommission > 100) {
+      setFieldError("Appointment commission must be between 0 and 100.");
+      return;
+    }
+    const apptMin = Number(form.apptMin);
+    const apptMax = Number(form.apptMax);
+    if (apptMin > apptMax) {
+      setFieldError("The shortest appointment cannot be longer than the longest.");
+      return;
+    }
+    // Appointments sit on a five-minute grid, so the limits must too.
+    if (apptMin % 5 || apptMax % 5) {
+      setFieldError("Appointment lengths must be multiples of 5 minutes.");
       return;
     }
     save.mutate();
@@ -499,6 +523,49 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
                 onChange={set("maxMinutes")}
               />
             </Field>
+          </div>
+
+          {/* ------------------------------------------------- appointments */}
+          <div className="rounded-xl border border-border bg-surface-muted/40 p-4">
+            <p className="mb-3 font-display text-sm font-semibold">Scheduled appointments</p>
+            <div className="flex flex-wrap gap-4">
+              <Field
+                label="Commission (%)"
+                required
+                className="w-40"
+                hint="Taken when booked"
+              >
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={form.apptCommission}
+                  onChange={set("apptCommission")}
+                />
+              </Field>
+              <Field label="Shortest (min)" required className="w-36">
+                <Input type="number" min={5} step={5} value={form.apptMin} onChange={set("apptMin")} />
+              </Field>
+              <Field label="Longest (min)" required className="w-36">
+                <Input type="number" min={5} step={5} value={form.apptMax} onChange={set("apptMax")} />
+              </Field>
+              <Field label="Book up to (days ahead)" required className="w-48">
+                <Input
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={form.apptDaysAhead}
+                  onChange={set("apptDaysAhead")}
+                />
+              </Field>
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+              The commission is taken from the user&apos;s wallet the moment they book
+              and is <strong>not returned</strong> if they cancel — that is what stops a
+              calendar filling with bookings nobody means to keep. The astrologer
+              collects the rest at the appointment itself.
+            </p>
           </div>
 
           {/* ------------------------------------------------ chat history */}

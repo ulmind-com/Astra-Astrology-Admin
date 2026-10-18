@@ -56,6 +56,19 @@ export const endpoints = {
     heartbeat: (id: string) => `/calls/${id}/heartbeat`,
   },
 
+  appointments: {
+    book: "/appointments",
+    mine: "/appointments/mine",
+    quote: "/appointments/quote",
+    detail: (id: string) => `/appointments/${id}`,
+    cancel: (id: string) => `/appointments/${id}/cancel`,
+    day: (astrologerId: string) => `/appointments/astrologers/${astrologerId}/day`,
+    myCard: "/appointments/me/card",
+    myWindows: "/appointments/me/windows",
+    myWindow: (id: string) => `/appointments/me/windows/${id}`,
+    mySchedule: "/appointments/me/schedule",
+  },
+
   chats: {
     start: "/chats",
     active: "/chats/active",
