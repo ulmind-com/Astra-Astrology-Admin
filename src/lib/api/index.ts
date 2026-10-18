@@ -6,6 +6,8 @@ import type {
   Address,
   AddressInput,
   AddressUpdate,
+  AdminEarningRow,
+  AdminEarningsSummary,
   AdminTransaction,
   AdminWallet,
   AstrologerAdminUpdate,
@@ -23,6 +25,8 @@ import type {
   CoinRateChange,
   ConsultationMode,
   CreateOrderResponse,
+  EarningRow,
+  EarningsSummary,
   EmailAvailability,
   GalleryUploadResult,
   HealthStatus,
@@ -264,6 +268,20 @@ export const adminSettingsApi = {
 
   coinRateHistory: () => api.get<CoinRateChange[]>(endpoints.admin.coinRateHistory),
 
+  setConsultationDefaults: (body: {
+    default_chat_coins_per_minute?: number;
+    default_call_coins_per_minute?: number;
+    default_video_coins_per_minute?: number;
+    default_commission_percent?: number;
+    min_session_minutes?: number;
+    max_session_minutes?: number;
+  }) => api.patch<PlatformSettings>(endpoints.admin.consultationDefaults, body),
+
+  earnings: () => api.get<AdminEarningsSummary>(endpoints.admin.earnings),
+
+  recentEarnings: (limit = 100) =>
+    api.get<AdminEarningRow[]>(endpoints.admin.earningsRecent, { query: { limit } }),
+
   setRechargeLimits: (body: {
     min_recharge_paise?: number;
     max_recharge_paise?: number;
@@ -310,4 +328,12 @@ export const chatApi = {
 
   history: (params: { page?: number; limit?: number } = {}) =>
     api.get<{ items: Chat[]; meta: PageMeta }>(endpoints.chats.history, { query: params }),
+};
+
+// ------------------------------------------------------ astrologer: earnings
+export const earningsApi = {
+  summary: () => api.get<EarningsSummary>(endpoints.astrologers.myEarnings),
+
+  recent: (limit = 50) =>
+    api.get<EarningRow[]>(endpoints.astrologers.myEarningsRecent, { query: { limit } }),
 };

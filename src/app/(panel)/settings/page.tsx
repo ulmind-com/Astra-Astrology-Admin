@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Coins, History, Loader2, Wallet } from "lucide-react";
+import { Coins, History, Loader2, Timer, Wallet } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -24,7 +24,12 @@ import { adminSettingsApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { formatDateTime } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
-import { coinWord, formatCoins, type PlatformSettings } from "@/types";
+import {
+  coinWord,
+  formatCoins,
+  formatEarning,
+  type PlatformSettings,
+} from "@/types";
 
 const EXAMPLES = [100, 500, 1000];
 
@@ -176,6 +181,8 @@ export default function SettingsPage() {
       </Card>
 
       <RechargeLimitsCard settings={settings} />
+
+      <ConsultationDefaultsCard settings={settings} />
 
       <Card>
         <CardHeader>
@@ -337,6 +344,181 @@ function RechargeLimitsCard({ settings }: { settings: PlatformSettings }) {
           <Button type="submit" disabled={save.isPending || !changed}>
             {save.isPending && <Loader2 className="size-4 animate-spin" />}
             {changed ? "Save limits" : "Saved"}
+          </Button>
+        </form>
+      </CardBody>
+    </Card>
+  );
+}
+
+/**
+ * What a consultation costs, and what the platform keeps.
+ *
+ * These are the defaults. An astrologer with their own rate or commission uses
+ * theirs; everyone else moves when this moves, which is what makes onboarding
+ * a new astrologer a decision-free step.
+ */
+function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) {
+  const queryClient = useQueryClient();
+
+  const [form, setForm] = React.useState({
+    chat: String(settings.default_chat_coins_per_minute),
+    call: String(settings.default_call_coins_per_minute),
+    video: String(settings.default_video_coins_per_minute),
+    commission: String(settings.default_commission_percent),
+    minMinutes: String(settings.min_session_minutes),
+    maxMinutes: String(settings.max_session_minutes),
+  });
+  const [fieldError, setFieldError] = React.useState<string | null>(null);
+
+  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const save = useMutation({
+    mutationFn: () =>
+      adminSettingsApi.setConsultationDefaults({
+        default_chat_coins_per_minute: Number(form.chat),
+        default_call_coins_per_minute: Number(form.call),
+        default_video_coins_per_minute: Number(form.video),
+        default_commission_percent: Number(form.commission),
+        min_session_minutes: Number(form.minMinutes),
+        max_session_minutes: Number(form.maxMinutes),
+      }),
+    onSuccess: (updated) => {
+      void queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
+      toast.success(
+        `Chat ${updated.default_chat_coins_per_minute}, call ${updated.default_call_coins_per_minute}, video ${updated.default_video_coins_per_minute} coins a minute.`,
+      );
+    },
+    onError: (e: ApiError) => setFieldError(e.message),
+  });
+
+  function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setFieldError(null);
+
+    const nums = [form.chat, form.call, form.video].map(Number);
+    if (nums.some((n) => !Number.isInteger(n) || n < 1)) {
+      setFieldError("Rates must be whole coins, 1 or more.");
+      return;
+    }
+    const commission = Number(form.commission);
+    if (Number.isNaN(commission) || commission < 0 || commission > 100) {
+      setFieldError("Commission must be between 0 and 100.");
+      return;
+    }
+    if (Number(form.minMinutes) > Number(form.maxMinutes)) {
+      setFieldError("The shortest session cannot be longer than the longest.");
+      return;
+    }
+    save.mutate();
+  }
+
+  const commission = Number(form.commission);
+  const videoRate = Number(form.video);
+  // What one video minute is worth, and who gets what — the figure worth
+  // checking before saving.
+  const grossPaise =
+    Number.isFinite(videoRate) && settings.coins_per_rupee
+      ? Math.round((videoRate * 100) / settings.coins_per_rupee)
+      : 0;
+  const astrologerPaise = Math.round(grossPaise * (1 - commission / 100));
+
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle>
+          <span className="flex items-center gap-2">
+            <Timer className="size-4 text-brand-500" />
+            Consultation pricing
+          </span>
+        </CardTitle>
+        <CardDescription>
+          The default cost of a minute, and the platform&apos;s share. An
+          astrologer with their own rate or commission keeps theirs.
+        </CardDescription>
+      </CardHeader>
+
+      <CardBody>
+        <form onSubmit={submit} className="space-y-5">
+          <div>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Coins per minute
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Field label="Chat" required className="w-32">
+                <Input type="number" min={1} step={1} value={form.chat} onChange={set("chat")} />
+              </Field>
+              <Field label="Voice call" required className="w-32">
+                <Input type="number" min={1} step={1} value={form.call} onChange={set("call")} />
+              </Field>
+              <Field label="Video call" required className="w-32">
+                <Input type="number" min={1} step={1} value={form.video} onChange={set("video")} />
+              </Field>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-4">
+            <Field
+              label="Commission %"
+              required
+              hint="The platform's share of each minute."
+              className="w-40"
+            >
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                step="0.5"
+                value={form.commission}
+                onChange={set("commission")}
+              />
+            </Field>
+            <Field label="Shortest session (min)" required className="w-40">
+              <Input
+                type="number"
+                min={1}
+                step={1}
+                value={form.minMinutes}
+                onChange={set("minMinutes")}
+              />
+            </Field>
+            <Field label="Longest session (min)" required className="w-40">
+              <Input
+                type="number"
+                min={1}
+                step={1}
+                value={form.maxMinutes}
+                onChange={set("maxMinutes")}
+              />
+            </Field>
+          </div>
+
+          {grossPaise > 0 && (
+            <div className="rounded-xl border border-border bg-surface-muted/50 p-4 text-sm">
+              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                One video minute
+              </p>
+              <p>
+                {videoRate} {coinWord(videoRate)} ={" "}
+                <strong>{formatEarning(grossPaise)}</strong> · astrologer gets{" "}
+                <strong className="text-emerald-600 dark:text-emerald-400">
+                  {formatEarning(astrologerPaise)}
+                </strong>
+                , you keep{" "}
+                <strong>{formatEarning(grossPaise - astrologerPaise)}</strong>
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                A coin is worth what people pay for it — {settings.coins_per_rupee} per ₹1.
+              </p>
+            </div>
+          )}
+
+          {fieldError && <Alert tone="error">{fieldError}</Alert>}
+
+          <Button type="submit" disabled={save.isPending}>
+            {save.isPending && <Loader2 className="size-4 animate-spin" />}
+            Save pricing
           </Button>
         </form>
       </CardBody>

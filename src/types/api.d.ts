@@ -404,6 +404,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/astrologers/{astrologer_id}/quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What a session with this astrologer costs me
+         * @description Drives the "how long do you want to talk?" picker.
+         *
+         *     Returned before anything is booked, so the choice is made against real
+         *     numbers rather than a guess the server then refuses.
+         */
+        get: operations["consultation_quote_api_v1_astrologers__astrologer_id__quote_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/astrologers": {
         parameters: {
             query?: never;
@@ -697,6 +720,23 @@ export interface paths {
         patch: operations["update_recharge_limits_api_v1_admin_settings_recharge_limits_patch"];
         trace?: never;
     };
+    "/api/v1/admin/settings/consultation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set the default per-minute prices and commission */
+        patch: operations["update_consultation_defaults_api_v1_admin_settings_consultation_patch"];
+        trace?: never;
+    };
     "/api/v1/admin/settings/coin-rate-history": {
         parameters: {
             query?: never;
@@ -986,6 +1026,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/astrologers/me/earnings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What I have earned */
+        get: operations["my_earnings_api_v1_astrologers_me_earnings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/astrologers/me/earnings/recent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My recent earnings */
+        get: operations["my_recent_earnings_api_v1_astrologers_me_earnings_recent_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/earnings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Platform earnings */
+        get: operations["platform_earnings_api_v1_admin_earnings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/earnings/recent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent earnings, with the split */
+        get: operations["recent_platform_earnings_api_v1_admin_earnings_recent_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1101,6 +1209,49 @@ export interface components {
             /** Reason */
             reason: string;
         };
+        /**
+         * AdminEarningRow
+         * @description The admin sees the whole split.
+         */
+        AdminEarningRow: {
+            /** Id */
+            id: string;
+            mode: components["schemas"]["ConsultationMode"];
+            /** Minutes */
+            minutes: number;
+            /** Earning Paise */
+            earning_paise: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Astrologer Id */
+            astrologer_id: string;
+            /** Astrologer Name */
+            astrologer_name?: string | null;
+            /** Coins Charged */
+            coins_charged: number;
+            /** Gross Paise */
+            gross_paise: number;
+            /** Commission Percent */
+            commission_percent: number;
+            /** Commission Paise */
+            commission_paise: number;
+        };
+        /** AdminEarningsSummary */
+        AdminEarningsSummary: {
+            /** Gross Paise */
+            gross_paise: number;
+            /** Commission Paise */
+            commission_paise: number;
+            /** Payout Paise */
+            payout_paise: number;
+            /** Coins Charged */
+            coins_charged: number;
+            /** Sessions */
+            sessions: number;
+        };
         /** AdminTransactionOut */
         AdminTransactionOut: {
             /** Id */
@@ -1165,6 +1316,20 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["Address"] | null;
+        };
+        /** ApiResponse[AdminEarningsSummary] */
+        ApiResponse_AdminEarningsSummary_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["AdminEarningsSummary"] | null;
         };
         /** ApiResponse[AstrologerCreated] */
         ApiResponse_AstrologerCreated_: {
@@ -1278,6 +1443,20 @@ export interface components {
             message: string;
             data?: components["schemas"]["ChatSessionOut"] | null;
         };
+        /** ApiResponse[ConsultationQuote] */
+        ApiResponse_ConsultationQuote_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["ConsultationQuote"] | null;
+        };
         /** ApiResponse[CreateOrderResponse] */
         ApiResponse_CreateOrderResponse_: {
             /**
@@ -1291,6 +1470,20 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["CreateOrderResponse"] | null;
+        };
+        /** ApiResponse[EarningsSummary] */
+        ApiResponse_EarningsSummary_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["EarningsSummary"] | null;
         };
         /** ApiResponse[EmailAvailability] */
         ApiResponse_EmailAvailability_: {
@@ -1615,6 +1808,21 @@ export interface components {
             /** Data */
             data?: components["schemas"]["Address"][] | null;
         };
+        /** ApiResponse[list[AdminEarningRow]] */
+        ApiResponse_list_AdminEarningRow__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            /** Data */
+            data?: components["schemas"]["AdminEarningRow"][] | null;
+        };
         /** ApiResponse[list[AstrologerProfile]] */
         ApiResponse_list_AstrologerProfile__: {
             /**
@@ -1644,6 +1852,21 @@ export interface components {
             message: string;
             /** Data */
             data?: components["schemas"]["CoinRateChangeOut"][] | null;
+        };
+        /** ApiResponse[list[EarningRow]] */
+        ApiResponse_list_EarningRow__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            /** Data */
+            data?: components["schemas"]["EarningRow"][] | null;
         };
         /**
          * AstrologerAdminUpdate
@@ -1886,7 +2109,7 @@ export interface components {
             qualifications: string[];
             /** Experience Years */
             experience_years: number;
-            rates: components["schemas"]["RateCard"];
+            rates: components["schemas"]["ResolvedRates"];
             /** Modes Enabled */
             modes_enabled: components["schemas"]["ConsultationMode"][];
             availability: components["schemas"]["Availability"];
@@ -2160,6 +2383,7 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            billing?: components["schemas"]["SessionBilling"] | null;
         };
         /**
          * CallParty
@@ -2243,6 +2467,7 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            billing?: components["schemas"]["SessionBilling"] | null;
         };
         /** ChatSessionOut */
         ChatSessionOut: {
@@ -2287,10 +2512,50 @@ export interface components {
             note?: string | null;
         };
         /**
+         * ConsultationDefaultsUpdate
+         * @description Any field may be sent on its own; the rest keep their value.
+         */
+        ConsultationDefaultsUpdate: {
+            /** Default Chat Coins Per Minute */
+            default_chat_coins_per_minute?: number | null;
+            /** Default Call Coins Per Minute */
+            default_call_coins_per_minute?: number | null;
+            /** Default Video Coins Per Minute */
+            default_video_coins_per_minute?: number | null;
+            /** Default Commission Percent */
+            default_commission_percent?: number | null;
+            /** Min Session Minutes */
+            min_session_minutes?: number | null;
+            /** Max Session Minutes */
+            max_session_minutes?: number | null;
+        };
+        /**
          * ConsultationMode
          * @enum {string}
          */
         ConsultationMode: "chat" | "call" | "video";
+        /**
+         * ConsultationQuote
+         * @description What a session with this astrologer costs me, right now.
+         */
+        ConsultationQuote: {
+            mode: components["schemas"]["ConsultationMode"];
+            /** Coins Per Minute */
+            coins_per_minute: number;
+            /** Balance Coins */
+            balance_coins: number;
+            /** Affordable Minutes */
+            affordable_minutes: number;
+            /** Min Minutes */
+            min_minutes: number;
+            /** Max Minutes */
+            max_minutes: number;
+            /**
+             * Currency
+             * @default INR
+             */
+            currency: string;
+        };
         /** CreateOrderRequest */
         CreateOrderRequest: {
             /**
@@ -2360,6 +2625,40 @@ export interface components {
              * @example Asia/Kolkata
              */
             timezone?: string | null;
+        };
+        /** EarningRow */
+        EarningRow: {
+            /** Id */
+            id: string;
+            mode: components["schemas"]["ConsultationMode"];
+            /** Minutes */
+            minutes: number;
+            /** Earning Paise */
+            earning_paise: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** EarningsBucket */
+        EarningsBucket: {
+            /** Earning Paise */
+            earning_paise: number;
+            /** Minutes */
+            minutes: number;
+            /** Sessions */
+            sessions: number;
+        };
+        /**
+         * EarningsSummary
+         * @description An astrologer sees money, never the commission that was taken.
+         */
+        EarningsSummary: {
+            today: components["schemas"]["EarningsBucket"];
+            this_week: components["schemas"]["EarningsBucket"];
+            this_month: components["schemas"]["EarningsBucket"];
+            all_time: components["schemas"]["EarningsBucket"];
         };
         /** EmailAvailability */
         EmailAvailability: {
@@ -2699,6 +2998,18 @@ export interface components {
             min_recharge_paise: number;
             /** Max Recharge Paise */
             max_recharge_paise: number;
+            /** Default Chat Coins Per Minute */
+            default_chat_coins_per_minute: number;
+            /** Default Call Coins Per Minute */
+            default_call_coins_per_minute: number;
+            /** Default Video Coins Per Minute */
+            default_video_coins_per_minute: number;
+            /** Default Commission Percent */
+            default_commission_percent: number;
+            /** Min Session Minutes */
+            min_session_minutes: number;
+            /** Max Session Minutes */
+            max_session_minutes: number;
             /**
              * Updated At
              * Format: date-time
@@ -2768,35 +3079,23 @@ export interface components {
         PydanticObjectId: string;
         /**
          * RateCard
-         * @description Per-minute pricing. `offer_*`, when set, is what the user actually pays.
+         * @description What this astrologer charges, in **coins per started minute**.
+         *
+         *     Coins rather than rupees because that is what a wallet holds. Storing
+         *     rupees and converting at the coin rate would mean an admin changing
+         *     `coins_per_rupee` silently re-priced every astrologer on the platform.
+         *
+         *     `None` means "whatever the platform charges" — so a new astrologer needs no
+         *     pricing decision to go live, and changing the default moves everyone who
+         *     has not been priced individually.
          */
         RateCard: {
-            /**
-             * Chat Per Minute
-             * @default 0
-             */
-            chat_per_minute: number;
-            /**
-             * Call Per Minute
-             * @default 0
-             */
-            call_per_minute: number;
-            /**
-             * Video Per Minute
-             * @default 0
-             */
-            video_per_minute: number;
-            /** Offer Chat Per Minute */
-            offer_chat_per_minute?: number | null;
-            /** Offer Call Per Minute */
-            offer_call_per_minute?: number | null;
-            /** Offer Video Per Minute */
-            offer_video_per_minute?: number | null;
-            /**
-             * Currency
-             * @default INR
-             */
-            currency: string;
+            /** Chat Coins Per Minute */
+            chat_coins_per_minute?: number | null;
+            /** Call Coins Per Minute */
+            call_coins_per_minute?: number | null;
+            /** Video Coins Per Minute */
+            video_coins_per_minute?: number | null;
         };
         /** RatingSummary */
         RatingSummary: {
@@ -2885,6 +3184,36 @@ export interface components {
             new_password: string;
         };
         /**
+         * ResolvedRates
+         * @description Coins per started minute, with no blanks left to interpret.
+         */
+        ResolvedRates: {
+            /** Chat Coins Per Minute */
+            chat_coins_per_minute: number;
+            /** Call Coins Per Minute */
+            call_coins_per_minute: number;
+            /** Video Coins Per Minute */
+            video_coins_per_minute: number;
+        };
+        /**
+         * SessionBilling
+         * @description What this session costs and how far it has got.
+         */
+        SessionBilling: {
+            /** Coins Per Minute */
+            coins_per_minute: number;
+            /** Requested Minutes */
+            requested_minutes: number;
+            /** Minutes Charged */
+            minutes_charged: number;
+            /** Coins Charged */
+            coins_charged: number;
+            /** Balance Coins */
+            balance_coins: number;
+            /** Minutes Left */
+            minutes_left: number;
+        };
+        /**
          * Skill
          * @description Services an astrologer can offer, from the client's spec.
          * @enum {string}
@@ -2896,11 +3225,15 @@ export interface components {
             astrologer_id: string;
             /** @default video */
             mode: components["schemas"]["ConsultationMode"];
+            /** Requested Minutes */
+            requested_minutes: number;
         };
         /** StartChatRequest */
         StartChatRequest: {
             /** Astrologer Id */
             astrologer_id: string;
+            /** Requested Minutes */
+            requested_minutes: number;
         };
         /** TokenPair */
         TokenPair: {
@@ -4000,6 +4333,39 @@ export interface operations {
             };
         };
     };
+    consultation_quote_api_v1_astrologers__astrologer_id__quote_get: {
+        parameters: {
+            query: {
+                mode: components["schemas"]["ConsultationMode"];
+            };
+            header?: never;
+            path: {
+                astrologer_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ConsultationQuote_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_astrologers_api_v1_admin_astrologers_get: {
         parameters: {
             query?: {
@@ -4654,6 +5020,39 @@ export interface operations {
             };
         };
     };
+    update_consultation_defaults_api_v1_admin_settings_consultation_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsultationDefaultsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_PlatformSettingsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     coin_rate_history_api_v1_admin_settings_coin_rate_history_get: {
         parameters: {
             query?: {
@@ -5160,6 +5559,108 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponse_ChatOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_earnings_api_v1_astrologers_me_earnings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_EarningsSummary_"];
+                };
+            };
+        };
+    };
+    my_recent_earnings_api_v1_astrologers_me_earnings_recent_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_list_EarningRow__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    platform_earnings_api_v1_admin_earnings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_AdminEarningsSummary_"];
+                };
+            };
+        };
+    };
+    recent_platform_earnings_api_v1_admin_earnings_recent_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_list_AdminEarningRow__"];
                 };
             };
             /** @description Validation Error */

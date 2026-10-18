@@ -85,6 +85,8 @@ export default function NewAstrologerPage() {
   function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     const number = (value: string) => (value.trim() === "" ? 0 : Number(value));
+    // Blank means "use the platform default" — a real choice, not zero.
+    const optional = (value: string) => (value.trim() === "" ? null : Number(value));
 
     create.mutate({
       email: form.email,
@@ -102,10 +104,9 @@ export default function NewAstrologerPage() {
       qualifications,
       experience_years: number(form.experience_years),
       rates: {
-        chat_per_minute: number(form.chat),
-        call_per_minute: number(form.call),
-        video_per_minute: number(form.video),
-        currency: "INR",
+        chat_coins_per_minute: optional(form.chat),
+        call_coins_per_minute: optional(form.call),
+        video_coins_per_minute: optional(form.video),
       },
       commission_percent: number(form.commission_percent),
       is_listed: form.is_listed,
@@ -371,18 +372,19 @@ export default function NewAstrologerPage() {
           <CardHeader>
             <CardTitle>Rates and listing</CardTitle>
             <CardDescription>
-              Only you can set these — astrologers cannot change their own pricing.
+              Coins per started minute. Leave a box empty to use the platform
+              default. Astrologers cannot change their own pricing.
             </CardDescription>
           </CardHeader>
           <CardBody className="space-y-4 pt-0">
             <div className="grid gap-4 sm:grid-cols-3">
-              <Field label="Chat ₹/min" htmlFor="chat">
+              <Field label="Chat coins/min" htmlFor="chat" hint="Blank = default">
                 <Input id="chat" type="number" min={0} value={form.chat} onChange={set("chat")} />
               </Field>
-              <Field label="Call ₹/min" htmlFor="call">
+              <Field label="Call coins/min" htmlFor="call" hint="Blank = default">
                 <Input id="call" type="number" min={0} value={form.call} onChange={set("call")} />
               </Field>
-              <Field label="Video ₹/min" htmlFor="video">
+              <Field label="Video coins/min" htmlFor="video" hint="Blank = default">
                 <Input
                   id="video"
                   type="number"

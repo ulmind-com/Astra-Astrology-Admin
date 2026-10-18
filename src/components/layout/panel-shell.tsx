@@ -12,6 +12,7 @@ import {
   UserRound,
   Receipt,
   Settings,
+  TrendingUp,
   Users,
   Wallet,
   X,
@@ -35,11 +36,13 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/wallets", label: "Wallets", icon: Wallet },
   { href: "/transactions", label: "Transactions", icon: Receipt },
   { href: "/payments", label: "Payments", icon: CreditCard },
+  { href: "/earnings", label: "Earnings", icon: TrendingUp },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 const ASTROLOGER_NAV: NavItem[] = [
   { href: "/me", label: "My profile", icon: UserRound },
+  { href: "/earnings", label: "Earnings", icon: TrendingUp },
   { href: "/me/password", label: "Password", icon: Lock },
 ];
 

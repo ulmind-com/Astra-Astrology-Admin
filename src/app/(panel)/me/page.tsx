@@ -12,7 +12,6 @@ import { LANGUAGE_SUGGESTIONS, SkillPicker, TagInput } from "@/components/skill-
 import {
   Alert,
   Avatar,
-  Badge,
   Button,
   Card,
   CardBody,
@@ -438,29 +437,6 @@ export default function AstrologerPanelPage() {
         </Card>
       </form>
 
-      {/* ------------------------------------------- read-only commercials */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Your rates</CardTitle>
-          <CardDescription>
-            Set by the platform. Contact an admin to have them changed.
-          </CardDescription>
-        </CardHeader>
-        <CardBody className="grid gap-3 pt-0 sm:grid-cols-3">
-          {(["chat", "call", "video"] as const).map((mode) => (
-            <div key={mode} className="rounded-xl border border-border p-3.5">
-              <p className="text-xs text-muted-foreground capitalize">{mode}</p>
-              <p className="mt-1 text-lg font-semibold">
-                {formatCurrency(profile.rates[`${mode}_per_minute`])}
-                <span className="text-xs font-normal text-muted-foreground">/min</span>
-              </p>
-            </div>
-          ))}
-          <div className="sm:col-span-3">
-            <Badge>Platform commission: {profile.commission_percent}%</Badge>
-          </div>
-        </CardBody>
-      </Card>
     </>
   );
 }

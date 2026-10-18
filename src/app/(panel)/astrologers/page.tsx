@@ -20,7 +20,7 @@ import {
 } from "@/components/ui";
 import { adminApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { SKILL_LABELS } from "@/types";
 import { useRequireAuth } from "@/providers/auth-provider";
 
@@ -103,7 +103,7 @@ export default function AstrologersListPage() {
                   <tr>
                     <th className="px-5 py-3 font-medium">Astrologer</th>
                     <th className="px-3 py-3 font-medium">Specialities</th>
-                    <th className="px-3 py-3 font-medium">Chat rate</th>
+                    <th className="px-3 py-3 font-medium">Chat coins/min</th>
                     <th className="px-3 py-3 font-medium">Status</th>
                     <th className="px-5 py-3 font-medium">Added</th>
                   </tr>
@@ -149,7 +149,7 @@ export default function AstrologersListPage() {
                         </div>
                       </td>
                       <td className="px-3 py-3 whitespace-nowrap">
-                        {formatCurrency(astrologer.rates.chat_per_minute)}/min
+                        {astrologer.rates.chat_coins_per_minute ?? "default"}
                       </td>
                       <td className="px-3 py-3">
                         <div className="flex flex-wrap gap-1">

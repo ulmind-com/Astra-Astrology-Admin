@@ -29,7 +29,7 @@ import {
   Switch,
   Textarea,
 } from "@/components/ui";
-import { adminApi } from "@/lib/api";
+import { adminApi, adminSettingsApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { cn, formatDateTime } from "@/lib/utils";
 import { MODE_LABELS, type AstrologerAdminUpdate, type ConsultationMode, type Skill } from "@/types";
@@ -40,6 +40,11 @@ export default function EditAstrologerPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { ready } = useRequireAuth({ roles: ["admin", "super_admin"], signInPath: "/login" });
+
+  const { data: defaults } = useQuery({
+    queryKey: ["admin", "settings"],
+    queryFn: adminSettingsApi.get,
+  });
 
   const { data: astrologer, isLoading, error } = useQuery({
     queryKey: ["admin", "astrologer", id],
@@ -57,11 +62,8 @@ export default function EditAstrologerPage() {
     bio: "",
     experience_years: "0",
     chat: "",
-    offer_chat: "",
     call: "",
-    offer_call: "",
     video: "",
-    offer_video: "",
     commission_percent: "50",
     status: "active",
     is_listed: true,
@@ -87,13 +89,10 @@ export default function EditAstrologerPage() {
       tagline: astrologer.tagline ?? "",
       bio: astrologer.bio ?? "",
       experience_years: String(astrologer.experience_years),
-      chat: String(r.chat_per_minute),
-      offer_chat: r.offer_chat_per_minute?.toString() ?? "",
-      call: String(r.call_per_minute),
-      offer_call: r.offer_call_per_minute?.toString() ?? "",
-      video: String(r.video_per_minute),
-      offer_video: r.offer_video_per_minute?.toString() ?? "",
-      commission_percent: String(astrologer.commission_percent),
+      chat: r.chat_coins_per_minute?.toString() ?? "",
+      call: r.call_coins_per_minute?.toString() ?? "",
+      video: r.video_coins_per_minute?.toString() ?? "",
+      commission_percent: astrologer.commission_percent?.toString() ?? "",
       status: astrologer.status,
       is_listed: astrologer.is_listed,
       is_featured: astrologer.is_featured,
@@ -147,16 +146,14 @@ export default function EditAstrologerPage() {
       specialisations,
       qualifications,
       experience_years: num(form.experience_years),
+      // Blank means "use the platform default", which is a real choice and
+      // not the same as zero.
       rates: {
-        chat_per_minute: num(form.chat),
-        offer_chat_per_minute: optional(form.offer_chat),
-        call_per_minute: num(form.call),
-        offer_call_per_minute: optional(form.offer_call),
-        video_per_minute: num(form.video),
-        offer_video_per_minute: optional(form.offer_video),
-        currency: "INR",
+        chat_coins_per_minute: optional(form.chat),
+        call_coins_per_minute: optional(form.call),
+        video_coins_per_minute: optional(form.video),
       },
-      commission_percent: num(form.commission_percent),
+      commission_percent: optional(form.commission_percent),
       status: form.status as AstrologerAdminUpdate["status"],
       is_listed: form.is_listed,
       is_featured: form.is_featured,
@@ -352,45 +349,62 @@ export default function EditAstrologerPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Rates</CardTitle>
+            <CardTitle>Rates for this astrologer</CardTitle>
             <CardDescription>
-              Leave an offer price empty to charge the full rate.
+              Coins per started minute. Leave a box empty to charge whatever the
+              platform charges — then this astrologer moves when you change the
+              default.
             </CardDescription>
           </CardHeader>
           <CardBody className="space-y-4 pt-0">
-            {(["chat", "call", "video"] as const).map((mode) => (
-              <div key={mode} className="grid gap-3 sm:grid-cols-2">
-                <Field label={`${mode[0].toUpperCase()}${mode.slice(1)} ₹/min`} htmlFor={mode}>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {(["chat", "call", "video"] as const).map((mode) => (
+                <Field
+                  key={mode}
+                  label={`${mode[0].toUpperCase()}${mode.slice(1)} coins/min`}
+                  htmlFor={mode}
+                  hint={
+                    defaults
+                      ? `Default ${
+                          mode === "chat"
+                            ? defaults.default_chat_coins_per_minute
+                            : mode === "call"
+                              ? defaults.default_call_coins_per_minute
+                              : defaults.default_video_coins_per_minute
+                        }`
+                      : undefined
+                  }
+                >
                   <Input
                     id={mode}
                     type="number"
-                    min={0}
+                    min={1}
+                    step={1}
+                    placeholder="Default"
                     value={form[mode]}
                     onChange={set(mode)}
                   />
                 </Field>
-                <Field label="Offer price ₹/min" htmlFor={`offer_${mode}`} hint="Optional">
-                  <Input
-                    id={`offer_${mode}`}
-                    type="number"
-                    min={0}
-                    value={form[`offer_${mode}` as keyof typeof form] as string}
-                    onChange={set(`offer_${mode}` as keyof typeof form)}
-                  />
-                </Field>
-              </div>
-            ))}
+              ))}
+            </div>
 
             <Field
               label="Commission %"
               htmlFor="commission"
               error={errors.commission_percent}
+              hint={
+                defaults
+                  ? `Default ${defaults.default_commission_percent}% — leave empty to use it`
+                  : "Leave empty to use the platform default"
+              }
             >
               <Input
                 id="commission"
                 type="number"
                 min={0}
                 max={100}
+                step="0.5"
+                placeholder="Default"
                 value={form.commission_percent}
                 onChange={set("commission_percent")}
                 className="max-w-32"

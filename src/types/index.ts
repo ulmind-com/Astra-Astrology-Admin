@@ -60,6 +60,7 @@ export type AstrologerAdminUpdate = S["AstrologerAdminUpdate"];
 export type AvailabilityUpdate = S["AvailabilityUpdate"];
 export type Availability = S["Availability"];
 export type RateCard = S["RateCard"];
+export type ResolvedRates = S["ResolvedRates"];
 export type RatingSummary = S["RatingSummary"];
 export type BankDetails = S["BankDetails"];
 export type GalleryImage = S["GalleryImage"];
@@ -258,3 +259,22 @@ export const CHAT_STATUS_LABELS: Record<ChatStatus, string> = {
   missed: "Not picked up",
   cancelled: "Cancelled",
 };
+
+// --------------------------------------------------------------- billing
+export type ConsultationQuote = S["ConsultationQuote"];
+export type SessionBilling = S["SessionBilling"];
+export type EarningsSummary = S["EarningsSummary"];
+export type EarningsBucket = S["EarningsBucket"];
+export type EarningRow = S["EarningRow"];
+export type AdminEarningRow = S["AdminEarningRow"];
+export type AdminEarningsSummary = S["AdminEarningsSummary"];
+
+/** Earnings are money, so they are paise — never coins. */
+export function formatEarning(paise: number): string {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: paise % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(paise / 100);
+}

@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-import type { ConsultationMode, RateCard } from "@/types";
+import type { ConsultationMode, ResolvedRates } from "@/types";
 
 /** Tailwind-aware className joiner. */
 export function cn(...inputs: ClassValue[]) {
@@ -90,30 +90,20 @@ export function titleCase(value: string): string {
  * Written against the real `RateCard` rather than an index signature, because
  * the card also carries `currency`, which is not a number.
  */
-const BASE_KEYS = {
-  chat: "chat_per_minute",
-  call: "call_per_minute",
-  video: "video_per_minute",
+/**
+ * Coins per started minute, by mode.
+ *
+ * The public payload has the platform default already filled in, so there is
+ * no blank to interpret here — a card can print the number it is given.
+ */
+const RATE_KEYS = {
+  chat: "chat_coins_per_minute",
+  call: "call_coins_per_minute",
+  video: "video_coins_per_minute",
 } as const;
 
-const OFFER_KEYS = {
-  chat: "offer_chat_per_minute",
-  call: "offer_call_per_minute",
-  video: "offer_video_per_minute",
-} as const;
-
-export function baseRate(rates: RateCard, mode: ConsultationMode): number {
-  return rates[BASE_KEYS[mode]] ?? 0;
-}
-
-export function effectiveRate(rates: RateCard, mode: ConsultationMode): number {
-  const offer = rates[OFFER_KEYS[mode]];
-  return typeof offer === "number" ? offer : baseRate(rates, mode);
-}
-
-export function hasDiscount(rates: RateCard, mode: ConsultationMode): boolean {
-  const offer = rates[OFFER_KEYS[mode]];
-  return typeof offer === "number" && offer < baseRate(rates, mode);
+export function coinsPerMinute(rates: ResolvedRates, mode: ConsultationMode): number {
+  return rates[RATE_KEYS[mode]] ?? 0;
 }
 
 export function debounce<A extends unknown[]>(fn: (...args: A) => void, ms = 300) {
