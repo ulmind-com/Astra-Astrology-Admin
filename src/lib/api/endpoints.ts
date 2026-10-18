@@ -69,6 +69,14 @@ export const endpoints = {
     mySchedule: "/appointments/me/schedule",
   },
 
+  reviews: {
+    leave: "/reviews",
+    pending: "/reviews/pending",
+    mine: "/reviews/mine",
+    forAstrologer: (id: string) => `/reviews/astrologers/${id}`,
+    hide: (id: string) => `/admin/reviews/${id}/hidden`,
+  },
+
   chats: {
     start: "/chats",
     active: "/chats/active",

@@ -4,6 +4,8 @@ import { api, apiFetch } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import type {
   Address,
+  ReviewPage,
+  Review,
   AvailabilityWindow,
   AppointmentCard,
   Appointment,
@@ -373,4 +375,14 @@ export const appointmentApi = {
 
   cancel: (id: string, reason?: string) =>
     api.post<Appointment>(endpoints.appointments.cancel(id), { reason: reason ?? null }),
+};
+
+// ----------------------------------------------------------------- reviews
+export const reviewApi = {
+  forAstrologer: (astrologerId: string, params: { skip?: number; limit?: number } = {}) =>
+    api.get<ReviewPage>(endpoints.reviews.forAstrologer(astrologerId), { query: params }),
+
+  /** Hiding is not deleting: the row stays, it just stops counting. */
+  setHidden: (reviewId: string, hidden: boolean, reason?: string) =>
+    api.patch<Review>(endpoints.reviews.hide(reviewId), { hidden, reason: reason ?? null }),
 };

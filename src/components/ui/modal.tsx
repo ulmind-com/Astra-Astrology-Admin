@@ -55,8 +55,8 @@ export function Modal({
       ref={ref}
       aria-labelledby="modal-title"
       className={cn(
-        "m-auto w-[calc(100vw-2rem)] rounded-2xl border border-border-strong bg-surface-raised p-0 backdrop-blur-xl",
-        "text-foreground shadow-glow backdrop:bg-night-950/75 backdrop:backdrop-blur-sm",
+        "m-auto w-[calc(100vw-2rem)] rounded-3xl border border-border bg-surface-raised p-0",
+        "text-foreground shadow-lift backdrop:bg-ink-900/40 backdrop:backdrop-blur-sm",
         widths[size],
       )}
       // Clicking the backdrop (but not the panel) closes it.
@@ -64,7 +64,7 @@ export function Modal({
         if (event.target === ref.current) onClose();
       }}
     >
-      <div className="flex items-start justify-between gap-4 px-5 pt-5">
+      <div className="flex items-start justify-between gap-4 px-8 pt-8">
         <div className="min-w-0">
           <h2 id="modal-title" className="text-lg font-semibold">
             {title}
@@ -78,9 +78,9 @@ export function Modal({
         </Button>
       </div>
 
-      {children && <div className="px-5 py-4">{children}</div>}
+      {children && <div className="px-8 py-4">{children}</div>}
       {footer && (
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3.5">
+        <div className="flex justify-end gap-2 px-8 pb-8 pt-4">
           {footer}
         </div>
       )}

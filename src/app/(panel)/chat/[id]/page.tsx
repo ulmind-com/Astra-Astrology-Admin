@@ -71,7 +71,7 @@ export default function AstrologerChatPage() {
               end.mutate({ id });
             }}
             disabled={end.isPending}
-            className={confirming ? "bg-rose-600 text-white hover:bg-rose-500" : undefined}
+            className={confirming ? "bg-rose-600 text-brand-950 hover:bg-rose-500" : undefined}
           >
             {confirming ? "Tap to confirm" : "End chat"}
           </Button>
@@ -144,7 +144,7 @@ function BookedTime({
         lastMinute
           ? "bg-warning-surface text-warning"
           : onDark
-            ? "bg-white/10 text-white/80"
+            ? "bg-ink-900/5 text-ink-700"
             : "bg-surface-muted text-muted-foreground",
       )}
     >

@@ -4,16 +4,14 @@ import { cn } from "@/lib/utils";
 
 type Tone = "brand" | "gold" | "green" | "red" | "neutral" | "blue";
 
-// Tinted glass rather than a solid chip: on the night sky a filled pastel
-// badge reads as a hole punched in the page.
+// Small pills. The brand yellow is reserved for the ones that are genuinely
+// about this product; status tones stay quiet so they never read as a button.
 const TONES: Record<Tone, string> = {
-  brand:
-    "bg-brand-500/15 text-brand-200 border border-brand-400/40 shadow-[0_0_8px_-2px_rgb(168_85_247/0.3)]",
-  gold:
-    "bg-gold-500/12 text-gold-300 border border-gold-400/35 shadow-[0_0_8px_-2px_rgb(245_158_11/0.3)]",
-  green: "bg-success-surface text-success border border-success/30",
-  red: "bg-danger-surface text-danger border border-danger/30",
-  blue: "bg-info-surface text-info border border-info/30",
+  brand: "bg-brand-300 text-brand-950",
+  gold: "bg-gold-100 text-gold-700 border border-gold-400/40",
+  green: "bg-success-surface text-success border border-success/20",
+  red: "bg-danger-surface text-danger border border-danger/25",
+  blue: "bg-info-surface text-info border border-info/20",
   neutral: "bg-surface-muted text-muted-foreground border border-border",
 };
 
@@ -25,7 +23,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium leading-none tracking-wide",
+        "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold leading-none",
         TONES[tone],
         className,
       )}

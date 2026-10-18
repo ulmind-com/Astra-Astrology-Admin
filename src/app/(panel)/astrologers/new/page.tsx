@@ -330,7 +330,7 @@ export default function NewAstrologerPage() {
                       className={cn(
                         "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
                         on
-                          ? "border-brand-500 bg-brand-500 text-white"
+                          ? "border-brand-500/50 bg-brand-300 text-brand-950"
                           : "border-border bg-surface hover:border-border-strong",
                       )}
                     >

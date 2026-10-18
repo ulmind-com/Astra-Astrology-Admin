@@ -14,7 +14,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       ref={ref}
       aria-invalid={invalid || undefined}
       className={cn(
-        "h-10 w-full rounded-lg border bg-surface-muted px-3 text-sm text-foreground",
+        "h-[51px] w-full rounded-full border bg-surface px-5 text-base text-foreground",
         "placeholder:text-muted-foreground/70",
         "transition-colors disabled:cursor-not-allowed disabled:opacity-60",
         invalid ? "border-danger/60" : "border-border hover:border-border-strong",
@@ -34,7 +34,7 @@ export const Textarea = React.forwardRef<
     ref={ref}
     aria-invalid={invalid || undefined}
     className={cn(
-      "w-full rounded-lg border bg-surface-muted px-3 py-2 text-sm text-foreground",
+      "w-full rounded-2xl border bg-surface px-5 py-3.5 text-base text-foreground",
       "placeholder:text-muted-foreground/70 transition-colors disabled:opacity-60",
       invalid ? "border-danger/60" : "border-border hover:border-border-strong",
       className,
@@ -52,7 +52,7 @@ export const Select = React.forwardRef<
     ref={ref}
     aria-invalid={invalid || undefined}
     className={cn(
-      "h-10 w-full rounded-lg border bg-surface-muted px-3 text-sm text-foreground",
+      "h-[51px] w-full rounded-full border bg-surface px-5 text-base text-foreground",
       "transition-colors disabled:opacity-60",
       invalid ? "border-danger/60" : "border-border hover:border-border-strong",
       className,
@@ -85,7 +85,7 @@ export function Field({
   return (
     <div className={cn("space-y-1.5", className)}>
       {label && (
-        <label htmlFor={htmlFor} className="block text-sm font-medium text-foreground">
+        <label htmlFor={htmlFor} className="block text-sm font-semibold text-foreground">
           {label}
           {required && <span className="ml-0.5 text-danger">*</span>}
         </label>

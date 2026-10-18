@@ -64,7 +64,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-full flex-col">
       {/* Logo */}
       <div className="relative flex h-16 items-center gap-3 border-b border-border/60 px-5">
-        <span className="medallion flex size-9 shrink-0 items-center justify-center rounded-xl text-brand-100 shadow-[0_0_16px_-4px_rgb(168_85_247/0.7)]">
+        <span className="medallion flex size-9 shrink-0 items-center justify-center rounded-xl text-ink-900 shadow-soft">
           <Sparkles className="size-4" />
         </span>
         <div className="min-w-0">
@@ -102,7 +102,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "flex size-7 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
                   active
-                    ? "bg-brand-500/25 text-brand-200"
+                    ? "bg-brand-500/25 text-ink-800"
                     : "text-muted-foreground group-hover:text-foreground",
                 )}
               >
@@ -142,7 +142,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh">
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 shrink-0 border-r border-border/60 bg-night-950/70 backdrop-blur-2xl lg:block">
+      <aside className="hidden w-64 shrink-0 border-r border-border/60 bg-ink-900/40 backdrop-blur-2xl lg:block">
         <div className="sticky top-0 h-dvh">{sidebar}</div>
       </aside>
 
@@ -150,11 +150,11 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
-            className="absolute inset-0 bg-night-950/75 backdrop-blur-sm"
+            className="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"
             onClick={() => setOpen(false)}
             aria-label="Close menu"
           />
-          <aside className="absolute inset-y-0 left-0 w-64 border-r border-border/60 bg-night-900 shadow-glow">
+          <aside className="absolute inset-y-0 left-0 w-64 border-r border-border/60 bg-surface shadow-lift">
             {sidebar}
           </aside>
         </div>
@@ -163,7 +163,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
       {/* Main content area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border/60 bg-night-950/60 px-4 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-xl">
           <Button
             variant="ghost"
             size="icon"
@@ -176,7 +176,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
 
           {/* Breadcrumb hint */}
           <div className="hidden items-center gap-2 text-sm text-muted-foreground lg:flex">
-            <Sparkles className="size-3.5 text-brand-400" />
+            <Sparkles className="size-3.5 text-brand-700" />
             <span className="font-medium text-foreground capitalize">
               {activeHref?.replace("/", "") || "Dashboard"}
             </span>

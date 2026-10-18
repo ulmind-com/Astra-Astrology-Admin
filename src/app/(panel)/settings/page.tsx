@@ -105,7 +105,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>
             <span className="flex items-center gap-2">
-              <Coins className="size-4 text-gold-500" />
+              <Coins className="size-4 text-gold-600" />
               Coins per rupee
             </span>
           </CardTitle>
@@ -169,7 +169,7 @@ export default function SettingsPage() {
                 {EXAMPLES.map((rupees) => (
                   <div key={rupees}>
                     <p className="font-semibold">₹{rupees}</p>
-                    <p className="text-brand-600 dark:text-brand-300">
+                    <p className="text-brand-700 dark:text-brand-700">
                       {formatCoins(rupees * preview)} {coinWord(rupees * preview)}
                     </p>
                   </div>
@@ -295,7 +295,7 @@ function RechargeLimitsCard({ settings }: { settings: PlatformSettings }) {
       <CardHeader>
         <CardTitle>
           <span className="flex items-center gap-2">
-            <Wallet className="size-4 text-brand-500" />
+            <Wallet className="size-4 text-brand-700" />
             Recharge limits
           </span>
         </CardTitle>
@@ -332,7 +332,7 @@ function RechargeLimitsCard({ settings }: { settings: PlatformSettings }) {
             <p className="text-sm text-muted-foreground">
               At {settings.coins_per_rupee} {coinWord(settings.coins_per_rupee)} per ₹1,
               the smallest recharge buys{" "}
-              <strong className="text-brand-600 dark:text-brand-300">
+              <strong className="text-brand-700 dark:text-brand-700">
                 {formatCoins(minCoins)} {coinWord(minCoins)}
               </strong>
               .
@@ -460,7 +460,7 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
       <CardHeader>
         <CardTitle>
           <span className="flex items-center gap-2">
-            <Timer className="size-4 text-brand-500" />
+            <Timer className="size-4 text-brand-700" />
             Consultation pricing
           </span>
         </CardTitle>

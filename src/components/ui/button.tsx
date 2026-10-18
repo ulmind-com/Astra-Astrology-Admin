@@ -8,22 +8,25 @@ import { cn } from "@/lib/utils";
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline";
 type Size = "sm" | "md" | "lg" | "icon";
 
+// Primary is the one yellow pill on a screen. The design is explicit about
+// this: the brand colour marks the single action that matters, and using it
+// twice on one view is what makes it stop meaning anything.
 const VARIANTS: Record<Variant, string> = {
-  primary: "btn-cosmic text-white font-semibold",
+  primary: "btn-cosmic",
   secondary:
-    "bg-surface-muted text-foreground border border-border hover:border-border-strong hover:bg-surface-raised transition-all",
-  outline:
-    "border border-border-strong bg-transparent text-foreground hover:bg-surface-muted hover:border-brand-400/50 transition-all",
-  ghost: "bg-transparent text-muted-foreground hover:bg-surface-muted hover:text-foreground transition-colors",
-  danger:
-    "bg-danger-surface text-danger border border-danger/40 hover:bg-danger/25 hover:border-danger/60 transition-all",
+    "bg-transparent text-foreground border border-border-strong hover:bg-brand-100",
+  outline: "border border-border-strong bg-transparent text-foreground hover:bg-brand-100",
+  ghost: "bg-transparent text-muted-foreground hover:bg-brand-100 hover:text-foreground",
+  danger: "bg-danger-surface text-danger border border-danger/30 hover:bg-danger/15",
 };
 
+// Generous horizontal padding, so an action feels substantial rather than
+// cramped. The medium height is the 51px the spec asks for.
 const SIZES: Record<Size, string> = {
-  sm: "h-8 px-4 text-xs gap-1.5 rounded-full",
-  md: "h-10 px-5 text-sm gap-2 rounded-full",
-  lg: "h-12 px-8 text-base gap-2.5 rounded-full",
-  icon: "h-10 w-10 p-0 rounded-xl",
+  sm: "h-9 px-5 text-xs gap-1.5",
+  md: "h-[51px] px-8 text-[15px] gap-2",
+  lg: "h-[56px] px-9 text-base gap-2",
+  icon: "h-11 w-11 p-0",
 };
 
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {

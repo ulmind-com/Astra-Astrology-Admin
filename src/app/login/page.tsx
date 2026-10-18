@@ -62,14 +62,14 @@ export default function AdminLoginPage() {
     <div className="bg-stars relative flex min-h-dvh items-center justify-center bg-cosmos px-4">
       <div className="relative w-full max-w-sm">
         <div className="mb-8 text-center">
-          <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-white/10 text-white backdrop-blur">
+          <span className="inline-flex size-12 items-center justify-center medallion rounded-2xl">
             <Sparkles className="size-6" />
           </span>
-          <h1 className="mt-4 text-2xl font-bold text-white">Astra Astrology</h1>
-          <p className="mt-1 text-sm text-brand-100/70">Admin & astrologer panel</p>
+          <h1 className="mt-4 text-2xl font-bold text-brand-950">Astra Astrology</h1>
+          <p className="mt-1 text-sm text-ink-500">Admin & astrologer panel</p>
         </div>
 
-        <div className="rounded-2xl border border-border-strong bg-surface-raised p-6 shadow-glow backdrop-blur-xl">
+        <div className="rounded-3xl border border-border bg-surface p-8 shadow-lift">
           {error && (
             <Alert tone="error" className="mb-5">
               {error.message}
@@ -112,7 +112,7 @@ export default function AdminLoginPage() {
             Forgot your password?{" "}
             <Link
               href="/forgot-password"
-              className="font-medium text-brand-600 hover:underline dark:text-brand-300"
+              className="font-medium text-brand-700 hover:underline dark:text-brand-700"
             >
               Reset it
             </Link>
@@ -121,7 +121,7 @@ export default function AdminLoginPage() {
 
         <div className="mt-8 flex flex-col items-center gap-3">
           <UlmindCredit />
-          <p className="text-xs text-brand-100/50">
+          <p className="text-xs text-ink-500">
             © <Year /> Astra Astrology
           </p>
         </div>

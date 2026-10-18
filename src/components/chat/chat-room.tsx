@@ -273,7 +273,7 @@ export function ChatRoom({
                         className={cn(
                           "max-w-[82%] px-3.5 py-2 text-sm shadow-sm sm:max-w-[70%]",
                           mine
-                            ? "rounded-2xl rounded-br-md bg-brand-600 text-white"
+                            ? "rounded-2xl rounded-br-md bg-brand-300 text-brand-950"
                             : "rounded-2xl rounded-bl-md bg-surface text-foreground",
                         )}
                       >
@@ -283,7 +283,7 @@ export function ChatRoom({
                         <span
                           className={cn(
                             "mt-1 flex items-center justify-end gap-1 text-[10px]",
-                            mine ? "text-white/70" : "text-muted-foreground",
+                            mine ? "text-ink-600" : "text-muted-foreground",
                           )}
                         >
                           {message.sentAt ? clockTime(message.sentAt) : "…"}
@@ -331,13 +331,13 @@ export function ChatRoom({
             placeholder="Write a message…"
             rows={1}
             maxLength={4000}
-            className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-border bg-surface-muted/60 px-4 py-2.5 text-sm leading-relaxed outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-brand-400"
+            className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-border bg-surface-muted/60 px-4 py-2.5 text-sm leading-relaxed outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-brand-500/50"
           />
           <button
             type="submit"
             disabled={!draft.trim() || sending}
             aria-label="Send message"
-            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white transition-all hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-300 text-brand-950 transition-all hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {sending ? (
               <Loader2 className="size-4 animate-spin" />

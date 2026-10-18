@@ -294,3 +294,18 @@ export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
   completed: "Completed",
   missed: "Missed",
 };
+
+// ----------------------------------------------------------------- reviews
+export type Review = S["ReviewOut"];
+export type ReviewPage = S["ReviewPage"];
+export type ReviewSummary = S["ReviewSummary"];
+export type PendingReview = S["PendingReview"];
+export type ReviewKind = S["ReviewKind"];
+
+/** What each kind of consultation is called in a review. */
+export const REVIEW_KIND_LABELS: Record<ReviewKind, string> = {
+  chat: "Chat",
+  call: "Voice call",
+  video: "Video call",
+  appointment: "Appointment",
+};

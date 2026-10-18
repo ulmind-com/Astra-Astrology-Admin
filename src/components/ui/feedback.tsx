@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 export function Spinner({ className }: { className?: string }) {
   return (
     <div className={cn("relative", className)}>
-      <Loader2 className="size-6 animate-spin text-brand-400" />
+      <Loader2 className="size-6 animate-spin text-brand-700" />
     </div>
   );
 }
@@ -17,7 +17,7 @@ export function LoadingBlock({ label = "Loading…" }: { label?: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
       <div className="medallion flex size-14 items-center justify-center rounded-full animate-pulse-glow">
-        <Loader2 className="size-6 animate-spin text-brand-200" />
+        <Loader2 className="size-6 animate-spin text-ink-800" />
       </div>
       <p className="text-sm font-medium text-muted-foreground">{label}</p>
     </div>
@@ -93,7 +93,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border-strong/50 px-8 py-20 text-center bg-surface/30">
       <span className="medallion mb-5 flex size-14 items-center justify-center rounded-2xl">
-        <Icon className="size-6 text-brand-200" />
+        <Icon className="size-6 text-ink-800" />
       </span>
       <p className="font-semibold text-foreground tracking-tight">{title}</p>
       {description && (

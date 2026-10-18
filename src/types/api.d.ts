@@ -1290,6 +1290,123 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Leave a review for a consultation you had */
+        post: operations["leave_review_api_v1_reviews_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consultations I have finished but not reviewed
+         * @description What the prompt is built from.
+         *
+         *     Looked up rather than stored against the session, so a review written on a
+         *     phone stops the prompt appearing on a laptop.
+         */
+        get: operations["pending_api_v1_reviews_pending_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Reviews I have written */
+        get: operations["my_reviews_api_v1_reviews_mine_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/astrologers/{astrologer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What people said about an astrologer
+         * @description Public. This is the whole point of a review.
+         */
+        get: operations["for_astrologer_api_v1_reviews_astrologers__astrologer_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reviews/{review_id}/hidden": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Hide a review, or put it back
+         * @description Hiding is not deleting.
+         *
+         *     The row stays — it is still a record of what was said — but it stops
+         *     counting towards the average and stops being shown.
+         */
+        patch: operations["set_hidden_api_v1_admin_reviews__review_id__hidden_patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/reviews/astrologers/{astrologer_id}/recalculate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rebuild an astrologer's rating from their reviews */
+        get: operations["recalculate_api_v1_admin_reviews_astrologers__astrologer_id__recalculate_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/astrologers/me/earnings": {
         parameters: {
             query?: never;
@@ -2043,6 +2160,34 @@ export interface components {
             message: string;
             data?: components["schemas"]["ReconcileResult"] | null;
         };
+        /** ApiResponse[ReviewOut] */
+        ApiResponse_ReviewOut_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["ReviewOut"] | null;
+        };
+        /** ApiResponse[ReviewPage] */
+        ApiResponse_ReviewPage_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["ReviewPage"] | null;
+        };
         /** ApiResponse[TranscriptOut] */
         ApiResponse_TranscriptOut_: {
             /**
@@ -2169,6 +2314,23 @@ export interface components {
             message: string;
             data?: components["schemas"]["WindowOut"] | null;
         };
+        /** ApiResponse[dict] */
+        ApiResponse_dict_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            /** Data */
+            data?: {
+                [key: string]: unknown;
+            } | null;
+        };
         /** ApiResponse[list[Address]] */
         ApiResponse_list_Address__: {
             /**
@@ -2258,6 +2420,36 @@ export interface components {
             message: string;
             /** Data */
             data?: components["schemas"]["EarningRow"][] | null;
+        };
+        /** ApiResponse[list[PendingReview]] */
+        ApiResponse_list_PendingReview__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            /** Data */
+            data?: components["schemas"]["PendingReview"][] | null;
+        };
+        /** ApiResponse[list[ReviewOut]] */
+        ApiResponse_list_ReviewOut__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            /** Data */
+            data?: components["schemas"]["ReviewOut"][] | null;
         };
         /** ApiResponse[list[WindowOut]] */
         ApiResponse_list_WindowOut__: {
@@ -3384,6 +3576,26 @@ export interface components {
                 [key: string]: boolean;
             };
         };
+        /** HideReviewRequest */
+        HideReviewRequest: {
+            /**
+             * Hidden
+             * @default true
+             */
+            hidden: boolean;
+            /** Reason */
+            reason?: string | null;
+        };
+        /** LeaveReviewRequest */
+        LeaveReviewRequest: {
+            kind: components["schemas"]["ReviewKind"];
+            /** Session Id */
+            session_id: string;
+            /** Stars */
+            stars: number;
+            /** Text */
+            text?: string | null;
+        };
         /**
          * MaritalStatus
          * @enum {string}
@@ -3595,6 +3807,23 @@ export interface components {
          * @enum {string}
          */
         PaymentOrderStatus: "created" | "paid" | "failed" | "expired";
+        /**
+         * PendingReview
+         * @description A finished consultation this user has not reviewed yet.
+         */
+        PendingReview: {
+            kind: components["schemas"]["ReviewKind"];
+            /** Session Id */
+            session_id: string;
+            /** Astrologer Id */
+            astrologer_id: string;
+            /** Astrologer Name */
+            astrologer_name: string;
+            /** Astrologer Avatar Url */
+            astrologer_avatar_url?: string | null;
+            /** Label */
+            label: string;
+        };
         /** PlatformSettingsOut */
         PlatformSettingsOut: {
             /** Coins Per Rupee */
@@ -3838,6 +4067,64 @@ export interface components {
             call_coins_per_minute: number;
             /** Video Coins Per Minute */
             video_coins_per_minute: number;
+        };
+        /**
+         * ReviewKind
+         * @description What a review is about.
+         *
+         *     Kept alongside the session id rather than relying on the id alone: ids are
+         *     unique within a collection, not across them, so without this a chat and a
+         *     call could collide on the same review.
+         * @enum {string}
+         */
+        ReviewKind: "chat" | "call" | "video" | "appointment";
+        /**
+         * ReviewOut
+         * @description A review as anyone may see it.
+         *
+         *     No user id: a review is public, and pairing a name with an account id
+         *     would let anyone build a list of everything one person has consulted
+         *     about.
+         */
+        ReviewOut: {
+            /** Id */
+            id: string;
+            /** Astrologer Id */
+            astrologer_id: string;
+            kind: components["schemas"]["ReviewKind"];
+            /** Stars */
+            stars: number;
+            /** Text */
+            text?: string | null;
+            /** Author Name */
+            author_name?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ReviewPage */
+        ReviewPage: {
+            /** Items */
+            items: components["schemas"]["ReviewOut"][];
+            /** Total */
+            total: number;
+            summary: components["schemas"]["ReviewSummary"];
+        };
+        /**
+         * ReviewSummary
+         * @description What a profile shows above the list.
+         */
+        ReviewSummary: {
+            /** Average */
+            average: number;
+            /** Count */
+            count: number;
+            /** Breakdown */
+            breakdown: {
+                [key: string]: number;
+            };
         };
         /** SendMessageRequest */
         SendMessageRequest: {
@@ -6815,6 +7102,179 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponse_ReadMarkerOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    leave_review_api_v1_reviews_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaveReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ReviewOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pending_api_v1_reviews_pending_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_list_PendingReview__"];
+                };
+            };
+        };
+    };
+    my_reviews_api_v1_reviews_mine_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_list_ReviewOut__"];
+                };
+            };
+        };
+    };
+    for_astrologer_api_v1_reviews_astrologers__astrologer_id__get: {
+        parameters: {
+            query?: {
+                skip?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                astrologer_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ReviewPage_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_hidden_api_v1_admin_reviews__review_id__hidden_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HideReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_ReviewOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recalculate_api_v1_admin_reviews_astrologers__astrologer_id__recalculate_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                astrologer_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_dict_"];
                 };
             };
             /** @description Validation Error */

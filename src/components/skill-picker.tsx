@@ -30,7 +30,7 @@ export function SkillPicker({
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
               selected
-                ? "border-brand-600 bg-brand-600 text-white"
+                ? "border-brand-600 bg-brand-300 text-brand-950"
                 : "border-border text-muted-foreground hover:border-border-strong hover:text-foreground",
             )}
           >
@@ -121,7 +121,7 @@ export function TagInput({
               key={item}
               type="button"
               onClick={() => add(item)}
-              className="rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-brand-400 hover:text-brand-600"
+              className="rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-brand-500/50 hover:text-brand-700"
             >
               + {item}
             </button>

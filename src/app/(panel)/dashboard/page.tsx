@@ -131,7 +131,7 @@ export default function DashboardPage() {
             <CardTitle>Recently added</CardTitle>
             <Link
               href="/astrologers"
-              className="inline-flex items-center gap-1 text-sm font-medium text-brand-300 hover:text-brand-200 transition-colors"
+              className="inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:text-ink-800 transition-colors"
             >
               View all
               <ArrowUpRight className="size-3.5" />
@@ -173,7 +173,7 @@ export default function DashboardPage() {
                         </span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-foreground group-hover:text-brand-300 transition-colors">
+                        <p className="truncate text-sm font-semibold text-foreground group-hover:text-brand-700 transition-colors">
                           {astrologer.display_name}
                         </p>
                         <p className="truncate text-xs text-muted-foreground">

@@ -118,7 +118,7 @@ function PriceCard() {
       <CardHeader>
         <CardTitle>
           <span className="flex items-center gap-2">
-            <IndianRupee className="size-4 text-brand-300" />
+            <IndianRupee className="size-4 text-brand-700" />
             What you charge
           </span>
         </CardTitle>
@@ -251,7 +251,7 @@ function OpenHours() {
       <CardHeader>
         <CardTitle>
           <span className="flex items-center gap-2">
-            <CalendarDays className="size-4 text-brand-300" />
+            <CalendarDays className="size-4 text-brand-700" />
             When you are free
           </span>
         </CardTitle>
@@ -299,7 +299,7 @@ function OpenHours() {
                       key={w.id}
                       className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-muted px-3 py-1.5 text-xs"
                     >
-                      <Clock className="size-3.5 text-brand-300" />
+                      <Clock className="size-3.5 text-brand-700" />
                       <span className="tabular-nums">
                         {clock(w.starts_at)} – {clock(w.ends_at)}
                       </span>

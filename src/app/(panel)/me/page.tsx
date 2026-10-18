@@ -317,7 +317,7 @@ export default function AstrologerPanelPage() {
                         toast.error((caught as ApiError).message);
                       }
                     }}
-                    className="absolute top-1.5 right-1.5 rounded-full bg-night-950/70 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                    className="absolute top-1.5 right-1.5 rounded-full bg-ink-900/40 p-1.5 text-brand-950 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                   >
                     <X className="size-3.5" />
                   </button>

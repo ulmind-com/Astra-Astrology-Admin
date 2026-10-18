@@ -1,88 +1,119 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-   Astra Astrology — design tokens
+   Astra Astrology — Calm Glow
 
-   One theme, everywhere: a night sky in deep violet, lit by nebula glows,
-   with gold for anything celestial or premium. The app does not have a light
-   mode — the brand is the dark sky, and a white page breaks it — so these
-   tokens are unconditional rather than split across :root and .dark.
+   Warm, bright and friendly: cream pages, white cards, a sunny yellow for the
+   one action that matters on each screen, and warm near-black ink. Depth comes
+   from faint borders and a soft glow under the primary button, never from
+   heavy shadows.
+
+   One theme only. There is no dark mode: the brand *is* the warm light
+   surface, and a dark variant would be a different product.
    ========================================================================== */
 
 @theme {
-  /* --- brand: violet, the colour of the whole product ------------------ */
-  --color-brand-50: #faf5ff;
-  --color-brand-100: #f3e8ff;
-  --color-brand-200: #e9d5ff;
-  --color-brand-300: #d8b4fe;
-  --color-brand-400: #c084fc;
-  --color-brand-500: #a855f7;
-  --color-brand-600: #9333ea;
-  --color-brand-700: #7e22ce;
-  --color-brand-800: #6b21a8;
-  --color-brand-900: #4c1d7a;
-  --color-brand-950: #2e1065;
+  /* --- brand: the sunny yellow ----------------------------------------
+     Pale at the low end for tints and chips, deepening into an olive that is
+     readable as text on white. #f7ee7a is the brand fill; anything below 500
+     is far too light to put words in. */
+  --color-brand-50: #fffdf0;
+  --color-brand-100: #fefbd4;
+  --color-brand-200: #fcf6ad;
+  --color-brand-300: #f7ee7a;
+  --color-brand-400: #f2e54a;
+  --color-brand-500: #ddcd21;
+  --color-brand-600: #b4a616;
+  --color-brand-700: #867c12;
+  --color-brand-800: #5a5310;
+  --color-brand-900: #3a350c;
+  --color-brand-950: #1c1304;
 
-  /* --- gold: accents, ratings, premium --------------------------------- */
-  --color-gold-50: #fffbeb;
-  --color-gold-100: #fef3c7;
-  --color-gold-200: #fde68a;
-  --color-gold-300: #fcd34d;
-  --color-gold-400: #fbbf24;
-  --color-gold-500: #f59e0b;
-  --color-gold-600: #d97706;
-  --color-gold-700: #b45309;
+  /* --- gold: ratings and anything celestial ---------------------------
+     Kept apart from the brand yellow so a star does not read as a button.
+     Warmer and darker, so it still shows on a cream page. */
+  --color-gold-50: #fff9ed;
+  --color-gold-100: #fef0d2;
+  --color-gold-200: #fcdfa4;
+  --color-gold-300: #f8c76b;
+  --color-gold-400: #f3ab35;
+  --color-gold-500: #e08c12;
+  --color-gold-600: #bd6c0c;
+  --color-gold-700: #964f0f;
+  --color-gold-800: #7a3f12;
+  --color-gold-900: #653512;
 
-  /* --- night: the sky behind everything -------------------------------- */
-  --color-night-600: #3b1f66;
-  --color-night-700: #2c1550;
-  --color-night-800: #1f0e3c;
-  --color-night-900: #150a2b;
-  --color-night-950: #0b0518;
+  /* --- ink: the warm near-blacks the spec names ----------------------- */
+  --color-ink-500: #6b5f4d;
+  --color-ink-600: #4a4034;
+  --color-ink-700: #2b2217;
+  --color-ink-800: #1a1a1a;
+  --color-ink-900: #1a1208;
+  --color-ink-950: #1c1304;
 
-  --font-sans: var(--font-geist-sans), "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-display), "Cinzel", ui-serif, Georgia, serif;
+  /* --- night: the video stage, and only that ---------------------------
+     A call fills the screen with someone's face, and every video product
+     puts that on black. It is the one place this warm, light system gives
+     way to something darker. */
+  --color-night-800: #241f18;
+  --color-night-900: #16120c;
+  --color-night-950: #0d0a06;
+
+  /* --- cream: page and promotional surfaces --------------------------- */
+  --color-cream-50: #fffefa;
+  --color-cream-100: #fffdf2;
+  --color-cream-200: #fff8d9;
+  --color-cream-300: #fdf1c2;
+
+  /* Poppins throughout. The design calls for a numeral-friendly companion
+     ("PoppinsNum") for prices and metrics; Poppins ships tabular figures, so
+     `.tabular-nums` does that job rather than a second webfont. */
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  --radius-card: 1.125rem;
+  /* Cards 16px, modals 24px, everything interactive a full pill. */
+  --radius-card: 16px;
+  --radius-modal: 24px;
 
-  /* Shadows read as glow here: on a dark page a drop shadow is invisible,
-     so depth comes from a violet halo instead. */
-  --shadow-soft: 0 1px 3px rgb(5 2 15 / 0.6), 0 8px 24px -12px rgb(88 28 160 / 0.5);
-  --shadow-lift: 0 4px 16px rgb(5 2 15 / 0.65), 0 20px 56px -20px rgb(124 58 237 / 0.55);
-  --shadow-glow: 0 0 0 1px rgb(168 85 247 / 0.4), 0 12px 40px -12px rgb(147 51 234 / 0.65);
-  --shadow-gold: 0 0 0 1px rgb(251 191 36 / 0.3), 0 8px 32px -8px rgb(245 158 11 / 0.5);
+  /* Soft and warm. Depth is a gentle lift, never a hard edge. */
+  --shadow-soft: 0 1px 2px rgb(26 18 8 / 0.04), 0 8px 24px -16px rgb(26 18 8 / 0.14);
+  --shadow-lift: 0 2px 6px rgb(26 18 8 / 0.06), 0 18px 40px -20px rgb(26 18 8 / 0.22);
+  /* The one glow in the system: under the yellow call to action. */
+  --shadow-glow: 0 10px 30px -12px rgb(242 229 74 / 0.9), 0 2px 6px rgb(26 18 8 / 0.08);
 }
 
 /* --------------------------------------------------------------------------
    Semantic surfaces. Components reference these, never raw palette steps.
    -------------------------------------------------------------------------- */
-:root,
-.dark {
-  color-scheme: dark;
+:root {
+  color-scheme: light;
 
-  --background: #120826;
-  --surface: rgb(38 16 72 / 0.6);
-  --surface-muted: rgb(55 24 98 / 0.52);
-  --surface-raised: rgb(54 22 96 / 0.78);
-  --surface-solid: #1e0d3a;
+  /* Cream page, white cards — the contrast that makes content read as
+     content and the page as a backdrop. */
+  --background: #fff8d9;
+  --surface: #ffffff;
+  --surface-muted: #fffdf2;
+  --surface-raised: #fff8d9;
+  --surface-solid: #ffffff;
 
-  --border: rgb(168 85 247 / 0.22);
-  --border-strong: rgb(192 132 252 / 0.48);
+  --border: rgb(26 18 8 / 0.08);
+  --border-strong: rgb(26 18 8 / 0.18);
 
-  --foreground: #f0e8ff;
-  --muted-foreground: #b89ed6;
-  --ring: #c084fc;
+  --foreground: #1a1208;
+  --muted-foreground: #6b5f4d;
+  --ring: #1c1304;
 
-  /* Status, tuned for a dark page rather than borrowed from a light one. */
-  --success: #34d399;
-  --success-surface: rgb(16 185 129 / 0.14);
-  --danger: #fb7185;
-  --danger-surface: rgb(244 63 94 / 0.15);
-  --warning: #fbbf24;
-  --warning-surface: rgb(245 158 11 / 0.15);
-  --info: #7dd3fc;
-  --info-surface: rgb(14 165 233 / 0.15);
+  /* Status. Warm and muted rather than signal-bright, so nothing competes
+     with the yellow. */
+  --success: #1f8a43;
+  --success-surface: rgb(44 180 89 / 0.14);
+  --danger: #c94b4b;
+  --danger-surface: rgb(201 75 75 / 0.1);
+  --warning: #bd6c0c;
+  --warning-surface: rgb(243 171 53 / 0.16);
+  --info: #2f6f8f;
+  --info-surface: rgb(47 111 143 / 0.1);
 }
 
 @theme inline {
@@ -110,82 +141,62 @@
 @layer base {
   * {
     border-color: var(--border);
-    box-sizing: border-box;
   }
 
   html {
     -webkit-text-size-adjust: 100%;
-    background-color: var(--color-night-900);
+    background-color: var(--background);
   }
 
   body {
+    background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    letter-spacing: -0.01em;
-
-    background-color: var(--background);
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    background-image:
-      /* stars — more spread out for a richer sky */
-      radial-gradient(1.8px 1.8px at 7% 14%, rgb(255 255 255 / 0.95), transparent),
-      radial-gradient(1.2px 1.2px at 18% 72%, rgb(233 213 255 / 0.8), transparent),
-      radial-gradient(1.6px 1.6px at 29% 38%, rgb(255 255 255 / 0.7), transparent),
-      radial-gradient(1px 1px at 42% 8%, rgb(255 255 255 / 0.85), transparent),
-      radial-gradient(1.4px 1.4px at 53% 55%, rgb(216 180 254 / 0.85), transparent),
-      radial-gradient(1px 1px at 61% 82%, rgb(255 255 255 / 0.65), transparent),
-      radial-gradient(1.6px 1.6px at 74% 22%, rgb(255 255 255 / 0.75), transparent),
-      radial-gradient(1.2px 1.2px at 82% 66%, rgb(233 213 255 / 0.7), transparent),
-      radial-gradient(1px 1px at 90% 40%, rgb(255 255 255 / 0.6), transparent),
-      radial-gradient(1.4px 1.4px at 96% 88%, rgb(216 180 254 / 0.75), transparent),
-      radial-gradient(1px 1px at 35% 92%, rgb(255 255 255 / 0.5), transparent),
-      radial-gradient(1.2px 1.2px at 47% 30%, rgb(255 255 255 / 0.6), transparent),
-      /* nebulae — deeper, more dramatic */
-      radial-gradient(1400px 800px at 5% -10%, rgb(139 44 234 / 0.5), transparent 60%),
-      radial-gradient(1000px 600px at 95% 2%, rgb(168 85 247 / 0.35), transparent 58%),
-      radial-gradient(800px 500px at 50% 105%, rgb(99 30 207 / 0.45), transparent 62%),
-      radial-gradient(600px 400px at 25% 50%, rgb(109 40 217 / 0.12), transparent 60%),
-      /* the sky it all sits on */
-      linear-gradient(175deg, #1a0935 0%, #120826 40%, #0c0520 100%);
   }
 
-  h1, h2, h3 {
-    letter-spacing: -0.02em;
-  }
-
+  /* Confident and tight, as the type scale asks. The negative tracking is
+     what gives the headlines their editorial feel; it is set per size because
+     a single value would be far too tight on the small ones. */
   h1 {
-    font-family: var(--font-display);
+    letter-spacing: -0.035em;
+    font-weight: 600;
   }
 
-  /* One focus style everywhere, rather than the browser default per control. */
+  h2 {
+    letter-spacing: -0.03em;
+    font-weight: 600;
+  }
+
+  h3 {
+    letter-spacing: -0.015em;
+    font-weight: 600;
+  }
+
+  /* Prices, balances and counts line up column by column. */
+  .tabular-nums,
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
-    border-radius: 4px;
   }
 
   ::selection {
-    background-color: var(--color-brand-600);
-    color: #ffffff;
+    background-color: var(--color-brand-300);
+    color: var(--color-ink-950);
   }
 
-  /* A native dropdown paints its list with the OS palette */
-  option {
-    background-color: var(--surface-solid);
-    color: var(--foreground);
-  }
-
-  /* Styled scrollbars */
+  /* Scrollbars, warm rather than grey. */
   * {
-    scrollbar-color: var(--color-brand-700) transparent;
-    scrollbar-width: thin;
+    scrollbar-color: rgb(26 18 8 / 0.2) transparent;
   }
 
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 10px;
+    height: 10px;
   }
 
   ::-webkit-scrollbar-track {
@@ -193,220 +204,156 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: rgb(126 34 206 / 0.55);
+    background-color: rgb(26 18 8 / 0.16);
+    border: 2px solid transparent;
     border-radius: 999px;
+    background-clip: padding-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: rgb(168 85 247 / 0.85);
+    background-color: rgb(26 18 8 / 0.28);
   }
 }
 
 @layer utilities {
-  /* A deeper patch of sky, for heroes and panels */
-  .bg-cosmos {
-    background-color: var(--color-night-900);
-    background-image:
-      radial-gradient(1000px 600px at 12% -12%, rgb(139 44 234 / 0.55), transparent 58%),
-      radial-gradient(800px 480px at 88% -4%, rgb(192 132 252 / 0.32), transparent 58%),
-      radial-gradient(700px 450px at 50% 112%, rgb(70 25 115 / 0.75), transparent 60%);
-  }
-
-  /* Faint starfield for a single section */
-  .bg-stars::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background-image:
-      radial-gradient(1.5px 1.5px at 15% 25%, rgb(255 255 255 / 0.9), transparent),
-      radial-gradient(1.5px 1.5px at 72% 18%, rgb(255 255 255 / 0.75), transparent),
-      radial-gradient(1px 1px at 38% 65%, rgb(255 255 255 / 0.8), transparent),
-      radial-gradient(1px 1px at 88% 58%, rgb(255 255 255 / 0.65), transparent),
-      radial-gradient(1.5px 1.5px at 8% 82%, rgb(255 255 255 / 0.55), transparent),
-      radial-gradient(1px 1px at 55% 92%, rgb(255 255 255 / 0.7), transparent),
-      radial-gradient(1px 1px at 93% 32%, rgb(255 255 255 / 0.5), transparent),
-      radial-gradient(1.2px 1.2px at 48% 42%, rgb(233 213 255 / 0.6), transparent),
-      radial-gradient(1px 1px at 25% 58%, rgb(255 255 255 / 0.45), transparent);
-  }
-
-  .text-gradient-brand {
-    background-image: linear-gradient(
-      130deg,
-      var(--color-brand-200),
-      var(--color-brand-300) 35%,
-      var(--color-gold-300) 65%,
-      var(--color-gold-200)
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .text-gradient-gold {
-    background-image: linear-gradient(
-      135deg,
-      var(--color-gold-200),
-      var(--color-gold-300) 50%,
-      var(--color-gold-200)
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  /* The standard panel: translucent violet over the sky */
+  /* The standard card: white, a faint border doing the structural work, and
+     only the gentlest lift. Cards are deliberately flat here — the hierarchy
+     is meant to come from the type, not from stacked shadows. */
   .card-surface {
     background-color: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
   }
 
-  .card-surface:hover {
-    border-color: rgb(168 85 247 / 0.32);
-  }
-
-  /* A panel that should catch the eye */
+  /* A card that should catch the eye: the warm promotional surface. */
   .card-glow {
-    border-color: rgb(192 132 252 / 0.5) !important;
-    box-shadow: var(--shadow-glow) !important;
+    background-color: var(--surface-raised);
+    border-color: rgb(242 229 74 / 0.6);
+    box-shadow: var(--shadow-glow);
   }
 
-  /* Stat card with a subtle left accent */
-  .card-stat {
-    background: linear-gradient(135deg, rgb(45 16 82 / 0.7), rgb(30 10 58 / 0.8));
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(16px);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .card-stat::before {
-    content: "";
-    position: absolute;
-    inset-block: 0;
-    left: 0;
-    width: 3px;
-    background-image: linear-gradient(180deg, transparent, rgb(168 85 247 / 0.8), transparent);
-    border-radius: 0 2px 2px 0;
-  }
-
-  /* The gradient pill */
+  /* The primary action, and nothing else. Yellow fill, dark text, full pill,
+     and the one glow in the system under it. */
   .btn-cosmic {
-    background-image: linear-gradient(135deg, #b06ef8 0%, #9333ea 45%, #7c3aed 100%);
-    box-shadow: 0 6px 20px -8px rgb(168 85 247 / 0.85), inset 0 1px 0 rgb(255 255 255 / 0.2);
-    transition: all 0.2s ease;
+    background-color: var(--color-brand-300);
+    color: var(--color-brand-950);
+    box-shadow: var(--shadow-glow);
   }
 
   .btn-cosmic:hover:not(:disabled) {
-    background-image: linear-gradient(135deg, #c07dfb 0%, #a855f7 45%, #8b5cf6 100%);
-    box-shadow: 0 8px 28px -8px rgb(192 132 252 / 1), inset 0 1px 0 rgb(255 255 255 / 0.28);
-    transform: translateY(-1px);
+    background-color: var(--color-brand-400);
+    box-shadow: 0 12px 34px -12px rgb(242 229 74 / 1), 0 2px 6px rgb(26 18 8 / 0.1);
   }
 
-  .btn-cosmic:active:not(:disabled) {
-    transform: translateY(0);
+  /* A warm promotional band, used where the old design had a night sky. */
+  .bg-cosmos {
+    background-color: var(--color-cream-200);
+    background-image:
+      radial-gradient(900px 420px at 12% -10%, rgb(247 238 122 / 0.75), transparent 62%),
+      radial-gradient(700px 360px at 88% 0%, rgb(242 229 74 / 0.5), transparent 60%),
+      radial-gradient(600px 400px at 50% 112%, rgb(253 241 194 / 0.9), transparent 62%);
   }
 
-  /* The ringed circular icon badge */
+  /* Kept as a no-op so markup that still asks for a starfield simply gets
+     nothing, rather than every page needing an edit to remove it. */
+  .bg-stars::before {
+    content: none;
+  }
+
+  /* Soft sunny blobs, the warm counterpart to the old planets. Decorative
+     only, and always aria-hidden where they are used. */
+  .orb {
+    border-radius: 9999px;
+    background-image: radial-gradient(
+      circle at 32% 28%,
+      rgb(255 253 240 / 0.95),
+      rgb(247 238 122 / 0.9) 45%,
+      rgb(242 229 74 / 0.75)
+    );
+    filter: blur(0.5px);
+  }
+
+  .orb-gold {
+    background-image: radial-gradient(
+      circle at 32% 28%,
+      rgb(254 240 210 / 0.95),
+      rgb(248 199 107 / 0.9) 48%,
+      rgb(243 171 53 / 0.8)
+    );
+  }
+
+  /* A soft yellow disc behind an icon. */
   .medallion {
-    background-image: radial-gradient(circle at 30% 26%, rgb(200 140 255 / 0.45), rgb(42 12 92 / 0.96));
-    border: 1px solid rgb(192 132 252 / 0.55);
-    box-shadow: 0 0 0 4px rgb(147 51 234 / 0.14), 0 8px 24px -12px rgb(168 85 247 / 0.85);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    background-color: var(--color-brand-300);
+    color: var(--color-brand-950);
+    border: 1px solid rgb(26 18 8 / 0.06);
+    box-shadow: 0 6px 18px -10px rgb(242 229 74 / 0.9);
   }
 
+  /* The selected item in the panel's sidebar. A soft yellow wash rather than
+     the full brand fill — the sidebar has one of these on every screen, and
+     at that frequency the solid colour stops meaning "this is the action"
+     and starts competing with the button that is. */
+  .nav-active {
+    background-color: var(--color-brand-200);
+    color: var(--color-brand-950);
+    font-weight: 600;
+  }
+
+  /* The warmer medallion, for anything celestial rather than commercial. */
   .medallion-gold {
-    background-image: radial-gradient(circle at 30% 26%, rgb(253 211 77 / 0.4), rgb(80 32 0 / 0.96));
-    border: 1px solid rgb(251 191 36 / 0.5);
-    box-shadow: 0 0 0 4px rgb(245 158 11 / 0.12), 0 8px 24px -12px rgb(251 191 36 / 0.6);
+    background-color: var(--color-gold-300);
+    color: var(--color-gold-900);
+    box-shadow: 0 6px 18px -10px rgb(243 171 53 / 0.9);
   }
 
-  /* The thin lit rule under navigation */
+  /* A quiet hairline, used where sections meet. */
   .hairline {
     background-image: linear-gradient(
       90deg,
       transparent,
-      rgb(192 132 252 / 0.45) 15%,
-      rgb(233 213 255 / 0.8) 50%,
-      rgb(192 132 252 / 0.45) 85%,
+      rgb(26 18 8 / 0.1) 20%,
+      rgb(26 18 8 / 0.14) 50%,
+      rgb(26 18 8 / 0.1) 80%,
       transparent
     );
   }
 
-  /* Decorative planets */
-  .orb {
-    border-radius: 9999px;
-    background-image: radial-gradient(circle at 30% 26%, #ede0ff, #a855f7 36%, #6d28d9 66%, #380f6e 100%);
-    box-shadow: inset -16px -20px 40px rgb(8 3 20 / 0.75), 0 0 80px -10px rgb(168 85 247 / 0.6);
+  /* Headline emphasis. On a light page this is a colour shift, not a glow —
+     a literal glow would simply look like a printing error. */
+  .text-gradient-brand {
+    background-image: linear-gradient(
+      100deg,
+      var(--color-ink-900),
+      var(--color-gold-600) 45%,
+      var(--color-brand-600)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
-  .orb-gold {
-    background-image: radial-gradient(circle at 30% 26%, #fef3c7, #f59e0b 40%, #b45309 70%, #5a1b02 100%);
-    box-shadow: inset -10px -14px 28px rgb(15 4 1 / 0.75), 0 0 60px -14px rgb(251 191 36 / 0.6);
-  }
-
+  /* The old dark theme lit text up; here the same emphasis is a warm
+     highlight behind it. */
   .glow-text {
-    text-shadow: 0 0 32px rgb(192 132 252 / 0.6), 0 0 64px rgb(147 51 234 / 0.3);
+    text-shadow: none;
   }
 
   .font-display {
     font-family: var(--font-display);
   }
 
-  /* Icon container with colored background */
-  .icon-box {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.75rem;
-    flex-shrink: 0;
-  }
-
-  .icon-box-brand {
-    background: linear-gradient(135deg, rgb(168 85 247 / 0.25), rgb(109 40 217 / 0.35));
-    border: 1px solid rgb(168 85 247 / 0.3);
-    color: var(--color-brand-300);
-    box-shadow: 0 0 0 3px rgb(147 51 234 / 0.1);
-  }
-
-  .icon-box-gold {
-    background: linear-gradient(135deg, rgb(245 158 11 / 0.2), rgb(180 83 9 / 0.3));
-    border: 1px solid rgb(251 191 36 / 0.3);
-    color: var(--color-gold-300);
-    box-shadow: 0 0 0 3px rgb(245 158 11 / 0.1);
-  }
-
-  .icon-box-green {
-    background: linear-gradient(135deg, rgb(16 185 129 / 0.18), rgb(5 150 105 / 0.25));
-    border: 1px solid rgb(52 211 153 / 0.28);
-    color: var(--color-success);
-    box-shadow: 0 0 0 3px rgb(16 185 129 / 0.1);
-  }
-
-  .icon-box-blue {
-    background: linear-gradient(135deg, rgb(14 165 233 / 0.18), rgb(2 132 199 / 0.25));
-    border: 1px solid rgb(125 211 252 / 0.28);
-    color: var(--color-info);
-    box-shadow: 0 0 0 3px rgb(14 165 233 / 0.1);
-  }
-
-  /* Skeletons and loading states */
+  /* Skeletons and "loading" states. */
   .shimmer {
     background: linear-gradient(
       90deg,
-      rgb(55 22 98 / 0.5) 25%,
-      rgb(108 32 192 / 0.4) 37%,
-      rgb(55 22 98 / 0.5) 63%
+      rgb(26 18 8 / 0.04) 25%,
+      rgb(26 18 8 / 0.09) 37%,
+      rgb(26 18 8 / 0.04) 63%
     );
     background-size: 400% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+    animation: shimmer 1.4s ease-in-out infinite;
   }
 
   @keyframes shimmer {
@@ -414,93 +361,13 @@
     100% { background-position: 0 50%; }
   }
 
-  /* Slow drift for the decorative orbs */
   @keyframes float-slow {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    33% { transform: translateY(-14px) rotate(1deg); }
-    66% { transform: translateY(-8px) rotate(-0.5deg); }
-  }
-
-  @keyframes float-gentle {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+    0%, 100% { transform: translateY(0) }
+    50% { transform: translateY(-18px) }
   }
 
   .animate-float-slow {
-    animation: float-slow 12s ease-in-out infinite;
-  }
-
-  .animate-float-gentle {
-    animation: float-gentle 8s ease-in-out infinite;
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 0 0 rgb(168 85 247 / 0.4); }
-    50% { box-shadow: 0 0 0 8px rgb(168 85 247 / 0); }
-  }
-
-  .animate-pulse-glow {
-    animation: pulse-glow 2.5s ease-in-out infinite;
-  }
-
-  @keyframes fade-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .animate-fade-in {
-    animation: fade-in 0.5s ease-out forwards;
-  }
-
-  /* Decorative ring */
-  .ring-cosmic {
-    box-shadow: 0 0 0 1px rgb(168 85 247 / 0.25), 0 0 0 4px rgb(147 51 234 / 0.1);
-  }
-
-  /* Section divider */
-  .section-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgb(168 85 247 / 0.3) 30%, rgb(192 132 252 / 0.5) 50%, rgb(168 85 247 / 0.3) 70%, transparent);
-  }
-
-  /* Number badge for stats */
-  .stat-number {
-    font-size: 2rem;
-    font-weight: 800;
-    line-height: 1;
-    background-image: linear-gradient(135deg, #f0e8ff, #d8b4fe);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .stat-number-gold {
-    background-image: linear-gradient(135deg, #fef3c7, #fbbf24);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .stat-number-green {
-    background-image: linear-gradient(135deg, #a7f3d0, #34d399);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .stat-number-blue {
-    background-image: linear-gradient(135deg, #bae6fd, #7dd3fc);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  /* Sidebar nav item active state */
-  .nav-active {
-    background: linear-gradient(135deg, rgb(168 85 247 / 0.25), rgb(109 40 217 / 0.2));
-    border: 1px solid rgb(168 85 247 / 0.35);
-    color: var(--color-brand-200);
-    box-shadow: 0 0 0 3px rgb(147 51 234 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.08);
+    animation: float-slow 11s ease-in-out infinite;
   }
 }
 

@@ -60,8 +60,8 @@ export function IncomingCallWatcher() {
     return (
       <div className="fixed inset-x-0 bottom-0 z-50 p-4 sm:inset-auto sm:right-6 sm:top-6 sm:w-80">
         <div className="card-surface overflow-hidden rounded-2xl border border-border shadow-2xl">
-          <div className="bg-cosmos px-5 py-4 text-white">
-            <p className="flex items-center gap-2 text-xs text-white/70">
+          <div className="bg-cosmos px-5 py-4 text-brand-950">
+            <p className="flex items-center gap-2 text-xs text-ink-600">
               <MessageCircle className="size-3.5" />
               Chat request
             </p>
@@ -69,7 +69,7 @@ export function IncomingCallWatcher() {
               <Avatar src={chat.peer?.avatar_url} name={chat.peer?.name} size="md" />
               <div className="min-w-0">
                 <p className="truncate font-semibold">{chat.peer?.name ?? "Someone"}</p>
-                <p className="text-xs text-white/60">wants to chat</p>
+                <p className="text-xs text-ink-600">wants to chat</p>
               </div>
             </div>
           </div>
@@ -88,7 +88,7 @@ export function IncomingCallWatcher() {
               Decline
             </Button>
             <Button
-              className="flex-1 bg-success text-white hover:bg-success"
+              className="flex-1 bg-success text-brand-950 hover:bg-success"
               disabled={chatActions.accept.isPending}
               onClick={() =>
                 chatActions.accept.mutate(chat.id, {
@@ -110,8 +110,8 @@ export function IncomingCallWatcher() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 p-4 sm:inset-auto sm:right-6 sm:top-6 sm:w-80">
       <div className="card-surface overflow-hidden rounded-2xl border border-border shadow-2xl">
-        <div className="bg-cosmos px-5 py-4 text-white">
-          <p className="flex items-center gap-2 text-xs text-white/70">
+        <div className="bg-cosmos px-5 py-4 text-brand-950">
+          <p className="flex items-center gap-2 text-xs text-ink-600">
             <Video className="size-3.5" />
             Incoming video call
           </p>
@@ -119,7 +119,7 @@ export function IncomingCallWatcher() {
             <Avatar src={call.peer?.avatar_url} name={call.peer?.name} size="md" />
             <div className="min-w-0">
               <p className="truncate font-semibold">{call.peer?.name ?? "Someone"}</p>
-              <p className="text-xs text-white/60">is calling you…</p>
+              <p className="text-xs text-ink-600">is calling you…</p>
             </div>
           </div>
         </div>
@@ -139,7 +139,7 @@ export function IncomingCallWatcher() {
             Decline
           </Button>
           <Button
-            className="flex-1 bg-success text-white hover:bg-success"
+            className="flex-1 bg-success text-brand-950 hover:bg-success"
             disabled={accept.isPending}
             onClick={() =>
               accept.mutate(call.id, {

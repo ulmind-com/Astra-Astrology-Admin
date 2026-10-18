@@ -135,7 +135,7 @@ export default function AstrologersListPage() {
                             </span>
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate font-semibold text-foreground group-hover:text-brand-300 transition-colors">{astrologer.display_name}</p>
+                            <p className="truncate font-semibold text-foreground group-hover:text-brand-700 transition-colors">{astrologer.display_name}</p>
                             <p className="truncate text-xs text-muted-foreground">
                               {astrologer.email}
                             </p>

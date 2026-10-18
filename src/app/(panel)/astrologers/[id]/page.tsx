@@ -201,7 +201,7 @@ export default function EditAstrologerPage() {
               href={`/astrologers/${astrologer.slug}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:underline dark:text-brand-300"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:underline dark:text-brand-700"
             >
               Public page
               <ExternalLink className="size-3.5" />
@@ -319,7 +319,7 @@ export default function EditAstrologerPage() {
                       className={cn(
                         "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
                         on
-                          ? "border-brand-500 bg-brand-500 text-white"
+                          ? "border-brand-500/50 bg-brand-300 text-brand-950"
                           : "border-border bg-surface hover:border-border-strong",
                       )}
                     >
@@ -406,7 +406,7 @@ export default function EditAstrologerPage() {
                   commission_percent: "",
                 }))
               }
-              className="text-xs font-medium text-brand-600 underline dark:text-brand-300"
+              className="text-xs font-medium text-brand-700 underline dark:text-brand-700"
             >
               Use the platform rates and commission
             </button>

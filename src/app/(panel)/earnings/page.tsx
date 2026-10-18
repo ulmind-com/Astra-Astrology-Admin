@@ -43,15 +43,15 @@ function Stat({
     <div
       className={
         highlight
-          ? "rounded-2xl bg-cosmos p-5 text-white"
+          ? "rounded-2xl bg-cosmos p-5 text-brand-950"
           : "rounded-2xl border border-border bg-surface p-5"
       }
     >
-      <p className={highlight ? "text-xs text-white/70" : "text-xs text-muted-foreground"}>
+      <p className={highlight ? "text-xs text-ink-600" : "text-xs text-muted-foreground"}>
         {label}
       </p>
       <p className="mt-1.5 text-2xl font-bold tabular-nums">{formatEarning(paise)}</p>
-      <p className={highlight ? "text-xs text-white/60" : "text-xs text-muted-foreground"}>
+      <p className={highlight ? "text-xs text-ink-600" : "text-xs text-muted-foreground"}>
         {minutes} {minutes === 1 ? "minute" : "minutes"}
       </p>
     </div>
@@ -194,8 +194,8 @@ export default function EarningsPage() {
             {totals.sessions === 1 ? "session" : "sessions"}
           </p>
         </div>
-        <div className="rounded-2xl bg-cosmos p-5 text-white">
-          <p className="flex items-center gap-1.5 text-xs text-white/70">
+        <div className="rounded-2xl bg-cosmos p-5 text-brand-950">
+          <p className="flex items-center gap-1.5 text-xs text-ink-600">
             <IndianRupee className="size-3.5" />
             Your commission
           </p>

@@ -58,7 +58,7 @@ function ResetPasswordForm() {
         Back to sign in
       </Link>
 
-      <span className="flex size-11 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-200">
+      <span className="flex size-11 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-100 dark:text-ink-800">
         <ShieldCheck className="size-5" />
       </span>
 
@@ -160,7 +160,7 @@ function ResetPasswordForm() {
 export default function Page() {
   return (
     <div className="bg-stars flex min-h-dvh items-center justify-center bg-cosmos px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-border-strong bg-surface-raised p-6 shadow-glow backdrop-blur-xl">
+      <div className="w-full max-w-sm rounded-3xl border border-border bg-surface p-8 shadow-lift">
         <React.Suspense fallback={<LoadingBlock />}>
           <ResetPasswordForm />
         </React.Suspense>
