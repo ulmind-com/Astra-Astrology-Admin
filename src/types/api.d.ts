@@ -247,6 +247,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/me/realtime-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A Firebase token, so this browser can subscribe to live updates
+         * @description Bridges our own JWT to a Firebase identity.
+         *
+         *     The public half of the live mirror — astrologer cards, platform settings —
+         *     needs no sign-in. This is for the half that is personal: a wallet document
+         *     is readable only by the uid it is named after, and Firestore can only check
+         *     that if the browser is signed in to Firebase as that person.
+         *
+         *     Minted per request and short-lived, never stored.
+         */
+        get: operations["realtime_token_api_v1_users_me_realtime_token_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/me/addresses": {
         parameters: {
             query?: never;
@@ -316,6 +343,54 @@ export interface paths {
         head?: never;
         /** Go online or offline, and toggle chat and call */
         patch: operations["update_my_availability_api_v1_astrologers_me_availability_patch"];
+        trace?: never;
+    };
+    "/api/v1/astrologers/me/presence/beat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * My panel is open
+         * @description Sent by an open panel every `beat_seconds`.
+         *
+         *     This is what actually puts an astrologer on the directory: opening the
+         *     panel is the act of going online, and the moment the beats stop — tab
+         *     closed, laptop shut, connection lost — they fall off it on their own.
+         */
+        post: operations["presence_beat_api_v1_astrologers_me_presence_beat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/astrologers/me/presence/offline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * My panel is closing
+         * @description The tidy exit, sent as the tab unloads.
+         *
+         *     Only an optimisation: if it never arrives — the browser was killed, the
+         *     network died — the heartbeat lapses and the TTL does the same job a few
+         *     seconds later. Nothing depends on this call being delivered.
+         */
+        post: operations["presence_offline_api_v1_astrologers_me_presence_offline_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/astrologers/me/image": {
@@ -1533,6 +1608,20 @@ export interface components {
             message: string;
             data?: components["schemas"]["EmailAvailability"] | null;
         };
+        /** ApiResponse[FirebaseCredentials] */
+        ApiResponse_FirebaseCredentials_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["FirebaseCredentials"] | null;
+        };
         /** ApiResponse[GalleryUploadResult] */
         ApiResponse_GalleryUploadResult_: {
             /**
@@ -1700,6 +1789,20 @@ export interface components {
              */
             message: string;
             data?: components["schemas"]["PlatformSettingsOut"] | null;
+        };
+        /** ApiResponse[PresenceState] */
+        ApiResponse_PresenceState_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["PresenceState"] | null;
         };
         /** ApiResponse[RechargeOptions] */
         ApiResponse_RechargeOptions_: {
@@ -2204,7 +2307,19 @@ export interface components {
              */
             is_new_user: boolean;
         };
-        /** Availability */
+        /**
+         * Availability
+         * @description Whether this astrologer can be consulted right now.
+         *
+         *     `is_online` is not trusted on its own. It says the astrologer meant to be
+         *     available; `last_seen_at` says their panel was actually open recently. A
+         *     browser that is closed, crashes, or loses its connection stops sending the
+         *     heartbeat and no longer reports anything — so without the second field an
+         *     astrologer would stay "online" forever after closing the tab, and users
+         *     would queue for someone who is not there.
+         *
+         *     Both fields are always read together through `app.services.presence`.
+         */
         Availability: {
             /**
              * Is Online
@@ -2233,6 +2348,8 @@ export interface components {
             is_busy: boolean;
             /** Last Online At */
             last_online_at?: string | null;
+            /** Last Seen At */
+            last_seen_at?: string | null;
         };
         /** AvailabilityUpdate */
         AvailabilityUpdate: {
@@ -3054,6 +3171,24 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /**
+         * PresenceState
+         * @description What the panel needs to keep itself on the directory.
+         *
+         *     The cadence is sent back rather than hard-coded in the browser, so the
+         *     heartbeat interval and the TTL can be retuned on the server without
+         *     shipping a new frontend.
+         */
+        PresenceState: {
+            /** Is Online */
+            is_online: boolean;
+            /** Beat Seconds */
+            beat_seconds: number;
+            /** Ttl Seconds */
+            ttl_seconds: number;
+            /** Last Seen At */
+            last_seen_at?: string | null;
         };
         /**
          * ProfileCompleteness
@@ -3987,6 +4122,26 @@ export interface operations {
             };
         };
     };
+    realtime_token_api_v1_users_me_realtime_token_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_FirebaseCredentials_"];
+                };
+            };
+        };
+    };
     list_addresses_api_v1_users_me_addresses_get: {
         parameters: {
             query?: never;
@@ -4188,6 +4343,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    presence_beat_api_v1_astrologers_me_presence_beat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_PresenceState_"];
+                };
+            };
+        };
+    };
+    presence_offline_api_v1_astrologers_me_presence_offline_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_PresenceState_"];
                 };
             };
         };

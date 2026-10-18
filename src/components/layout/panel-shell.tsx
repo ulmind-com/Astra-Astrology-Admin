@@ -21,6 +21,7 @@ import * as React from "react";
 
 import { IncomingCallWatcher } from "@/components/call/incoming-call";
 import { Avatar, Badge, Button } from "@/components/ui";
+import { UlmindCredit } from "@/components/ulmind-credit";
 import { cn } from "@/lib/utils";
 import { ROLE_LABELS } from "@/types";
 import { useAuth } from "@/providers/auth-provider";
@@ -152,6 +153,10 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
         </header>
 
         <main className="flex-1 p-4 sm:p-6">{children}</main>
+
+        <footer className="mt-auto flex justify-center border-t border-border px-4 py-6">
+          <UlmindCredit />
+        </footer>
 
         {/* Rings on every panel page, since a call can arrive at any time. */}
         <IncomingCallWatcher />

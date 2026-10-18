@@ -7,6 +7,7 @@ import * as React from "react";
 import { toast } from "sonner";
 
 import { Alert, Button, Field, Input, Year } from "@/components/ui";
+import { UlmindCredit } from "@/components/ulmind-credit";
 import { authApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/providers/auth-provider";
@@ -118,9 +119,12 @@ export default function AdminLoginPage() {
           </p>
         </div>
 
-        <p className="mt-6 text-center text-xs text-brand-100/50">
-          © <Year /> Astra Astrology
-        </p>
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <UlmindCredit />
+          <p className="text-xs text-brand-100/50">
+            © <Year /> Astra Astrology
+          </p>
+        </div>
       </div>
     </div>
   );
