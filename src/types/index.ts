@@ -309,3 +309,9 @@ export const REVIEW_KIND_LABELS: Record<ReviewKind, string> = {
   video: "Video call",
   appointment: "Appointment",
 };
+
+// ------------------------------------------------------------ face reading
+export type FaceReading = S["FaceReadingOut"];
+export type FaceReadingSection = S["ReadingSectionOut"];
+export type FaceReadingAvailability = S["FaceReadingAvailability"];
+export type FaceRule = S["RuleOut"];

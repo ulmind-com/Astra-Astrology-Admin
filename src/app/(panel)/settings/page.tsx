@@ -18,6 +18,7 @@ import {
   Field,
   Input,
   LoadingBlock,
+  Switch,
   Textarea,
 } from "@/components/ui";
 import { adminSettingsApi } from "@/lib/api";
@@ -373,6 +374,8 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
     apptMin: String(settings.min_appointment_minutes),
     apptMax: String(settings.max_appointment_minutes),
     apptDaysAhead: String(settings.appointment_booking_days_ahead),
+    faceCoins: String(settings.face_reading_coins),
+    faceEnabled: settings.face_reading_enabled,
   });
   const [fieldError, setFieldError] = React.useState<string | null>(null);
 
@@ -393,6 +396,8 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
         min_appointment_minutes: Number(form.apptMin),
         max_appointment_minutes: Number(form.apptMax),
         appointment_booking_days_ahead: Number(form.apptDaysAhead),
+        face_reading_coins: Number(form.faceCoins),
+        face_reading_enabled: form.faceEnabled,
       }),
     onSuccess: (updated) => {
       void queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
@@ -440,6 +445,11 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
     // Appointments sit on a five-minute grid, so the limits must too.
     if (apptMin % 5 || apptMax % 5) {
       setFieldError("Appointment lengths must be multiples of 5 minutes.");
+      return;
+    }
+    const faceCoins = Number(form.faceCoins);
+    if (!Number.isInteger(faceCoins) || faceCoins < 0) {
+      setFieldError("A face reading must cost a whole number of coins, 0 or more.");
       return;
     }
     save.mutate();
@@ -523,6 +533,40 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
                 onChange={set("maxMinutes")}
               />
             </Field>
+          </div>
+
+          {/* ------------------------------------------------- face reading */}
+          <div className="rounded-xl border border-border bg-surface-muted/40 p-4">
+            <p className="mb-3 font-display text-sm font-semibold">Face reading</p>
+            <div className="flex flex-wrap items-end gap-4">
+              <Field
+                label="Cost per reading (coins)"
+                required
+                className="w-52"
+                hint={Number(form.faceCoins) === 0 ? "Free" : undefined}
+              >
+                <Input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={form.faceCoins}
+                  onChange={set("faceCoins")}
+                />
+              </Field>
+              <div className="pb-2">
+                <Switch
+                  checked={form.faceEnabled}
+                  label="Offer face reading"
+                  onChange={(next: boolean) => setForm((f) => ({ ...f, faceEnabled: next }))}
+                />
+              </div>
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+              Charged when the reading is produced. The photo is measured on the
+              user&apos;s own device and never reaches the server — only the
+              proportions do. What each measurement <em>means</em> is edited
+              under <strong>Face rules</strong>.
+            </p>
           </div>
 
           {/* ------------------------------------------------- appointments */}

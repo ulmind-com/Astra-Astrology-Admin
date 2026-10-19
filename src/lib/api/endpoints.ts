@@ -69,6 +69,15 @@ export const endpoints = {
     mySchedule: "/appointments/me/schedule",
   },
 
+  faceReading: {
+    availability: "/face-reading/availability",
+    submit: "/face-reading",
+    mine: "/face-reading/mine",
+    detail: (id: string) => `/face-reading/${id}`,
+    rules: "/admin/face-reading/rules",
+    rule: (id: string) => `/admin/face-reading/rules/${id}`,
+  },
+
   reviews: {
     leave: "/reviews",
     pending: "/reviews/pending",

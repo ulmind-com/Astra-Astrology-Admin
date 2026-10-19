@@ -4,6 +4,7 @@ import { api, apiFetch } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import type {
   Address,
+  FaceRule,
   ReviewPage,
   Review,
   AvailabilityWindow,
@@ -285,6 +286,8 @@ export const adminSettingsApi = {
     min_appointment_minutes?: number;
     max_appointment_minutes?: number;
     appointment_booking_days_ahead?: number;
+    face_reading_coins?: number;
+    face_reading_enabled?: boolean;
   }) => api.patch<PlatformSettings>(endpoints.admin.consultationDefaults, body),
 
   earnings: () => api.get<AdminEarningsSummary>(endpoints.admin.earnings),
@@ -385,4 +388,25 @@ export const reviewApi = {
   /** Hiding is not deleting: the row stays, it just stops counting. */
   setHidden: (reviewId: string, hidden: boolean, reason?: string) =>
     api.patch<Review>(endpoints.reviews.hide(reviewId), { hidden, reason: reason ?? null }),
+};
+
+// ------------------------------------------------------------ face reading
+export const faceReadingApi = {
+  /** Where the client's corrections land. Editing a row changes every future
+   *  reading — no deploy. */
+  rules: (feature?: string) =>
+    api.get<FaceRule[]>(endpoints.faceReading.rules, { query: { feature } }),
+
+  updateRule: (
+    id: string,
+    body: {
+      label?: string;
+      meaning?: string;
+      area?: string | null;
+      conditions?: Array<Record<string, unknown>>;
+      priority?: number;
+      enabled?: boolean;
+      reviewed?: boolean;
+    },
+  ) => api.patch<FaceRule>(endpoints.faceReading.rule(id), body),
 };

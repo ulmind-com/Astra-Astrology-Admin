@@ -10,6 +10,7 @@ import {
   Sparkles,
   UserRound,
   Receipt,
+  ScanFace,
   Settings,
   TrendingUp,
   Users,
@@ -37,6 +38,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/transactions", label: "Transactions", icon: Receipt },
   { href: "/payments", label: "Payments", icon: CreditCard },
   { href: "/earnings", label: "Earnings", icon: TrendingUp },
+  { href: "/face-rules", label: "Face rules", icon: ScanFace },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

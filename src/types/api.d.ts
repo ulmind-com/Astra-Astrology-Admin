@@ -1290,6 +1290,123 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/face-reading/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What a reading costs, and whether it is on
+         * @description Asked before the camera opens, so nobody is charged by surprise.
+         */
+        get: operations["availability_api_v1_face_reading_availability_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/face-reading": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read a face from its measurements
+         * @description Takes ratios, not a photograph.
+         *
+         *     The face is measured on the device and never leaves it. What arrives here
+         *     is about twenty numbers, each already relative to the subject's own face.
+         */
+        post: operations["submit_api_v1_face_reading_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/face-reading/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My readings */
+        get: operations["mine_api_v1_face_reading_mine_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/face-reading/{reading_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One reading */
+        get: operations["one_api_v1_face_reading__reading_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/face-reading/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every rule, including disabled ones
+         * @description This is the screen the client's corrections land on.
+         *
+         *     Editing a row changes how every future reading is decided — no deploy, no
+         *     code change. That is the point of keeping the rules here.
+         */
+        get: operations["list_rules_api_v1_admin_face_reading_rules_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/face-reading/rules/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Correct a rule — its wording, its thresholds, or both */
+        patch: operations["update_rule_api_v1_admin_face_reading_rules__rule_id__patch"];
+        trace?: never;
+    };
     "/api/v1/reviews": {
         parameters: {
             query?: never;
@@ -1936,6 +2053,34 @@ export interface components {
             message: string;
             data?: components["schemas"]["EmailAvailability"] | null;
         };
+        /** ApiResponse[FaceReadingAvailability] */
+        ApiResponse_FaceReadingAvailability_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["FaceReadingAvailability"] | null;
+        };
+        /** ApiResponse[FaceReadingOut] */
+        ApiResponse_FaceReadingOut_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["FaceReadingOut"] | null;
+        };
         /** ApiResponse[GalleryUploadResult] */
         ApiResponse_GalleryUploadResult_: {
             /**
@@ -2188,6 +2333,20 @@ export interface components {
             message: string;
             data?: components["schemas"]["ReviewPage"] | null;
         };
+        /** ApiResponse[RuleOut] */
+        ApiResponse_RuleOut_: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            data?: components["schemas"]["RuleOut"] | null;
+        };
         /** ApiResponse[TranscriptOut] */
         ApiResponse_TranscriptOut_: {
             /**
@@ -2421,6 +2580,21 @@ export interface components {
             /** Data */
             data?: components["schemas"]["EarningRow"][] | null;
         };
+        /** ApiResponse[list[FaceReadingOut]] */
+        ApiResponse_list_FaceReadingOut__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            /** Data */
+            data?: components["schemas"]["FaceReadingOut"][] | null;
+        };
         /** ApiResponse[list[PendingReview]] */
         ApiResponse_list_PendingReview__: {
             /**
@@ -2450,6 +2624,21 @@ export interface components {
             message: string;
             /** Data */
             data?: components["schemas"]["ReviewOut"][] | null;
+        };
+        /** ApiResponse[list[RuleOut]] */
+        ApiResponse_list_RuleOut__: {
+            /**
+             * Success
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @default Success
+             */
+            message: string;
+            /** Data */
+            data?: components["schemas"]["RuleOut"][] | null;
         };
         /** ApiResponse[list[WindowOut]] */
         ApiResponse_list_WindowOut__: {
@@ -3291,6 +3480,10 @@ export interface components {
             max_appointment_minutes?: number | null;
             /** Appointment Booking Days Ahead */
             appointment_booking_days_ahead?: number | null;
+            /** Face Reading Coins */
+            face_reading_coins?: number | null;
+            /** Face Reading Enabled */
+            face_reading_enabled?: boolean | null;
         };
         /**
          * ConsultationMode
@@ -3506,6 +3699,38 @@ export interface components {
         ExtendRequest: {
             /** Extra Minutes */
             extra_minutes: number;
+        };
+        /**
+         * FaceReadingAvailability
+         * @description What it costs and whether it is on, before anyone starts.
+         */
+        FaceReadingAvailability: {
+            /** Enabled */
+            enabled: boolean;
+            /** Coins */
+            coins: number;
+            /** Balance Coins */
+            balance_coins: number;
+            /** Can Afford */
+            can_afford: boolean;
+            /** Min Quality */
+            min_quality: number;
+        };
+        /** FaceReadingOut */
+        FaceReadingOut: {
+            /** Id */
+            id: string;
+            /** Sections */
+            sections: components["schemas"]["ReadingSectionOut"][];
+            /** Coins Charged */
+            coins_charged: number;
+            /** Quality */
+            quality: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /**
          * ForgotPasswordRequest
@@ -3854,6 +4079,10 @@ export interface components {
             max_appointment_minutes: number;
             /** Appointment Booking Days Ahead */
             appointment_booking_days_ahead: number;
+            /** Face Reading Coins */
+            face_reading_coins: number;
+            /** Face Reading Enabled */
+            face_reading_enabled: boolean;
             /**
              * Updated At
              * Format: date-time
@@ -3982,6 +4211,21 @@ export interface components {
             delivered_at?: string | null;
             /** Read At */
             read_at?: string | null;
+        };
+        /** ReadingSectionOut */
+        ReadingSectionOut: {
+            /** Feature */
+            feature: string;
+            /** Feature Label */
+            feature_label: string;
+            /** Option */
+            option: string;
+            /** Label */
+            label: string;
+            /** Meaning */
+            meaning: string;
+            /** Area */
+            area?: string | null;
         };
         /**
          * RechargeLimitsUpdate
@@ -4126,6 +4370,55 @@ export interface components {
                 [key: string]: number;
             };
         };
+        /** RuleOut */
+        RuleOut: {
+            /** Id */
+            id: string;
+            /** Feature */
+            feature: string;
+            /** Option */
+            option: string;
+            /** Label */
+            label: string;
+            /** Conditions */
+            conditions: {
+                [key: string]: unknown;
+            }[];
+            /** Meaning */
+            meaning: string;
+            /** Area */
+            area?: string | null;
+            /** Priority */
+            priority: number;
+            /** Is Default */
+            is_default: boolean;
+            /** Enabled */
+            enabled: boolean;
+            /** Reviewed */
+            reviewed: boolean;
+        };
+        /**
+         * RuleUpdate
+         * @description An admin correcting a rule. Any field may be sent on its own.
+         */
+        RuleUpdate: {
+            /** Label */
+            label?: string | null;
+            /** Meaning */
+            meaning?: string | null;
+            /** Area */
+            area?: string | null;
+            /** Conditions */
+            conditions?: {
+                [key: string]: unknown;
+            }[] | null;
+            /** Priority */
+            priority?: number | null;
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Reviewed */
+            reviewed?: boolean | null;
+        };
         /** SendMessageRequest */
         SendMessageRequest: {
             /** Text */
@@ -4180,6 +4473,21 @@ export interface components {
             astrologer_id: string;
             /** Requested Minutes */
             requested_minutes: number;
+        };
+        /**
+         * SubmitReadingRequest
+         * @description What the browser sends after measuring a face.
+         *
+         *     Measurements only — never an image. Each is a ratio against the subject's
+         *     own face, so nothing here identifies anybody.
+         */
+        SubmitReadingRequest: {
+            /** Measurements */
+            measurements: {
+                [key: string]: number;
+            };
+            /** Quality */
+            quality: number;
         };
         /** TokenPair */
         TokenPair: {
@@ -7102,6 +7410,176 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponse_ReadMarkerOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    availability_api_v1_face_reading_availability_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_FaceReadingAvailability_"];
+                };
+            };
+        };
+    };
+    submit_api_v1_face_reading_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitReadingRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_FaceReadingOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mine_api_v1_face_reading_mine_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_list_FaceReadingOut__"];
+                };
+            };
+        };
+    };
+    one_api_v1_face_reading__reading_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reading_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_FaceReadingOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_rules_api_v1_admin_face_reading_rules_get: {
+        parameters: {
+            query?: {
+                feature?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_list_RuleOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_rule_api_v1_admin_face_reading_rules__rule_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: components["schemas"]["PydanticObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponse_RuleOut_"];
                 };
             };
             /** @description Validation Error */
