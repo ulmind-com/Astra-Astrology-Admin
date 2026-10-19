@@ -1,9 +1,11 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Clock, IndianRupee, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, Clock, IndianRupee, Plus, RefreshCw, Trash2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
+
+import { cn } from "@/lib/utils";
 
 import { PanelHeader } from "@/components/layout/panel-shell";
 import {
@@ -324,13 +326,45 @@ function OpenHours() {
 }
 
 /* --------------------------------------------------------------- schedule */
+type ScheduleTab = "upcoming" | "today" | "all" | "past";
+
+function isSameDay(isoA: string, dateB: Date = new Date()): boolean {
+  const a = new Date(isoA);
+  return (
+    a.getFullYear() === dateB.getFullYear() &&
+    a.getMonth() === dateB.getMonth() &&
+    a.getDate() === dateB.getDate()
+  );
+}
+
+function isUpcoming(a: { status: string; ends_at: string }): boolean {
+  return a.status === "booked" && new Date(a.ends_at).getTime() >= Date.now();
+}
+
+function dayRelative(iso: string): string {
+  const now = new Date();
+  if (isSameDay(iso, now)) return "Today";
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+  if (isSameDay(iso, tomorrow)) return "Tomorrow";
+  return dayLabel(iso);
+}
+
 function Schedule() {
   const queryClient = useQueryClient();
-  const { data: bookings, isLoading } = useQuery({
+  const [tab, setTab] = React.useState<ScheduleTab>("upcoming");
+
+  // Fetch all appointments so the astrologer has complete visibility
+  const {
+    data: bookings,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useQuery({
     queryKey: SCHEDULE_KEY,
-    queryFn: () => appointmentApi.schedule(true),
-    // A booking can arrive while this page is open.
-    refetchInterval: 30_000,
+    queryFn: () => appointmentApi.schedule(false),
+    refetchInterval: 10_000,
+    refetchOnWindowFocus: true,
   });
 
   const cancel = useMutation({
@@ -342,56 +376,253 @@ function Schedule() {
     onError: (e: ApiError) => toast.error(e.message),
   });
 
+  const allBookings = React.useMemo(() => bookings ?? [], [bookings]);
+  const upcomingList = React.useMemo(() => allBookings.filter(isUpcoming), [allBookings]);
+  const todayList = React.useMemo(
+    () => allBookings.filter((a) => isSameDay(a.starts_at)),
+    [allBookings],
+  );
+  const pastList = React.useMemo(() => allBookings.filter((a) => !isUpcoming(a)), [allBookings]);
+
+  const displayedList = React.useMemo(() => {
+    if (tab === "upcoming") {
+      return [...upcomingList].sort(
+        (a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
+      );
+    }
+    if (tab === "today") {
+      return [...todayList].sort(
+        (a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
+      );
+    }
+    if (tab === "past") {
+      return [...pastList].sort(
+        (a, b) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime(),
+      );
+    }
+    return [...allBookings].sort(
+      (a, b) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime(),
+    );
+  }, [tab, upcomingList, todayList, pastList, allBookings]);
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Upcoming bookings</CardTitle>
-        <CardDescription>What you have been booked for, soonest first.</CardDescription>
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <CardTitle>Bookings & Schedule</CardTitle>
+          <CardDescription>
+            {tab === "upcoming"
+              ? "Upcoming appointments, soonest first."
+              : tab === "today"
+                ? "All appointments scheduled for today."
+                : tab === "past"
+                  ? "Completed, missed, and past appointments."
+                  : "All appointments on record."}
+          </CardDescription>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Tabs */}
+          <div className="inline-flex rounded-lg border border-border bg-surface-muted p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setTab("upcoming")}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors",
+                tab === "upcoming"
+                  ? "bg-brand text-brand-950 font-semibold shadow-xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <span>Upcoming</span>
+              {upcomingList.length > 0 && (
+                <span className="rounded-full bg-brand-950/15 px-1.5 py-0.2 text-[10px] font-bold">
+                  {upcomingList.length}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab("today")}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors",
+                tab === "today"
+                  ? "bg-brand text-brand-950 font-semibold shadow-xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <span>Today</span>
+              {todayList.length > 0 && (
+                <span className="rounded-full bg-brand-950/15 px-1.5 py-0.2 text-[10px] font-bold">
+                  {todayList.length}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab("all")}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors",
+                tab === "all"
+                  ? "bg-brand text-brand-950 font-semibold shadow-xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <span>All</span>
+              {allBookings.length > 0 && (
+                <span className="rounded-full bg-brand-950/15 px-1.5 py-0.2 text-[10px] font-bold">
+                  {allBookings.length}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab("past")}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors",
+                tab === "past"
+                  ? "bg-brand text-brand-950 font-semibold shadow-xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <span>Past</span>
+              {pastList.length > 0 && (
+                <span className="rounded-full bg-brand-950/15 px-1.5 py-0.2 text-[10px] font-bold">
+                  {pastList.length}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Refresh Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              void refetch();
+              toast.success("Schedule refreshed.");
+            }}
+            disabled={isFetching}
+            title="Refresh bookings"
+            className="h-8 px-2 text-muted-foreground hover:text-foreground"
+          >
+            <RefreshCw className={cn("size-3.5", isFetching && "animate-spin")} />
+          </Button>
+        </div>
       </CardHeader>
       <CardBody>
         {isLoading ? (
           <LoadingBlock label="Loading your bookings…" />
-        ) : !bookings?.length ? (
-          <EmptyState
-            icon={CalendarDays}
-            title="Nothing booked yet"
-            description="Bookings appear here as soon as someone takes a slot."
-          />
+        ) : !displayedList.length ? (
+          <div className="py-6">
+            <EmptyState
+              icon={CalendarDays}
+              title={
+                tab === "upcoming"
+                  ? "No upcoming bookings"
+                  : tab === "today"
+                    ? "No bookings today"
+                    : tab === "past"
+                      ? "No past bookings"
+                      : "Nothing booked yet"
+              }
+              description={
+                tab === "upcoming" && allBookings.length > 0
+                  ? "You have no upcoming future slots, but you have bookings on record."
+                  : "Bookings appear here as soon as someone takes a slot."
+              }
+            />
+            {tab === "upcoming" && allBookings.length > 0 && (
+              <div className="mt-4 flex justify-center">
+                <Button variant="secondary" size="sm" onClick={() => setTab("all")}>
+                  View All ({allBookings.length}) Bookings
+                </Button>
+              </div>
+            )}
+          </div>
         ) : (
           <ul className="divide-y divide-border">
-            {bookings.map((a) => (
-              <li key={a.id} className="flex flex-wrap items-center gap-3 py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">
-                    {dayLabel(a.starts_at)} · {clock(a.starts_at)} – {clock(a.ends_at)}
-                  </p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
-                    {a.peer?.name ?? "Someone"} · {a.minutes} min
-                    {a.user_note ? ` · “${a.user_note}”` : ""}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold tabular-nums">₹{rupees(a.price_paise)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    ₹{rupees(a.balance_due_paise)} to collect
-                  </p>
-                </div>
-                <Badge tone={a.status === "booked" ? "green" : "neutral"}>
-                  {APPOINTMENT_STATUS_LABELS[a.status]}
-                </Badge>
-                {a.status === "booked" && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-danger hover:bg-danger/15"
-                    loading={cancel.isPending}
-                    onClick={() => cancel.mutate(a.id)}
+            {displayedList.map((a) => {
+              const isTodayBooking = isSameDay(a.starts_at);
+              const upcoming = isUpcoming(a);
+
+              return (
+                <li key={a.id} className="flex flex-wrap items-center gap-4 py-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold text-foreground">
+                        {dayRelative(a.starts_at)} · {clock(a.starts_at)} – {clock(a.ends_at)}
+                      </p>
+                      {isTodayBooking && (
+                        <span className="rounded-full border border-amber-300/40 bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 dark:bg-amber-950/60 dark:text-amber-200">
+                          TODAY
+                        </span>
+                      )}
+                      {!upcoming && a.status === "booked" && (
+                        <span className="rounded-full border border-border bg-surface-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                          Ended
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-sm text-foreground/80">
+                      <span className="font-medium text-foreground">
+                        {a.peer?.name ?? "Client"}
+                      </span>
+                      <span className="text-muted-foreground"> · {a.minutes} min consultation</span>
+                    </p>
+                    {a.user_note && (
+                      <p className="mt-1 inline-block rounded-md bg-surface-muted/80 px-2.5 py-1 text-xs text-muted-foreground italic">
+                        “{a.user_note}”
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="text-right">
+                    <p className="font-semibold tabular-nums text-foreground">
+                      ₹{rupees(a.price_paise)}
+                    </p>
+                    {a.balance_due_paise > 0 ? (
+                      <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                        ₹{rupees(a.balance_due_paise)} to collect
+                      </p>
+                    ) : (
+                      <p className="text-xs font-medium text-success">Fully paid</p>
+                    )}
+                    <p className="text-[11px] text-muted-foreground tabular-nums">
+                      Deposit: ₹{rupees(a.deposit_paise)} ({a.deposit_coins} coins)
+                    </p>
+                  </div>
+
+                  <Badge
+                    tone={
+                      a.status === "booked"
+                        ? upcoming
+                          ? "green"
+                          : "neutral"
+                        : a.status === "completed"
+                          ? "blue"
+                          : a.status === "cancelled"
+                            ? "red"
+                            : "neutral"
+                    }
                   >
-                    Cancel
-                  </Button>
-                )}
-              </li>
-            ))}
+                    {APPOINTMENT_STATUS_LABELS[a.status]}
+                  </Badge>
+
+                  {a.status === "booked" && upcoming && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-danger hover:bg-danger/15"
+                      loading={cancel.isPending}
+                      onClick={() => cancel.mutate(a.id)}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </CardBody>
