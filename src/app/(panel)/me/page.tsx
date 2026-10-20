@@ -118,6 +118,21 @@ export default function AstrologerPanelPage() {
     }
   }
 
+  async function uploadBanner(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploadingBanner(true);
+    try {
+      queryClient.setQueryData(ME_KEY, await astrologerApi.uploadBanner(file));
+      toast.success("Card banner updated.");
+    } catch (caught) {
+      toast.error((caught as ApiError).message);
+    } finally {
+      setUploadingBanner(false);
+      if (bannerRef.current) bannerRef.current.value = "";
+    }
+  }
+
   async function addGalleryImage(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -279,6 +294,82 @@ export default function AstrologerPanelPage() {
               >
                 <Trash2 className="size-4" />
                 Remove
+              </Button>
+            )}
+          </div>
+        </CardBody>
+      </Card>
+
+      {/* ------------------------------------------------ card banner */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Card Banner Image</CardTitle>
+          <CardDescription>
+            This background image appears at the top of your card in the astrologers directory.
+            If not set, a cosmic gradient banner is used by default. Recommended ratio ~ 2.5:1 (e.g. 1200×480).
+          </CardDescription>
+        </CardHeader>
+        <CardBody className="space-y-4 pt-0">
+          <div className="relative h-36 sm:h-44 w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-indigo-950 via-purple-950 to-amber-950 shadow-inner">
+            {profile.banner_image_url ? (
+              <Image
+                src={profile.banner_image_url}
+                alt="Your card banner"
+                fill
+                sizes="(max-width: 768px) 100vw, 600px"
+                className="object-cover"
+                unoptimized
+              />
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center p-4 text-center">
+                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm border border-white/15">
+                  Default Cosmic Banner Active
+                </span>
+                <p className="mt-2 text-xs text-white/60">
+                  Upload a personalized banner to stand out in directory listings!
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={bannerRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={uploadBanner}
+            />
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={uploadingBanner}
+              onClick={() => bannerRef.current?.click()}
+            >
+              <ImagePlus className="size-4" />
+              {profile.banner_image_url ? "Change banner image" : "Upload custom banner"}
+            </Button>
+
+            {profile.banner_image_url && (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={uploadingBanner}
+                className="text-danger hover:bg-danger/15"
+                onClick={async () => {
+                  setUploadingBanner(true);
+                  try {
+                    queryClient.setQueryData(ME_KEY, await astrologerApi.removeBanner());
+                    toast.success("Custom banner removed. Reverted to default.");
+                  } catch (caught) {
+                    toast.error((caught as ApiError).message);
+                  } finally {
+                    setUploadingBanner(false);
+                  }
+                }}
+              >
+                <Trash2 className="size-4" />
+                Reset to default
               </Button>
             )}
           </div>
