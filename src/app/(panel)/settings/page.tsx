@@ -376,6 +376,8 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
     apptDaysAhead: String(settings.appointment_booking_days_ahead),
     faceCoins: String(settings.face_reading_coins),
     faceEnabled: settings.face_reading_enabled,
+    palmCoins: String(settings.palm_reading_coins ?? 50),
+    palmEnabled: settings.palm_reading_enabled ?? true,
   });
   const [fieldError, setFieldError] = React.useState<string | null>(null);
 
@@ -398,6 +400,8 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
         appointment_booking_days_ahead: Number(form.apptDaysAhead),
         face_reading_coins: Number(form.faceCoins),
         face_reading_enabled: form.faceEnabled,
+        palm_reading_coins: Number(form.palmCoins),
+        palm_reading_enabled: form.palmEnabled,
       }),
     onSuccess: (updated) => {
       void queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
@@ -566,6 +570,39 @@ function ConsultationDefaultsCard({ settings }: { settings: PlatformSettings }) 
               user&apos;s own device and never reaches the server — only the
               proportions do. What each measurement <em>means</em> is edited
               under <strong>Face rules</strong>.
+            </p>
+          </div>
+
+          {/* ------------------------------------------------- palm reading */}
+          <div className="rounded-xl border border-border bg-surface-muted/40 p-4">
+            <p className="mb-3 font-display text-sm font-semibold">Palm reading (হস্তরেখা বিচার)</p>
+            <div className="flex flex-wrap items-end gap-4">
+              <Field
+                label="Cost per reading (coins)"
+                required
+                className="w-52"
+                hint={Number(form.palmCoins) === 0 ? "Free" : undefined}
+              >
+                <Input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={form.palmCoins}
+                  onChange={set("palmCoins")}
+                />
+              </Field>
+              <div className="pb-2">
+                <Switch
+                  checked={form.palmEnabled}
+                  label="Offer palm reading"
+                  onChange={(next: boolean) => setForm((f) => ({ ...f, palmEnabled: next }))}
+                />
+              </div>
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+              Charged when the palm reading is produced. Supports live 3D MediaPipe + OpenCV
+              Samudrik Shastra biometric scans. What each line &amp; mount measurement <em>means</em> is edited
+              under <strong>Palm rules</strong>.
             </p>
           </div>
 

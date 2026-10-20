@@ -5,6 +5,7 @@ import { endpoints } from "@/lib/api/endpoints";
 import type {
   Address,
   FaceRule,
+  PalmRule,
   ReviewPage,
   Review,
   AvailabilityWindow,
@@ -299,6 +300,8 @@ export const adminSettingsApi = {
     appointment_booking_days_ahead?: number;
     face_reading_coins?: number;
     face_reading_enabled?: boolean;
+    palm_reading_coins?: number;
+    palm_reading_enabled?: boolean;
   }) => api.patch<PlatformSettings>(endpoints.admin.consultationDefaults, body),
 
   earnings: () => api.get<AdminEarningsSummary>(endpoints.admin.earnings),
@@ -421,3 +424,24 @@ export const faceReadingApi = {
     },
   ) => api.patch<FaceRule>(endpoints.faceReading.rule(id), body),
 };
+
+// ------------------------------------------------------------ palm reading
+export const palmReadingApi = {
+  /** Where the client's corrections land for Samudrik Shastra palm rules. */
+  rules: (feature?: string) =>
+    api.get<PalmRule[]>(endpoints.palmReading.rules, { query: { feature } }),
+
+  updateRule: (
+    id: string,
+    body: {
+      label?: string;
+      meaning?: string;
+      area?: string | null;
+      conditions?: Array<Record<string, unknown>>;
+      priority?: number;
+      enabled?: boolean;
+      reviewed?: boolean;
+    },
+  ) => api.patch<PalmRule>(endpoints.palmReading.rule(id), body),
+};
+

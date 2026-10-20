@@ -319,3 +319,29 @@ export type FaceReading = S["FaceReadingOut"];
 export type FaceReadingSection = S["ReadingSectionOut"];
 export type FaceReadingAvailability = S["FaceReadingAvailability"];
 export type FaceRule = S["RuleOut"];
+
+// ------------------------------------------------------------ palm reading
+export type PalmRule = {
+  id: string;
+  feature: string;
+  option: string;
+  label: string;
+  conditions: Array<{ metric: string; min?: number | null; max?: number | null }>;
+  meaning: string;
+  area: string | null;
+  priority: number;
+  is_default: boolean;
+  enabled: boolean;
+  reviewed: boolean;
+};
+
+export type PalmRuleUpdate = {
+  label?: string | null;
+  meaning?: string | null;
+  area?: string | null;
+  conditions?: Array<{ metric: string; min?: number | null; max?: number | null }> | null;
+  priority?: number | null;
+  enabled?: boolean | null;
+  reviewed?: boolean | null;
+};
+
