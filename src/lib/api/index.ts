@@ -168,6 +168,17 @@ export const astrologerApi = {
 
   removeImage: () => api.delete<AstrologerProfile>(endpoints.astrologers.image),
 
+  uploadBanner: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return apiFetch<AstrologerProfile>(endpoints.astrologers.banner, {
+      method: "POST",
+      body: form,
+    });
+  },
+
+  removeBanner: () => api.delete<AstrologerProfile>(endpoints.astrologers.banner),
+
   addGalleryImage: (file: File) => {
     const form = new FormData();
     form.append("file", file);

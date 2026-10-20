@@ -32,6 +32,7 @@ export const endpoints = {
     myEarningsRecent: "/astrologers/me/earnings/recent",
     availability: "/astrologers/me/availability",
     image: "/astrologers/me/image",
+    banner: "/astrologers/me/banner",
     gallery: "/astrologers/me/gallery",
     galleryImage: (publicId: string) => `/astrologers/me/gallery/${publicId}`,
   },

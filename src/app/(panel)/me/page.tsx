@@ -58,7 +58,9 @@ export default function AstrologerPanelPage() {
   const [specialisations, setSpecialisations] = React.useState<string[]>([]);
   const [qualifications, setQualifications] = React.useState<string[]>([]);
   const [uploading, setUploading] = React.useState(false);
+  const [uploadingBanner, setUploadingBanner] = React.useState(false);
   const photoRef = React.useRef<HTMLInputElement>(null);
+  const bannerRef = React.useRef<HTMLInputElement>(null);
   const galleryRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {

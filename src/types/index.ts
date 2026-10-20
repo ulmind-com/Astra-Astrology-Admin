@@ -51,8 +51,12 @@ export type Gender = S["Gender"];
 export type MaritalStatus = S["MaritalStatus"];
 
 // -------------------------------------------------------------- astrologer
-export type AstrologerPublic = S["AstrologerPublic"];
-export type AstrologerProfile = S["AstrologerProfile"];
+export type AstrologerPublic = S["AstrologerPublic"] & {
+  banner_image_url?: string | null;
+};
+export type AstrologerProfile = S["AstrologerProfile"] & {
+  banner_image_url?: string | null;
+};
 export type AstrologerCreate = S["AstrologerCreate"];
 export type AstrologerCreated = S["AstrologerCreated"];
 export type AstrologerUpdate = S["AstrologerUpdate"];
