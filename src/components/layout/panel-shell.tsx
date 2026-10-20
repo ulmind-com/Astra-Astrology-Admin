@@ -11,7 +11,6 @@ import {
   UserRound,
   Receipt,
   ScanFace,
-  Hand,
   Settings,
   TrendingUp,
   Users,
@@ -40,7 +39,6 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/payments", label: "Payments", icon: CreditCard },
   { href: "/earnings", label: "Earnings", icon: TrendingUp },
   { href: "/face-rules", label: "Face rules", icon: ScanFace },
-  { href: "/palm-rules", label: "Palm rules", icon: Hand },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
