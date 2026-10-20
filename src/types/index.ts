@@ -180,7 +180,10 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentOrderStatus, string> = {
   expired: "Expired",
 };
 
-export type PlatformSettings = S["PlatformSettingsOut"];
+export type PlatformSettings = S["PlatformSettingsOut"] & {
+  palm_reading_coins?: number;
+  palm_reading_enabled?: boolean;
+};
 export type CoinRateChange = S["CoinRateChangeOut"];
 
 /**

@@ -17,12 +17,7 @@ import {
   Alert,
   Badge,
   Button,
-  Card,
-  CardBody,
-  CardHeader,
-  CardTitle,
   Field,
-  Input,
   LoadingBlock,
   Switch,
   Textarea,
@@ -74,15 +69,15 @@ export default function PalmRulesPage() {
   return (
     <>
       <PanelHeader
-        title="Palm reading rules (হস্তরেখা বিচার শাস্ত্র)"
+        title="Palm rules (হস্তরেখা শাস্ত্র)"
         description="Samudrik Shastra interpretations, thresholds, and planetary mount bands."
       />
 
       <Alert tone="info" className="mb-6">
         <strong>অথেনটিক সমুদ্রিক শাস্ত্র ও বায়োমেট্রিক রুলবুক:</strong> The interpretations
-        are grounded in classical Vedic chiromancy; the ratio bands are our computer-vision calibration.
+        are traditional associations written fresh; the ratio bands are our computer-vision calibration.
         Admins and astrologers can adjust wording, conditions, and active status directly here. Changes
-        apply immediately to all future scans without redeploying.
+        apply immediately to all future readings without redeploying.
       </Alert>
 
       {isLoading ? (
@@ -108,9 +103,9 @@ export default function PalmRulesPage() {
                   </span>
                 </header>
 
-                <div className="grid gap-3 lg:grid-cols-2">
+                <div className="space-y-3">
                   {items.map((rule) => (
-                    <RuleCard key={rule.id} rule={rule} />
+                    <RuleRow key={rule.id} rule={rule} />
                   ))}
                 </div>
               </section>
@@ -122,128 +117,105 @@ export default function PalmRulesPage() {
   );
 }
 
-function RuleCard({ rule }: { rule: PalmRule }) {
-  const qc = useQueryClient();
-  const [label, setLabel] = React.useState(rule.label);
+function RuleRow({ rule }: { rule: PalmRule }) {
+  const queryClient = useQueryClient();
   const [meaning, setMeaning] = React.useState(rule.meaning);
-  const [area, setArea] = React.useState(rule.area ?? "");
-  const [enabled, setEnabled] = React.useState(rule.enabled);
-  const [reviewed, setReviewed] = React.useState(rule.reviewed);
+  const [bands, setBands] = React.useState(() => JSON.stringify(rule.conditions, null, 1));
+  const [open, setOpen] = React.useState(false);
+  const [bandError, setBandError] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    setLabel(rule.label);
-    setMeaning(rule.meaning);
-    setArea(rule.area ?? "");
-    setEnabled(rule.enabled);
-    setReviewed(rule.reviewed);
-  }, [rule]);
-
-  const dirty =
-    label !== rule.label ||
-    meaning !== rule.meaning ||
-    (area || null) !== rule.area ||
-    enabled !== rule.enabled ||
-    reviewed !== rule.reviewed;
-
-  const mutation = useMutation({
-    mutationFn: () =>
-      palmReadingApi.updateRule(rule.id, {
-        label,
-        meaning,
-        area: area.trim() || null,
-        enabled,
-        reviewed,
-      }),
-    onSuccess: (updated) => {
-      qc.setQueryData<PalmRule[]>(KEY, (prev) =>
-        prev ? prev.map((r) => (r.id === updated.id ? updated : r)) : [updated],
-      );
-      toast.success(`Updated "${updated.label}"`);
+  const save = useMutation({
+    mutationFn: (body: Parameters<typeof palmReadingApi.updateRule>[1]) =>
+      palmReadingApi.updateRule(rule.id, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: KEY });
+      toast.success("Saved. It applies to the next reading.");
     },
-    onError: (err) => {
-      toast.error(err instanceof ApiError ? err.message : "Save failed.");
-    },
+    onError: (e: ApiError) => toast.error(e.message),
   });
 
+  function saveAll() {
+    setBandError(null);
+    let parsed: Array<Record<string, unknown>>;
+    try {
+      parsed = JSON.parse(bands);
+      if (!Array.isArray(parsed)) throw new Error("not a list");
+    } catch {
+      setBandError('The bands must be a list, like [{"metric": "ratio_2d_4d", "min": 1.02}]');
+      return;
+    }
+    save.mutate({ meaning, conditions: parsed });
+  }
+
+  const dirty = meaning !== rule.meaning || bands !== JSON.stringify(rule.conditions, null, 1);
+
   return (
-    <Card className={!enabled ? "opacity-60" : undefined}>
-      <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0 pb-2">
-        <div className="flex items-center gap-2">
-          <CardTitle className="text-sm font-medium">{rule.option}</CardTitle>
-          {rule.is_default && <Badge variant="secondary">Default</Badge>}
-          {reviewed && (
-            <Badge variant="outline" className="border-emerald-500/40 text-emerald-600">
-              <Check className="mr-1 size-3" /> Reviewed
-            </Badge>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Enabled</span>
-          <Switch checked={enabled} onCheckedChange={setEnabled} size="sm" />
-        </div>
-      </CardHeader>
+    <div className="rounded-xl border border-border p-4">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 text-left"
+      >
+        <span className="flex-1">
+          <span className="font-semibold">{rule.label}</span>
+          <span className="ml-2 text-xs text-muted-foreground">{rule.option}</span>
+        </span>
+        {rule.is_default && <Badge tone="neutral">fallback</Badge>}
+        {rule.reviewed && (
+          <Badge tone="green">
+            <Check className="size-3" /> reviewed
+          </Badge>
+        )}
+        {!rule.enabled && <Badge tone="red">off</Badge>}
+      </button>
 
-      <CardBody className="space-y-3 pt-0">
-        <Field label="Label (shown in the section header)">
-          <Input value={label} onChange={(e) => setLabel(e.target.value)} size="sm" />
-        </Field>
-
-        <Field label="Meaning (the reading text)">
-          <Textarea
-            value={meaning}
-            onChange={(e) => setMeaning(e.target.value)}
-            rows={4}
-            className="text-xs leading-relaxed"
-          />
-        </Field>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Life area (optional)">
-            <Input
-              value={area}
-              onChange={(e) => setArea(e.target.value)}
-              placeholder="e.g. personality, career, love"
-              size="sm"
+      {!open ? (
+        <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{rule.meaning}</p>
+      ) : (
+        <div className="mt-4 space-y-4">
+          <Field label="What the reading says">
+            <Textarea
+              rows={6}
+              value={meaning}
+              maxLength={4000}
+              onChange={(e) => setMeaning(e.target.value)}
             />
           </Field>
-          <Field label="Conditions">
-            <p className="pt-2 font-mono text-xs text-muted-foreground">
-              {rule.conditions.length === 0
-                ? "— (fallback rule)"
-                : rule.conditions
-                    .map((c) => {
-                      if (c.min != null && c.max != null) {
-                        return `${c.min} ≤ ${c.metric} < ${c.max}`;
-                      }
-                      if (c.min != null) return `${c.metric} ≥ ${c.min}`;
-                      if (c.max != null) return `${c.metric} < ${c.max}`;
-                      return c.metric;
-                    })
-                    .join(", ")}
-            </p>
-          </Field>
-        </div>
 
-        <div className="flex items-center justify-between pt-2">
-          <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={reviewed}
-              onChange={(e) => setReviewed(e.target.checked)}
-              className="rounded"
-            />
-            Astrologer-approved wording
-          </label>
-
-          <Button
-            size="sm"
-            disabled={!dirty || mutation.isPending}
-            onClick={() => mutation.mutate()}
+          <Field
+            label="When it applies"
+            error={bandError ?? undefined}
+            hint={
+              rule.is_default
+                ? "This is the fallback — used when nothing else matches. Leave the bands empty."
+                : "Every band must hold. min is included, max is not."
+            }
           >
-            {mutation.isPending ? "Saving…" : "Save changes"}
-          </Button>
+            <Textarea
+              rows={4}
+              value={bands}
+              onChange={(e) => setBands(e.target.value)}
+              className="font-mono text-xs"
+            />
+          </Field>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button onClick={saveAll} loading={save.isPending} disabled={!dirty}>
+              Save
+            </Button>
+            <Switch
+              checked={rule.reviewed}
+              label="Astrologer has checked this"
+              onChange={(next) => save.mutate({ reviewed: next })}
+            />
+            <Switch
+              checked={rule.enabled}
+              label="In use"
+              onChange={(next) => save.mutate({ enabled: next })}
+            />
+          </div>
         </div>
-      </CardBody>
-    </Card>
+      )}
+    </div>
   );
 }
