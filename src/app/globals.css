@@ -72,48 +72,43 @@
   --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  /* Cards 16px, modals 24px, everything interactive a full pill. */
-  --radius-card: 16px;
-  --radius-modal: 24px;
+  --radius-card: 28px;
+  --radius-modal: 32px;
 
-  /* Soft and warm. Depth is a gentle lift, never a hard edge. */
-  --shadow-soft: 0 1px 2px rgb(26 18 8 / 0.04), 0 8px 24px -16px rgb(26 18 8 / 0.14);
-  --shadow-lift: 0 2px 6px rgb(26 18 8 / 0.06), 0 18px 40px -20px rgb(26 18 8 / 0.22);
-  /* The one glow in the system: under the yellow call to action. */
-  --shadow-glow: 0 10px 30px -12px rgb(242 229 74 / 0.9), 0 2px 6px rgb(26 18 8 / 0.08);
+  /* DealDeck 3D depth shadows */
+  --shadow-soft: 0 4px 12px rgba(20, 25, 45, 0.03);
+  --shadow-lift: 0 10px 30px rgba(20, 25, 45, 0.05), 0 1px 3px rgba(20, 25, 45, 0.02);
+  --shadow-glow: 0 12px 32px -8px rgba(59, 80, 223, 0.45);
 }
 
 /* --------------------------------------------------------------------------
-   Semantic surfaces. Components reference these, never raw palette steps.
+   Semantic surfaces: DealDeck Ultra-Premium 3D palette
    -------------------------------------------------------------------------- */
 :root {
   color-scheme: light;
 
-  /* Cream page, white cards — the contrast that makes content read as
-     content and the page as a backdrop. */
-  --background: #fff8d9;
+  --background: #EEF1F8;
   --surface: #ffffff;
-  --surface-muted: #fffdf2;
-  --surface-raised: #fff8d9;
+  --surface-muted: #F8FAFD;
+  --surface-raised: #ffffff;
   --surface-solid: #ffffff;
 
-  --border: rgb(26 18 8 / 0.08);
-  --border-strong: rgb(26 18 8 / 0.18);
+  --border: rgba(226, 232, 240, 0.9);
+  --border-strong: rgba(203, 213, 225, 0.95);
 
-  --foreground: #1a1208;
-  --muted-foreground: #6b5f4d;
-  --ring: #1c1304;
+  --foreground: #0F172A;
+  --muted-foreground: #64748B;
+  --ring: #3B50DF;
 
-  /* Status. Warm and muted rather than signal-bright, so nothing competes
-     with the yellow. */
-  --success: #1f8a43;
-  --success-surface: rgb(44 180 89 / 0.14);
-  --danger: #c94b4b;
-  --danger-surface: rgb(201 75 75 / 0.1);
-  --warning: #bd6c0c;
-  --warning-surface: rgb(243 171 53 / 0.16);
-  --info: #2f6f8f;
-  --info-surface: rgb(47 111 143 / 0.1);
+  /* Status */
+  --success: #10B981;
+  --success-surface: rgba(16, 185, 129, 0.12);
+  --danger: #EF4444;
+  --danger-surface: rgba(239, 68, 68, 0.1);
+  --warning: #F59E0B;
+  --warning-surface: rgba(245, 158, 11, 0.14);
+  --info: #3B50DF;
+  --info-surface: rgba(59, 80, 223, 0.12);
 }
 
 @theme inline {
@@ -223,13 +218,48 @@
     background-color: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
-    box-shadow: var(--shadow-soft);
+    box-shadow: 0 10px 30px rgba(20, 25, 45, 0.04), 0 1px 3px rgba(20, 25, 45, 0.02);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .card-surface:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 38px rgba(20, 25, 45, 0.08), 0 2px 6px rgba(20, 25, 45, 0.03);
+  }
+
+  .card-3d {
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    border-radius: 28px;
+    box-shadow: 0 10px 30px rgba(20, 25, 45, 0.04), 0 1px 3px rgba(20, 25, 45, 0.02);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+  }
+
+  .card-3d:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 42px rgba(20, 25, 45, 0.09), 0 2px 6px rgba(20, 25, 45, 0.03);
+  }
+
+  .card-hero-3d {
+    background: linear-gradient(135deg, #3B50DF 0%, #2838C7 100%);
+    border-radius: 28px;
+    color: #ffffff;
+    box-shadow: 0 16px 36px -8px rgba(59, 80, 223, 0.45);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-hero-3d:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 22px 45px -8px rgba(59, 80, 223, 0.55);
   }
 
   /* A card that should catch the eye: the warm promotional surface. */
   .card-glow {
     background-color: var(--surface-raised);
-    border-color: rgb(242 229 74 / 0.6);
+    border-color: rgba(59, 80, 223, 0.5);
     box-shadow: var(--shadow-glow);
   }
 
@@ -291,14 +321,16 @@
     box-shadow: 0 6px 18px -10px rgb(242 229 74 / 0.9);
   }
 
-  /* The selected item in the panel's sidebar. A soft yellow wash rather than
-     the full brand fill — the sidebar has one of these on every screen, and
-     at that frequency the solid colour stops meaning "this is the action"
-     and starts competing with the button that is. */
   .nav-active {
-    background-color: var(--color-brand-200);
-    color: var(--color-brand-950);
-    font-weight: 600;
+    background-color: #3B50DF !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    box-shadow: 0 10px 25px -5px rgba(59, 80, 223, 0.4);
+    border-radius: 16px;
+  }
+
+  .nav-active svg {
+    color: #ffffff !important;
   }
 
   /* The warmer medallion, for anything celestial rather than commercial. */
@@ -369,6 +401,29 @@
   .animate-float-slow {
     animation: float-slow 11s ease-in-out infinite;
   }
+
+  .bubble-float-1 {
+    animation: float-slow 6s ease-in-out infinite;
+  }
+
+  .bubble-float-2 {
+    animation: float-slow 8s ease-in-out infinite 1s;
+  }
+
+  .bubble-float-3 {
+    animation: float-slow 7s ease-in-out infinite 2s;
+  }
+
+  .bubble-float-4 {
+    animation: float-slow 9s ease-in-out infinite 1.5s;
+  }
+
+  .glass-tooltip {
+    background: rgba(17, 19, 25, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -379,4 +434,18 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Hide Next.js dev indicator badge (N 1 Insight button) */
+nextjs-portal,
+#nextjs-dev-indicator,
+[data-nextjs-toast-wrapper],
+[data-nextjs-dev-tools-button],
+div[data-nextjs-router-announcer],
+div[data-next-badge],
+button[data-nextjs-toast-wrapper] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
