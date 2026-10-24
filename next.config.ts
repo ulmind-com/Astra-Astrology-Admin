@@ -1,11 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // `cacheComponents` (on by default in the scaffold) refuses to prerender any
-  // route that reads request-time state. This app is signed-in and
-  // client-rendered — `useSearchParams`, `useParams` and the auth context are
-  // on nearly every page — so it only produced build failures. Off, those
-  // routes simply render on demand, which is what they need anyway.
+  // Disable Next.js dev indicators overlay badge (e.g. "N 1 Insight" button)
+  devIndicators: false,
   turbopack: {
     rules: {
       "*.css": {
