@@ -155,7 +155,10 @@ export type RechargeOptions = S["RechargeOptions"];
 export type RechargePack = S["RechargePack"];
 export type CreateOrderResponse = S["CreateOrderResponse"];
 export type VerifyPaymentResponse = S["VerifyPaymentResponse"];
-export type PaymentOrder = S["PaymentOrderOut"];
+export type PaymentOrder = S["PaymentOrderOut"] & {
+  user_email?: string | null;
+  user_name?: string | null;
+};
 export type PaymentOrderStatus = S["PaymentOrderStatus"];
 export type AdminWallet = S["AdminWalletOut"];
 export type AdminTransaction = S["AdminTransactionOut"];

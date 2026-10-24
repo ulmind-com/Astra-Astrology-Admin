@@ -98,12 +98,14 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+  const currentDate =
+    new Date().toLocaleDateString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    }) + " (IST)";
 
   const renderNavGroup = (title: string, items: NavItem[], isMobile = false) => {
     const isIconOnly = collapsed && !isMobile;
@@ -138,7 +140,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                     className={cn(
                       "flex size-11 items-center justify-center rounded-2xl transition-all duration-200 relative",
                       isActive
-                        ? "bg-[#3B50DF] text-white shadow-[0_8px_20px_-4px_rgba(59,80,223,0.5)] font-bold"
+                        ? "bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white shadow-[0_8px_20px_-4px_rgba(245,158,11,0.5)] font-bold"
                         : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                     )}
                     aria-label={item.label}
@@ -159,7 +161,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                     <div className="absolute left-[54px] top-1/2 -translate-y-1/2 z-50 pointer-events-none whitespace-nowrap rounded-xl bg-[#0F172A] px-3 py-1.5 text-xs font-bold text-white shadow-[0_10px_25px_rgba(0,0,0,0.3)] border border-slate-700/60 animate-in fade-in zoom-in-95 duration-150 flex items-center gap-2">
                       <span>{item.label}</span>
                       {isActive && (
-                        <span className="size-1.5 rounded-full bg-blue-400" />
+                        <span className="size-1.5 rounded-full bg-amber-400" />
                       )}
                       <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 bg-[#0F172A] border-l border-b border-slate-700/60" />
                     </div>
@@ -175,7 +177,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "flex items-center gap-3.5 rounded-2xl px-3.5 py-2.5 text-sm font-semibold transition-all duration-200 group",
                   isActive
-                    ? "bg-[#3B50DF] text-white shadow-[0_8px_20px_-4px_rgba(59,80,223,0.5)] font-bold"
+                    ? "bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white shadow-[0_8px_20px_-4px_rgba(245,158,11,0.5)] font-bold"
                     : "text-slate-500 hover:bg-slate-100/70 hover:text-slate-900"
                 )}
               >
@@ -223,7 +225,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
               >
                 <button
                   onClick={toggleCollapsed}
-                  className="relative flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#3B50DF] to-[#6366F1] shadow-[0_4px_16px_rgba(59,80,223,0.4)] hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-transparent hover:ring-blue-200"
+                  className="relative flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#B45309] via-[#D97706] to-[#F59E0B] shadow-[0_4px_16px_rgba(217,119,6,0.4)] hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-transparent hover:ring-amber-200"
                   aria-label="Expand sidebar"
                   title="Click to expand sidebar"
                 >
@@ -251,7 +253,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                   )}
                   title={!isMobile ? "Click to collapse sidebar" : undefined}
                 >
-                  <div className="relative flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-[#3B50DF] to-[#6366F1] shadow-[0_4px_16px_rgba(59,80,223,0.4)] group-hover:scale-105 transition-transform">
+                  <div className="relative flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-[#B45309] via-[#D97706] to-[#F59E0B] shadow-[0_4px_16px_rgba(217,119,6,0.4)] group-hover:scale-105 transition-transform">
                     <Sparkles className="size-5 text-white" />
                     <span className="absolute -top-0.5 -right-0.5 flex size-2.5">
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -271,7 +273,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                 {!isMobile ? (
                   <button
                     onClick={toggleCollapsed}
-                    className="flex size-7 items-center justify-center rounded-lg text-slate-400 hover:text-[#3B50DF] hover:bg-blue-50 transition-colors cursor-pointer"
+                    className="flex size-7 items-center justify-center rounded-lg text-slate-400 hover:text-[#D97706] hover:bg-amber-50 transition-colors cursor-pointer"
                     aria-label="Collapse sidebar"
                     title="Collapse sidebar to icon-only"
                   >
@@ -363,7 +365,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                 </div>
 
                 <Link href="/astrologers/new" className="block pt-1">
-                  <button className="w-full rounded-xl bg-[#3B50DF] py-2 text-[11px] font-bold text-white shadow-md transition-all duration-200 hover:bg-[#2F42D8] active:scale-95 cursor-pointer">
+                  <button className="w-full rounded-xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] py-2 text-[11px] font-bold text-white shadow-md transition-all duration-200 hover:from-[#B45309] hover:to-[#D97706] active:scale-95 cursor-pointer">
                     + Add Astrologer
                   </button>
                 </Link>
@@ -376,7 +378,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-dvh bg-[#EEF1F8] p-3 sm:p-5 lg:p-7 font-sans text-slate-800 antialiased selection:bg-[#3B50DF] selection:text-white">
+    <div className="min-h-dvh bg-[#EEF1F8] p-3 sm:p-5 lg:p-7 font-sans text-slate-800 antialiased selection:bg-[#F59E0B] selection:text-slate-950">
       <div className="flex min-h-[calc(100vh-2.5rem)] gap-6">
         {/* Desktop Sidebar */}
         <aside
@@ -456,7 +458,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                       type="text"
                       placeholder="Search astrologers, wallets, reports..."
                       autoFocus
-                      className="w-full rounded-xl bg-slate-50 px-3.5 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3B50DF]"
+                      className="w-full rounded-xl bg-slate-50 px-3.5 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F59E0B]"
                     />
                   </div>
                 )}

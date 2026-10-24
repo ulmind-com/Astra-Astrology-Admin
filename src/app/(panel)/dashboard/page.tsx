@@ -162,9 +162,9 @@ export default function DashboardPage() {
       title: "Total Astrologers Network",
       subtitle: `Complete network of all ${list.length} certified specialists registered on Astra`,
       icon: Users,
-      gradient: "from-[#3B50DF] to-[#6366F1]",
+      gradient: "from-[#D97706] to-[#F59E0B]",
       badgeText: `${list.length} Specialists`,
-      badgeTone: "bg-blue-50 text-[#3B50DF] border-blue-200",
+      badgeTone: "bg-amber-50 text-[#D97706] border-amber-200",
       emptyMsg: "No astrologers have been registered on the platform yet.",
     },
     online: {
@@ -180,9 +180,9 @@ export default function DashboardPage() {
       title: "Publicly Listed in Directory",
       subtitle: `${listedCount} astrologers visible in the public search directory on Astra Web`,
       icon: UserCheck,
-      gradient: "from-blue-600 to-indigo-700",
+      gradient: "from-[#B45309] to-[#D97706]",
       badgeText: `${listedCount} Listed`,
-      badgeTone: "bg-indigo-50 text-indigo-600 border-indigo-200",
+      badgeTone: "bg-amber-50 text-[#D97706] border-amber-200",
       emptyMsg: "No astrologers are currently marked as publicly listed.",
     },
     featured: {
@@ -206,7 +206,7 @@ export default function DashboardPage() {
       chatLabel: "34.200",
       callLabel: "24.150",
       readingsLabel: "18.300",
-      totalRevenue: "$48.650",
+      totalRevenue: "₹48,650",
     },
     {
       month: "Feb",
@@ -216,7 +216,7 @@ export default function DashboardPage() {
       chatLabel: "62.400",
       callLabel: "48.200",
       readingsLabel: "32.100",
-      totalRevenue: "$76.400",
+      totalRevenue: "₹76,400",
     },
     {
       month: "Mar",
@@ -226,7 +226,7 @@ export default function DashboardPage() {
       chatLabel: "42.100",
       callLabel: "28.300",
       readingsLabel: "22.500",
-      totalRevenue: "$54.200",
+      totalRevenue: "₹54,200",
     },
     {
       month: "Apr",
@@ -236,7 +236,7 @@ export default function DashboardPage() {
       chatLabel: "43.787",
       callLabel: "39.784",
       readingsLabel: "28.900",
-      totalRevenue: "$112.471",
+      totalRevenue: "₹1,12,471",
     },
     {
       month: "May",
@@ -246,7 +246,7 @@ export default function DashboardPage() {
       chatLabel: "48.900",
       callLabel: "32.400",
       readingsLabel: "24.100",
-      totalRevenue: "$62.800",
+      totalRevenue: "₹62,800",
     },
     {
       month: "Jun",
@@ -256,7 +256,7 @@ export default function DashboardPage() {
       chatLabel: "58.200",
       callLabel: "44.600",
       readingsLabel: "35.200",
-      totalRevenue: "$78.900",
+      totalRevenue: "₹78,900",
     },
     {
       month: "Jul",
@@ -266,7 +266,7 @@ export default function DashboardPage() {
       chatLabel: "54.100",
       callLabel: "38.200",
       readingsLabel: "28.500",
-      totalRevenue: "$71.300",
+      totalRevenue: "₹71,300",
     },
   ];
 
@@ -277,7 +277,7 @@ export default function DashboardPage() {
       name: "North India (Delhi NCR)",
       value: "2.417",
       growth: "+14.8%",
-      color: "from-[#1E3A8A] to-[#2563EB]",
+      color: "from-[#B45309] to-[#D97706]",
       size: "size-24 sm:size-26",
       coords: "top-2 left-16 sm:left-24",
       anim: "bubble-float-1",
@@ -289,7 +289,7 @@ export default function DashboardPage() {
       name: "West India (Mumbai & Gujarat)",
       value: "2.281",
       growth: "+12.2%",
-      color: "from-[#3B50DF] to-[#4F46E5]",
+      color: "from-[#D97706] to-[#F59E0B]",
       size: "size-26 sm:size-28",
       coords: "bottom-1 left-2 sm:left-4",
       anim: "bubble-float-2",
@@ -301,7 +301,7 @@ export default function DashboardPage() {
       name: "South India (Bengaluru & Chennai)",
       value: "812",
       growth: "+8.6%",
-      color: "from-[#6366F1] to-[#818CF8]",
+      color: "from-[#F59E0B] to-[#FBBF24]",
       size: "size-18 sm:size-20",
       coords: "bottom-4 right-16 sm:right-20",
       anim: "bubble-float-3",
@@ -313,7 +313,7 @@ export default function DashboardPage() {
       name: "North America & UK (NRI Diaspora)",
       value: "287",
       growth: "+22.4%",
-      color: "from-[#93C5FD] to-[#60A5FA]",
+      color: "from-[#FBBF24] to-[#FDE047]",
       size: "size-16 sm:size-17",
       coords: "top-4 left-0 sm:left-2",
       anim: "bubble-float-4",
@@ -325,7 +325,7 @@ export default function DashboardPage() {
       name: "Middle East (Dubai & UAE)",
       value: "194",
       growth: "+18.1%",
-      color: "from-[#C7D2FE] to-[#A5B4FC]",
+      color: "from-[#FEF08A] to-[#FDE047]",
       size: "size-13 sm:size-14",
       coords: "top-8 right-4 sm:right-6",
       anim: "bubble-float-2",
@@ -372,7 +372,7 @@ export default function DashboardPage() {
                 onClick={() => setDateFilter(filter)}
                 className={`rounded-xl px-3 py-1.5 text-xs font-bold capitalize transition-all duration-200 ${
                   dateFilter === filter
-                    ? "bg-[#3B50DF] text-white shadow-sm"
+                    ? "bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white shadow-sm"
                     : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                 }`}
               >
@@ -395,7 +395,7 @@ export default function DashboardPage() {
           >
             <RefreshCw
               className={`size-3.5 ${
-                isRefetching ? "animate-spin text-[#3B50DF]" : "text-slate-400"
+                isRefetching ? "animate-spin text-[#D97706]" : "text-slate-400"
               }`}
             />
             <span className="hidden sm:inline">
@@ -405,7 +405,7 @@ export default function DashboardPage() {
 
           {/* Add Astrologer CTA */}
           <Link href="/astrologers/new">
-            <button className="flex items-center gap-2 rounded-2xl bg-[#3B50DF] px-4 py-2 text-xs font-bold text-white shadow-[0_8px_20px_-4px_rgba(59,80,223,0.45)] transition-all hover:bg-[#2F42D8] hover:shadow-[0_12px_25px_-4px_rgba(59,80,223,0.55)] active:scale-95">
+            <button className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] px-4 py-2 text-xs font-bold text-white shadow-[0_8px_20px_-4px_rgba(217,119,6,0.45)] transition-all hover:from-[#B45309] hover:to-[#D97706] hover:shadow-[0_12px_25px_-4px_rgba(217,119,6,0.55)] active:scale-95">
               <Plus className="size-4 stroke-[2.5]" />
               <span>Add Astrologer</span>
             </button>
@@ -427,7 +427,7 @@ export default function DashboardPage() {
                 setSelectedCardDetail("total");
                 setDrawerSearch("");
               }}
-              className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#3B50DF] via-[#3548E8] to-[#4F46E5] p-6 text-white shadow-[0_14px_32px_-6px_rgba(59,80,223,0.45)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_22px_45px_-6px_rgba(59,80,223,0.6)] cursor-pointer group active:scale-[0.98] flex flex-col justify-between min-h-[175px]"
+              className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#B45309] via-[#D97706] to-[#F59E0B] p-6 text-white shadow-[0_14px_32px_-6px_rgba(217,119,6,0.45)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_22px_45px_-6px_rgba(217,119,6,0.6)] cursor-pointer group active:scale-[0.98] flex flex-col justify-between min-h-[175px]"
             >
               {/* Decorative subtle ambient circle */}
               <div className="pointer-events-none absolute -right-6 -bottom-6 size-36 rounded-full bg-white/10 blur-2xl group-hover:scale-125 transition-transform" />
@@ -442,14 +442,14 @@ export default function DashboardPage() {
               </div>
 
               <div className="mt-4">
-                <p className="text-xs font-semibold text-white/80">
+                <p className="text-xs font-semibold text-white/90">
                   Total Sales
                 </p>
                 <div className="mt-1 flex items-baseline justify-between">
                   <h3 className="font-display text-[32px] sm:text-4xl font-black tracking-tight text-white leading-none">
-                    $612.917
+                    ₹6,12,917
                   </h3>
-                  <span className="text-[11px] font-medium text-white/70">
+                  <span className="text-[11px] font-medium text-white/80">
                     Products vs last month
                   </span>
                 </div>
@@ -501,7 +501,7 @@ export default function DashboardPage() {
               className="rounded-[28px] bg-white p-6 border border-slate-100/90 shadow-[0_12px_32px_rgba(20,25,45,0.03)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(20,25,45,0.08)] cursor-pointer group active:scale-[0.98] flex flex-col justify-between min-h-[175px]"
             >
               <div className="flex items-center justify-between">
-                <div className="flex size-11 items-center justify-center rounded-2xl bg-blue-50 text-[#3B50DF] transition-transform group-hover:scale-110">
+                <div className="flex size-11 items-center justify-center rounded-2xl bg-amber-50 text-[#D97706] transition-transform group-hover:scale-110">
                   <User className="size-5 stroke-[2.2]" />
                 </div>
                 <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-600 shadow-sm">
@@ -578,7 +578,7 @@ export default function DashboardPage() {
                     <span>Seen product</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="size-2.5 rounded-full bg-[#3B50DF]" />
+                    <span className="size-2.5 rounded-full bg-[#F59E0B]" />
                     <span>Sales</span>
                   </div>
                 </div>
@@ -635,7 +635,7 @@ export default function DashboardPage() {
                             <span className="font-bold text-white">{item.chatLabel} Products</span>
                           </div>
                           <div className="flex items-center gap-2 text-[11px] font-semibold">
-                            <span className="size-2 rounded-full bg-[#3B50DF]" />
+                            <span className="size-2 rounded-full bg-[#F59E0B]" />
                             <span className="font-bold text-white">{item.callLabel} Products</span>
                           </div>
                           {/* Triangle Pointer */}
@@ -650,11 +650,11 @@ export default function DashboardPage() {
                           style={{ height: `${item.calls * 2.3}px` }}
                           className="w-3 sm:w-4 rounded-t-lg bg-[#D7DBE7] transition-all duration-300 group-hover:bg-[#CBD2E1]"
                         />
-                        {/* Bar 2: Royal Blue / Sales */}
+                        {/* Bar 2: Royal Gold / Sales */}
                         <div
                           style={{ height: `${item.chat * 2.3}px` }}
-                          className={`w-3 sm:w-4 rounded-t-lg bg-[#3B50DF] transition-all duration-300 ${
-                            isHoveredOrPinned ? "shadow-[0_0_12px_rgba(59,80,223,0.6)]" : ""
+                          className={`w-3 sm:w-4 rounded-t-lg bg-[#F59E0B] transition-all duration-300 ${
+                            isHoveredOrPinned ? "shadow-[0_0_12px_rgba(245,158,11,0.6)]" : ""
                           }`}
                         />
                       </div>
@@ -662,7 +662,7 @@ export default function DashboardPage() {
                       {/* Month Label */}
                       <span
                         className={`mt-3 text-xs font-bold transition-colors ${
-                          isHoveredOrPinned ? "text-[#3B50DF]" : "text-slate-400"
+                          isHoveredOrPinned ? "text-[#D97706]" : "text-slate-400"
                         }`}
                       >
                         {item.month}
@@ -705,13 +705,13 @@ export default function DashboardPage() {
                   viewBox="0 0 160 160"
                   fill="none"
                 >
-                  {/* Outer Ring (Blue #3B50DF) */}
+                  {/* Outer Ring (Gold #F59E0B) */}
                   <circle cx="80" cy="80" r="64" stroke="#F1F5F9" strokeWidth="9" />
                   <circle
                     cx="80"
                     cy="80"
                     r="64"
-                    stroke="#3B50DF"
+                    stroke="#F59E0B"
                     strokeWidth="9"
                     strokeDasharray={2 * Math.PI * 64}
                     strokeDashoffset={2 * Math.PI * 64 * 0.28}
@@ -770,7 +770,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-3">
                   <div className="flex size-7 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
-                    <Sparkles className="size-4 text-[#3B50DF]" />
+                    <Sparkles className="size-4 text-[#D97706]" />
                   </div>
                   <span className="font-bold text-slate-800">Electronic</span>
                 </div>
@@ -839,25 +839,25 @@ export default function DashboardPage() {
             <div className="my-5 grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
               {/* Left (5 cols): Overlapping Packed Bubbles */}
               <div className="sm:col-span-5 relative h-48 w-full flex items-center justify-center">
-                {/* Bubble 1 (Top-Right): 2.417 Deep Blue */}
+                {/* Bubble 1 (Top-Right): 2.417 Deep Gold */}
                 <div
-                  className="absolute top-1 right-2 sm:right-3 size-20 sm:size-22 rounded-full bg-[#2563EB] shadow-[0_8px_20px_rgba(37,99,235,0.35)] flex flex-col items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform z-20 group"
+                  className="absolute top-1 right-2 sm:right-3 size-20 sm:size-22 rounded-full bg-gradient-to-br from-[#B45309] to-[#D97706] shadow-[0_8px_20px_rgba(217,119,6,0.35)] flex flex-col items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform z-20 group"
                   title="2.417 Direct Inquiries"
                 >
                   <span className="font-black text-sm sm:text-base leading-none">2.417</span>
                 </div>
 
-                {/* Bubble 2 (Bottom-Left): 2.281 Electric Blue */}
+                {/* Bubble 2 (Bottom-Left): 2.281 Electric Amber */}
                 <div
-                  className="absolute bottom-1 left-2 sm:left-3 size-22 sm:size-24 rounded-full bg-[#3B50DF] shadow-[0_8px_22px_rgba(59,80,223,0.4)] flex flex-col items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform z-30 group"
+                  className="absolute bottom-1 left-2 sm:left-3 size-22 sm:size-24 rounded-full bg-gradient-to-br from-[#D97706] to-[#F59E0B] shadow-[0_8px_22px_rgba(245,158,11,0.4)] flex flex-col items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform z-30 group"
                   title="2.281 Live Consultations"
                 >
                   <span className="font-black text-base sm:text-lg leading-none">2.281</span>
                 </div>
 
-                {/* Bubble 3 (Bottom-Right): 812 Periwinkle Blue */}
+                {/* Bubble 3 (Bottom-Right): 812 Warm Gold */}
                 <div
-                  className="absolute bottom-2 right-4 sm:right-6 size-15 sm:size-16 rounded-full bg-[#6366F1] shadow-[0_6px_16px_rgba(99,102,241,0.3)] flex flex-col items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform z-10 group"
+                  className="absolute bottom-2 right-4 sm:right-6 size-15 sm:size-16 rounded-full bg-gradient-to-br from-[#F59E0B] to-[#FBBF24] shadow-[0_6px_16px_rgba(245,158,11,0.3)] flex flex-col items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform z-10 group"
                   title="812 Consultations"
                 >
                   <span className="font-bold text-xs sm:text-sm leading-none">812</span>
@@ -879,11 +879,11 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                     <div className="flex items-center gap-2">
                       <span className="text-base leading-none">🇺🇸</span>
-                      <span className="group-hover:text-[#3B50DF] transition-colors">United States</span>
+                      <span className="group-hover:text-[#D97706] transition-colors">United States</span>
                     </div>
                   </div>
                   <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                    <div className="h-full w-[85%] rounded-full bg-[#3B50DF] transition-all duration-700" />
+                    <div className="h-full w-[85%] rounded-full bg-gradient-to-r from-[#D97706] to-[#F59E0B] transition-all duration-700" />
                   </div>
                 </div>
 
@@ -892,11 +892,11 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                     <div className="flex items-center gap-2">
                       <span className="text-base leading-none">🇩🇪</span>
-                      <span className="group-hover:text-[#3B50DF] transition-colors">Germany</span>
+                      <span className="group-hover:text-[#D97706] transition-colors">Germany</span>
                     </div>
                   </div>
                   <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                    <div className="h-full w-[68%] rounded-full bg-[#3B50DF] transition-all duration-700" />
+                    <div className="h-full w-[68%] rounded-full bg-gradient-to-r from-[#D97706] to-[#F59E0B] transition-all duration-700" />
                   </div>
                 </div>
 
@@ -905,11 +905,11 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                     <div className="flex items-center gap-2">
                       <span className="text-base leading-none">🇦🇺</span>
-                      <span className="group-hover:text-[#3B50DF] transition-colors">Australia</span>
+                      <span className="group-hover:text-[#D97706] transition-colors">Australia</span>
                     </div>
                   </div>
                   <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                    <div className="h-full w-[54%] rounded-full bg-[#3B50DF] transition-all duration-700" />
+                    <div className="h-full w-[54%] rounded-full bg-gradient-to-r from-[#D97706] to-[#F59E0B] transition-all duration-700" />
                   </div>
                 </div>
 
@@ -918,11 +918,11 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                     <div className="flex items-center gap-2">
                       <span className="text-base leading-none">🇫🇷</span>
-                      <span className="group-hover:text-[#3B50DF] transition-colors">France</span>
+                      <span className="group-hover:text-[#D97706] transition-colors">France</span>
                     </div>
                   </div>
                   <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                    <div className="h-full w-[38%] rounded-full bg-[#3B50DF] transition-all duration-700" />
+                    <div className="h-full w-[38%] rounded-full bg-gradient-to-r from-[#D97706] to-[#F59E0B] transition-all duration-700" />
                   </div>
                 </div>
               </div>
@@ -939,7 +939,7 @@ export default function DashboardPage() {
               <h3 className="font-display text-lg font-bold text-slate-900">
                 Registered Astrologer Network
               </h3>
-              <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-[#3B50DF]">
+              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-[#D97706]">
                 {list.length} Verified Specialists
               </span>
             </div>
@@ -957,12 +957,12 @@ export default function DashboardPage() {
                 placeholder="Filter astrologers..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 w-48 rounded-xl border border-slate-200 bg-slate-50 pl-8 pr-3 text-xs font-semibold text-slate-700 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3B50DF]/20"
+                className="h-9 w-48 rounded-xl border border-slate-200 bg-slate-50 pl-8 pr-3 text-xs font-semibold text-slate-700 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F59E0B]/20"
               />
             </div>
 
             <Link href="/astrologers/new">
-              <button className="flex items-center gap-2 rounded-2xl bg-[#3B50DF] px-4 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-[#2534C7] active:scale-95">
+              <button className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] px-4 py-2 text-xs font-bold text-white shadow-md transition-all hover:from-[#B45309] hover:to-[#D97706] active:scale-95">
                 <Plus className="size-3.5 stroke-[2.5]" />
                 <span>Add Astrologer</span>
               </button>
@@ -970,7 +970,7 @@ export default function DashboardPage() {
 
             <Link
               href="/astrologers"
-              className="flex items-center gap-1 rounded-2xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-[#3B50DF]"
+              className="flex items-center gap-1 rounded-2xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-[#D97706]"
             >
               <span>Full Directory</span>
               <ArrowUpRight className="size-3.5" />
@@ -1011,7 +1011,7 @@ export default function DashboardPage() {
                           className="size-11 rounded-2xl ring-2 ring-slate-100 object-cover"
                         />
                         <div className="min-w-0">
-                          <p className="font-bold text-slate-900 group-hover:text-[#3B50DF] transition-colors truncate text-sm">
+                          <p className="font-bold text-slate-900 group-hover:text-[#D97706] transition-colors truncate text-sm">
                             {astrologer.full_name}
                           </p>
                           <p className="text-[11px] font-semibold text-slate-400 truncate">
@@ -1032,7 +1032,7 @@ export default function DashboardPage() {
                           </span>
                         ))}
                         {(astrologer.skills?.length || 0) > 3 && (
-                          <span className="rounded-lg bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-[#3B50DF]">
+                          <span className="rounded-lg bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-[#D97706]">
                             +{(astrologer.skills?.length || 0) - 3}
                           </span>
                         )}
@@ -1069,7 +1069,7 @@ export default function DashboardPage() {
 
                     <td className="py-4 pr-2 text-right">
                       <Link href={`/astrologers/${astrologer.id}`}>
-                        <button className="rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-[#3B50DF] hover:text-white hover:border-[#3B50DF]">
+                        <button className="rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-[#D97706] hover:text-white hover:border-[#D97706]">
                           Manage
                         </button>
                       </Link>
@@ -1143,12 +1143,12 @@ export default function DashboardPage() {
                   placeholder="Search specialists by name, email or skill..."
                   value={drawerSearch}
                   onChange={(e) => setDrawerSearch(e.target.value)}
-                  className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-xs font-semibold text-slate-700 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3B50DF]/20"
+                  className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-xs font-semibold text-slate-700 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F59E0B]/20"
                 />
               </div>
 
               <Link href="/astrologers/new">
-                <button className="flex items-center gap-1.5 rounded-xl bg-[#3B50DF] px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#2F42D8] transition-all">
+                <button className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:from-[#B45309] hover:to-[#D97706] transition-all">
                   <Plus className="size-3.5 stroke-[2.5]" />
                   <span>Add</span>
                 </button>
@@ -1171,7 +1171,7 @@ export default function DashboardPage() {
                 drawerAstrologers.map((astrologer) => (
                   <div
                     key={astrologer.id}
-                    className="group rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm hover:border-[#3B50DF]/40 hover:shadow-md transition-all duration-200"
+                    className="group rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm hover:border-[#F59E0B]/40 hover:shadow-md transition-all duration-200"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3.5 min-w-0">
@@ -1191,7 +1191,7 @@ export default function DashboardPage() {
 
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-slate-900 group-hover:text-[#3B50DF] transition-colors truncate text-sm">
+                            <h4 className="font-bold text-slate-900 group-hover:text-[#D97706] transition-colors truncate text-sm">
                               {astrologer.full_name}
                             </h4>
                             {astrologer.is_featured && (
@@ -1227,7 +1227,7 @@ export default function DashboardPage() {
                         )}
 
                         <Link href={`/astrologers/${astrologer.id}`}>
-                          <button className="flex items-center gap-1 rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-[#3B50DF] hover:text-white transition-all">
+                          <button className="flex items-center gap-1 rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-[#D97706] hover:text-white transition-all">
                             <span>Manage</span>
                             <ArrowRight className="size-3" />
                           </button>
@@ -1267,7 +1267,7 @@ export default function DashboardPage() {
                   Close
                 </button>
                 <Link href="/astrologers">
-                  <button className="rounded-xl bg-[#3B50DF] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#2534C7] transition-all">
+                  <button className="rounded-xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] px-4 py-2 text-xs font-bold text-white shadow-sm hover:from-[#B45309] hover:to-[#D97706] transition-all">
                     All Directory →
                   </button>
                 </Link>
