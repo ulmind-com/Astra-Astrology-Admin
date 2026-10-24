@@ -78,7 +78,7 @@
   /* DealDeck 3D depth shadows */
   --shadow-soft: 0 4px 12px rgba(20, 25, 45, 0.03);
   --shadow-lift: 0 10px 30px rgba(20, 25, 45, 0.05), 0 1px 3px rgba(20, 25, 45, 0.02);
-  --shadow-glow: 0 12px 32px -8px rgba(59, 80, 223, 0.45);
+  --shadow-glow: 0 12px 32px -8px rgba(245, 158, 11, 0.45);
 }
 
 /* --------------------------------------------------------------------------
@@ -98,7 +98,7 @@
 
   --foreground: #0F172A;
   --muted-foreground: #64748B;
-  --ring: #3B50DF;
+  --ring: #F59E0B;
 
   /* Status */
   --success: #10B981;
@@ -107,8 +107,8 @@
   --danger-surface: rgba(239, 68, 68, 0.1);
   --warning: #F59E0B;
   --warning-surface: rgba(245, 158, 11, 0.14);
-  --info: #3B50DF;
-  --info-surface: rgba(59, 80, 223, 0.12);
+  --info: #D97706;
+  --info-surface: rgba(245, 158, 11, 0.12);
 }
 
 @theme inline {
@@ -242,10 +242,10 @@
   }
 
   .card-hero-3d {
-    background: linear-gradient(135deg, #3B50DF 0%, #2838C7 100%);
+    background: linear-gradient(135deg, #B45309 0%, #D97706 50%, #F59E0B 100%);
     border-radius: 28px;
     color: #ffffff;
-    box-shadow: 0 16px 36px -8px rgba(59, 80, 223, 0.45);
+    box-shadow: 0 16px 36px -8px rgba(217, 119, 6, 0.45);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
     overflow: hidden;
@@ -253,13 +253,13 @@
 
   .card-hero-3d:hover {
     transform: translateY(-4px);
-    box-shadow: 0 22px 45px -8px rgba(59, 80, 223, 0.55);
+    box-shadow: 0 22px 45px -8px rgba(217, 119, 6, 0.55);
   }
 
   /* A card that should catch the eye: the warm promotional surface. */
   .card-glow {
     background-color: var(--surface-raised);
-    border-color: rgba(59, 80, 223, 0.5);
+    border-color: rgba(245, 158, 11, 0.5);
     box-shadow: var(--shadow-glow);
   }
 
@@ -322,10 +322,10 @@
   }
 
   .nav-active {
-    background-color: #3B50DF !important;
+    background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%) !important;
     color: #ffffff !important;
     font-weight: 700;
-    box-shadow: 0 10px 25px -5px rgba(59, 80, 223, 0.4);
+    box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
     border-radius: 16px;
   }
 
@@ -423,6 +423,20 @@
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .animate-marquee {
+    display: flex;
+    width: max-content;
+    animation: marquee 35s linear infinite;
+  }
+  .animate-marquee:hover {
+    animation-play-state: paused;
   }
 }
 
