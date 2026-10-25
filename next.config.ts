@@ -15,6 +15,9 @@ const nextConfig: NextConfig = {
     // Profile pictures and galleries are served from Cloudinary.
     remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
   },
+  experimental: {
+    agentUpgrade: "security",
+  },
 };
 
 export default nextConfig;

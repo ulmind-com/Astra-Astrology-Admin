@@ -183,7 +183,46 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentOrderStatus, string> = {
   expired: "Expired",
 };
 
-export type PlatformSettings = S["PlatformSettingsOut"];
+export type PlatformSettings = S["PlatformSettingsOut"] & {
+  daily_horoscope_coins?: number;
+  daily_horoscope_enabled?: boolean;
+  kundli_coins?: number;
+  kundli_enabled?: boolean;
+  kundli_matching_coins?: number;
+  kundli_matching_enabled?: boolean;
+  kp_calculator_coins?: number;
+  kp_calculator_enabled?: boolean;
+  dasha_calculator_coins?: number;
+  dasha_calculator_enabled?: boolean;
+  rashi_calculator_coins?: number;
+  rashi_calculator_enabled?: boolean;
+  nakshatra_calculator_coins?: number;
+  nakshatra_calculator_enabled?: boolean;
+  palm_reading_coins?: number;
+  palm_reading_enabled?: boolean;
+};
+
+export interface FeaturePricingUpdate {
+  daily_horoscope_coins?: number;
+  daily_horoscope_enabled?: boolean;
+  kundli_coins?: number;
+  kundli_enabled?: boolean;
+  kundli_matching_coins?: number;
+  kundli_matching_enabled?: boolean;
+  kp_calculator_coins?: number;
+  kp_calculator_enabled?: boolean;
+  dasha_calculator_coins?: number;
+  dasha_calculator_enabled?: boolean;
+  rashi_calculator_coins?: number;
+  rashi_calculator_enabled?: boolean;
+  nakshatra_calculator_coins?: number;
+  nakshatra_calculator_enabled?: boolean;
+  palm_reading_coins?: number;
+  palm_reading_enabled?: boolean;
+  face_reading_coins?: number;
+  face_reading_enabled?: boolean;
+}
+
 export type CoinRateChange = S["CoinRateChangeOut"];
 
 /**

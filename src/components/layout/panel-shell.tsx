@@ -61,6 +61,7 @@ const ADMIN_FINANCIAL_NAV: NavItem[] = [
 ];
 
 const ADMIN_TOOLS_NAV: NavItem[] = [
+  { href: "/feature-pricing", label: "Feature Pricing", icon: Sparkles },
   { href: "/face-rules", label: "Face Rules", icon: ScanFace },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

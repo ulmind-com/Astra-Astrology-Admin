@@ -118,5 +118,6 @@ export const endpoints = {
     earningsRecent: "/admin/earnings/recent",
     coinRateHistory: "/admin/settings/coin-rate-history",
     rechargeLimits: "/admin/settings/recharge-limits",
+    featurePricing: "/admin/settings/feature-pricing",
   },
 } as const;
