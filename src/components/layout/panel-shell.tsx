@@ -21,6 +21,7 @@ import {
   PanelLeftOpen,
   CalendarDays,
   Lock,
+  Bot,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -61,6 +62,7 @@ const ADMIN_FINANCIAL_NAV: NavItem[] = [
 ];
 
 const ADMIN_TOOLS_NAV: NavItem[] = [
+  { href: "/ai-knowledge", label: "AI Astrologer Hub", icon: Bot },
   { href: "/feature-pricing", label: "Feature Pricing", icon: Sparkles },
   { href: "/face-rules", label: "Face Rules", icon: ScanFace },
   { href: "/settings", label: "Settings", icon: Settings },

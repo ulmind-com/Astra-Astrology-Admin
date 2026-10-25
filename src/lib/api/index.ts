@@ -425,3 +425,86 @@ export const faceReadingApi = {
     },
   ) => api.patch<FaceRule>(endpoints.faceReading.rule(id), body),
 };
+
+// ------------------------------------------------------------ AI Astrologer Hub
+export interface AIKnowledgeDocItem {
+  id: string;
+  title: string;
+  category: string;
+  source_file: string;
+  snippet: string;
+  created_at: string;
+}
+
+export interface AICustomRuleItem {
+  id: string;
+  rule_title: string;
+  trigger_keywords: string[];
+  category: string;
+  response_bn: string;
+  remedy_bn: string;
+  priority: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface AIFeedbackItem {
+  id: string;
+  session_id: string;
+  user_query: string;
+  ai_response: string;
+  rating: number;
+  feedback_reason: string;
+  reviewed_by_admin: boolean;
+  admin_corrected_response: string | null;
+  added_to_knowledge: boolean;
+  created_at: string;
+}
+
+export const aiAdminApi = {
+  getKnowledge: (params?: { category?: string; limit?: number; skip?: number }) =>
+    api.get<{ total: number; docs: AIKnowledgeDocItem[] }>(endpoints.admin.aiKnowledge, { query: params }),
+
+  seedKnowledge: () =>
+    api.post<{ seeded_count: number }>(endpoints.admin.aiKnowledgeSeed),
+
+  getRules: () =>
+    api.get<AICustomRuleItem[]>(endpoints.admin.aiRules),
+
+  createRule: (body: {
+    rule_title: string;
+    trigger_keywords: string[];
+    category?: string;
+    response_bn: string;
+    remedy_bn?: string;
+    priority?: number;
+  }) => api.post<{ rule_id: string; status: string }>(endpoints.admin.aiRules, body),
+
+  updateRule: (
+    id: string,
+    body: {
+      rule_title?: string;
+      trigger_keywords?: string[];
+      category?: string;
+      response_bn?: string;
+      remedy_bn?: string;
+      priority?: number;
+      is_active?: boolean;
+    },
+  ) => api.patch<{ rule_id: string; status: string }>(endpoints.admin.aiRule(id), body),
+
+  deleteRule: (id: string) =>
+    api.delete<{ deleted: boolean }>(endpoints.admin.aiRule(id)),
+
+  getFeedback: (limit?: number) =>
+    api.get<AIFeedbackItem[]>(endpoints.admin.aiFeedback, { query: { limit } }),
+
+  approveFeedback: (
+    id: string,
+    body: {
+      admin_corrected_response: string;
+      rule_title?: string;
+      keywords?: string[];
+    },
+  ) => api.post<{ rule_id: string; status: string }>(endpoints.admin.aiFeedbackApprove(id), body),
+};

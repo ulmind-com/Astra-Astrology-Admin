@@ -119,5 +119,11 @@ export const endpoints = {
     coinRateHistory: "/admin/settings/coin-rate-history",
     rechargeLimits: "/admin/settings/recharge-limits",
     featurePricing: "/admin/settings/feature-pricing",
+    aiKnowledge: "/admin/ai/knowledge",
+    aiKnowledgeSeed: "/admin/ai/knowledge/seed",
+    aiRules: "/admin/ai/rules",
+    aiRule: (id: string) => `/admin/ai/rules/${id}`,
+    aiFeedback: "/admin/ai/feedback",
+    aiFeedbackApprove: (id: string) => `/admin/ai/feedback/${id}/approve`,
   },
 } as const;
