@@ -307,7 +307,7 @@ function LoginForm() {
                 <br />
                 Verified Consultation Platform
               </p>
-              <UlmindCredit />
+              <UlmindCredit variant="light" />
             </div>
           </div>
         </div>
@@ -460,7 +460,7 @@ function LoginForm() {
 
             {/* ULMIND credit — mobile only (desktop shows it on the left card) */}
             <div className="mt-6 flex justify-center lg:hidden">
-              <UlmindCredit />
+              <UlmindCredit variant="light" />
             </div>
           </div>
         </div>
