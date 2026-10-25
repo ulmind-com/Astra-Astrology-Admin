@@ -24,10 +24,10 @@ function ForgotPasswordForm() {
     try {
       const sent = await authApi.forgotPassword(email);
       toast.success(`We sent a reset code to ${sent.email}`);
-      // Carry the dev code through so local testing does not need the inbox.
-      const query = new URLSearchParams({ email: sent.email });
-      if (sent.dev_code) query.set("code", sent.dev_code);
-      router.push(`/reset-password?${query.toString()}`);
+      // Only the address is carried over. The code is never put in the URL or
+      // filled in for the user: proving they can read the inbox is the whole
+      // point of the reset, and a code the page already knows proves nothing.
+      router.push(`/reset-password?email=${encodeURIComponent(sent.email)}`);
     } catch (caught) {
       setError(caught as ApiError);
     } finally {
