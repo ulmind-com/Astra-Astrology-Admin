@@ -1005,7 +1005,7 @@ function Schedule() {
               Keep Appointment
             </Button>
             <Button
-              tone="danger"
+              variant="danger"
               loading={cancel.isPending}
               onClick={() => {
                 if (cancelTargetId) cancel.mutate(cancelTargetId);
