@@ -58,11 +58,14 @@ export type LivePlatform = {
   max_session_minutes: number;
 };
 
+import type { FeaturePricingItem } from "@/types";
+
 export type LiveMessage =
   | { type: "ready"; data: { signed_in: boolean } }
   | { type: "pong" }
   | { type: "astrologer"; data: LiveAstrologer }
   | { type: "settings"; data: LivePlatform }
+  | { type: "feature_pricing"; data: Record<string, FeaturePricingItem> }
   | { type: "wallet"; data: { balance_coins: number } }
   // Chat traffic. Typed loosely here on purpose: the chat client owns the
   // shape of a message, and repeating it in two places would be one more

@@ -202,6 +202,15 @@ export type PlatformSettings = S["PlatformSettingsOut"] & {
   palm_reading_enabled?: boolean;
 };
 
+export interface FeaturePricingItem {
+  feature_id: string;
+  name: string;
+  coins: number;
+  is_free: boolean;
+  enabled: boolean;
+  description?: string;
+}
+
 export interface FeaturePricingUpdate {
   daily_horoscope_coins?: number;
   daily_horoscope_enabled?: boolean;
