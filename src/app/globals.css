@@ -521,6 +521,7 @@ html.dark .bg-\[\#CBD2E1\] { background-color: var(--d-raised-2) !important; }
 
 /* --- slate backgrounds (light greys) --------------------------------- */
 html.dark .bg-slate-50,
+html.dark .bg-slate-50\/40,
 html.dark .bg-slate-50\/50,
 html.dark .bg-slate-50\/60,
 html.dark .bg-slate-50\/70,
@@ -528,9 +529,11 @@ html.dark .bg-slate-50\/80 { background-color: rgba(27, 35, 56, 0.7) !important;
 
 html.dark .bg-slate-100,
 html.dark .bg-slate-100\/70,
-html.dark .bg-slate-100\/80 { background-color: var(--d-raised) !important; }
+html.dark .bg-slate-100\/80,
+html.dark .bg-slate-100\/90 { background-color: var(--d-raised) !important; }
 
 html.dark .bg-slate-200,
+html.dark .bg-slate-200\/60,
 html.dark .bg-slate-200\/70,
 html.dark .bg-slate-200\/80 { background-color: var(--d-raised-2) !important; }
 
