@@ -29,7 +29,9 @@ import * as React from "react";
 import { AppointmentReminder } from "@/components/appointments/reminder";
 import { IncomingCallWatcher } from "@/components/call/incoming-call";
 import { Avatar, Button } from "@/components/ui";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { UlmindCredit } from "@/components/ulmind-credit";
+import { playNavFeedback } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 
@@ -87,6 +89,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleCollapsed = () => {
+    playNavFeedback();
     setCollapsed((prev) => {
       const next = !prev;
       try {
@@ -123,8 +126,8 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
         <div className={cn("space-y-1", isIconOnly && "flex flex-col items-center")}>
           {items.map((item) => {
             const isActive =
-              item.href === "/dashboard"
-                ? pathname === "/dashboard"
+              item.href === "/dashboard" || item.href === "/me"
+                ? pathname === item.href
                 : pathname === item.href || pathname.startsWith(item.href + "/");
 
             if (isIconOnly) {
@@ -137,11 +140,12 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                 >
                   <Link
                     href={item.href}
+                    onClick={() => playNavFeedback()}
                     className={cn(
                       "flex size-11 items-center justify-center rounded-2xl transition-all duration-200 relative",
                       isActive
-                        ? "bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white shadow-[0_8px_20px_-4px_rgba(245,158,11,0.5)] font-bold"
-                        : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                        ? "bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white shadow-[0_8px_20px_-4px_rgba(245,158,11,0.5)] font-bold scale-[1.02]"
+                        : "text-slate-500 hover:bg-slate-100 hover:text-slate-900 active:scale-95"
                     )}
                     aria-label={item.label}
                   >
@@ -174,11 +178,12 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.label}
                 href={item.href}
+                onClick={() => playNavFeedback()}
                 className={cn(
                   "flex items-center gap-3.5 rounded-2xl px-3.5 py-2.5 text-sm font-semibold transition-all duration-200 group",
                   isActive
-                    ? "bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white shadow-[0_8px_20px_-4px_rgba(245,158,11,0.5)] font-bold"
-                    : "text-slate-500 hover:bg-slate-100/70 hover:text-slate-900"
+                    ? "bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white shadow-[0_8px_20px_-4px_rgba(245,158,11,0.5)] font-bold scale-[1.01]"
+                    : "text-slate-500 hover:bg-slate-100/70 hover:text-slate-900 active:scale-[0.98]"
                 )}
               >
                 <item.icon
@@ -319,6 +324,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
             >
               <Link
                 href="/astrologers/new"
+                onClick={() => playNavFeedback()}
                 className="relative flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white shadow-md border border-slate-800 transition-all hover:scale-105 hover:border-slate-700 active:scale-95"
                 aria-label="Add Astrologer"
               >
@@ -364,7 +370,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                   </p>
                 </div>
 
-                <Link href="/astrologers/new" className="block pt-1">
+                <Link href="/astrologers/new" onClick={() => playNavFeedback()} className="block pt-1">
                   <button className="w-full rounded-xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] py-2 text-[11px] font-bold text-white shadow-md transition-all duration-200 hover:from-[#B45309] hover:to-[#D97706] active:scale-95 cursor-pointer">
                     + Add Astrologer
                   </button>
@@ -426,6 +432,8 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                     ? "Platform Overview"
                     : pathname === "/me"
                     ? "My Astrologer Profile"
+                    : pathname === "/me/password"
+                    ? "Security & Password"
                     : pathname === "/appointments"
                     ? "Appointments & Sessions"
                     : pathname === "/earnings"
@@ -440,14 +448,20 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
 
-            {/* Right Header: Search Circle, Bell Circle, User Pill */}
+            {/* Right Header: Theme Toggle, Search Circle, Bell Circle, User Pill */}
             <div className="flex items-center gap-3">
+              {/* Day / Night Theme Toggle */}
+              <ThemeToggle />
+
               {/* Search Circular Button */}
               <div className="relative">
                 <button
-                  onClick={() => setSearchOpen(!searchOpen)}
+                  onClick={() => {
+                    playNavFeedback();
+                    setSearchOpen(!searchOpen);
+                  }}
                   aria-label="Search"
-                  className="flex size-11 items-center justify-center rounded-full bg-white shadow-[0_4px_16px_rgba(20,25,45,0.04)] border border-slate-100 text-slate-700 transition-all hover:bg-slate-50 hover:scale-105 active:scale-95"
+                  className="flex size-11 items-center justify-center rounded-full bg-white shadow-[0_4px_16px_rgba(20,25,45,0.04)] border border-slate-100 text-slate-700 transition-all hover:bg-slate-50 hover:scale-105 active:scale-95 cursor-pointer"
                 >
                   <Search className="size-4.5 text-slate-600" />
                 </button>
@@ -466,8 +480,9 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
 
               {/* Notification Circular Button */}
               <button
+                onClick={() => playNavFeedback()}
                 aria-label="Notifications"
-                className="relative flex size-11 items-center justify-center rounded-full bg-white shadow-[0_4px_16px_rgba(20,25,45,0.04)] border border-slate-100 text-slate-700 transition-all hover:bg-slate-50 hover:scale-105 active:scale-95"
+                className="relative flex size-11 items-center justify-center rounded-full bg-white shadow-[0_4px_16px_rgba(20,25,45,0.04)] border border-slate-100 text-slate-700 transition-all hover:bg-slate-50 hover:scale-105 active:scale-95 cursor-pointer"
               >
                 <Bell className="size-4.5 text-slate-600" />
                 <span className="absolute top-2.5 right-2.5 size-2 rounded-full bg-[#FF4D4D] ring-2 ring-white" />
@@ -476,8 +491,11 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
               {/* User Profile Pill */}
               <div className="relative">
                 <button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center gap-3 rounded-full bg-white py-1.5 pl-1.5 pr-4 shadow-[0_4px_16px_rgba(20,25,45,0.04)] border border-slate-100 transition-all hover:bg-slate-50"
+                  onClick={() => {
+                    playNavFeedback();
+                    setShowProfileMenu(!showProfileMenu);
+                  }}
+                  className="flex items-center gap-3 rounded-full bg-white py-1.5 pl-1.5 pr-4 shadow-[0_4px_16px_rgba(20,25,45,0.04)] border border-slate-100 transition-all hover:bg-slate-50 cursor-pointer"
                 >
                   <Avatar
                     src={user?.avatar_url}
@@ -506,8 +524,11 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                       </p>
                     </div>
                     <button
-                      onClick={() => signOut()}
-                      className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
+                      onClick={() => {
+                        playNavFeedback();
+                        signOut();
+                      }}
+                      className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                     >
                       <LogOut className="size-3.5" />
                       Sign out

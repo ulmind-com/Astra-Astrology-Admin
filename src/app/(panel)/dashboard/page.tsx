@@ -46,6 +46,7 @@ import * as React from "react";
 
 import { Avatar, LoadingBlock } from "@/components/ui";
 import { adminApi, healthApi } from "@/lib/api";
+import { playNavFeedback } from "@/lib/sound";
 import { formatDateTime } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
 import { SKILL_LABELS, type Skill } from "@/types";
@@ -369,8 +370,11 @@ export default function DashboardPage() {
             {(["today", "week", "month", "year"] as const).map((filter) => (
               <button
                 key={filter}
-                onClick={() => setDateFilter(filter)}
-                className={`rounded-xl px-3 py-1.5 text-xs font-bold capitalize transition-all duration-200 ${
+                onClick={() => {
+                  playNavFeedback();
+                  setDateFilter(filter);
+                }}
+                className={`rounded-xl px-3 py-1.5 text-xs font-bold capitalize transition-all duration-200 cursor-pointer ${
                   dateFilter === filter
                     ? "bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white shadow-sm"
                     : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
@@ -389,9 +393,12 @@ export default function DashboardPage() {
 
           {/* Refresh Button */}
           <button
-            onClick={() => refetch()}
+            onClick={() => {
+              playNavFeedback();
+              refetch();
+            }}
             disabled={isRefetching}
-            className="flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw
               className={`size-3.5 ${
@@ -404,8 +411,8 @@ export default function DashboardPage() {
           </button>
 
           {/* Add Astrologer CTA */}
-          <Link href="/astrologers/new">
-            <button className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] px-4 py-2 text-xs font-bold text-white shadow-[0_8px_20px_-4px_rgba(217,119,6,0.45)] transition-all hover:from-[#B45309] hover:to-[#D97706] hover:shadow-[0_12px_25px_-4px_rgba(217,119,6,0.55)] active:scale-95">
+          <Link href="/astrologers/new" onClick={() => playNavFeedback()}>
+            <button className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] px-4 py-2 text-xs font-bold text-white shadow-[0_8px_20px_-4px_rgba(217,119,6,0.45)] transition-all hover:from-[#B45309] hover:to-[#D97706] hover:shadow-[0_12px_25px_-4px_rgba(217,119,6,0.55)] active:scale-95 cursor-pointer">
               <Plus className="size-4 stroke-[2.5]" />
               <span>Add Astrologer</span>
             </button>
@@ -424,6 +431,7 @@ export default function DashboardPage() {
               role="button"
               tabIndex={0}
               onClick={() => {
+                playNavFeedback();
                 setSelectedCardDetail("total");
                 setDrawerSearch("");
               }}
@@ -461,6 +469,7 @@ export default function DashboardPage() {
               role="button"
               tabIndex={0}
               onClick={() => {
+                playNavFeedback();
                 setSelectedCardDetail("online");
                 setDrawerSearch("");
               }}
@@ -495,6 +504,7 @@ export default function DashboardPage() {
               role="button"
               tabIndex={0}
               onClick={() => {
+                playNavFeedback();
                 setSelectedCardDetail("listed");
                 setDrawerSearch("");
               }}
@@ -529,6 +539,7 @@ export default function DashboardPage() {
               role="button"
               tabIndex={0}
               onClick={() => {
+                playNavFeedback();
                 setSelectedCardDetail("featured");
                 setDrawerSearch("");
               }}

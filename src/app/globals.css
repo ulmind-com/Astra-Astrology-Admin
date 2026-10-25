@@ -376,6 +376,11 @@
     font-family: var(--font-display);
   }
 
+  /* Premium serif, for the auth screen's wordmark and hero heading only. */
+  .font-serif-display {
+    font-family: var(--font-cormorant), ui-serif, Georgia, serif;
+  }
+
   /* Skeletons and "loading" states. */
   .shimmer {
     background: linear-gradient(
@@ -462,4 +467,111 @@ button[data-nextjs-toast-wrapper] {
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
+}
+
+/* ==========================================================================
+   DARK MODE — full inversion
+
+   The app paints its surfaces and text with hardcoded Tailwind `slate` / white
+   utilities and a few literal hex values rather than the semantic tokens, so a
+   dark theme cannot be done by flipping `:root` alone. Here we (1) flip the
+   semantic variables for the components that do use them, and (2) remap every
+   slate / white / page utility the UI actually uses, scoped under `html.dark`
+   so the override wins on specificity. The warm amber / orange brand accents
+   (#D97706, #F59E0B, #B45309 …) are intentionally left untouched — they stay
+   the brand colour in both themes.
+   ========================================================================== */
+
+html.dark {
+  color-scheme: dark;
+
+  --background: #0a0e17;
+  --surface: #141b2d;
+  --surface-muted: #1b2338;
+  --surface-raised: #141b2d;
+  --surface-solid: #141b2d;
+
+  --border: rgba(148, 163, 184, 0.14);
+  --border-strong: rgba(148, 163, 184, 0.24);
+
+  --foreground: #f8fafc;
+  --muted-foreground: #8891a6;
+  --ring: #F59E0B;
+
+  --success-surface: rgba(16, 185, 129, 0.18);
+  --danger-surface: rgba(239, 68, 68, 0.18);
+  --warning-surface: rgba(245, 158, 11, 0.2);
+  --info-surface: rgba(245, 158, 11, 0.18);
+}
+
+/* Dark surface scale reused below */
+html.dark {
+  --d-page: #0a0e17;
+  --d-surface: #141b2d;
+  --d-raised: #1b2338;
+  --d-raised-2: #232d45;
+  --d-border: rgba(148, 163, 184, 0.14);
+}
+
+/* --- page + solid surfaces ------------------------------------------- */
+html.dark .bg-white { background-color: var(--d-surface) !important; }
+html.dark .bg-\[\#EEF1F8\] { background-color: var(--d-page) !important; }
+html.dark .bg-\[\#D7DBE7\],
+html.dark .bg-\[\#CBD2E1\] { background-color: var(--d-raised-2) !important; }
+
+/* --- slate backgrounds (light greys) --------------------------------- */
+html.dark .bg-slate-50,
+html.dark .bg-slate-50\/50,
+html.dark .bg-slate-50\/60,
+html.dark .bg-slate-50\/70,
+html.dark .bg-slate-50\/80 { background-color: rgba(27, 35, 56, 0.7) !important; }
+
+html.dark .bg-slate-100,
+html.dark .bg-slate-100\/70,
+html.dark .bg-slate-100\/80 { background-color: var(--d-raised) !important; }
+
+html.dark .bg-slate-200,
+html.dark .bg-slate-200\/70,
+html.dark .bg-slate-200\/80 { background-color: var(--d-raised-2) !important; }
+
+html.dark .bg-slate-300 { background-color: #2c3750 !important; }
+html.dark .bg-slate-400 { background-color: #3a465f !important; }
+
+/* --- slate text (dark inks) → light inks ----------------------------- */
+html.dark .text-slate-900 { color: #f8fafc !important; }
+html.dark .text-slate-800 { color: #e8edf5 !important; }
+html.dark .text-slate-700 { color: #d4dbe8 !important; }
+html.dark .text-slate-600 { color: #aeb8c9 !important; }
+html.dark .text-slate-500 { color: #9aa5b8 !important; }
+html.dark .text-slate-400 { color: #8891a6 !important; }
+html.dark .text-slate-300 { color: #727d94 !important; }
+
+html.dark .placeholder-slate-400::placeholder { color: #64748b !important; }
+
+/* --- borders / rings / dividers -------------------------------------- */
+html.dark .border-slate-100,
+html.dark .border-slate-100\/90,
+html.dark .border-slate-200,
+html.dark .border-slate-200\/90,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-200\/60,
+html.dark .border-slate-300 { border-color: var(--d-border) !important; }
+
+html.dark .ring-slate-100 { --tw-ring-color: var(--d-border) !important; }
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: var(--d-border) !important; }
+
+/* --- card utilities that bake in white ------------------------------- */
+html.dark .card-3d {
+  background: var(--d-surface) !important;
+  border-color: var(--d-border) !important;
+}
+
+/* --- already-dark cards / tooltips: lift slightly off the dark page --- */
+html.dark .bg-slate-900 { background-color: #1c2740 !important; }
+html.dark .bg-slate-800 { background-color: #242f49 !important; }
+
+/* Keep the warm sunny selection readable in dark too */
+html.dark ::selection {
+  background-color: var(--color-brand-400);
+  color: var(--color-ink-950);
 }

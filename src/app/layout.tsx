@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Poppins } from "next/font/google";
+import { Cormorant_Garamond, Geist_Mono, Poppins } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { AuthProvider } from "@/providers/auth-provider";
@@ -18,6 +18,14 @@ const poppins = Poppins({
   weight: ["400", "500", "600"],
 });
 
+// An elegant high-contrast serif, used only for premium display moments
+// (the wordmark and the big "Login" heading on the auth screen).
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: { default: "Astra Astrology — Admin", template: "%s · Astra Admin" },
   description: "Admin and astrologer panel for Astra Astrology.",
@@ -34,8 +42,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${poppins.variable} ${geistMono.variable} h-full`}
+      className={`${poppins.variable} ${cormorant.variable} ${geistMono.variable} h-full`}
     >
+      <head>
+        {/* Apply the saved theme before first paint to avoid a flash. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("astra_theme");if(t==="dark"){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-full">
         <ThemeProvider>
           <QueryProvider>
