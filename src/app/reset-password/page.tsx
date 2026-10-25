@@ -15,7 +15,8 @@ function ResetPasswordForm() {
   const params = useSearchParams();
 
   const [email, setEmail] = React.useState(params.get("email") ?? "");
-  const [code, setCode] = React.useState(params.get("code") ?? "");
+  // Deliberately not read from the URL — the code has to come from the inbox.
+  const [code, setCode] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
   const [error, setError] = React.useState<ApiError | null>(null);
