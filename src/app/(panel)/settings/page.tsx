@@ -23,6 +23,7 @@ import {
 } from "@/components/ui";
 import { adminSettingsApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
+import { FeaturePricingCard } from "@/components/settings/feature-pricing-card";
 import { formatDateTime } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
 import {
@@ -182,6 +183,8 @@ export default function SettingsPage() {
       </Card>
 
       <RechargeLimitsCard settings={settings} />
+
+      <FeaturePricingCard settings={settings} />
 
       <ConsultationDefaultsCard settings={settings} />
 

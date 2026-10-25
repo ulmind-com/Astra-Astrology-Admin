@@ -42,6 +42,7 @@ import type {
   PaymentOrder,
   PaymentOrderStatus,
   PlatformSettings,
+  FeaturePricingUpdate,
   ProfileUpdate,
   RechargeOptions,
   ReconcileResult,
@@ -310,6 +311,9 @@ export const adminSettingsApi = {
     min_recharge_paise?: number;
     max_recharge_paise?: number;
   }) => api.patch<PlatformSettings>(endpoints.admin.rechargeLimits, body),
+
+  setFeaturePricing: (body: FeaturePricingUpdate) =>
+    api.patch<PlatformSettings>(endpoints.admin.featurePricing, body),
 };
 
 // ------------------------------------------------------------------- calls
