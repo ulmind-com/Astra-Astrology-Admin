@@ -242,6 +242,10 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           setPlatform(message.data);
           break;
 
+        case "feature_pricing":
+          void queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
+          break;
+
         case "wallet":
           // Patched rather than invalidated: an invalidation would refetch and
           // briefly show the old number again before the new one lands. The
