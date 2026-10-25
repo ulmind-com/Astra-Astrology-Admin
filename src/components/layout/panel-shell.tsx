@@ -322,18 +322,31 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
               onMouseEnter={() => setHoveredNav("cluster_status")}
               onMouseLeave={() => setHoveredNav(null)}
             >
-              <Link
-                href="/astrologers/new"
-                onClick={() => playNavFeedback()}
-                className="relative flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white shadow-md border border-slate-800 transition-all hover:scale-105 hover:border-slate-700 active:scale-95"
-                aria-label="Add Astrologer"
-              >
-                <Zap className="size-5 text-emerald-400" />
-                <span className="absolute -top-0.5 -right-0.5 flex size-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
-                </span>
-              </Link>
+              {user?.role === "astrologer" ? (
+                <div
+                  className="relative flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white shadow-md border border-slate-800"
+                  aria-label="Live Cluster"
+                >
+                  <Zap className="size-5 text-emerald-400" />
+                  <span className="absolute -top-0.5 -right-0.5 flex size-2.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
+                  </span>
+                </div>
+              ) : (
+                <Link
+                  href="/astrologers/new"
+                  onClick={() => playNavFeedback()}
+                  className="relative flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white shadow-md border border-slate-800 transition-all hover:scale-105 hover:border-slate-700 active:scale-95"
+                  aria-label="Add Astrologer"
+                >
+                  <Zap className="size-5 text-emerald-400" />
+                  <span className="absolute -top-0.5 -right-0.5 flex size-2.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
+                  </span>
+                </Link>
+              )}
 
               {hoveredNav === "cluster_status" && (
                 <div className="absolute left-[54px] top-1/2 -translate-y-1/2 z-50 pointer-events-none whitespace-nowrap rounded-xl bg-[#0F172A] px-3 py-2 text-xs text-white shadow-[0_10px_25px_rgba(0,0,0,0.3)] border border-slate-700/60 animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-0.5">
@@ -341,7 +354,9 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                     <span className="size-1.5 rounded-full bg-emerald-400" />
                     <span className="font-bold text-white">Live Cluster v2.4</span>
                   </div>
-                  <span className="text-[10px] text-slate-400 font-medium">+ Add Astrologer</span>
+                  {user?.role !== "astrologer" && (
+                    <span className="text-[10px] text-slate-400 font-medium">+ Add Astrologer</span>
+                  )}
                   <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 bg-[#0F172A] border-l border-b border-slate-700/60" />
                 </div>
               )}
@@ -370,11 +385,13 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                   </p>
                 </div>
 
-                <Link href="/astrologers/new" onClick={() => playNavFeedback()} className="block pt-1">
-                  <button className="w-full rounded-xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] py-2 text-[11px] font-bold text-white shadow-md transition-all duration-200 hover:from-[#B45309] hover:to-[#D97706] active:scale-95 cursor-pointer">
-                    + Add Astrologer
-                  </button>
-                </Link>
+                {user?.role !== "astrologer" && (
+                  <Link href="/astrologers/new" onClick={() => playNavFeedback()} className="block pt-1">
+                    <button className="w-full rounded-xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] py-2 text-[11px] font-bold text-white shadow-md transition-all duration-200 hover:from-[#B45309] hover:to-[#D97706] active:scale-95 cursor-pointer">
+                      + Add Astrologer
+                    </button>
+                  </Link>
+                )}
               </div>
             </div>
           )}
