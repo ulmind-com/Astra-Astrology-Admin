@@ -7,20 +7,41 @@ import Image from "next/image";
  * The logo is a light mark on transparency, so it sits on the night sky
  * without a plate behind it. Kept quiet by default and lit on hover: a credit
  * should be findable, not louder than the product.
+ *
+ * `variant`:
+ *   "auto"  — follows the theme via semantic tokens (default; for app chrome).
+ *   "light" — fixed clear styling for a known light surface (e.g. the login
+ *             card) so it stays readable regardless of the chosen theme.
  */
-export function UlmindCredit({ className }: { className?: string }) {
+export function UlmindCredit({
+  className,
+  variant = "auto",
+}: {
+  className?: string;
+  variant?: "auto" | "light";
+}) {
+  const isLight = variant === "light";
+
   return (
     <a
       href="https://ulmind.com"
       target="_blank"
       rel="noopener noreferrer"
       className={[
-        "group inline-flex items-center gap-2.5 rounded-full border border-border",
-        "bg-surface-muted/60 px-4 py-2 transition-colors hover:border-border-strong",
+        "group inline-flex items-center gap-2.5 rounded-full border transition-colors",
+        "px-4 py-2",
+        isLight
+          ? "border-[#EADFBE] bg-[#FBF6E9] hover:border-[#E0B63C]"
+          : "border-border bg-surface-muted/60 hover:border-border-strong",
         className ?? "",
       ].join(" ")}
     >
-      <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+      <span
+        className={[
+          "text-[11px] font-semibold uppercase tracking-[0.14em]",
+          isLight ? "text-[#8a6a12]" : "text-muted-foreground",
+        ].join(" ")}
+      >
         Designed &amp; developed by
       </span>
       <Image
