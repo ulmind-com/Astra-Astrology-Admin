@@ -16,6 +16,7 @@ import { Alert, Year } from "@/components/ui";
 import { UlmindCredit } from "@/components/ulmind-credit";
 import { authApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
+import { apiBase } from "@/lib/env";
 import { playNavFeedback } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
@@ -176,6 +177,19 @@ function LoginForm() {
     if (loading || !user) return;
     router.replace(user.role === "astrologer" ? "/me" : "/dashboard");
   }, [user, loading, router]);
+
+  // The API is on a platform that sleeps when idle, so the first request after
+  // a while pays a cold-start of several seconds — which is exactly the login
+  // tap. Wake it the moment this page opens, in the background, so the backend
+  // is warm by the time credentials are submitted. Fire-and-forget: a failure
+  // here changes nothing, the real login still reports its own errors.
+  React.useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${apiBase}/health`, { signal: controller.signal, cache: "no-store" }).catch(
+      () => {},
+    );
+    return () => controller.abort();
+  }, []);
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
