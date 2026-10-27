@@ -285,10 +285,10 @@ function LoginForm() {
               </span>
               <div className="leading-tight">
                 <p className="font-serif-display text-lg font-semibold tracking-wide text-[#8a6a12]">
-                  ASTRA
+                  DIVINLINK
                 </p>
                 <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#B4871A]">
-                  Astrology
+                  Astrology & Consult
                 </p>
               </div>
             </div>
@@ -303,7 +303,7 @@ function LoginForm() {
             {/* footer bottom-left: copyright + ULMIND credit */}
             <div className="absolute bottom-12 left-12 space-y-3">
               <p className="text-[11px] font-medium leading-relaxed text-[#a9975f]">
-                © <Year /> Astra Astrology
+                © <Year /> DivinLink
                 <br />
                 Verified Consultation Platform
               </p>
@@ -324,7 +324,7 @@ function LoginForm() {
                 <Sparkles className="size-5 text-[#2a2109]" />
               </span>
               <span className="font-serif-display text-lg font-semibold tracking-wide text-white">
-                Astra Astrology
+                DivinLink
               </span>
             </div>
           </div>
