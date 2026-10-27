@@ -27,8 +27,8 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Astra Astrology — Admin", template: "%s · Astra Admin" },
-  description: "Admin and astrologer panel for Astra Astrology.",
+  title: { default: "DivinLink — Admin", template: "%s · DivinLink Admin" },
+  description: "Admin and astrologer panel for DivinLink.",
   robots: { index: false, follow: false },
   icons: {
     icon: "/icon.svg",

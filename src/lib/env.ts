@@ -30,7 +30,7 @@ export const env = {
     DEPLOYED_API_URL,
   ).replace(/\/+$/, ""),
   apiPrefix: process.env.NEXT_PUBLIC_API_PREFIX ?? "/api/v1",
-  appName: process.env.NEXT_PUBLIC_APP_NAME ?? "Astra Astrology",
+  appName: process.env.NEXT_PUBLIC_APP_NAME ?? "DivinLink",
   isProduction: process.env.NODE_ENV === "production",
 } as const;
 

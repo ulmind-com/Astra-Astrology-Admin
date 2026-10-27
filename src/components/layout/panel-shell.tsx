@@ -246,7 +246,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
 
                 {hoveredNav === "brand_logo" && (
                   <div className="absolute left-[54px] top-1/2 -translate-y-1/2 z-50 pointer-events-none whitespace-nowrap rounded-xl bg-[#0F172A] px-3 py-1.5 text-xs font-bold text-white shadow-[0_10px_25px_rgba(0,0,0,0.3)] border border-slate-700/60 animate-in fade-in zoom-in-95 duration-150 flex items-center gap-1.5">
-                    <span>Astra Astrology • Click to expand</span>
+                    <span>DivinLink • Click to expand</span>
                     <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 bg-[#0F172A] border-l border-b border-slate-700/60" />
                   </div>
                 )}
@@ -270,7 +270,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                   </div>
                   <div className="flex flex-col">
                     <span className="font-display text-lg font-black tracking-tight text-slate-900 leading-tight">
-                      Astra Astrology
+                      DivinLink
                     </span>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-tight">
                       {user?.role === "astrologer" ? "Astrologer" : "Super Admin"}
@@ -381,7 +381,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
 
                 <div>
                   <h4 className="font-display text-xs font-bold text-white leading-tight">
-                    Astra Astrology Core
+                    DivinLink Core
                   </h4>
                   <p className="mt-0.5 text-[10px] font-medium leading-relaxed text-slate-400">
                     Voice, chat & palm reading engine connected
