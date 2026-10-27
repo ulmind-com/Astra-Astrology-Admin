@@ -200,6 +200,12 @@ export type PlatformSettings = S["PlatformSettingsOut"] & {
   nakshatra_calculator_enabled?: boolean;
   palm_reading_coins?: number;
   palm_reading_enabled?: boolean;
+  face_reading_coins?: number;
+  face_reading_enabled?: boolean;
+  numerology_coins?: number;
+  numerology_enabled?: boolean;
+  vastu_coins?: number;
+  vastu_enabled?: boolean;
 };
 
 export interface FeaturePricingItem {
@@ -230,6 +236,10 @@ export interface FeaturePricingUpdate {
   palm_reading_enabled?: boolean;
   face_reading_coins?: number;
   face_reading_enabled?: boolean;
+  numerology_coins?: number;
+  numerology_enabled?: boolean;
+  vastu_coins?: number;
+  vastu_enabled?: boolean;
 }
 
 export type CoinRateChange = S["CoinRateChangeOut"];
