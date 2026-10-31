@@ -3,7 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   CalendarDays,
+  CheckCircle2,
   Filter,
+  Heart,
   MessageCircle,
   MessageSquare,
   Phone,
@@ -11,6 +13,7 @@ import {
   Search,
   Sparkles,
   Star,
+  ThumbsUp,
   User,
   Video,
 } from "lucide-react";
@@ -20,373 +23,420 @@ import { Avatar, LoadingBlock } from "@/components/ui";
 import { reviewApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { cn, formatDateTime, timeAgo } from "@/lib/utils";
-import { useAuth, useRequireAuth } from "@/providers/auth-provider";
-import {
-  REVIEW_KIND_LABELS,
-  type Review,
-  type ReviewKind,
-} from "@/types";
+import { useRequireAuth } from "@/providers/auth-provider";
+import type { Review, ReviewKind } from "@/types";
+
+type FilterTab = "all" | ReviewKind;
 
 function getKindBadge(kind: ReviewKind) {
-  if (kind === "chat") {
-    return {
-      label: "Live Chat",
-      icon: MessageCircle,
-      className: "bg-amber-50 text-amber-800 border-amber-200/80",
-    };
+  switch (kind) {
+    case "chat":
+      return {
+        label: "Live Chat",
+        icon: MessageCircle,
+        className: "bg-amber-50 text-amber-800 border-amber-200/80",
+      };
+    case "call":
+      return {
+        label: "Voice Call",
+        icon: Phone,
+        className: "bg-emerald-50 text-emerald-800 border-emerald-200/80",
+      };
+    case "video":
+      return {
+        label: "Video Call",
+        icon: Video,
+        className: "bg-purple-50 text-purple-800 border-purple-200/80",
+      };
+    case "appointment":
+      return {
+        label: "Appointment",
+        icon: CalendarDays,
+        className: "bg-sky-50 text-sky-800 border-sky-200/80",
+      };
+    default:
+      return {
+        label: "Consultation",
+        icon: MessageSquare,
+        className: "bg-slate-50 text-slate-700 border-slate-200",
+      };
   }
-  if (kind === "call") {
-    return {
-      label: "Voice Call",
-      icon: Phone,
-      className: "bg-emerald-50 text-emerald-800 border-emerald-200/80",
-    };
-  }
-  if (kind === "video") {
-    return {
-      label: "Video Call",
-      icon: Video,
-      className: "bg-purple-50 text-purple-800 border-purple-200/80",
-    };
-  }
-  return {
-    label: "Appointment",
-    icon: CalendarDays,
-    className: "bg-blue-50 text-blue-800 border-blue-200/80",
-  };
 }
 
-export default function ReviewsPage() {
-  const { user } = useAuth();
+export default function AstrologerReviewsPage() {
   const { ready } = useRequireAuth({
     roles: ["astrologer", "admin", "super_admin"],
     signInPath: "/login",
   });
 
-  const [starFilter, setStarFilter] = React.useState<number | "all">("all");
-  const [kindFilter, setKindFilter] = React.useState<ReviewKind | "all">("all");
+  const [activeTab, setActiveTab] = React.useState<FilterTab>("all");
+  const [starFilter, setStarFilter] = React.useState<number | 0>(0);
   const [search, setSearch] = React.useState("");
 
   const reviewsQuery = useQuery({
-    queryKey: ["reviews", "astrologer", "me"],
-    queryFn: () => reviewApi.forMe({ limit: 100 }),
+    queryKey: ["astrologer", "reviews", "mine"],
+    queryFn: () => reviewApi.myReviews({ limit: 100 }),
     enabled: ready,
+    refetchInterval: 15000,
   });
 
-  if (!ready || reviewsQuery.isLoading) {
-    return <LoadingBlock label="Loading client feedback and reviews…" />;
+  if (!ready) return <LoadingBlock />;
+  if (reviewsQuery.isLoading) {
+    return <LoadingBlock label="Loading verified client feedback & ratings…" />;
   }
-
   if (reviewsQuery.error) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm font-semibold text-rose-700">
-        {(reviewsQuery.error as ApiError).message || "Failed to load reviews."}
+      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm font-semibold text-rose-700">
+        {(reviewsQuery.error as ApiError).message || "Failed to load reviews"}
       </div>
     );
   }
 
   const reviewData = reviewsQuery.data;
-  const items = reviewData?.items ?? [];
-  const summary = reviewData?.summary ?? {
-    average: 0,
-    count: 0,
-    breakdown: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+  const items: Review[] = (reviewData?.items as Review[]) || [];
+  const summary = reviewData?.summary || { average: 5.0, count: 0, breakdown: {} };
+  const totalCount = summary.count || items.length;
+  const avgRating = summary.average ? Number(summary.average.toFixed(1)) : 5.0;
+
+  // Breakdown counts for 5 down to 1
+  const breakdown: Record<number, number> = {
+    5: summary.breakdown?.["5"] ?? items.filter((r) => r.stars === 5).length,
+    4: summary.breakdown?.["4"] ?? items.filter((r) => r.stars === 4).length,
+    3: summary.breakdown?.["3"] ?? items.filter((r) => r.stars === 3).length,
+    2: summary.breakdown?.["2"] ?? items.filter((r) => r.stars === 2).length,
+    1: summary.breakdown?.["1"] ?? items.filter((r) => r.stars === 1).length,
   };
 
-  const filteredItems = items.filter((r) => {
-    if (starFilter !== "all" && r.stars !== starFilter) return false;
-    if (kindFilter !== "all" && r.kind !== kindFilter) return false;
+  // 4 & 5 stars percentage
+  const positiveReviews = (breakdown[5] || 0) + (breakdown[4] || 0);
+  const positiveRate = totalCount > 0 ? Math.round((positiveReviews / totalCount) * 100) : 100;
+
+  // Filtered reviews
+  const filtered = items.filter((rev) => {
+    if (activeTab !== "all" && rev.kind !== activeTab) return false;
+    if (starFilter > 0 && rev.stars !== starFilter) return false;
     if (search.trim()) {
       const q = search.toLowerCase();
-      const matchAuthor = (r.author_name || "").toLowerCase().includes(q);
-      const matchText = (r.text || "").toLowerCase().includes(q);
-      if (!matchAuthor && !matchText) return false;
+      const matchName = rev.author_name?.toLowerCase().includes(q);
+      const matchText = rev.text?.toLowerCase().includes(q);
+      if (!matchName && !matchText) return false;
     }
     return true;
   });
 
-  const totalReviews = summary.count || items.length;
-  const breakdown = summary.breakdown || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-6 pb-20">
+      {/* ── HEADER ── */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="flex size-8 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 text-white shadow-xs">
-              <Star className="size-4.5 fill-white" />
+            <span className="flex size-8 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#D97706] to-[#F59E0B] text-white shadow-xs">
+              <Star className="size-4.5 fill-current" />
             </span>
-            <h2 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-slate-900 leading-tight">
-              Client Feedback & Reviews
-            </h2>
+            <div className="flex items-center gap-2">
+              <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-slate-900 leading-tight">
+                Reviews & Client Feedback
+              </h1>
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-800">
+                <Sparkles className="size-3 text-amber-600" />
+                VERIFIED CLIENTS
+              </span>
+            </div>
           </div>
-          <p className="mt-1 text-xs font-semibold text-slate-400">
-            Ratings and feedback submitted by clients for your chat, call, and video consultations.
+          <p className="mt-1 text-xs font-semibold text-slate-500">
+            Real feedback and ratings submitted by clients following consultations across chat, voice, video, and appointments.
           </p>
         </div>
 
         <button
           onClick={() => void reviewsQuery.refetch()}
           disabled={reviewsQuery.isFetching}
-          className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs disabled:opacity-50"
+          className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
         >
-          <RefreshCw className={cn("size-3.5", reviewsQuery.isFetching && "animate-spin")} />
+          <RefreshCw className={cn("size-3.5", reviewsQuery.isFetching && "animate-spin text-[#D97706]")} />
           <span>Refresh</span>
         </button>
       </div>
 
-      {/* Ratings Overview Hero Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Rating Score Hero Card */}
-        <div className="relative overflow-hidden rounded-[26px] bg-gradient-to-br from-[#92400E] via-[#D97706] to-[#F59E0B] p-6 text-white shadow-[0_14px_30px_-6px_rgba(217,119,6,0.35)] flex flex-col justify-between">
-          <div className="pointer-events-none absolute -right-6 -bottom-6 size-36 rounded-full bg-white/10 blur-xl" />
+      {/* ── TOP STATS MATRIX (3 CARDS) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Card 1: Overall Average Rating */}
+        <div className="rounded-[26px] bg-gradient-to-br from-amber-500 to-amber-600 p-6 text-white shadow-[0_12px_32px_rgba(217,119,6,0.25)] flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-md px-3 py-1 text-xs font-bold text-white">
-              <Sparkles className="size-3.5" />
-              <span>Overall Rating</span>
+            <span className="rounded-full bg-white/20 backdrop-blur-md px-3 py-1 text-[11px] font-black uppercase tracking-wider text-white">
+              Overall Rating
             </span>
-            <span className="text-[11px] font-bold text-white/80">
-              {totalReviews} verified {totalReviews === 1 ? "review" : "reviews"}
-            </span>
+            <Star className="size-5 fill-white text-white opacity-80" />
           </div>
 
-          <div className="my-4">
+          <div className="my-3">
             <div className="flex items-baseline gap-2">
-              <span className="font-display text-5xl sm:text-6xl font-black tracking-tight leading-none">
-                {summary.average > 0 ? summary.average.toFixed(1) : "5.0"}
+              <span className="font-display text-5xl font-black tracking-tight leading-none">
+                {avgRating}
               </span>
-              <span className="text-xl font-bold text-white/70">/ 5.0</span>
+              <span className="text-xl font-bold text-amber-100">/ 5.0</span>
             </div>
             <div className="flex items-center gap-1 mt-2">
-              {[1, 2, 3, 4, 5].map((star) => (
+              {[1, 2, 3, 4, 5].map((s) => (
                 <Star
-                  key={star}
+                  key={s}
                   className={cn(
-                    "size-5",
-                    star <= Math.round(summary.average || 5)
+                    "size-4.5",
+                    s <= Math.round(avgRating)
                       ? "fill-white text-white"
-                      : "fill-white/30 text-white/30"
+                      : "fill-white/30 text-transparent"
                   )}
                 />
               ))}
+              <span className="ml-2 text-xs font-bold text-amber-100">
+                ({totalCount} {totalCount === 1 ? "review" : "reviews"})
+              </span>
             </div>
           </div>
 
-          <p className="text-xs font-medium text-white/80">
-            Calculated across all completed consultations. Hidden reviews are excluded.
+          <p className="text-[11px] font-medium text-amber-100/90">
+            Based on all verified consultations on the platform.
           </p>
         </div>
 
-        {/* Rating Breakdown Bars Card */}
-        <div className="lg:col-span-2 rounded-[26px] bg-white p-6 border border-slate-100/90 shadow-[0_10px_28px_rgba(20,25,45,0.03)] flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="font-display text-sm font-bold text-slate-900">
+        {/* Card 2: Star Rating Distribution Breakdown */}
+        <div className="rounded-[26px] bg-white p-6 border border-slate-100/90 shadow-[0_10px_28px_rgba(20,25,45,0.03)] flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h3 className="font-display text-xs font-bold uppercase tracking-wider text-slate-400">
               Rating Distribution
             </h3>
-            <span className="text-xs text-slate-400 font-medium">
-              Client Satisfaction
+            <span className="text-xs font-bold text-slate-700 font-mono">
+              {totalCount} Total
             </span>
           </div>
 
-          <div className="space-y-2.5 my-3">
+          <div className="space-y-1.5 py-2">
             {[5, 4, 3, 2, 1].map((stars) => {
               const count = breakdown[stars] || 0;
-              const percent = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
+              const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
               return (
-                <div key={stars} className="flex items-center gap-3 text-xs">
-                  <div className="flex items-center gap-1 w-14 shrink-0 font-bold text-slate-700">
-                    <span>{stars}</span>
-                    <Star className="size-3 fill-amber-400 text-amber-400" />
-                  </div>
-                  <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+                <button
+                  key={stars}
+                  type="button"
+                  onClick={() => setStarFilter((prev) => (prev === stars ? 0 : stars))}
+                  className={cn(
+                    "w-full flex items-center gap-2 text-xs py-0.5 rounded-lg transition-all text-left group cursor-pointer",
+                    starFilter === stars && "bg-amber-50 px-1 font-bold"
+                  )}
+                >
+                  <span className="w-8 font-bold text-slate-700 flex items-center gap-1 font-mono">
+                    {stars} <Star className="size-3 fill-amber-500 text-amber-500" />
+                  </span>
+                  <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden relative">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-500"
-                      style={{ width: `${percent}%` }}
+                      className="h-full bg-amber-500 rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="w-10 text-right font-mono font-bold text-slate-600 shrink-0">
+                  <span className="w-8 text-right font-mono text-[11px] text-slate-400 group-hover:text-slate-700">
                     {count}
                   </span>
-                  <span className="w-12 text-right text-[11px] text-slate-400 shrink-0">
-                    {percent}%
-                  </span>
-                </div>
+                </button>
               );
             })}
           </div>
 
-          <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-100 flex items-center justify-between">
-            <span>Client reviews update automatically after every consultation rating.</span>
+          <p className="text-[10px] text-slate-400">
+            Click any star level to filter reviews below.
+          </p>
+        </div>
+
+        {/* Card 3: Satisfaction Insight */}
+        <div className="rounded-[26px] bg-white p-6 border border-slate-100/90 shadow-[0_10px_28px_rgba(20,25,45,0.03)] flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <div className="flex size-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+              <ThumbsUp className="size-5 stroke-[2.2]" />
+            </div>
+            <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
+              Client Satisfaction
+            </span>
+          </div>
+
+          <div className="my-3">
+            <p className="text-xs font-semibold text-slate-400">Positive Feedback</p>
+            <h3 className="font-display text-4xl font-black tracking-tight text-emerald-600 leading-tight">
+              {positiveRate}%
+            </h3>
+            <p className="mt-1 text-xs text-slate-500 font-medium">
+              Rated 4 or 5 stars by {positiveReviews} satisfied clients.
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100 text-[11px] text-slate-600 flex items-start gap-2">
+            <Sparkles className="size-3.5 text-amber-500 shrink-0 mt-0.5" />
+            <span>High ratings improve your ranking in directory search and client discovery.</span>
           </div>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="rounded-2xl bg-white border border-slate-100/90 p-4 shadow-xs space-y-3">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          {/* Search Input */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by client name or feedback text…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
-            />
-          </div>
-
-          {/* Star Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="text-[11px] font-bold text-slate-400 mr-1 flex items-center gap-1">
-              <Filter className="size-3" />
-              <span>Stars:</span>
-            </span>
+      {/* ── FILTER & SEARCH TOOLBAR ── */}
+      <div className="rounded-2xl bg-white border border-slate-100 p-3 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+        {/* Consultation Mode Tabs */}
+        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+          {(
+            [
+              { key: "all", label: "All Reviews" },
+              { key: "chat", label: "Live Chat" },
+              { key: "call", label: "Voice Call" },
+              { key: "video", label: "Video Call" },
+              { key: "appointment", label: "Appointments" },
+            ] as const
+          ).map((tab) => (
             <button
-              onClick={() => setStarFilter("all")}
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
               className={cn(
-                "px-2.5 py-1 rounded-lg font-bold text-xs transition-colors",
-                starFilter === "all"
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                "rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer",
+                activeTab === tab.key
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "bg-slate-50 text-slate-600 hover:bg-slate-100"
               )}
             >
-              All
-            </button>
-            {[5, 4, 3, 2, 1].map((s) => (
-              <button
-                key={s}
-                onClick={() => setStarFilter(s)}
-                className={cn(
-                  "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold text-xs transition-colors",
-                  starFilter === s
-                    ? "bg-amber-500 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                )}
-              >
-                <span>{s}</span>
-                <Star className={cn("size-3", starFilter === s ? "fill-white" : "fill-amber-400 text-amber-400")} />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Consultation Mode Filter */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 text-xs">
-          <span className="text-[11px] font-bold text-slate-400 mr-1">Consultation Mode:</span>
-          {(["all", "chat", "call", "video", "appointment"] as const).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setKindFilter(mode)}
-              className={cn(
-                "px-2.5 py-1 rounded-lg font-bold text-xs capitalize transition-colors",
-                kindFilter === mode
-                  ? "bg-slate-800 text-white shadow-xs"
-                  : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100"
-              )}
-            >
-              {mode === "all" ? "All Modes" : REVIEW_KIND_LABELS[mode] || mode}
+              {tab.label}
             </button>
           ))}
-          {(starFilter !== "all" || kindFilter !== "all" || search) && (
+        </div>
+
+        {/* Search input & Active Filters */}
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {starFilter > 0 && (
             <button
-              onClick={() => {
-                setStarFilter("all");
-                setKindFilter("all");
-                setSearch("");
-              }}
-              className="ml-auto text-[11px] font-bold text-amber-700 hover:text-amber-800"
+              onClick={() => setStarFilter(0)}
+              className="inline-flex items-center gap-1 rounded-xl bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-bold text-amber-800 cursor-pointer hover:bg-amber-100"
             >
-              Reset Filters
+              <span>{starFilter} ★ only</span>
+              <span className="text-amber-500 ml-1">×</span>
             </button>
           )}
+
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by client or keyword..."
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-8 pr-3 py-1.5 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-amber-500 focus:outline-hidden"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Review Cards Grid / List */}
-      {filteredItems.length === 0 ? (
-        <div className="rounded-[28px] bg-white border border-slate-100/90 p-12 text-center shadow-xs">
-          <div className="flex size-14 items-center justify-center rounded-full bg-amber-50 text-amber-600 mx-auto mb-3">
-            <Star className="size-6 stroke-[1.8]" />
+      {/* ── REVIEWS FEEDBACK LIST ── */}
+      {filtered.length === 0 ? (
+        <div className="rounded-[28px] bg-white border border-slate-100 p-12 text-center shadow-xs">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 mb-3">
+            <MessageSquare className="size-6" />
           </div>
-          <h4 className="font-display text-base font-bold text-slate-900">
-            No reviews found
-          </h4>
+          <h3 className="font-display text-base font-bold text-slate-900">
+            {items.length === 0 ? "No Client Reviews Yet" : "No Matching Reviews"}
+          </h3>
           <p className="mt-1 text-xs text-slate-400 max-w-sm mx-auto">
             {items.length === 0
-              ? "You have not received any client reviews yet. Reviews will appear here once clients complete consultations."
-              : "No reviews match your selected star or mode filters. Try resetting the filters."}
+              ? "When clients complete consultations and submit ratings or testimonials, they will appear here."
+              : "Try adjusting your filter or search query to see other client reviews."}
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredItems.map((r) => {
-            const badge = getKindBadge(r.kind);
-            const KindIcon = badge.icon;
+          {filtered.map((review) => {
+            const badge = getKindBadge(review.kind);
+            const Icon = badge.icon;
+            const hasText = Boolean(review.text && review.text.trim().length > 0);
+
             return (
               <div
-                key={r.id}
-                className="rounded-[24px] bg-white border border-slate-100 p-5 shadow-[0_8px_24px_rgba(20,25,45,0.02)] hover:shadow-[0_12px_30px_rgba(20,25,45,0.05)] transition-all flex flex-col justify-between"
+                key={review.id}
+                className="rounded-[24px] bg-white border border-slate-100/90 p-5 shadow-[0_6px_20px_rgba(20,25,45,0.03)] hover:shadow-md hover:border-amber-200/60 transition-all flex flex-col justify-between"
               >
                 <div>
-                  {/* Top: Author, Stars & Mode */}
-                  <div className="flex items-start justify-between gap-3 mb-3">
+                  {/* Top Header: Client Info & Session Mode */}
+                  <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-3">
                       <Avatar
-                        src={r.author_avatar_url}
-                        name={r.author_name || "Client"}
-                        className="size-10 ring-2 ring-slate-100"
+                        src={review.author_avatar || review.author_avatar_url}
+                        name={review.author_name || "Verified Client"}
+                        size="md"
+                        className="size-10 rounded-2xl shadow-xs"
                       />
                       <div>
-                        <h4 className="font-bold text-sm text-slate-900">
-                          {r.author_name || "Client"}
+                        <h4 className="font-display text-xs font-bold text-slate-900">
+                          {review.author_name || "Verified Client"}
                         </h4>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={cn(
-                                "size-3.5",
-                                star <= r.stars
-                                  ? "fill-amber-400 text-amber-400"
-                                  : "fill-slate-100 text-slate-200"
-                              )}
-                            />
-                          ))}
-                          <span className="ml-1 text-[11px] font-bold text-slate-700">
-                            {r.stars}.0
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-bold",
+                              badge.className
+                            )}
+                          >
+                            <Icon className="size-3" />
+                            {badge.label}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            • {timeAgo(review.created_at)}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Mode Badge */}
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-[11px] font-bold shrink-0",
-                        badge.className
-                      )}
-                    >
-                      <KindIcon className="size-3" />
-                      {badge.label}
-                    </span>
+                    {/* Star Rating Badge */}
+                    <div className="flex items-center gap-1 rounded-xl bg-amber-50 px-2.5 py-1 border border-amber-200/80 shrink-0">
+                      <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                      <span className="font-mono text-xs font-black text-amber-900">
+                        {review.stars}.0
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Feedback Text */}
-                  <div className="rounded-xl bg-slate-50/70 p-3.5 border border-slate-100 text-xs text-slate-700 leading-relaxed font-medium">
-                    {r.text ? (
-                      <p className="italic">&ldquo;{r.text}&rdquo;</p>
+                  {/* Star row */}
+                  <div className="flex items-center gap-1 pt-3">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        className={cn(
+                          "size-3.5",
+                          s <= review.stars
+                            ? "fill-amber-400 text-amber-400"
+                            : "fill-slate-100 text-slate-200"
+                        )}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Feedback Message Body - NEVER FAKE TEXT */}
+                  <div className="mt-2.5">
+                    {hasText ? (
+                      <blockquote className="rounded-xl bg-amber-50/40 border border-amber-100/60 p-3 text-xs leading-relaxed text-slate-800 font-medium italic">
+                        &ldquo;{review.text}&rdquo;
+                      </blockquote>
                     ) : (
-                      <p className="text-slate-400 italic">No written comment left with this rating.</p>
+                      <p className="text-xs italic text-slate-400 py-1">
+                        Rated {review.stars} stars without written comments.
+                      </p>
                     )}
                   </div>
                 </div>
 
-                {/* Footer: Date and details */}
-                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-                  <span>{formatDateTime(r.created_at)}</span>
-                  <span>{timeAgo(r.created_at)}</span>
+                {/* Footer timestamp & insight */}
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{formatDateTime(review.created_at)}</span>
+                  {review.stars >= 4 ? (
+                    <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
+                      <CheckCircle2 className="size-3 text-emerald-600" />
+                      Satisfied Client
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-amber-700 font-bold">
+                      <Sparkles className="size-3 text-amber-600" />
+                      Actionable Feedback
+                    </span>
+                  )}
                 </div>
               </div>
             );

@@ -48,7 +48,7 @@ import { astrologerApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
-import type { AstrologerUpdate, Skill } from "@/types";
+import type { AstrologerProfile, AstrologerUpdate, Skill } from "@/types";
 
 const ME_KEY = ["astrologer", "me"] as const;
 
@@ -192,9 +192,26 @@ export default function AstrologerPanelPage() {
   async function addGalleryImage(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file (JPEG, PNG, WebP).");
+      if (galleryRef.current) galleryRef.current.value = "";
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image file size must be under 10MB.");
+      if (galleryRef.current) galleryRef.current.value = "";
+      return;
+    }
+
     setUploadingGallery(true);
     try {
-      await astrologerApi.addGalleryImage(file);
+      const res = await astrologerApi.addGalleryImage(file);
+      queryClient.setQueryData(ME_KEY, (prev: AstrologerProfile | undefined) => {
+        if (!prev) return prev;
+        return { ...prev, gallery: res.gallery };
+      });
       await queryClient.invalidateQueries({ queryKey: ME_KEY });
       toast.success("Photo added to your astrologer gallery!");
     } catch (caught) {
@@ -208,6 +225,13 @@ export default function AstrologerPanelPage() {
   async function removeGalleryImage(publicId: string) {
     try {
       await astrologerApi.removeGalleryImage(publicId);
+      queryClient.setQueryData(ME_KEY, (prev: AstrologerProfile | undefined) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          gallery: prev.gallery.filter((img) => img.public_id !== publicId),
+        };
+      });
       await queryClient.invalidateQueries({ queryKey: ME_KEY });
       toast.success("Gallery photo deleted.");
     } catch (caught) {
@@ -432,6 +456,17 @@ export default function AstrologerPanelPage() {
 
                 {/* Metadata badges with high contrast */}
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1 text-xs">
+                  <Link
+                    href="/reviews"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 border border-amber-200/80 px-2.5 py-1 font-bold text-amber-800 hover:bg-amber-100 transition-colors"
+                  >
+                    <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                    <span>
+                      {profile.rating?.average ? profile.rating.average.toFixed(1) : "5.0"} ★ (
+                      {profile.rating?.count ?? 0} reviews)
+                    </span>
+                  </Link>
+
                   <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100/90 border border-slate-200/80 px-2.5 py-1 font-bold text-slate-700">
                     <Award className="size-3.5 text-amber-600" />
                     <span>{profile.experience_years} Years Experience</span>
@@ -475,6 +510,38 @@ export default function AstrologerPanelPage() {
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ------------------------------------------------ REVIEWS & FEEDBACK QUICK GLANCE */}
+      <div className="relative overflow-hidden rounded-3xl border border-amber-200/80 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-amber-500/10 p-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-xs">
+              <Star className="size-5 fill-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-display text-sm font-bold text-slate-900">
+                  Client Rating & Feedback
+                </h3>
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 px-2 py-0.5 text-[10px] font-black text-amber-900">
+                  ★ {profile.rating?.average ? profile.rating.average.toFixed(1) : "5.0"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {profile.rating?.count ?? 0} verified client {profile.rating?.count === 1 ? "review" : "reviews"} across chat, calls, and appointments.
+              </p>
+            </div>
+          </div>
+          <Link href="/reviews">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] px-4 py-2.5 text-xs font-bold text-white shadow-md hover:from-amber-600 hover:to-amber-500 hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+            >
+              <span>All Reviews →</span>
+            </button>
+          </Link>
         </div>
       </div>
 

@@ -85,6 +85,7 @@ export const endpoints = {
     mine: "/reviews/mine",
     forMe: "/reviews/astrologer/me",
     forAstrologer: (id: string) => `/reviews/astrologers/${id}`,
+    myAstrologerReviews: "/reviews/astrologer/me",
     hide: (id: string) => `/admin/reviews/${id}/hidden`,
   },
 
