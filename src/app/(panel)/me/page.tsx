@@ -48,7 +48,7 @@ import { astrologerApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
-import type { AstrologerUpdate, Skill } from "@/types";
+import type { AstrologerProfile, AstrologerUpdate, Skill } from "@/types";
 
 const ME_KEY = ["astrologer", "me"] as const;
 
@@ -192,9 +192,26 @@ export default function AstrologerPanelPage() {
   async function addGalleryImage(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file (JPEG, PNG, WebP).");
+      if (galleryRef.current) galleryRef.current.value = "";
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image file size must be under 10MB.");
+      if (galleryRef.current) galleryRef.current.value = "";
+      return;
+    }
+
     setUploadingGallery(true);
     try {
-      await astrologerApi.addGalleryImage(file);
+      const res = await astrologerApi.addGalleryImage(file);
+      queryClient.setQueryData(ME_KEY, (prev: AstrologerProfile | undefined) => {
+        if (!prev) return prev;
+        return { ...prev, gallery: res.gallery };
+      });
       await queryClient.invalidateQueries({ queryKey: ME_KEY });
       toast.success("Photo added to your astrologer gallery!");
     } catch (caught) {
@@ -208,6 +225,13 @@ export default function AstrologerPanelPage() {
   async function removeGalleryImage(publicId: string) {
     try {
       await astrologerApi.removeGalleryImage(publicId);
+      queryClient.setQueryData(ME_KEY, (prev: AstrologerProfile | undefined) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          gallery: prev.gallery.filter((img) => img.public_id !== publicId),
+        };
+      });
       await queryClient.invalidateQueries({ queryKey: ME_KEY });
       toast.success("Gallery photo deleted.");
     } catch (caught) {
