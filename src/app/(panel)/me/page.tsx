@@ -432,6 +432,17 @@ export default function AstrologerPanelPage() {
 
                 {/* Metadata badges with high contrast */}
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1 text-xs">
+                  <Link
+                    href="/reviews"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 border border-amber-200/80 px-2.5 py-1 font-bold text-amber-800 hover:bg-amber-100 transition-colors"
+                  >
+                    <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                    <span>
+                      {profile.rating?.average ? profile.rating.average.toFixed(1) : "5.0"} ★ (
+                      {profile.rating?.count ?? 0} reviews)
+                    </span>
+                  </Link>
+
                   <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100/90 border border-slate-200/80 px-2.5 py-1 font-bold text-slate-700">
                     <Award className="size-3.5 text-amber-600" />
                     <span>{profile.experience_years} Years Experience</span>
@@ -475,6 +486,38 @@ export default function AstrologerPanelPage() {
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ------------------------------------------------ REVIEWS & FEEDBACK QUICK GLANCE */}
+      <div className="relative overflow-hidden rounded-3xl border border-amber-200/80 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-amber-500/10 p-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-xs">
+              <Star className="size-5 fill-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-display text-sm font-bold text-slate-900">
+                  Client Rating & Feedback
+                </h3>
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 px-2 py-0.5 text-[10px] font-black text-amber-900">
+                  ★ {profile.rating?.average ? profile.rating.average.toFixed(1) : "5.0"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {profile.rating?.count ?? 0} verified client {profile.rating?.count === 1 ? "review" : "reviews"} across chat, calls, and appointments.
+              </p>
+            </div>
+          </div>
+          <Link href="/reviews">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] px-4 py-2.5 text-xs font-bold text-white shadow-md hover:from-amber-600 hover:to-amber-500 hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+            >
+              <span>All Reviews →</span>
+            </button>
+          </Link>
         </div>
       </div>
 

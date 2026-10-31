@@ -330,8 +330,18 @@ export type ConsultationQuote = S["ConsultationQuote"];
 export type SessionBilling = S["SessionBilling"];
 export type EarningsSummary = S["EarningsSummary"];
 export type EarningsBucket = S["EarningsBucket"];
-export type EarningRow = S["EarningRow"];
-export type AdminEarningRow = S["AdminEarningRow"];
+export type EarningRow = S["EarningRow"] & {
+  user_id?: string | null;
+  user_name?: string | null;
+  user_avatar?: string | null;
+  coins_charged?: number | null;
+  gross_paise?: number | null;
+};
+export type AdminEarningRow = S["AdminEarningRow"] & {
+  user_id?: string | null;
+  user_name?: string | null;
+  user_avatar?: string | null;
+};
 export type AdminEarningsSummary = S["AdminEarningsSummary"];
 
 /** Earnings are money, so they are paise — never coins. */
@@ -361,7 +371,10 @@ export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
 };
 
 // ----------------------------------------------------------------- reviews
-export type Review = S["ReviewOut"];
+export type Review = S["ReviewOut"] & {
+  author_avatar?: string | null;
+  session_id?: string | null;
+};
 export type ReviewPage = S["ReviewPage"];
 export type ReviewSummary = S["ReviewSummary"];
 export type PendingReview = S["PendingReview"];

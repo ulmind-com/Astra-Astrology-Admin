@@ -84,6 +84,7 @@ export const endpoints = {
     pending: "/reviews/pending",
     mine: "/reviews/mine",
     forAstrologer: (id: string) => `/reviews/astrologers/${id}`,
+    myAstrologerReviews: "/reviews/astrologer/me",
     hide: (id: string) => `/admin/reviews/${id}/hidden`,
   },
 

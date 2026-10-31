@@ -400,6 +400,9 @@ export const reviewApi = {
   forAstrologer: (astrologerId: string, params: { skip?: number; limit?: number } = {}) =>
     api.get<ReviewPage>(endpoints.reviews.forAstrologer(astrologerId), { query: params }),
 
+  myReviews: (params: { skip?: number; limit?: number } = {}) =>
+    api.get<ReviewPage>(endpoints.reviews.myAstrologerReviews, { query: params }),
+
   /** Hiding is not deleting: the row stays, it just stops counting. */
   setHidden: (reviewId: string, hidden: boolean, reason?: string) =>
     api.patch<Review>(endpoints.reviews.hide(reviewId), { hidden, reason: reason ?? null }),
