@@ -23,6 +23,7 @@ import {
   Lock,
   Bot,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
@@ -233,11 +234,18 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
               >
                 <button
                   onClick={toggleCollapsed}
-                  className="relative flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#B45309] via-[#D97706] to-[#F59E0B] shadow-[0_4px_16px_rgba(217,119,6,0.4)] hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-transparent hover:ring-amber-200"
+                  className="relative flex size-11 items-center justify-center rounded-2xl overflow-hidden shadow-[0_4px_16px_rgba(217,119,6,0.3)] hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-transparent hover:ring-amber-200"
                   aria-label="Expand sidebar"
                   title="Click to expand sidebar"
                 >
-                  <Sparkles className="size-5 text-white" />
+                  <Image
+                    src="/logo.png"
+                    alt="DivinLink"
+                    width={44}
+                    height={44}
+                    className="size-full object-contain"
+                    priority
+                  />
                   <span className="absolute -top-0.5 -right-0.5 flex size-2.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
@@ -261,8 +269,15 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                   )}
                   title={!isMobile ? "Click to collapse sidebar" : undefined}
                 >
-                  <div className="relative flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-[#B45309] via-[#D97706] to-[#F59E0B] shadow-[0_4px_16px_rgba(217,119,6,0.4)] group-hover:scale-105 transition-transform">
-                    <Sparkles className="size-5 text-white" />
+                  <div className="relative flex size-9 shrink-0 items-center justify-center rounded-xl overflow-hidden shadow-[0_4px_16px_rgba(217,119,6,0.3)] group-hover:scale-105 transition-transform">
+                    <Image
+                      src="/logo.png"
+                      alt="DivinLink"
+                      width={36}
+                      height={36}
+                      className="size-full object-contain"
+                      priority
+                    />
                     <span className="absolute -top-0.5 -right-0.5 flex size-2.5">
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                       <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />

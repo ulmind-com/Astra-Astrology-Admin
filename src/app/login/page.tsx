@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -280,8 +281,15 @@ function LoginForm() {
           <div className="relative h-full py-12 pl-12 pr-24">
             {/* logo top-left */}
             <div className="flex items-center gap-3">
-              <span className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#F3E3A6] via-[#E0B63C] to-[#B4871A] shadow-[0_6px_18px_rgba(224,182,60,0.4)]">
-                <Sparkles className="size-6 text-[#2a2109]" />
+              <span className="relative flex size-11 items-center justify-center rounded-2xl overflow-hidden shadow-[0_6px_18px_rgba(224,182,60,0.4)]">
+                <Image
+                  src="/logo.png"
+                  alt="DivinLink"
+                  width={44}
+                  height={44}
+                  className="size-full object-contain"
+                  priority
+                />
               </span>
               <div className="leading-tight">
                 <p className="font-serif-display text-lg font-semibold tracking-wide text-[#8a6a12]">
@@ -320,8 +328,15 @@ function LoginForm() {
               <AstrologyScene />
             </div>
             <div className="flex items-center gap-2">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#F3E3A6] via-[#E0B63C] to-[#B4871A]">
-                <Sparkles className="size-5 text-[#2a2109]" />
+              <span className="relative flex size-9 items-center justify-center rounded-xl overflow-hidden shadow-soft">
+                <Image
+                  src="/logo.png"
+                  alt="DivinLink"
+                  width={36}
+                  height={36}
+                  className="size-full object-contain"
+                  priority
+                />
               </span>
               <span className="font-serif-display text-lg font-semibold tracking-wide text-white">
                 DivinLink

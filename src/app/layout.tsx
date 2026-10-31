@@ -33,9 +33,12 @@ export const metadata: Metadata = {
   description: "Admin and astrologer panel for DivinLink.",
   robots: { index: false, follow: false },
   icons: {
-    icon: "/icon.svg",
-    shortcut: "/icon.svg",
-    apple: "/icon.svg",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.png",
   },
 };
 
