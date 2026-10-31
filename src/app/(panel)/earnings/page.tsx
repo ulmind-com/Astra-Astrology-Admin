@@ -259,8 +259,10 @@ export default function EarningsPage() {
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     <th className="py-4 pl-6 pr-4">When (IST)</th>
+                    <th className="py-4 px-4">Client / User</th>
                     <th className="py-4 px-4">Session Type</th>
                     <th className="py-4 px-4 text-right">Duration</th>
+                    <th className="py-4 px-4 text-right">Coins</th>
                     <th className="py-4 pr-6 pl-4 text-right">Credited Payout</th>
                   </tr>
                 </thead>
@@ -278,6 +280,23 @@ export default function EarningsPage() {
                             {timeAgo(row.created_at)}
                           </span>
                         </td>
+                        <td className="py-4 px-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2.5">
+                            <Avatar
+                              src={row.user_image_url}
+                              name={row.user_name || "Client"}
+                              className="size-7.5 ring-1 ring-slate-200"
+                            />
+                            <div>
+                              <span className="font-bold text-slate-900 block text-xs">
+                                {row.user_name || "Client"}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                {row.user_id ? `User: ${row.user_id.slice(-6)}` : "Consultation Client"}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
                         <td className="py-4 px-4">
                           <span
                             className={cn(
@@ -291,6 +310,9 @@ export default function EarningsPage() {
                         </td>
                         <td className="py-4 px-4 text-right font-mono font-bold text-slate-700">
                           {row.minutes} min
+                        </td>
+                        <td className="py-4 px-4 text-right font-mono text-xs font-semibold text-amber-700">
+                          {row.coins_charged != null ? `${formatCoins(row.coins_charged)}` : "—"}
                         </td>
                         <td className="py-4 pr-6 pl-4 text-right font-mono text-sm font-black text-emerald-600">
                           +{formatEarning(row.earning_paise)}

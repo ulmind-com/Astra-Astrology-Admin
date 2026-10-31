@@ -22,6 +22,7 @@ import {
   CalendarDays,
   Lock,
   Bot,
+  Star,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -47,6 +48,7 @@ const ASTROLOGER_NAV: NavItem[] = [
   { href: "/me", label: "My Profile", icon: UserRound },
   { href: "/appointments", label: "Appointments", icon: CalendarDays },
   { href: "/earnings", label: "Earnings", icon: TrendingUp },
+  { href: "/reviews", label: "Client Feedback", icon: Star },
   { href: "/me/password", label: "Password", icon: Lock },
 ];
 
