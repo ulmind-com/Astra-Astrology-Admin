@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Geist_Mono, Poppins } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 
 import { AuthProvider } from "@/providers/auth-provider";
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <AuthProvider signInPath="/login">
               {children}
               <Toaster theme="light" position="top-right" richColors closeButton />
+              <Analytics />
             </AuthProvider>
             </RealtimeProvider>
           </QueryProvider>
