@@ -48,7 +48,7 @@ const ASTROLOGER_NAV: NavItem[] = [
   { href: "/me", label: "My Profile", icon: UserRound },
   { href: "/appointments", label: "Appointments", icon: CalendarDays },
   { href: "/earnings", label: "Earnings", icon: TrendingUp },
-  { href: "/reviews", label: "Reviews & Feedback", icon: Star },
+    { href: "/reviews", label: "Reviews & Feedback", icon: Star },
   { href: "/me/password", label: "Password", icon: Lock },
 ];
 

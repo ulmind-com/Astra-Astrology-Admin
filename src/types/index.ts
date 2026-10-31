@@ -334,6 +334,7 @@ export type EarningRow = S["EarningRow"] & {
   user_id?: string | null;
   user_name?: string | null;
   user_avatar?: string | null;
+  user_image_url?: string | null;
   coins_charged?: number | null;
   gross_paise?: number | null;
 };
@@ -341,6 +342,7 @@ export type AdminEarningRow = S["AdminEarningRow"] & {
   user_id?: string | null;
   user_name?: string | null;
   user_avatar?: string | null;
+  user_image_url?: string | null;
 };
 export type AdminEarningsSummary = S["AdminEarningsSummary"];
 
@@ -373,9 +375,12 @@ export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
 // ----------------------------------------------------------------- reviews
 export type Review = S["ReviewOut"] & {
   author_avatar?: string | null;
+  author_avatar_url?: string | null;
   session_id?: string | null;
 };
-export type ReviewPage = S["ReviewPage"];
+export type ReviewPage = Omit<S["ReviewPage"], "items"> & {
+  items: Review[];
+};
 export type ReviewSummary = S["ReviewSummary"];
 export type PendingReview = S["PendingReview"];
 export type ReviewKind = S["ReviewKind"];

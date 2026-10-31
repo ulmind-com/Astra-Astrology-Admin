@@ -397,6 +397,9 @@ export const appointmentApi = {
 
 // ----------------------------------------------------------------- reviews
 export const reviewApi = {
+  forMe: (params: { skip?: number; limit?: number } = {}) =>
+    api.get<ReviewPage>(endpoints.reviews.forMe, { query: params }),
+
   forAstrologer: (astrologerId: string, params: { skip?: number; limit?: number } = {}) =>
     api.get<ReviewPage>(endpoints.reviews.forAstrologer(astrologerId), { query: params }),
 

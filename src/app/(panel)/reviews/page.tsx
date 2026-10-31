@@ -359,7 +359,7 @@ export default function AstrologerReviewsPage() {
                   <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-3">
                       <Avatar
-                        src={review.author_avatar}
+                        src={review.author_avatar || review.author_avatar_url}
                         name={review.author_name || "Verified Client"}
                         size="md"
                         className="size-10 rounded-2xl shadow-xs"

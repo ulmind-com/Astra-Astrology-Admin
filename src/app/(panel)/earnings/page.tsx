@@ -275,7 +275,7 @@ export default function EarningsPage() {
                         <td className="py-4 pl-6 pr-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <Avatar
-                              src={row.user_avatar}
+                              src={row.user_avatar || row.user_image_url}
                               name={row.user_name || "Client"}
                               size="sm"
                               className="size-8"
