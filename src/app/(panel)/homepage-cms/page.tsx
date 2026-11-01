@@ -44,12 +44,58 @@ import { useRequireAuth } from "@/providers/auth-provider";
 
 type ActiveTab = "hero" | "chakra" | "cards" | "stats" | "services" | "cta";
 
+const DEFAULT_CMS_DATA: HomePageCMSData = {
+  hero_eyebrow: "Explore the Horoscope",
+  hero_title_line1: "WELCOME TO THE",
+  hero_title_line2: "WORLD OF",
+  hero_title_highlight: "ASTROLOGY",
+  hero_description:
+    "Learn about astrology, zodiac signs, retrogrades, and more! Your world becomes clear once you understand how the universe influences it.",
+  hero_cta_primary_text: "Find an Astrologer",
+  hero_cta_primary_link: "/astrologers",
+  hero_cta_secondary_text: "Kundli Matching",
+  hero_cta_secondary_link: "/kundli-matching",
+  hero_chakra_image_url: "/zodiac-chakra.png",
+  hero_chakra_speed_seconds: 60,
+  hero_chakra_enabled: true,
+  hero_cards: [
+    { title: "Zodiac Signs", subtitle: "READ MORE", link: "/rashi-calculator", icon: "zodiac" },
+    { title: "Chinese Signs", subtitle: "READ MORE", link: "modal:chinese", icon: "chinese" },
+    { title: "Planets", subtitle: "READ MORE", link: "/kundli", icon: "planets" },
+    { title: "Houses", subtitle: "READ MORE", link: "/kp-calculator", icon: "houses" },
+  ],
+  trust_stats: [
+    { value: "500+", label: "VERIFIED ASTROLOGERS" },
+    { value: "50K+", label: "HAPPY CONSULTATIONS" },
+    { value: "4.8★", label: "AVERAGE CLIENT RATING" },
+  ],
+  services_eyebrow: "What we offer",
+  services_title: "What you can ask about",
+  services_description: "Traditional methods, interpreted by people who practise them every day.",
+  how_it_works_badge: "How it works",
+  how_it_works_title: "Three steps to clarity",
+  step1_title: "Pick your astrologer",
+  step1_body: "Browse verified profiles, languages spoken, specialties, and real reviews.",
+  step2_title: "Recharge your wallet",
+  step2_body: "Transparent per-minute rates. Add what you need via UPI or card.",
+  step3_title: "Connect instantly",
+  step3_body: "Start a private 1-on-1 chat or audio/video call. No waiting rooms.",
+  cta_badge: "Get started today",
+  cta_title: "Ready when you are",
+  cta_description:
+    "Create an account, add your birth details once, and every reading after that is a click away.",
+  cta_primary_text: "Get started — it's free",
+  cta_primary_link: "/register",
+  cta_secondary_text: "Browse astrologers",
+  cta_secondary_link: "/astrologers",
+};
+
 export default function HomepageCMSPage() {
   const { ready } = useRequireAuth({ roles: ["admin", "super_admin"], signInPath: "/login" });
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = React.useState<ActiveTab>("hero");
-  const [formData, setFormData] = React.useState<HomePageCMSData | null>(null);
+  const [formData, setFormData] = React.useState<HomePageCMSData>(DEFAULT_CMS_DATA);
   const [isDirty, setIsDirty] = React.useState(false);
   const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -58,14 +104,15 @@ export default function HomepageCMSPage() {
     queryKey: ["admin", "cms", "homepage"],
     queryFn: cmsAdminApi.getHomepage,
     enabled: ready,
+    retry: 2,
   });
 
-  // Sync formData with serverData initially
+  // Sync formData with serverData once fetched
   React.useEffect(() => {
-    if (serverData && !formData) {
+    if (serverData) {
       setFormData(serverData);
     }
-  }, [serverData, formData]);
+  }, [serverData]);
 
   const updateField = <K extends keyof HomePageCMSData>(key: K, value: HomePageCMSData[K]) => {
     setFormData((prev) => {
@@ -154,9 +201,6 @@ export default function HomepageCMSPage() {
   };
 
   if (!ready) return <LoadingBlock />;
-  if (isLoading) return <LoadingBlock label="Loading Homepage CMS data..." />;
-  if (error) return <Alert tone="error">{(error as ApiError).message}</Alert>;
-  if (!formData) return null;
 
   return (
     <>
@@ -202,6 +246,20 @@ export default function HomepageCMSPage() {
           </div>
         }
       />
+
+      {/* Sync / Loading notice */}
+      {isLoading && (
+        <div className="mb-4 flex items-center gap-2 rounded-xl bg-blue-500/10 border border-blue-500/20 px-4 py-2 text-xs font-medium text-blue-600 dark:text-blue-400">
+          <RefreshCw className="size-3.5 animate-spin" />
+          Syncing with server CMS configuration...
+        </div>
+      )}
+
+      {error && (
+        <Alert tone="error" className="mb-4">
+          Notice: {(error as ApiError).message || "Could not sync server"}. Showing default content editor — you can still customize and click "Save Changes" to publish.
+        </Alert>
+      )}
 
       {/* Unsaved indicator banner */}
       {isDirty && (

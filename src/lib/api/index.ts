@@ -563,7 +563,7 @@ export interface HomePageCMSData {
 }
 
 export const cmsAdminApi = {
-  getHomepage: () => api.get<HomePageCMSData>(endpoints.admin.cmsHomepage),
+  getHomepage: () => api.get<HomePageCMSData>(endpoints.cms.homepage),
   updateHomepage: (body: Partial<HomePageCMSData>) =>
     api.put<HomePageCMSData>(endpoints.admin.cmsHomepage, body),
   resetHomepage: () =>
