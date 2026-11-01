@@ -4,6 +4,7 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
+  Fingerprint,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -12,10 +13,11 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
+import { startAuthentication } from "@simplewebauthn/browser";
 
 import { Alert, Year } from "@/components/ui";
 import { UlmindCredit } from "@/components/ulmind-credit";
-import { authApi } from "@/lib/api";
+import { authApi, passkeyApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { apiBase } from "@/lib/env";
 import { playNavFeedback } from "@/lib/sound";
@@ -223,6 +225,53 @@ function LoginForm() {
       setBusy(false);
     }
   }
+
+  const handlePasskeyLogin = async () => {
+    setError(null);
+    setBusy(true);
+    try {
+      playNavFeedback();
+      toast.loading("Communicating with device sensor...", { id: "passkey-login" });
+      const optionsRes = await passkeyApi.getLoginOptions({ email: email.trim() || undefined });
+
+      toast.loading("Touch your fingerprint sensor or verify with Face ID...", { id: "passkey-login" });
+      const asseResp = await startAuthentication({ optionsJSON: optionsRes });
+
+      toast.loading("Verifying security credentials with server...", { id: "passkey-login" });
+      const result = await passkeyApi.verifyLogin({ credential: asseResp });
+
+      if (result.user.role === "user") {
+        setError(
+          new ApiError(
+            "This portal is exclusively for verified Astrologers and Platform Administrators.",
+            403,
+            "insufficient_role",
+          ),
+        );
+        toast.dismiss("passkey-login");
+        setBusy(false);
+        return;
+      }
+
+      toast.success(`Welcome back, ${result.user.first_name}!`, { id: "passkey-login" });
+      signIn(result);
+      if (result.user.role === "astrologer") {
+        router.replace("/me");
+      } else {
+        router.replace("/dashboard");
+      }
+    } catch (caught: any) {
+      if (caught.name === "NotAllowedError") {
+        toast.error("Fingerprint verification was cancelled or timed out.", { id: "passkey-login" });
+      } else {
+        const err = caught instanceof ApiError ? caught : new ApiError(caught.message || "Passkey login failed", 400);
+        setError(err);
+        toast.error(err.message, { id: "passkey-login" });
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const fillSampleAccount = (role: PortalType) => {
     playNavFeedback();
@@ -447,6 +496,24 @@ function LoginForm() {
                   ? "Login to Astrologer Studio"
                   : "Login to Console"}
                 <ArrowRight className="size-4" />
+              </button>
+
+              <div className="relative my-3 flex items-center justify-center">
+                <div className="w-full border-t border-white/20" />
+                <span className="bg-transparent px-3 text-[11px] font-semibold uppercase tracking-wider text-white/70">
+                  Or
+                </span>
+                <div className="w-full border-t border-white/20" />
+              </div>
+
+              <button
+                type="button"
+                onClick={handlePasskeyLogin}
+                disabled={busy}
+                className="flex w-full items-center justify-center gap-2.5 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-bold text-white shadow-lg backdrop-blur-md transition-all hover:bg-white/20 hover:border-white/50 active:scale-[0.99] cursor-pointer"
+              >
+                <Fingerprint className="size-4.5 text-[#FFFBEA]" />
+                Sign in with Passkey / Fingerprint
               </button>
             </form>
 

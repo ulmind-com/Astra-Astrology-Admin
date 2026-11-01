@@ -578,3 +578,25 @@ export const cmsAdminApi = {
   },
 };
 
+export interface PasskeyInfo {
+  id: string;
+  credential_id: string;
+  device_name: string;
+  transports: string[];
+  created_at: string;
+  last_used_at: string | null;
+}
+
+export const passkeyApi = {
+  getRegisterOptions: () => api.post<any>(endpoints.passkeys.registerOptions),
+  verifyRegistration: (body: { credential: any; device_name?: string }) =>
+    api.post<PasskeyInfo>(endpoints.passkeys.registerVerify, body),
+  listMine: () => api.get<PasskeyInfo[]>(endpoints.passkeys.mine),
+  delete: (id: string) => api.delete<{ deleted: boolean }>(endpoints.passkeys.delete(id)),
+  getLoginOptions: (body?: { email?: string }) =>
+    api.post<any>(endpoints.passkeys.loginOptions, body || {}, { auth: false }),
+  verifyLogin: (body: { credential: any }) =>
+    api.post<AuthResult>(endpoints.passkeys.loginVerify, body, { auth: false }),
+};
+
+

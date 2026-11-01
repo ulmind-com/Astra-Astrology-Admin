@@ -24,6 +24,7 @@ import {
   Bot,
   Star,
   LayoutTemplate,
+  Fingerprint,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -49,7 +50,8 @@ const ASTROLOGER_NAV: NavItem[] = [
   { href: "/me", label: "My Profile", icon: UserRound },
   { href: "/appointments", label: "Appointments", icon: CalendarDays },
   { href: "/earnings", label: "Earnings", icon: TrendingUp },
-    { href: "/reviews", label: "Reviews & Feedback", icon: Star },
+  { href: "/reviews", label: "Reviews & Feedback", icon: Star },
+  { href: "/me/passkeys", label: "Biometric Passkey", icon: Fingerprint },
   { href: "/me/password", label: "Password", icon: Lock },
 ];
 
@@ -562,12 +564,31 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                         {user?.email || "astroapp26@gmail.com"}
                       </p>
                     </div>
+
+                    <Link
+                      href="/me"
+                      onClick={() => setShowProfileMenu(false)}
+                      className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      <UserRound className="size-3.5 text-slate-500" />
+                      My Profile
+                    </Link>
+
+                    <Link
+                      href="/me/passkeys"
+                      onClick={() => setShowProfileMenu(false)}
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors"
+                    >
+                      <Fingerprint className="size-3.5 text-primary" />
+                      Passkeys & Biometrics
+                    </Link>
+
                     <button
                       onClick={() => {
                         playNavFeedback();
                         signOut();
                       }}
-                      className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                      className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer border-t border-slate-100 pt-2"
                     >
                       <LogOut className="size-3.5" />
                       Sign out

@@ -134,4 +134,12 @@ export const endpoints = {
   cms: {
     homepage: "/cms/homepage",
   },
+  passkeys: {
+    registerOptions: "/auth/passkey/register/options",
+    registerVerify: "/auth/passkey/register/verify",
+    mine: "/auth/passkey/mine",
+    delete: (id: string) => `/auth/passkey/${id}`,
+    loginOptions: "/auth/passkey/login/options",
+    loginVerify: "/auth/passkey/login/verify",
+  },
 } as const;
