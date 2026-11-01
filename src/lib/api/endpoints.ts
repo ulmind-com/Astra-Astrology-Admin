@@ -127,5 +127,11 @@ export const endpoints = {
     aiRule: (id: string) => `/admin/ai/rules/${id}`,
     aiFeedback: "/admin/ai/feedback",
     aiFeedbackApprove: (id: string) => `/admin/ai/feedback/${id}/approve`,
+    cmsHomepage: "/admin/cms/homepage",
+    cmsHomepageReset: "/admin/cms/homepage/reset",
+    cmsUploadImage: "/admin/cms/upload-image",
+  },
+  cms: {
+    homepage: "/cms/homepage",
   },
 } as const;

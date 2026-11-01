@@ -23,6 +23,7 @@ import {
   Lock,
   Bot,
   Star,
+  LayoutTemplate,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -65,6 +66,7 @@ const ADMIN_FINANCIAL_NAV: NavItem[] = [
 ];
 
 const ADMIN_TOOLS_NAV: NavItem[] = [
+  { href: "/homepage-cms", label: "Homepage CMS", icon: LayoutTemplate },
   { href: "/ai-knowledge", label: "AI Astrologer Hub", icon: Bot },
   { href: "/feature-pricing", label: "Feature Pricing", icon: Sparkles },
   { href: "/face-rules", label: "Face Rules", icon: ScanFace },
