@@ -10,7 +10,14 @@ import {
   ChevronRight,
   Clock,
   Coins,
+  Compass,
   DollarSign,
+  Edit3,
+  ExternalLink,
+  Eye,
+  FileText,
+  Flame,
+  Gem,
   HelpCircle,
   IndianRupee,
   Info,
@@ -34,7 +41,16 @@ import { appointmentApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
-import { APPOINTMENT_STATUS_LABELS } from "@/types";
+import { APPOINTMENT_STATUS_LABELS, type Appointment, type VedicPrescription } from "@/types";
+
+const PILLAR_LABELS: Record<string, { label: string; icon: string }> = {
+  career_wealth: { label: "Career & Wealth", icon: "💼" },
+  love_marriage: { label: "Love & Kundali Milan", icon: "💍" },
+  health_longevity: { label: "Health & Vitality", icon: "🌿" },
+  dosha_graha_shanti: { label: "Graha Shanti & Doshas", icon: "🔥" },
+  business_expansion: { label: "Business & Investments", icon: "📈" },
+  spiritual_guidance: { label: "Spiritual Path & Moksha", icon: "🕉️" },
+};
 
 const CARD_KEY = ["appointments", "card"] as const;
 const WINDOWS_KEY = ["appointments", "windows"] as const;
@@ -703,6 +719,55 @@ function Schedule() {
   const [tab, setTab] = React.useState<ScheduleTab>("upcoming");
   const [cancelTargetId, setCancelTargetId] = React.useState<string | null>(null);
 
+  // Advanced Dossier & Prescription state
+  const [dossierAppointment, setDossierAppointment] = React.useState<Appointment | null>(null);
+  const [prescriptionAppointment, setPrescriptionAppointment] = React.useState<Appointment | null>(null);
+  const [prescriptionForm, setPrescriptionForm] = React.useState<{
+    gemstone: string;
+    rudraksha: string;
+    mantra: string;
+    mantra_count: number;
+    daan_remedy: string;
+    astrologer_notes: string;
+  }>({
+    gemstone: "",
+    rudraksha: "",
+    mantra: "",
+    mantra_count: 108,
+    daan_remedy: "",
+    astrologer_notes: "",
+  });
+
+  const openPrescriptionModal = (a: Appointment) => {
+    setPrescriptionAppointment(a);
+    setPrescriptionForm({
+      gemstone: a.prescription?.gemstone || "",
+      rudraksha: a.prescription?.rudraksha || "",
+      mantra: a.prescription?.mantra || "",
+      mantra_count: a.prescription?.mantra_count || 108,
+      daan_remedy: a.prescription?.daan_remedy || "",
+      astrologer_notes: a.prescription?.astrologer_notes || "",
+    });
+  };
+
+  const updatePrescriptionMutation = useMutation({
+    mutationFn: () =>
+      appointmentApi.updatePrescription(prescriptionAppointment!.id, {
+        gemstone: prescriptionForm.gemstone.trim() || null,
+        rudraksha: prescriptionForm.rudraksha.trim() || null,
+        mantra: prescriptionForm.mantra.trim() || null,
+        mantra_count: Number(prescriptionForm.mantra_count) || null,
+        daan_remedy: prescriptionForm.daan_remedy.trim() || null,
+        astrologer_notes: prescriptionForm.astrologer_notes.trim() || null,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+      setPrescriptionAppointment(null);
+      toast.success("Vedic prescription issued and synced to client in real-time!");
+    },
+    onError: (e: ApiError) => toast.error(e.message || "Failed to update prescription."),
+  });
+
   const {
     data: bookings,
     isLoading,
@@ -893,14 +958,24 @@ function Schedule() {
           {displayedList.map((a) => {
             const isTodayBooking = isSameDay(a.starts_at);
             const upcoming = isUpcoming(a);
+            const startsMs = new Date(a.starts_at).getTime();
+            const endsMs = new Date(a.ends_at).getTime();
+            const now = Date.now();
+            const isLiveWindow = a.status === "booked" && startsMs - now <= 15 * 60_000 && endsMs >= now;
+            const pillar = a.consultation_pillar ? PILLAR_LABELS[a.consultation_pillar] : null;
+            const hasPrescription = Boolean(
+              a.prescription?.gemstone || a.prescription?.rudraksha || a.prescription?.mantra,
+            );
 
             return (
               <div
                 key={a.id}
                 className={cn(
-                  "relative rounded-2xl border p-5 transition-all",
-                  isTodayBooking && upcoming
-                    ? "border-amber-300 bg-amber-50/30 shadow-xs"
+                  "relative rounded-2xl border p-5 transition-all space-y-4",
+                  isLiveWindow
+                    ? "border-amber-400 bg-amber-50/40 ring-2 ring-amber-400/20 shadow-md"
+                    : isTodayBooking && upcoming
+                    ? "border-amber-300 bg-amber-50/20 shadow-xs"
                     : "border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-2xs"
                 )}
               >
@@ -957,7 +1032,7 @@ function Schedule() {
                     </div>
                   </div>
 
-                  {/* Financial Details & Actions */}
+                  {/* Financial Details */}
                   <div className="flex flex-wrap sm:flex-nowrap items-center justify-between md:justify-end gap-6 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
                     <div className="text-left md:text-right space-y-0.5">
                       <p className="font-display text-base font-black tabular-nums text-slate-900">
@@ -974,6 +1049,70 @@ function Schedule() {
                         Deposit: ₹{rupees(a.deposit_paise)} ({a.deposit_coins} coins)
                       </p>
                     </div>
+                  </div>
+                </div>
+
+                {/* Astrological Metadata & Fast Actions Bar */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {pillar && (
+                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/10 px-2.5 py-1 font-semibold text-amber-800 border border-amber-500/20 text-[11px]">
+                        <span>{pillar.icon}</span>
+                        <span>{pillar.label}</span>
+                      </span>
+                    )}
+
+                    {a.muhurat_type && (
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 font-semibold text-slate-700 border border-slate-200 text-[11px]">
+                        <Sparkles className="size-3 text-amber-500" />
+                        <span>{a.muhurat_type}</span>
+                      </span>
+                    )}
+
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 font-semibold text-[11px] border",
+                        hasPrescription
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-slate-50 text-slate-500 border-slate-200"
+                      )}
+                    >
+                      <FileText className="size-3" />
+                      <span>{hasPrescription ? "Prescription Issued" : "Prescription Pending"}</span>
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* View Dossier */}
+                    <button
+                      type="button"
+                      onClick={() => setDossierAppointment(a)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-amber-600 transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <Eye className="size-3.5 text-slate-400" />
+                      <span>Client Dossier</span>
+                    </button>
+
+                    {/* Prescription Editor */}
+                    <button
+                      type="button"
+                      onClick={() => openPrescriptionModal(a)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-500/20 transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <Edit3 className="size-3.5 text-amber-600" />
+                      <span>{hasPrescription ? "Edit Prescription" : "Write Prescription"}</span>
+                    </button>
+
+                    {/* Enter Chamber (Live) */}
+                    {isLiveWindow && (
+                      <a
+                        href={`/calls`}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm animate-pulse"
+                      >
+                        <Video className="size-3.5" />
+                        <span>Enter Chamber</span>
+                      </a>
+                    )}
 
                     {/* Cancellation Trigger */}
                     {a.status === "booked" && upcoming && (
@@ -982,7 +1121,7 @@ function Schedule() {
                         onClick={() => setCancelTargetId(a.id)}
                         className="rounded-xl border border-rose-200 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                       >
-                        Cancel Session
+                        Cancel
                       </button>
                     )}
                   </div>
@@ -992,6 +1131,207 @@ function Schedule() {
           })}
         </div>
       )}
+
+      {/* Client Astrological Dossier Modal */}
+      <Modal
+        open={Boolean(dossierAppointment)}
+        onClose={() => setDossierAppointment(null)}
+        title="Client Astrological Dossier"
+        description="Comprehensive pre-consultation details and birth chart snapshot submitted by the client."
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button variant="secondary" onClick={() => setDossierAppointment(null)}>
+              Close Dossier
+            </Button>
+          </div>
+        }
+      >
+        {dossierAppointment && (
+          <div className="space-y-4 py-2 text-xs">
+            {/* Client Profile Header */}
+            <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3.5 border border-slate-200">
+              <Avatar
+                name={dossierAppointment.peer?.name || "Client"}
+                src={dossierAppointment.peer?.avatar_url ?? undefined}
+                size="md"
+              />
+              <div className="min-w-0 flex-1">
+                <h4 className="font-display font-bold text-sm text-slate-900 truncate">
+                  {dossierAppointment.peer?.name || "Client"}
+                </h4>
+                <p className="text-[11px] text-slate-500">
+                  Appointment Session · {dossierAppointment.minutes} mins · {dayRelative(dossierAppointment.starts_at)}
+                </p>
+              </div>
+            </div>
+
+            {/* Consultation Focus Pillar */}
+            {dossierAppointment.consultation_pillar && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-3.5 space-y-1">
+                <p className="text-[10px] uppercase font-bold text-amber-700 flex items-center gap-1.5">
+                  <Compass className="size-3.5 text-amber-600" />
+                  <span>Primary Consultation Focus Pillar</span>
+                </p>
+                <p className="font-bold text-slate-900 text-sm">
+                  {PILLAR_LABELS[dossierAppointment.consultation_pillar]?.icon}{" "}
+                  {PILLAR_LABELS[dossierAppointment.consultation_pillar]?.label || dossierAppointment.consultation_pillar}
+                </p>
+              </div>
+            )}
+
+            {/* Birth Details Snapshot */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-2.5">
+              <p className="text-[11px] font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Calendar className="size-3.5 text-amber-600" />
+                <span>Birth Chart Details</span>
+              </p>
+
+              {dossierAppointment.birth_details ? (
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">Date of Birth</span>
+                    <span className="font-bold text-slate-800">
+                      {dossierAppointment.birth_details.date_of_birth || "Not specified"}
+                    </span>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">Time of Birth</span>
+                    <span className="font-bold text-slate-800">
+                      {dossierAppointment.birth_details.time_of_birth || "Not specified"}
+                    </span>
+                  </div>
+                  <div className="col-span-2 rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">Place of Birth</span>
+                    <span className="font-bold text-slate-800">
+                      {dossierAppointment.birth_details.place_of_birth || "Not specified"}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-slate-400 italic">No specific birth coordinates submitted.</p>
+              )}
+            </div>
+
+            {/* Client Notes & Inquiries */}
+            {dossierAppointment.user_note && (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-3.5 space-y-1">
+                <p className="text-[10px] uppercase font-bold text-slate-500">
+                  Client Specific Inquiries / Questions
+                </p>
+                <p className="text-slate-800 leading-relaxed italic bg-white p-2.5 rounded-xl border border-slate-200">
+                  “{dossierAppointment.user_note}”
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      {/* Sacred Vedic Prescription Editor Modal */}
+      <Modal
+        open={Boolean(prescriptionAppointment)}
+        onClose={() => setPrescriptionAppointment(null)}
+        title="Write / Issue Vedic Prescription"
+        description="Prescribe consecrated gemstones, authentic rudraksha, sacred mantras, and remedial daan. This instantly updates on the client's screen in real time."
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button variant="secondary" onClick={() => setPrescriptionAppointment(null)}>
+              Cancel
+            </Button>
+            <Button
+              loading={updatePrescriptionMutation.isPending}
+              onClick={() => updatePrescriptionMutation.mutate()}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
+            >
+              <Check className="size-3.5 mr-1" />
+              Save & Issue Prescription
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3.5 py-2 text-xs max-h-[70vh] overflow-y-auto pr-1">
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+              <Gem className="size-3.5 text-amber-600" />
+              <span>Recommended Gemstone (রত্ন প্রতিকার)</span>
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Natural Yellow Sapphire (Pokhraj) - 5.25 Carats in Gold on Index Finger"
+              value={prescriptionForm.gemstone}
+              onChange={(e) => setPrescriptionForm((p) => ({ ...p, gemstone: e.target.value }))}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+              <Sparkles className="size-3.5 text-amber-600" />
+              <span>Recommended Rudraksha (রুদ্রাক্ষ প্রতিকার)</span>
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. 7 Mukhi Mahalaxmi Rudraksha energized with Om Hreem Shreem"
+              value={prescriptionForm.rudraksha}
+              onChange={(e) => setPrescriptionForm((p) => ({ ...p, rudraksha: e.target.value }))}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-2">
+              <label className="block text-[11px] font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                <Flame className="size-3.5 text-amber-600" />
+                <span>Sacred Vedic Mantra (সিদ্ধ মন্ত্র)</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. ॐ ग्रां ग्रीं ग्रौं सः गुरवे नमः"
+                value={prescriptionForm.mantra}
+                onChange={(e) => setPrescriptionForm((p) => ({ ...p, mantra: e.target.value }))}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-800 mb-1">
+                Japa Count (জপ)
+              </label>
+              <input
+                type="number"
+                value={prescriptionForm.mantra_count}
+                onChange={(e) => setPrescriptionForm((p) => ({ ...p, mantra_count: Number(e.target.value) }))}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1">
+              Vedic Daan & Charitable Rituals (দান ও পূজার বিধান)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Donate yellow sweets and grams on Thursday morning at temple"
+              value={prescriptionForm.daan_remedy}
+              onChange={(e) => setPrescriptionForm((p) => ({ ...p, daan_remedy: e.target.value }))}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1">
+              Astrologer Guidance & Custom Directives (বিশেষ পরামর্শ)
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Detailed personalized instructions for the seeker..."
+              value={prescriptionForm.astrologer_notes}
+              onChange={(e) => setPrescriptionForm((p) => ({ ...p, astrologer_notes: e.target.value }))}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+        </div>
+      </Modal>
 
       {/* Confirmation Modal for Session Cancellation */}
       <Modal

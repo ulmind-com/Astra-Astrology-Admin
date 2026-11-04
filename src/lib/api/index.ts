@@ -393,6 +393,18 @@ export const appointmentApi = {
 
   cancel: (id: string, reason?: string) =>
     api.post<Appointment>(endpoints.appointments.cancel(id), { reason: reason ?? null }),
+
+  updatePrescription: (
+    id: string,
+    body: {
+      gemstone?: string | null;
+      rudraksha?: string | null;
+      mantra?: string | null;
+      mantra_count?: number | null;
+      daan_remedy?: string | null;
+      astrologer_notes?: string | null;
+    },
+  ) => api.patch<Appointment>(`/appointments/${id}/prescription`, body),
 };
 
 // ----------------------------------------------------------------- reviews

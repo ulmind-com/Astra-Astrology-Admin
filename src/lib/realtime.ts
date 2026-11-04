@@ -67,6 +67,8 @@ export type LiveMessage =
   | { type: "settings"; data: LivePlatform }
   | { type: "feature_pricing"; data: Record<string, FeaturePricingItem> }
   | { type: "wallet"; data: { balance_coins: number } }
+  | { type: "appointment_event"; data: { event: string; appointment: Record<string, any> } }
+  | { type: "availability_event"; data: { astrologer_id: string; day: string } }
   // Chat traffic. Typed loosely here on purpose: the chat client owns the
   // shape of a message, and repeating it in two places would be one more
   // thing to keep in step.

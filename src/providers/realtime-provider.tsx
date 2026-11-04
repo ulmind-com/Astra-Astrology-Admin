@@ -261,6 +261,15 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           });
           break;
 
+        case "appointment_event":
+          void queryClient.invalidateQueries({ queryKey: ["appointments"] });
+          void queryClient.invalidateQueries({ queryKey: ["appointments", "schedule"] });
+          break;
+
+        case "availability_event":
+          void queryClient.invalidateQueries({ queryKey: ["appointments", "windows"] });
+          break;
+
         case "chat_message":
         case "chat_read":
         case "chat_ended":
