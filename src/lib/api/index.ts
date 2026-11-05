@@ -561,7 +561,22 @@ export interface TrustStatConfig {
   label: string;
 }
 
+export interface HeroSlideConfig {
+  id?: string;
+  title: string;
+  subtitle: string;
+  description?: string;
+  cta_text: string;
+  cta_link: string;
+  badge_text: string;
+  badge_rating?: string;
+  image_url: string;
+  bg_gradient?: string;
+  border_color?: string;
+}
+
 export interface HomePageCMSData {
+  hero_slides?: HeroSlideConfig[];
   hero_eyebrow: string;
   hero_title_line1: string;
   hero_title_line2: string;
