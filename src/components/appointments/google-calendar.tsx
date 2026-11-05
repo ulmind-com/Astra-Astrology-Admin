@@ -672,6 +672,7 @@ function WeekCalendarView({
 
                 const isCancelled = b.status === "cancelled";
                 const isCompleted = b.status === "completed";
+                const isNoShow = Boolean(b.is_no_show);
                 const pillar = b.consultation_pillar ? PILLAR_ICONS[b.consultation_pillar] : null;
 
                 return (
@@ -686,6 +687,8 @@ function WeekCalendarView({
                       "absolute inset-x-1.5 rounded-xl p-2 cursor-pointer z-10 transition-all shadow-xs overflow-hidden flex flex-col justify-between border",
                       isCancelled
                         ? "bg-rose-50 text-rose-800 border-rose-300 opacity-70"
+                        : isNoShow
+                        ? "bg-amber-50 text-amber-950 border-amber-400 hover:shadow-md"
                         : isCompleted
                         ? "bg-emerald-50 text-emerald-900 border-emerald-300 hover:shadow-md"
                         : "bg-gradient-to-tr from-sky-600 to-indigo-600 text-white border-sky-400 hover:shadow-lg hover:scale-[1.01]",
@@ -708,6 +711,8 @@ function WeekCalendarView({
                           "text-[9px] font-medium truncate mt-0.5",
                           isCancelled
                             ? "text-rose-600"
+                            : isNoShow
+                            ? "text-amber-800"
                             : isCompleted
                             ? "text-emerald-700"
                             : "text-sky-100",
@@ -719,7 +724,9 @@ function WeekCalendarView({
 
                     {height >= 50 && (
                       <div className="flex items-center justify-between text-[9px] font-bold mt-1 pt-1 border-t border-white/20">
-                        <span className="uppercase tracking-wider">{APPOINTMENT_STATUS_LABELS[b.status]}</span>
+                        <span className="uppercase tracking-wider">
+                          {isNoShow ? "Client No-Show" : APPOINTMENT_STATUS_LABELS[b.status]}
+                        </span>
                         <a
                           href={getGoogleCalendarUrl(b)}
                           target="_blank"
@@ -987,9 +994,13 @@ function DayCalendarView({
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-xs text-slate-900">{b.peer?.name || "Client"}</span>
-                        <Badge tone={b.status === "booked" ? "green" : b.status === "completed" ? "blue" : "red"}>
-                          {APPOINTMENT_STATUS_LABELS[b.status]}
-                        </Badge>
+                        {b.is_no_show ? (
+                          <Badge tone="gold">Client No-Show</Badge>
+                        ) : (
+                          <Badge tone={b.status === "booked" ? "green" : b.status === "completed" ? "blue" : "red"}>
+                            {APPOINTMENT_STATUS_LABELS[b.status]}
+                          </Badge>
+                        )}
                       </div>
 
                       <p className="text-[11px] text-slate-500">
@@ -1089,9 +1100,13 @@ function AgendaCalendarView({
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-bold text-sm text-slate-900">{b.peer?.name || "Client"}</h4>
-                  <Badge tone={b.status === "booked" ? "green" : b.status === "completed" ? "blue" : "red"}>
-                    {APPOINTMENT_STATUS_LABELS[b.status]}
-                  </Badge>
+                  {b.is_no_show ? (
+                    <Badge tone="gold">Client No-Show</Badge>
+                  ) : (
+                    <Badge tone={b.status === "booked" ? "green" : b.status === "completed" ? "blue" : "red"}>
+                      {APPOINTMENT_STATUS_LABELS[b.status]}
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
                   📅 {s.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {formatTime(s)} – {formatTime(e)} ({b.minutes} mins)

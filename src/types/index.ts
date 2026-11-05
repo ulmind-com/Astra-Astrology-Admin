@@ -377,6 +377,13 @@ export type Appointment = Omit<S["AppointmentOut"], "peer"> & {
   cosmic_synergy_score?: number | null;
   certificate_data?: Record<string, any> | null;
   standby_queue?: Array<Record<string, any>> | null;
+  rescheduled_count?: number;
+  rescheduled_at?: string | null;
+  previous_starts_at?: string | null;
+  reschedule_reason?: string | null;
+  is_no_show?: boolean;
+  no_show_marked_at?: string | null;
+  no_show_wait_minutes?: number | null;
   peer?: S["AppointmentPeer"] | null;
   held_coins?: number;
   held_status?: string;

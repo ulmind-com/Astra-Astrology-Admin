@@ -421,6 +421,12 @@ export const appointmentApi = {
 
   getCertificateHtmlUrl: (id: string) =>
     `${process.env.NEXT_PUBLIC_API_URL || "https://api.divinlink.com"}/api/v1/appointments/${id}/certificate/html`,
+
+  reschedule: (id: string, new_starts_at: string, reason?: string) =>
+    api.post<Appointment>(`/appointments/${id}/reschedule`, { new_starts_at, reason: reason ?? null }),
+
+  markNoShow: (id: string, reason?: string) =>
+    api.post<Appointment>(`/appointments/${id}/no-show`, { reason: reason ?? null }),
 };
 
 // ----------------------------------------------------------------- reviews

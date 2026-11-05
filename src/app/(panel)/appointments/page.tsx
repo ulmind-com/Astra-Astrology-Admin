@@ -986,6 +986,54 @@ function Schedule({
     onError: (e: ApiError) => toast.error(e.message),
   });
 
+  // Courtesy Reschedule state & mutation (Option B)
+  const [rescheduleAppointment, setRescheduleAppointment] = React.useState<Appointment | null>(null);
+  const [rescheduleForm, setRescheduleForm] = React.useState<{ newStartsAt: string; reason: string }>({
+    newStartsAt: "",
+    reason: "",
+  });
+
+  const rescheduleMutation = useMutation({
+    mutationFn: () => {
+      if (!rescheduleAppointment || !rescheduleForm.newStartsAt) {
+        throw new Error("Please select a new time slot.");
+      }
+      return appointmentApi.reschedule(
+        rescheduleAppointment.id,
+        new Date(rescheduleForm.newStartsAt).toISOString(),
+        rescheduleForm.reason.trim() || undefined,
+      );
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+      setRescheduleAppointment(null);
+      setDossierAppointment(null);
+      toast.success("Appointment courtesy rescheduled! Client notified via email & calendar.");
+    },
+    onError: (e: any) => toast.error(e?.message || "Failed to reschedule appointment."),
+  });
+
+  // Client No-Show state & mutation (10-15m wait rule)
+  const [noShowAppointment, setNoShowAppointment] = React.useState<Appointment | null>(null);
+  const [noShowReason, setNoShowReason] = React.useState("");
+
+  const noShowMutation = useMutation({
+    mutationFn: () => {
+      if (!noShowAppointment) throw new Error("No appointment selected.");
+      return appointmentApi.markNoShow(
+        noShowAppointment.id,
+        noShowReason.trim() || undefined,
+      );
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+      setNoShowAppointment(null);
+      setDossierAppointment(null);
+      toast.success("Appointment closed as Client No-Show. Session balance captured as compensation.");
+    },
+    onError: (e: any) => toast.error(e?.message || "Failed to mark no-show."),
+  });
+
   const allBookings = React.useMemo(() => bookings ?? [], [bookings]);
   const upcomingList = React.useMemo(() => allBookings.filter(isUpcoming), [allBookings]);
   const todayList = React.useMemo(
@@ -1414,21 +1462,68 @@ function Schedule({
         title="Client Astrological Dossier & AI Pre-Flight"
         description="Comprehensive pre-consultation details, cosmic resonance index, and automated AI astrological briefing."
         footer={
-          <div className="flex items-center justify-between gap-3 w-full">
-            <div>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
+            <div className="flex items-center gap-2 flex-wrap">
               {dossierAppointment?.status === "completed" && (
                 <Button
                   variant="secondary"
                   onClick={() => {
                     window.open(appointmentApi.getCertificateHtmlUrl(dossierAppointment.id), "_blank");
                   }}
-                  className="border-amber-500/30 text-amber-600 hover:bg-amber-50 font-bold"
+                  className="border-amber-500/30 text-amber-600 hover:bg-amber-50 font-bold text-xs"
                 >
                   <FileText className="size-3.5 mr-1.5" />
                   View Divya Certificate
                 </Button>
               )}
+
+              {dossierAppointment?.status === "booked" && (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={Boolean(dossierAppointment.rescheduled_count && dossierAppointment.rescheduled_count >= 1)}
+                    onClick={() => {
+                      const d = new Date(dossierAppointment.starts_at);
+                      d.setDate(d.getDate() + 1);
+                      setRescheduleForm({
+                        newStartsAt: toLocalInput(d),
+                        reason: "",
+                      });
+                      setRescheduleAppointment(dossierAppointment);
+                    }}
+                    className="border-amber-500/30 text-amber-800 hover:bg-amber-50 text-xs font-bold"
+                  >
+                    <CalendarDays className="size-3.5 mr-1 text-amber-600" />
+                    {dossierAppointment.rescheduled_count && dossierAppointment.rescheduled_count >= 1
+                      ? "Rescheduled (1/1 Used)"
+                      : "Courtesy Reschedule (১-বার ফ্রি)"}
+                  </Button>
+
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      const startMs = new Date(dossierAppointment.starts_at).getTime();
+                      const elapsedMins = (Date.now() - startMs) / 60_000;
+                      if (elapsedMins < 10) {
+                        toast.error(
+                          `You must wait at least 10 minutes into the scheduled consultation before marking a client no-show. Session started at ${new Date(dossierAppointment.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`
+                        );
+                        return;
+                      }
+                      setNoShowReason("");
+                      setNoShowAppointment(dossierAppointment);
+                    }}
+                    className="border-rose-300 text-rose-700 hover:bg-rose-50 text-xs font-bold"
+                  >
+                    <AlertCircle className="size-3.5 mr-1 text-rose-600" />
+                    Mark No-Show
+                  </Button>
+                </>
+              )}
             </div>
+
             <Button variant="secondary" onClick={() => setDossierAppointment(null)}>
               Close Dossier
             </Button>
@@ -1437,6 +1532,34 @@ function Schedule({
       >
         {dossierAppointment && (
           <div className="space-y-4 py-2 text-xs">
+            {/* Client No-Show Notice if marked */}
+            {dossierAppointment.is_no_show && (
+              <div className="rounded-2xl border border-rose-300 bg-rose-50/80 p-3.5 text-rose-900 text-xs flex items-center gap-2.5">
+                <AlertCircle className="size-4 text-rose-600 shrink-0" />
+                <div>
+                  <span className="font-bold block text-rose-950">Client No-Show / Missed Consultation</span>
+                  <span className="text-[11px] text-rose-700">
+                    The astrologer waited for {dossierAppointment.no_show_wait_minutes || 15} minutes in the chamber.
+                    The session was closed and the escrow fee was settled as compensation.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Courtesy Reschedule Notice if applied */}
+            {Boolean(dossierAppointment.rescheduled_count && dossierAppointment.rescheduled_count > 0) && (
+              <div className="rounded-2xl border border-amber-300 bg-amber-50/70 p-3 text-amber-950 text-xs flex items-center gap-2.5">
+                <CalendarDays className="size-4 text-amber-600 shrink-0" />
+                <div>
+                  <span className="font-bold block">Courtesy Reschedule Applied (1/1 Used)</span>
+                  <span className="text-[11px] text-amber-800">
+                    Moved to current slot by the astrologer without charging extra fees.
+                    {dossierAppointment.reschedule_reason ? ` Note: "${dossierAppointment.reschedule_reason}"` : ""}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Client Profile Header with Cosmic Synergy Score */}
             <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3.5 border border-slate-200">
               <div className="flex items-center gap-3 min-w-0">
@@ -1699,6 +1822,108 @@ function Schedule({
           <Alert tone="warning">
             Frequent cancellations may impact your astrologer profile rating and ranking in the Astra directory.
           </Alert>
+        </div>
+      </Modal>
+
+      {/* Courtesy Reschedule Modal (Option B) */}
+      <Modal
+        open={Boolean(rescheduleAppointment)}
+        onClose={() => setRescheduleAppointment(null)}
+        title="Courtesy Reschedule (সৌজন্যমূলক রি-শিডিউল)"
+        description="Grant a 1-time courtesy reschedule for this client without extra fees. The deposit and escrow balance will seamlessly transfer to the new slot."
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button variant="secondary" onClick={() => setRescheduleAppointment(null)}>
+              Cancel
+            </Button>
+            <Button
+              loading={rescheduleMutation.isPending}
+              onClick={() => rescheduleMutation.mutate()}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
+            >
+              <CalendarDays className="size-3.5 mr-1" />
+              Confirm Reschedule
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 py-2 text-xs">
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1">
+              New Date & Time (IST) *
+            </label>
+            <input
+              type="datetime-local"
+              step="300"
+              value={rescheduleForm.newStartsAt}
+              onChange={(e) => setRescheduleForm((p) => ({ ...p, newStartsAt: e.target.value }))}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+            />
+            <p className="text-[10px] text-slate-500 mt-1">
+              Must be within an open Availability Window in your schedule and on a 5-minute mark.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1">
+              Reason / Emergency Note (Optional)
+            </label>
+            <textarea
+              rows={2}
+              placeholder="e.g. Client requested emergency reschedule due to medical appointment"
+              value={rescheduleForm.reason}
+              onChange={(e) => setRescheduleForm((p) => ({ ...p, reason: e.target.value }))}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+
+          <Alert tone="info">
+            <strong>Policy:</strong> Only 1 courtesy reschedule is permitted per booking. The client will receive an updated email with new Google Calendar sync.
+          </Alert>
+        </div>
+      </Modal>
+
+      {/* Mark Client No-Show Modal (10-15m wait rule) */}
+      <Modal
+        open={Boolean(noShowAppointment)}
+        onClose={() => setNoShowAppointment(null)}
+        title="Mark Client No-Show (১০-১৫ মিনিট অপেক্ষা পরবর্তী)"
+        description="Confirm that you were present in the consultation chamber and waited for the client. The session will be closed and your consultation fee will be settled."
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button variant="secondary" onClick={() => setNoShowAppointment(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              loading={noShowMutation.isPending}
+              onClick={() => noShowMutation.mutate()}
+              className="font-bold"
+            >
+              <AlertCircle className="size-3.5 mr-1" />
+              Confirm Client No-Show
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3.5 py-2 text-xs">
+          <Alert tone="warning">
+            You are certifying that you waited in the chamber for at least 10–15 minutes and the client was absent.
+            The escrowed session coins will be captured to your account as compensation.
+          </Alert>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1">
+              No-Show Notes (Optional)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Client did not enter chamber after 15m wait"
+              value={noShowReason}
+              onChange={(e) => setNoShowReason(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+            />
+          </div>
         </div>
       </Modal>
     </div>
