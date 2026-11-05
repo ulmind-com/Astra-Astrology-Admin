@@ -427,6 +427,16 @@ export const appointmentApi = {
 
   markNoShow: (id: string, reason?: string) =>
     api.post<Appointment>(`/appointments/${id}/no-show`, { reason: reason ?? null }),
+
+  joinChamber: (id: string) =>
+    api.post<{
+      call_id: string;
+      room_id: string;
+      token: string;
+      starts_at: string;
+      ends_at: string;
+      minutes: number;
+    }>(`/appointments/${id}/chamber`, {}),
 };
 
 // ----------------------------------------------------------------- reviews

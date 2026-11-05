@@ -34,6 +34,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -873,10 +874,12 @@ function Schedule({
 }: {
   initialDisplayMode?: "calendar" | "list";
 }) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [displayMode, setDisplayMode] = React.useState<"calendar" | "list">(initialDisplayMode);
   const [tab, setTab] = React.useState<ScheduleTab>("upcoming");
   const [cancelTargetId, setCancelTargetId] = React.useState<string | null>(null);
+  const [enteringChamber, setEnteringChamber] = React.useState(false);
 
   // Availability windows query for Google Calendar integration
   const { data: windows } = useQuery({
@@ -1479,6 +1482,39 @@ function Schedule({
 
               {dossierAppointment?.status === "booked" && (
                 <>
+                  {(() => {
+                    const startMs = new Date(dossierAppointment.starts_at).getTime();
+                    const endMs = new Date(dossierAppointment.ends_at).getTime();
+                    const nowMs = Date.now();
+                    const isLiveWindow = nowMs >= startMs - 10 * 60_000 && nowMs <= endMs + 15 * 60_000;
+                    if (!isLiveWindow) return null;
+                    return (
+                      <Button
+                        size="sm"
+                        disabled={enteringChamber}
+                        onClick={async () => {
+                          setEnteringChamber(true);
+                          try {
+                            const res = await appointmentApi.joinChamber(dossierAppointment.id);
+                            if (res?.call_id) {
+                              router.push(`/call/${res.call_id}`);
+                            } else {
+                              toast.error("Could not prepare chamber.");
+                            }
+                          } catch (err: any) {
+                            toast.error(err?.message || "Failed to enter chamber.");
+                          } finally {
+                            setEnteringChamber(false);
+                          }
+                        }}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md"
+                      >
+                        <Video className="size-3.5 mr-1" />
+                        {enteringChamber ? "Entering..." : "Enter Live Chamber"}
+                      </Button>
+                    );
+                  })()}
+
                   <Button
                     variant="secondary"
                     size="sm"
