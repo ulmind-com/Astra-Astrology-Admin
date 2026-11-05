@@ -384,6 +384,9 @@ export const appointmentApi = {
     block_minutes?: number;
     cancellation_window_minutes?: number;
     buffer_minutes?: number;
+    follow_up_enabled?: boolean;
+    follow_up_window_days?: number;
+    follow_up_max_messages?: number;
   }) => api.patch<AppointmentCard>(endpoints.appointments.myCard, body),
 
   windows: (days = 60) =>
@@ -469,6 +472,14 @@ export const appointmentApi = {
 
   offerExtension: (id: string, extra_minutes: number = 10) =>
     api.post<Appointment>(`/appointments/${id}/extension/offer`, { extra_minutes }),
+
+  issueFollowUpPass: (
+    id: string,
+    body: { window_days?: number; max_messages?: number; notes?: string | null },
+  ) => api.post<Appointment>(`/appointments/${id}/follow-up/issue`, body),
+
+  sendFollowUpMessage: (id: string, text: string) =>
+    api.post<Appointment>(`/appointments/${id}/follow-up/message`, { text }),
 };
 
 // ----------------------------------------------------------------- reviews

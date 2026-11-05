@@ -507,6 +507,9 @@ function PriceCard() {
   const [form, setForm] = React.useState({ rupees: "", block: "30" });
   const [cancelWindow, setCancelWindow] = React.useState<number>(30);
   const [bufferMins, setBufferMins] = React.useState<number>(10);
+  const [followUpEnabled, setFollowUpEnabled] = React.useState<boolean>(true);
+  const [followUpDays, setFollowUpDays] = React.useState<number>(7);
+  const [followUpMaxQuestions, setFollowUpMaxQuestions] = React.useState<number>(3);
   const [ready, setReady] = React.useState(false);
 
   React.useEffect(() => {
@@ -514,6 +517,9 @@ function PriceCard() {
       setForm({ rupees: String(card.price_paise / 100), block: String(card.block_minutes) });
       setCancelWindow(card.cancellation_window_minutes ?? 30);
       setBufferMins(card.buffer_minutes ?? 10);
+      setFollowUpEnabled(card.follow_up_enabled ?? true);
+      setFollowUpDays(card.follow_up_window_days ?? 7);
+      setFollowUpMaxQuestions(card.follow_up_max_messages ?? 3);
       setReady(true);
     }
   }, [card, ready]);
@@ -525,6 +531,9 @@ function PriceCard() {
       block_minutes?: number;
       cancellation_window_minutes?: number;
       buffer_minutes?: number;
+      follow_up_enabled?: boolean;
+      follow_up_window_days?: number;
+      follow_up_max_messages?: number;
     }) => appointmentApi.updateCard(body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: CARD_KEY });
@@ -795,6 +804,81 @@ function PriceCard() {
         </div>
       </div>
 
+      {/* Complimentary Remedy Follow-up Window Authority */}
+      <div className="space-y-3 rounded-2xl border border-amber-200/80 bg-gradient-to-br from-amber-500/5 via-orange-500/5 to-amber-500/10 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-4 text-amber-600" />
+            <span className="text-xs font-bold text-slate-800">
+              Complimentary Remedy Follow-up Pass (রেমিডি ফলো-আপ উইন্ডো)
+            </span>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={followUpEnabled}
+              onChange={(e) => setFollowUpEnabled(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
+          </label>
+        </div>
+
+        <p className="text-[11px] text-slate-600 leading-relaxed">
+          Allow seekers to ask quick clarification questions about your sacred prescription (gemstone finger, mantra japa timing, ritual guidance) for free within the pass window.
+        </p>
+
+        {followUpEnabled && (
+          <div className="space-y-3 pt-1 border-t border-amber-200/50">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-slate-500 block mb-1.5">
+                Pass Validity Window (কত দিনের মধ্যে প্রশ্ন করতে পারবে)
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {[3, 5, 7, 10, 14].map((days) => (
+                  <button
+                    key={days}
+                    type="button"
+                    onClick={() => setFollowUpDays(days)}
+                    className={cn(
+                      "rounded-xl px-3 py-1.5 text-xs font-bold transition-all border cursor-pointer",
+                      followUpDays === days
+                        ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                    )}
+                  >
+                    {days} Days {days === 7 && "(Standard)"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <span className="text-[10px] uppercase font-bold text-slate-500 block mb-1.5">
+                Max Complimentary Questions (সর্বোচ্চ কয়টি প্রশ্ন করতে পারবে)
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {[1, 2, 3, 5].map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    onClick={() => setFollowUpMaxQuestions(count)}
+                    className={cn(
+                      "rounded-xl px-3 py-1.5 text-xs font-bold transition-all border cursor-pointer",
+                      followUpMaxQuestions === count
+                        ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                    )}
+                  >
+                    {count} {count === 1 ? "Question" : "Questions"} {count === 3 && "(Recommended)"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Save Button */}
       <button
         type="button"
@@ -805,6 +889,9 @@ function PriceCard() {
             block_minutes: block,
             cancellation_window_minutes: cancelWindow,
             buffer_minutes: bufferMins,
+            follow_up_enabled: followUpEnabled,
+            follow_up_window_days: followUpDays,
+            follow_up_max_messages: followUpMaxQuestions,
             enabled: true,
           })
         }
@@ -1307,6 +1394,34 @@ function Schedule({
       toast.success("Birth Time Rectification request sent to seeker via email & in-app prompt.");
     },
     onError: (e: any) => toast.error(e?.message || "Failed to request BTR."),
+  });
+
+  // Follow-up Pass state & mutations
+  const [issuePassAppointment, setIssuePassAppointment] = React.useState<Appointment | null>(null);
+  const [passWindowDays, setPassWindowDays] = React.useState<number>(7);
+  const [passMaxQuestions, setPassMaxQuestions] = React.useState<number>(3);
+  const [passNotes, setPassNotes] = React.useState<string>("");
+  const [followUpReplyText, setFollowUpReplyText] = React.useState<string>("");
+  const [sendingFollowUpReply, setSendingFollowUpReply] = React.useState<boolean>(false);
+
+  const issuePassMutation = useMutation({
+    mutationFn: () => {
+      if (!issuePassAppointment) throw new Error("No appointment selected.");
+      return appointmentApi.issueFollowUpPass(issuePassAppointment.id, {
+        window_days: passWindowDays,
+        max_messages: passMaxQuestions,
+        notes: passNotes.trim() || undefined,
+      });
+    },
+    onSuccess: (updated) => {
+      void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+      setIssuePassAppointment(null);
+      if (dossierAppointment && updated && dossierAppointment.id === updated.id) {
+        setDossierAppointment(updated);
+      }
+      toast.success(`Complimentary ${passWindowDays}-day remedy follow-up pass issued successfully!`);
+    },
+    onError: (e: any) => toast.error(e?.message || "Failed to issue follow-up pass."),
   });
 
   const allBookings = React.useMemo(() => bookings ?? [], [bookings]);
@@ -2184,6 +2299,122 @@ function Schedule({
                 </p>
               </div>
             )}
+
+            {/* Complimentary Remedy Follow-up Pass Section */}
+            <div className="rounded-2xl border border-amber-300/80 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-500/15 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="size-4 text-amber-700" />
+                  <span className="font-bold text-slate-900 text-xs">
+                    Remedy Clarification Pass (সৌজন্যমূলক ফলো-আপ উইন্ডো)
+                  </span>
+                </div>
+                {dossierAppointment.follow_up_pass_enabled ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    Active · {dossierAppointment.follow_up_messages_used || 0}/{dossierAppointment.follow_up_max_messages || 3} Questions Used
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                    Not Active
+                  </span>
+                )}
+              </div>
+
+              {dossierAppointment.follow_up_pass_enabled && dossierAppointment.follow_up_expires_at && (
+                <p className="text-[11px] text-amber-900 font-medium flex items-center justify-between">
+                  <span>Validity: {dossierAppointment.follow_up_window_days || 7} Days</span>
+                  <span>Expires: {new Date(dossierAppointment.follow_up_expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                </p>
+              )}
+
+              {/* Follow-up Messages Thread */}
+              {dossierAppointment.follow_up_thread && dossierAppointment.follow_up_thread.length > 0 ? (
+                <div className="space-y-2 rounded-xl bg-white p-3 border border-amber-200/80 max-h-56 overflow-y-auto">
+                  {dossierAppointment.follow_up_thread.map((msg: any) => {
+                    const isAstro = msg.sender_role === "astrologer";
+                    return (
+                      <div
+                        key={msg.id}
+                        className={cn(
+                          "rounded-xl p-2.5 text-xs max-w-[85%]",
+                          isAstro
+                            ? "ml-auto bg-amber-50 border border-amber-200 text-amber-950"
+                            : "mr-auto bg-slate-100 text-slate-900"
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-2 text-[10px] font-bold text-slate-500 mb-1">
+                          <span>{msg.sender_name} ({isAstro ? "Panditji" : "Client"})</span>
+                          <span>{new Date(msg.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                        </div>
+                        <p className="whitespace-pre-line leading-relaxed">{msg.text}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-[11px] text-slate-500 italic bg-white/60 p-2.5 rounded-xl border border-amber-200/60">
+                  {dossierAppointment.follow_up_pass_enabled
+                    ? "Seeker has not asked any remedy questions yet."
+                    : "No remedy clarification pass has been issued for this seeker."}
+                </p>
+              )}
+
+              {/* Action Buttons & Reply Box */}
+              <div className="flex flex-col gap-2 pt-1">
+                {dossierAppointment.follow_up_pass_enabled && (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Write guidance / answer to seeker..."
+                      value={followUpReplyText}
+                      onChange={(e) => setFollowUpReplyText(e.target.value)}
+                      className="flex-1 rounded-xl border border-amber-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    />
+                    <Button
+                      size="sm"
+                      disabled={sendingFollowUpReply || !followUpReplyText.trim()}
+                      onClick={async () => {
+                        setSendingFollowUpReply(true);
+                        try {
+                          const updated = await appointmentApi.sendFollowUpMessage(
+                            dossierAppointment.id,
+                            followUpReplyText.trim()
+                          );
+                          setDossierAppointment(updated);
+                          setFollowUpReplyText("");
+                          toast.success("Guidance reply sent to seeker!");
+                          void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+                        } catch (err: any) {
+                          toast.error(err?.message || "Failed to send follow-up reply.");
+                        } finally {
+                          setSendingFollowUpReply(false);
+                        }
+                      }}
+                      className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs"
+                    >
+                      Send Answer
+                    </Button>
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setPassWindowDays(dossierAppointment.follow_up_window_days || 7);
+                      setPassMaxQuestions(dossierAppointment.follow_up_max_messages || 3);
+                      setPassNotes(dossierAppointment.follow_up_notes || "");
+                      setIssuePassAppointment(dossierAppointment);
+                    }}
+                    className="text-amber-800 border-amber-300 hover:bg-amber-100 text-xs font-semibold"
+                  >
+                    <Sparkles className="size-3.5 mr-1 text-amber-600" />
+                    {dossierAppointment.follow_up_pass_enabled ? "Adjust / Extend Pass" : "Issue Follow-up Pass"}
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </Modal>
@@ -2585,6 +2816,94 @@ function Schedule({
         <p className="text-xs text-slate-600 py-2 leading-relaxed">
           Removing <strong>{unblockTarget?.name}</strong> from your blacklist will enable them to view your available calendar slots and book appointments as a normal seeker.
         </p>
+      </Modal>
+
+      {/* Issue / Update Follow-Up Pass Modal */}
+      <Modal
+        open={Boolean(issuePassAppointment)}
+        onClose={() => setIssuePassAppointment(null)}
+        title="Issue Complimentary Follow-up Pass (রেমিডি ফলো-আপ পাস)"
+        description="Grant a free 7-day (or custom) inbox follow-up pass for this consultation so the client can clarify prescribed remedies, mantras, or rituals."
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button variant="secondary" onClick={() => setIssuePassAppointment(null)}>
+              Cancel
+            </Button>
+            <Button
+              loading={issuePassMutation.isPending}
+              onClick={() => issuePassMutation.mutate()}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
+            >
+              <Sparkles className="size-3.5 mr-1" />
+              Confirm & Issue Pass
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 py-2 text-xs">
+          <Alert tone="info">
+            The seeker can submit up to the specified questions without paying coins. You can reply from the consultation dossier at your convenience.
+          </Alert>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1.5">
+              Pass Validity Duration (কত দিনের বৈধতা) *
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[3, 5, 7, 10, 14, 21].map((days) => (
+                <button
+                  key={days}
+                  type="button"
+                  onClick={() => setPassWindowDays(days)}
+                  className={cn(
+                    "rounded-xl px-3 py-1.5 text-xs font-bold border transition-all cursor-pointer",
+                    passWindowDays === days
+                      ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                  )}
+                >
+                  {days} Days {days === 7 && "(Standard)"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1.5">
+              Allowed Free Questions (সর্বোচ্চ কয়টি প্রশ্ন) *
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[1, 2, 3, 5].map((cnt) => (
+                <button
+                  key={cnt}
+                  type="button"
+                  onClick={() => setPassMaxQuestions(cnt)}
+                  className={cn(
+                    "rounded-xl px-3 py-1.5 text-xs font-bold border transition-all cursor-pointer",
+                    passMaxQuestions === cnt
+                      ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                  )}
+                >
+                  {cnt} {cnt === 1 ? "Question" : "Questions"} {cnt === 3 && "(Recommended)"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1">
+              Instructions for Seeker (Optional)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Feel free to ask about gemstone wearing rituals or mantra counts"
+              value={passNotes}
+              onChange={(e) => setPassNotes(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+        </div>
       </Modal>
     </div>
   );

@@ -420,6 +420,21 @@ export type Appointment = Omit<S["AppointmentOut"], "peer"> & {
   extension_offered_at?: string | null;
   extension_status?: "none" | "pending" | "accepted" | "declined" | "expired";
   extension_total_extended_minutes?: number;
+  follow_up_pass_enabled?: boolean;
+  follow_up_window_days?: number;
+  follow_up_expires_at?: string | null;
+  follow_up_max_messages?: number;
+  follow_up_messages_used?: number;
+  follow_up_granted_at?: string | null;
+  follow_up_notes?: string | null;
+  follow_up_thread?: Array<{
+    id: string;
+    sender_id: string;
+    sender_role: "user" | "astrologer";
+    sender_name: string;
+    text: string;
+    sent_at: string;
+  }>;
   peer?: S["AppointmentPeer"] | null;
   held_coins?: number;
   held_status?: string;
@@ -437,6 +452,9 @@ export type AppointmentStatus = S["AppointmentStatus"];
 export type AppointmentCard = S["AppointmentCardOut"] & {
   cancellation_window_minutes?: number;
   buffer_minutes?: number;
+  follow_up_enabled?: boolean;
+  follow_up_window_days?: number;
+  follow_up_max_messages?: number;
 };
 export type AvailabilityWindow = S["WindowOut"];
 export type AppointmentDayView = S["DayView"];
