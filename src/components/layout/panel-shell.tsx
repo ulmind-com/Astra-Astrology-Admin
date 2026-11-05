@@ -25,6 +25,7 @@ import {
   Star,
   LayoutTemplate,
   Fingerprint,
+  LifeBuoy,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -58,6 +59,7 @@ const ASTROLOGER_NAV: NavItem[] = [
 const ADMIN_MENU_NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/astrologers", label: "Astrologers", icon: Users },
+  { href: "/support", label: "Support Tickets", icon: LifeBuoy },
 ];
 
 const ADMIN_FINANCIAL_NAV: NavItem[] = [
