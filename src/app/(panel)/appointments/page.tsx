@@ -38,6 +38,7 @@ import * as React from "react";
 import { toast } from "sonner";
 
 import { Alert, Avatar, Badge, Button, EmptyState, LoadingBlock, Modal } from "@/components/ui";
+import { GoogleCalendarSuite } from "@/components/appointments/google-calendar";
 import { appointmentApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
@@ -781,8 +782,15 @@ function OpenHours() {
 /* --------------------------------------------------------------- schedule */
 function Schedule() {
   const queryClient = useQueryClient();
+  const [displayMode, setDisplayMode] = React.useState<"calendar" | "list">("calendar");
   const [tab, setTab] = React.useState<ScheduleTab>("upcoming");
   const [cancelTargetId, setCancelTargetId] = React.useState<string | null>(null);
+
+  // Availability windows query for Google Calendar integration
+  const { data: windows } = useQuery({
+    queryKey: WINDOWS_KEY,
+    queryFn: () => appointmentApi.windows(),
+  });
 
   // Advanced Dossier & Prescription state
   const [dossierAppointment, setDossierAppointment] = React.useState<Appointment | null>(null);
@@ -894,6 +902,65 @@ function Schedule() {
   }, [tab, upcomingList, todayList, pastList, allBookings]);
 
   return (
+    <div className="space-y-6">
+      {/* Top View Selector Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-3xl border border-slate-200/90 bg-white shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setDisplayMode("calendar")}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
+              displayMode === "calendar"
+                ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+            )}
+          >
+            <Calendar className="size-4 text-sky-400" />
+            <span>Google Calendar Schedule</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setDisplayMode("list")}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
+              displayMode === "list"
+                ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+            )}
+          >
+            <FileText className="size-4 text-amber-400" />
+            <span>Bookings Ledger ({allBookings.length})</span>
+          </button>
+        </div>
+
+        <p className="text-xs text-slate-500 font-medium hidden sm:block">
+          {displayMode === "calendar"
+            ? "📅 Interactive Google Calendar view with live time indicator and 1-click slot activation."
+            : "📋 Full chronological table of client bookings, prescriptions, and cancellation status."}
+        </p>
+      </div>
+
+      {/* 1. GOOGLE CALENDAR SUITE (Default Hero Experience) */}
+      {displayMode === "calendar" && (
+        <GoogleCalendarSuite
+          bookings={allBookings}
+          windows={windows ?? []}
+          onOpenSession={(a) => setDossierAppointment(a)}
+          onOpenPrescription={(a) => openPrescriptionModal(a)}
+          onCancelAppointment={(id) => setCancelTargetId(id)}
+          onCompleteAppointment={(id) => complete.mutate(id)}
+          onAddWindow={async (fromIso, toIso) => {
+            await appointmentApi.addWindow(fromIso, toIso);
+            void queryClient.invalidateQueries({ queryKey: WINDOWS_KEY });
+            void queryClient.invalidateQueries({ queryKey: CARD_KEY });
+          }}
+        />
+      )}
+
+      {/* 2. CLASSIC LEDGER & TABLE LIST VIEW */}
+      {displayMode === "list" && (
     <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-[0_16px_40px_rgba(20,25,45,0.05)] space-y-6">
       {/* Header and Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
@@ -1222,6 +1289,8 @@ function Schedule() {
             );
           })}
         </div>
+      )}
+    </div>
       )}
 
       {/* Client Astrological Dossier Modal */}
