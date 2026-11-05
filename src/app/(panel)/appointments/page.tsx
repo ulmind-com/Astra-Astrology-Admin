@@ -312,20 +312,39 @@ function PriceCard() {
           className={cn(
             "group flex items-center gap-2 rounded-2xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer border",
             card.enabled
-              ? "bg-emerald-50 text-emerald-800 border-emerald-200 shadow-xs hover:bg-emerald-100"
-              : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
+              ? "bg-emerald-50 text-emerald-800 border-emerald-300 shadow-xs hover:bg-emerald-100 ring-2 ring-emerald-500/20"
+              : "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 ring-2 ring-amber-500/20"
           )}
           title={card.enabled ? "Click to pause bookings" : "Click to enable bookings"}
         >
           <span
             className={cn(
               "size-2 rounded-full transition-all",
-              card.enabled ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+              card.enabled ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
             )}
           />
-          <span>{card.enabled ? "Accepting Bookings" : "Bookings Paused"}</span>
+          <span>{card.enabled ? "Accepting Bookings (Live)" : "Bookings Paused"}</span>
         </button>
       </div>
+
+      {/* Warning banner when bookings are paused */}
+      {!card.enabled && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50/90 p-3.5 text-xs text-amber-900 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="size-4 text-amber-600 shrink-0" />
+            <span className="font-medium">
+              Your appointment calendar is currently paused. Clients cannot see your slots on the website.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => save.mutate({ enabled: true })}
+            className="rounded-xl bg-amber-600 px-3 py-1.5 font-bold text-white hover:bg-amber-700 transition-colors shadow-2xs cursor-pointer text-xs"
+          >
+            Activate Bookings Now
+          </button>
+        </div>
+      )}
 
       {/* Quick Rate Presets */}
       <div className="space-y-2">
@@ -449,7 +468,11 @@ function PriceCard() {
         type="button"
         disabled={save.isPending || !(price > 0 && block >= 5)}
         onClick={() =>
-          save.mutate({ price_paise: Math.round(price * 100), block_minutes: block })
+          save.mutate({
+            price_paise: Math.round(price * 100),
+            block_minutes: block,
+            enabled: true,
+          })
         }
         className={cn(
           "w-full flex items-center justify-center gap-2 rounded-2xl py-3 px-6 text-sm font-bold text-white transition-all cursor-pointer",
@@ -459,7 +482,7 @@ function PriceCard() {
         )}
       >
         <Check className="size-4 stroke-[2.5]" />
-        <span>{save.isPending ? "Saving Pricing..." : "Save Rate Preferences"}</span>
+        <span>{save.isPending ? "Saving Pricing..." : "Save Rate & Activate Bookings"}</span>
       </button>
     </div>
   );
@@ -495,7 +518,8 @@ function OpenHours() {
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: WINDOWS_KEY });
-      toast.success("Availability window opened!");
+      void queryClient.invalidateQueries({ queryKey: CARD_KEY });
+      toast.success("Availability window opened & live on website!");
     },
     onError: (e: ApiError) => toast.error(e.message),
   });
