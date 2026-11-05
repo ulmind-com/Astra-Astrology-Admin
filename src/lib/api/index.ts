@@ -412,6 +412,15 @@ export const appointmentApi = {
       astrologer_notes?: string | null;
     },
   ) => api.patch<Appointment>(`/appointments/${id}/prescription`, body),
+
+  getPreflight: (id: string) =>
+    api.get<Record<string, any>>(`/appointments/${id}/preflight`),
+
+  getCertificate: (id: string) =>
+    api.get<Record<string, any>>(`/appointments/${id}/certificate`),
+
+  getCertificateHtmlUrl: (id: string) =>
+    `${process.env.NEXT_PUBLIC_API_URL || "https://api.divinlink.com"}/api/v1/appointments/${id}/certificate/html`,
 };
 
 // ----------------------------------------------------------------- reviews

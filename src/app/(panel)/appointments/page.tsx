@@ -886,6 +886,28 @@ function Schedule({
 
   // Advanced Dossier & Prescription state
   const [dossierAppointment, setDossierAppointment] = React.useState<Appointment | null>(null);
+  const [preflightData, setPreflightData] = React.useState<Record<string, any> | null>(null);
+  const [isLoadingPreflight, setIsLoadingPreflight] = React.useState(false);
+
+  React.useEffect(() => {
+    if (dossierAppointment) {
+      if (dossierAppointment.preflight_dossier) {
+        setPreflightData(dossierAppointment.preflight_dossier);
+      } else {
+        setIsLoadingPreflight(true);
+        appointmentApi
+          .getPreflight(dossierAppointment.id)
+          .then((res) => {
+            setPreflightData(res.data);
+          })
+          .catch(() => {})
+          .finally(() => setIsLoadingPreflight(false));
+      }
+    } else {
+      setPreflightData(null);
+    }
+  }, [dossierAppointment]);
+
   const [prescriptionAppointment, setPrescriptionAppointment] = React.useState<Appointment | null>(null);
   const [prescriptionForm, setPrescriptionForm] = React.useState<{
     gemstone: string;
@@ -1389,10 +1411,24 @@ function Schedule({
       <Modal
         open={Boolean(dossierAppointment)}
         onClose={() => setDossierAppointment(null)}
-        title="Client Astrological Dossier"
-        description="Comprehensive pre-consultation details and birth chart snapshot submitted by the client."
+        title="Client Astrological Dossier & AI Pre-Flight"
+        description="Comprehensive pre-consultation details, cosmic resonance index, and automated AI astrological briefing."
         footer={
-          <div className="flex items-center justify-end gap-3 w-full">
+          <div className="flex items-center justify-between gap-3 w-full">
+            <div>
+              {dossierAppointment?.status === "completed" && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    window.open(appointmentApi.getCertificateHtmlUrl(dossierAppointment.id), "_blank");
+                  }}
+                  className="border-amber-500/30 text-amber-600 hover:bg-amber-50 font-bold"
+                >
+                  <FileText className="size-3.5 mr-1.5" />
+                  View Divya Certificate
+                </Button>
+              )}
+            </div>
             <Button variant="secondary" onClick={() => setDossierAppointment(null)}>
               Close Dossier
             </Button>
@@ -1401,21 +1437,71 @@ function Schedule({
       >
         {dossierAppointment && (
           <div className="space-y-4 py-2 text-xs">
-            {/* Client Profile Header */}
-            <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3.5 border border-slate-200">
-              <Avatar
-                name={dossierAppointment.peer?.name || "Client"}
-                src={dossierAppointment.peer?.avatar_url ?? undefined}
-                size="md"
-              />
-              <div className="min-w-0 flex-1">
-                <h4 className="font-display font-bold text-sm text-slate-900 truncate">
-                  {dossierAppointment.peer?.name || "Client"}
-                </h4>
-                <p className="text-[11px] text-slate-500">
-                  Appointment Session · {dossierAppointment.minutes} mins · {dayRelative(dossierAppointment.starts_at)}
-                </p>
+            {/* Client Profile Header with Cosmic Synergy Score */}
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3.5 border border-slate-200">
+              <div className="flex items-center gap-3 min-w-0">
+                <Avatar
+                  name={dossierAppointment.peer?.name || "Client"}
+                  src={dossierAppointment.peer?.avatar_url ?? undefined}
+                  size="md"
+                />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-display font-bold text-sm text-slate-900 truncate">
+                    {dossierAppointment.peer?.name || "Client"}
+                  </h4>
+                  <p className="text-[11px] text-slate-500">
+                    Appointment Session · {dossierAppointment.minutes} mins · {dayRelative(dossierAppointment.starts_at)}
+                  </p>
+                </div>
               </div>
+
+              <div className="text-right shrink-0">
+                <span className="inline-flex items-center gap-1 rounded-full bg-linear-to-r from-amber-500/10 to-orange-500/15 border border-amber-500/30 px-2.5 py-1 text-[11px] font-bold text-amber-700">
+                  <Sparkles className="size-3 text-amber-500" />
+                  <span>{dossierAppointment.cosmic_synergy_score || 88}% Synergy</span>
+                </span>
+              </div>
+            </div>
+
+            {/* AI Astrological Pre-Flight Intelligence Dossier */}
+            <div className="rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/70 via-indigo-50/30 to-purple-50/40 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-bold text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="size-3.5 text-indigo-600" />
+                  <span>🔮 AI Astrological Pre-Flight Intelligence (T-15m)</span>
+                </p>
+                {isLoadingPreflight && (
+                  <span className="text-[10px] text-indigo-500 animate-pulse">Synthesizing Kundli...</span>
+                )}
+              </div>
+
+              {preflightData ? (
+                <div className="space-y-2.5 text-[11px]">
+                  {/* Planetary Gochars */}
+                  <div className="rounded-xl bg-white/90 p-2.5 border border-indigo-100 space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-indigo-700 block">Planetary Gochar Transits</span>
+                    <ul className="list-disc list-inside space-y-0.5 text-slate-700 text-[11px]">
+                      <li>{preflightData.planetary_transits?.saturn_gochar || "Saturn in active transit restructuring"}</li>
+                      <li>{preflightData.planetary_transits?.jupiter_gochar || "Jupiter in auspicious trine aspect"}</li>
+                      <li>{preflightData.planetary_transits?.rahu_ketu_axis || "Karmic nodal alignment on pivotal axis"}</li>
+                    </ul>
+                  </div>
+
+                  {/* AI Strategic Directives */}
+                  <div className="rounded-xl bg-white/90 p-2.5 border border-indigo-100 space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-indigo-700 block">Consultation Guidance Synthesis</span>
+                    <ul className="list-disc list-inside space-y-1 text-slate-700 text-[11px]">
+                      {(preflightData.ai_executive_summary || []).map((summary: string, idx: number) => (
+                        <li key={idx} className="leading-relaxed">{summary}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-xl bg-white/80 p-3 text-slate-500 italic text-[11px]">
+                  AI Astrological pre-flight briefing is generating automatically based on client birth chart...
+                </div>
+              )}
             </div>
 
             {/* Consultation Focus Pillar */}
@@ -1436,7 +1522,7 @@ function Schedule({
             <div className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-2.5">
               <p className="text-[11px] font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                 <Calendar className="size-3.5 text-amber-600" />
-                <span>Birth Chart Details</span>
+                <span>Birth Chart Coordinates</span>
               </p>
 
               {dossierAppointment.birth_details ? (
@@ -1444,19 +1530,19 @@ function Schedule({
                   <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
                     <span className="text-[10px] text-slate-400 block">Date of Birth</span>
                     <span className="font-bold text-slate-800">
-                      {dossierAppointment.birth_details.date_of_birth || "Not specified"}
+                      {dossierAppointment.birth_details.date_of_birth || dossierAppointment.birth_details.dob || "Not specified"}
                     </span>
                   </div>
                   <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
                     <span className="text-[10px] text-slate-400 block">Time of Birth</span>
                     <span className="font-bold text-slate-800">
-                      {dossierAppointment.birth_details.time_of_birth || "Not specified"}
+                      {dossierAppointment.birth_details.time_of_birth || dossierAppointment.birth_details.tob || "Not specified"}
                     </span>
                   </div>
                   <div className="col-span-2 rounded-xl bg-slate-50 p-2.5 border border-slate-100">
                     <span className="text-[10px] text-slate-400 block">Place of Birth</span>
                     <span className="font-bold text-slate-800">
-                      {dossierAppointment.birth_details.place_of_birth || "Not specified"}
+                      {dossierAppointment.birth_details.place_of_birth || dossierAppointment.birth_details.pob || "Not specified"}
                     </span>
                   </div>
                 </div>

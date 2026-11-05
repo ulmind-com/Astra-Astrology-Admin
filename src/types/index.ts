@@ -373,6 +373,10 @@ export type Appointment = Omit<S["AppointmentOut"], "peer"> & {
   birth_details?: Record<string, any> | null;
   prescription?: VedicPrescription | null;
   muhurat_type?: string | null;
+  preflight_dossier?: Record<string, any> | null;
+  cosmic_synergy_score?: number | null;
+  certificate_data?: Record<string, any> | null;
+  standby_queue?: Array<Record<string, any>> | null;
   peer?: S["AppointmentPeer"] | null;
   held_coins?: number;
   held_status?: string;
