@@ -40,6 +40,10 @@ export default function AstrologerCallPage() {
   const [redFlagNotes, setRedFlagNotes] = React.useState("");
   const [submittingRedFlag, setSubmittingRedFlag] = React.useState(false);
 
+  const [extendOpen, setExtendOpen] = React.useState(false);
+  const [extendMinutes, setExtendMinutes] = React.useState<number>(10);
+  const [offeringExtension, setOfferingExtension] = React.useState(false);
+
   React.useEffect(() => {
     if (call && !isCallLive(call.status)) {
       const timer = setTimeout(() => router.replace("/me"), 3000);
@@ -84,6 +88,31 @@ export default function AstrologerCallPage() {
             </p>
           </div>
           <div className="pointer-events-auto flex items-center gap-2">
+            {call.appointment_id && (
+              <>
+                {call.extension_offer?.status === "pending" ? (
+                  <span className="flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-950/70 px-2.5 py-1 text-xs font-semibold text-amber-200 animate-pulse">
+                    <Clock className="size-3.5 text-amber-400" />
+                    Offer Sent (+{call.extension_offer.extra_minutes}m)...
+                  </span>
+                ) : call.extension_offer?.status === "accepted" ? (
+                  <span className="flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-950/70 px-2.5 py-1 text-xs font-semibold text-emerald-200">
+                    <Clock className="size-3.5 text-emerald-400" />
+                    Extended (+{call.extension_offer.extra_minutes}m)!
+                  </span>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={() => setExtendOpen(true)}
+                    className="bg-amber-500 hover:bg-amber-400 text-slate-950 border border-amber-400 text-xs font-bold"
+                    title="Offer 10 or 15 mins extension to client"
+                  >
+                    <Clock className="size-3.5 mr-1" />
+                    Offer Extension
+                  </Button>
+                )}
+              </>
+            )}
             <Button
               size="sm"
               onClick={() => setRedFlagOpen(true)}
@@ -197,6 +226,82 @@ export default function AstrologerCallPage() {
                 placeholder="What happened in the chamber..."
                 className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-900"
               />
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Offer Extension Modal */}
+      {extendOpen && Boolean(call.appointment_id) && (
+        <Modal
+          open={extendOpen}
+          onClose={() => setExtendOpen(false)}
+          title="Offer Session Extension (সেশন বৃদ্ধি প্রস্তাব)"
+          description="Send an instant in-chamber extension offer to the client. If they accept, extra consultation fee is debited from their wallet and the chamber clock extends seamlessly."
+          footer={
+            <div className="flex items-center justify-end gap-3 w-full">
+              <Button variant="secondary" onClick={() => setExtendOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                disabled={offeringExtension}
+                onClick={async () => {
+                  setOfferingExtension(true);
+                  try {
+                    await appointmentApi.offerExtension(call.appointment_id!, extendMinutes);
+                    toast.success(`Extension offer for +${extendMinutes} minutes sent to seeker!`);
+                    setExtendOpen(false);
+                  } catch (err: any) {
+                    toast.error(err?.message || "Failed to send extension offer.");
+                  } finally {
+                    setOfferingExtension(false);
+                  }
+                }}
+                className="font-bold bg-amber-500 hover:bg-amber-400 text-slate-950"
+              >
+                <Clock className="size-3.5 mr-1" />
+                {offeringExtension ? "Sending Offer..." : `Offer +${extendMinutes} Minutes`}
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-4 py-2 text-xs text-slate-800">
+            <Alert tone="info">
+              The seeker will receive a live prompt on their screen. The call will stay connected without interruption while they respond.
+            </Alert>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 mb-2">
+                Select Extension Duration *
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setExtendMinutes(10)}
+                  className={cn(
+                    "flex flex-col items-center justify-center p-3.5 rounded-xl border text-center transition-all",
+                    extendMinutes === 10
+                      ? "border-amber-500 bg-amber-50/80 text-amber-950 font-bold shadow-sm"
+                      : "border-slate-200 hover:border-slate-300 text-slate-600 bg-white"
+                  )}
+                >
+                  <span className="text-sm font-extrabold">+10 Minutes</span>
+                  <span className="text-[10px] text-slate-700 font-medium mt-0.5">Recommended extension</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExtendMinutes(15)}
+                  className={cn(
+                    "flex flex-col items-center justify-center p-3.5 rounded-xl border text-center transition-all",
+                    extendMinutes === 15
+                      ? "border-amber-500 bg-amber-50/80 text-amber-950 font-bold shadow-sm"
+                      : "border-slate-200 hover:border-slate-300 text-slate-600 bg-white"
+                  )}
+                >
+                  <span className="text-sm font-extrabold">+15 Minutes</span>
+                  <span className="text-[10px] text-slate-700 font-medium mt-0.5">Deep consultation</span>
+                </button>
+              </div>
             </div>
           </div>
         </Modal>

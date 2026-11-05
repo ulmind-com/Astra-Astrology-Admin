@@ -279,8 +279,18 @@ export function coinWord(coins: number): string {
 }
 
 // ------------------------------------------------------------------- calls
+export interface ExtensionOffer {
+  offered: boolean;
+  status: "none" | "pending" | "accepted" | "declined" | "expired";
+  extra_minutes?: number | null;
+  cost_coins: number;
+  cost_paise: number;
+  offered_at?: string | null;
+}
+
 export type Call = S["CallOut"] & {
   appointment_id?: string | null;
+  extension_offer?: ExtensionOffer | null;
 };
 export type CallCredentials = S["CallCredentials"];
 export type CallSession = Omit<S["CallSessionOut"], "call"> & {
@@ -403,6 +413,13 @@ export type Appointment = Omit<S["AppointmentOut"], "peer"> & {
   btr_requested_at?: string | null;
   btr_fulfilled?: boolean;
   btr_updated_at?: string | null;
+  extension_offered?: boolean;
+  extension_offered_minutes?: number | null;
+  extension_cost_coins?: number;
+  extension_cost_paise?: number;
+  extension_offered_at?: string | null;
+  extension_status?: "none" | "pending" | "accepted" | "declined" | "expired";
+  extension_total_extended_minutes?: number;
   peer?: S["AppointmentPeer"] | null;
   held_coins?: number;
   held_status?: string;

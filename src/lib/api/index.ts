@@ -466,6 +466,9 @@ export const appointmentApi = {
 
   requestBtr: (id: string, note?: string | null) =>
     api.post<Appointment>(`/appointments/${id}/request-btr`, { note: note ?? null }),
+
+  offerExtension: (id: string, extra_minutes: number = 10) =>
+    api.post<Appointment>(`/appointments/${id}/extension/offer`, { extra_minutes }),
 };
 
 // ----------------------------------------------------------------- reviews
