@@ -10,6 +10,7 @@ import type {
   AvailabilityWindow,
   AppointmentCard,
   Appointment,
+  BlacklistedClient,
   AddressInput,
   AddressUpdate,
   AdminEarningRow,
@@ -447,6 +448,24 @@ export const appointmentApi = {
 
   resumeBrahmaPause: () =>
     api.post<{ message: string }>(`/appointments/brahma-pause/resume`, {}),
+
+  redFlag: (
+    id: string,
+    body: {
+      reason: string;
+      notes?: string | null;
+      blacklist_client?: boolean;
+      terminate_call?: boolean;
+    },
+  ) => api.post<Appointment>(`/appointments/${id}/red-flag`, body),
+
+  myBlacklist: () => api.get<BlacklistedClient[]>(`/appointments/me/blacklist`),
+
+  unblockClient: (userId: string) =>
+    api.post<{ message: string }>(`/appointments/me/blacklist/${userId}/unblock`, {}),
+
+  requestBtr: (id: string, note?: string | null) =>
+    api.post<Appointment>(`/appointments/${id}/request-btr`, { note: note ?? null }),
 };
 
 // ----------------------------------------------------------------- reviews

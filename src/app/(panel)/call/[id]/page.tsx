@@ -1,12 +1,14 @@
 "use client";
 
-import { Clock, Phone, PhoneOff, Video } from "lucide-react";
+import { Clock, Flag, Phone, PhoneOff, Video } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
+import { toast } from "sonner";
 
 import { CallRoom } from "@/components/call/call-room";
-import { Alert, Avatar, Button, LoadingBlock } from "@/components/ui";
+import { Alert, Avatar, Button, LoadingBlock, Modal } from "@/components/ui";
 import { useCall, useCallActions, useCallHeartbeat, useCallTimer } from "@/hooks/use-call";
+import { appointmentApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
@@ -32,6 +34,11 @@ export default function AstrologerCallPage() {
 
   useCallHeartbeat(id, live);
   const seconds = useCallTimer(call?.started_at);
+
+  const [redFlagOpen, setRedFlagOpen] = React.useState(false);
+  const [redFlagReason, setRedFlagReason] = React.useState("Abusive language / Verbal harassment");
+  const [redFlagNotes, setRedFlagNotes] = React.useState("");
+  const [submittingRedFlag, setSubmittingRedFlag] = React.useState(false);
 
   React.useEffect(() => {
     if (call && !isCallLive(call.status)) {
@@ -76,15 +83,26 @@ export default function AstrologerCallPage() {
               {formatDuration(seconds)}
             </p>
           </div>
-          <Button
-            size="sm"
-            onClick={hangUp}
-            disabled={end.isPending}
-            className="pointer-events-auto bg-rose-600 text-white hover:bg-rose-500"
-          >
-            <PhoneOff className="size-4" />
-            End
-          </Button>
+          <div className="pointer-events-auto flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={() => setRedFlagOpen(true)}
+              className="bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-500/40 text-xs font-bold"
+              title="Terminate session and report client misconduct"
+            >
+              <Flag className="size-3.5 mr-1 text-rose-400" />
+              Red-Flag
+            </Button>
+            <Button
+              size="sm"
+              onClick={hangUp}
+              disabled={end.isPending}
+              className="bg-rose-600 text-white hover:bg-rose-500"
+            >
+              <PhoneOff className="size-4" />
+              End
+            </Button>
+          </div>
         </header>
       ) : (
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-5 px-6 text-center">
@@ -105,6 +123,83 @@ export default function AstrologerCallPage() {
             Back to my profile
           </Button>
         </div>
+      )}
+
+      {/* Red-Flag & Abuse Termination Modal */}
+      {redFlagOpen && (
+        <Modal
+          open={redFlagOpen}
+          onClose={() => setRedFlagOpen(false)}
+          title="Red-Flag & Terminate Call (অপব্যবহার রিপোর্ট)"
+          description="End this session immediately, log an official misconduct incident, and blacklist this client from booking you again."
+          footer={
+            <div className="flex items-center justify-end gap-3 w-full">
+              <Button variant="secondary" onClick={() => setRedFlagOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                disabled={submittingRedFlag}
+                onClick={async () => {
+                  setSubmittingRedFlag(true);
+                  try {
+                    if (call.appointment_id) {
+                      await appointmentApi.redFlag(call.appointment_id, {
+                        reason: redFlagReason,
+                        notes: redFlagNotes.trim() || undefined,
+                        blacklist_client: true,
+                        terminate_call: true,
+                      });
+                    }
+                    hangUp();
+                    toast.success("Call terminated. Client red-flagged for policy violation.");
+                    router.replace("/appointments");
+                  } catch (err: any) {
+                    toast.error(err?.message || "Failed to submit red-flag report.");
+                    hangUp();
+                  } finally {
+                    setSubmittingRedFlag(false);
+                    setRedFlagOpen(false);
+                  }
+                }}
+                className="font-bold bg-rose-600 text-white"
+              >
+                <Flag className="size-3.5 mr-1" />
+                Terminate & Red-Flag
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-3.5 py-2 text-xs text-slate-800">
+            <Alert tone="error">
+              This will immediately disconnect the call, report the seeker for misconduct, and protect your session compensation.
+            </Alert>
+            <div>
+              <label className="block text-[11px] font-bold mb-1">Reason *</label>
+              <select
+                value={redFlagReason}
+                onChange={(e) => setRedFlagReason(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 bg-white"
+              >
+                <option value="Abusive language / Verbal harassment">Abusive language / Verbal harassment</option>
+                <option value="Threats or Hostile intimidation">Threats or Hostile intimidation</option>
+                <option value="Inappropriate or Vulgar behavior">Inappropriate or Vulgar behavior</option>
+                <option value="Fraudulent identity or Bad faith">Fraudulent identity or Bad faith</option>
+                <option value="Other platform violation">Other platform violation</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold mb-1">Notes (Optional)</label>
+              <textarea
+                rows={2}
+                value={redFlagNotes}
+                onChange={(e) => setRedFlagNotes(e.target.value)}
+                placeholder="What happened in the chamber..."
+                className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-900"
+              />
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );

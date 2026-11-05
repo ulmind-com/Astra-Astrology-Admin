@@ -17,6 +17,7 @@ import {
   ExternalLink,
   Eye,
   FileText,
+  Flag,
   Flame,
   Gem,
   HelpCircle,
@@ -26,10 +27,13 @@ import {
   PhoneCall,
   Plus,
   RefreshCw,
+  ShieldAlert,
+  ShieldCheck,
   Sparkles,
   Trash2,
   TrendingUp,
   User,
+  UserX,
   Video,
   X,
   Zap,
@@ -44,7 +48,12 @@ import { appointmentApi, astrologerApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
-import { APPOINTMENT_STATUS_LABELS, type Appointment, type VedicPrescription } from "@/types";
+import {
+  APPOINTMENT_STATUS_LABELS,
+  type Appointment,
+  type BlacklistedClient,
+  type VedicPrescription,
+} from "@/types";
 
 const PILLAR_LABELS: Record<string, { label: string; icon: string }> = {
   career_wealth: { label: "Career & Wealth", icon: "💼" },
@@ -58,6 +67,7 @@ const PILLAR_LABELS: Record<string, { label: string; icon: string }> = {
 const CARD_KEY = ["appointments", "card"] as const;
 const WINDOWS_KEY = ["appointments", "windows"] as const;
 const SCHEDULE_KEY = ["appointments", "schedule"] as const;
+const BLACKLIST_KEY = ["appointments", "blacklist"] as const;
 
 /** A date-time input wants "YYYY-MM-DDTHH:mm" in the browser's own timezone. */
 function toLocalInput(date: Date): string {
@@ -1065,11 +1075,11 @@ function OpenHours() {
 function Schedule({
   initialDisplayMode = "calendar",
 }: {
-  initialDisplayMode?: "calendar" | "list";
+  initialDisplayMode?: "calendar" | "list" | "blacklist";
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [displayMode, setDisplayMode] = React.useState<"calendar" | "list">(initialDisplayMode);
+  const [displayMode, setDisplayMode] = React.useState<"calendar" | "list" | "blacklist">(initialDisplayMode);
   const [tab, setTab] = React.useState<ScheduleTab>("upcoming");
   const [cancelTargetId, setCancelTargetId] = React.useState<string | null>(null);
   const [enteringChamber, setEnteringChamber] = React.useState(false);
@@ -1230,6 +1240,75 @@ function Schedule({
     onError: (e: any) => toast.error(e?.message || "Failed to mark no-show."),
   });
 
+  // Blacklist query
+  const { data: blacklist, isLoading: blacklistLoading } = useQuery({
+    queryKey: BLACKLIST_KEY,
+    queryFn: () => appointmentApi.myBlacklist(),
+    enabled: displayMode === "blacklist",
+  });
+
+  // Red-Flag & Abuse Report state & mutation
+  const [redFlagAppointment, setRedFlagAppointment] = React.useState<Appointment | null>(null);
+  const [redFlagReason, setRedFlagReason] = React.useState("Abusive language / Verbal harassment");
+  const [redFlagNotes, setRedFlagNotes] = React.useState("");
+  const [redFlagBlacklist, setRedFlagBlacklist] = React.useState(true);
+
+  const redFlagMutation = useMutation({
+    mutationFn: () => {
+      if (!redFlagAppointment) throw new Error("No appointment selected.");
+      return appointmentApi.redFlag(redFlagAppointment.id, {
+        reason: redFlagReason,
+        notes: redFlagNotes.trim() || undefined,
+        blacklist_client: redFlagBlacklist,
+        terminate_call: true,
+      });
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+      void queryClient.invalidateQueries({ queryKey: BLACKLIST_KEY });
+      setRedFlagAppointment(null);
+      setDossierAppointment(null);
+      toast.success("Incident logged. Client red-flagged and session compensation captured.");
+    },
+    onError: (e: any) => toast.error(e?.message || "Failed to submit red-flag report."),
+  });
+
+  // Unblock client state & mutation
+  const [unblockTarget, setUnblockTarget] = React.useState<BlacklistedClient | null>(null);
+  const unblockMutation = useMutation({
+    mutationFn: (userId: string) => appointmentApi.unblockClient(userId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: BLACKLIST_KEY });
+      setUnblockTarget(null);
+      toast.success("Client unblocked. They can now book appointments with you.");
+    },
+    onError: (e: any) => toast.error(e?.message || "Failed to unblock client."),
+  });
+
+  // Birth Time Rectification (BTR) state & mutation
+  const [btrAppointment, setBtrAppointment] = React.useState<Appointment | null>(null);
+  const [btrNote, setBtrNote] = React.useState("");
+  const btrMutation = useMutation({
+    mutationFn: () => {
+      if (!btrAppointment) throw new Error("No appointment selected.");
+      return appointmentApi.requestBtr(btrAppointment.id, btrNote.trim() || undefined);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+      setBtrAppointment(null);
+      if (dossierAppointment && btrAppointment && dossierAppointment.id === btrAppointment.id) {
+        setDossierAppointment({
+          ...dossierAppointment,
+          btr_requested: true,
+          btr_request_note: btrNote.trim() || null,
+          btr_fulfilled: false,
+        });
+      }
+      toast.success("Birth Time Rectification request sent to seeker via email & in-app prompt.");
+    },
+    onError: (e: any) => toast.error(e?.message || "Failed to request BTR."),
+  });
+
   const allBookings = React.useMemo(() => bookings ?? [], [bookings]);
   const upcomingList = React.useMemo(() => allBookings.filter(isUpcoming), [allBookings]);
   const todayList = React.useMemo(
@@ -1291,11 +1370,27 @@ function Schedule({
             <FileText className="size-4 text-amber-400" />
             <span>Bookings Ledger ({allBookings.length})</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setDisplayMode("blacklist")}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
+              displayMode === "blacklist"
+                ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+            )}
+          >
+            <ShieldAlert className="size-4 text-rose-500" />
+            <span>Blacklist Shield ({blacklist?.length ?? 0})</span>
+          </button>
         </div>
 
         <p className="text-xs text-slate-500 font-medium hidden sm:block">
           {displayMode === "calendar"
             ? "📅 Interactive Google Calendar view with live time indicator and 1-click slot activation."
+            : displayMode === "blacklist"
+            ? "🛡️ Screening & Abuse Shield: Manage blocked clients and review safety incident flags."
             : "📋 Full chronological table of client bookings, prescriptions, and cancellation status."}
         </p>
       </div>
@@ -1651,6 +1746,96 @@ function Schedule({
     </div>
       )}
 
+      {/* 3. BLACKLIST SHIELD (SCREENING & ABUSE SHIELD) */}
+      {displayMode === "blacklist" && (
+        <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-[0_16px_40px_rgba(20,25,45,0.05)] space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600">
+                  <ShieldAlert className="size-5 stroke-[2.2]" />
+                </div>
+                <h2 className="font-display text-xl font-bold text-slate-900">
+                  Client Screening & Abuse Shield
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 font-medium">
+                Clients blacklisted from booking your profile. Blocked users cannot schedule sessions with you.
+              </p>
+            </div>
+
+            <Badge tone="neutral" className="px-3 py-1 text-xs font-bold self-start sm:self-auto">
+              {blacklist?.length ?? 0} Blocked Clients
+            </Badge>
+          </div>
+
+          {blacklistLoading ? (
+            <LoadingBlock label="Loading blacklist shield..." />
+          ) : !blacklist?.length ? (
+            <EmptyState
+              icon={ShieldCheck}
+              title="No Blacklisted Clients"
+              description="Your consultation chamber is secure and clean. No clients have been red-flagged or blocked."
+            />
+          ) : (
+            <div className="space-y-3">
+              {blacklist.map((client) => (
+                <div
+                  key={client.user_id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-slate-200/90 bg-slate-50/50 p-4 transition-all hover:bg-white hover:border-slate-300"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <Avatar src={client.avatar_url ?? undefined} name={client.name} size="md" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-slate-900">{client.name}</span>
+                        <Badge tone="red" className="text-[10px]">
+                          Blacklisted
+                        </Badge>
+                        {client.total_reports > 1 && (
+                          <Badge tone="gold" className="text-[10px]">
+                            {client.total_reports} Incidents
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-xs text-slate-500 flex flex-wrap items-center gap-2">
+                        {client.email_masked && <span>{client.email_masked}</span>}
+                        {client.phone_masked && <span>• {client.phone_masked}</span>}
+                        {client.blacklisted_at && (
+                          <span>• Flagged on {new Date(client.blacklisted_at).toLocaleDateString()}</span>
+                        )}
+                      </p>
+                      {client.last_reason && (
+                        <p className="mt-1.5 text-xs text-rose-700 font-medium">
+                          <strong>Reason:</strong> {client.last_reason}
+                        </p>
+                      )}
+                      {client.notes && (
+                        <p className="text-[11px] text-slate-500 italic mt-0.5">
+                          "{client.notes}"
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="shrink-0">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setUnblockTarget(client)}
+                      className="text-xs font-bold border-slate-200 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50"
+                    >
+                      <UserX className="size-3.5 mr-1" />
+                      Unblock Client
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Client Astrological Dossier Modal */}
       <Modal
         open={Boolean(dossierAppointment)}
@@ -1749,6 +1934,45 @@ function Schedule({
                     <AlertCircle className="size-3.5 mr-1 text-rose-600" />
                     Mark No-Show
                   </Button>
+
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setBtrNote(dossierAppointment.btr_request_note || "Lagna cusp / Navamsha D9 precision check. Please verify exact hospital birth time.");
+                      setBtrAppointment(dossierAppointment);
+                    }}
+                    className={cn(
+                      "text-xs font-bold",
+                      dossierAppointment.btr_fulfilled
+                        ? "border-emerald-300 text-emerald-800 bg-emerald-50/50"
+                        : dossierAppointment.btr_requested
+                        ? "border-sky-300 text-sky-800 bg-sky-50/50"
+                        : "border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                    )}
+                  >
+                    <Clock className="size-3.5 mr-1 text-indigo-600" />
+                    {dossierAppointment.btr_fulfilled
+                      ? "BTR Rectified ✓"
+                      : dossierAppointment.btr_requested
+                      ? "BTR Requested ⏳"
+                      : "Request BTR"}
+                  </Button>
+
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setRedFlagReason("Abusive language / Verbal harassment");
+                      setRedFlagNotes("");
+                      setRedFlagBlacklist(true);
+                      setRedFlagAppointment(dossierAppointment);
+                    }}
+                    className="border-rose-300 text-rose-700 hover:bg-rose-50 text-xs font-bold"
+                  >
+                    <Flag className="size-3.5 mr-1 text-rose-600" />
+                    Red-Flag / Shield
+                  </Button>
                 </>
               )}
             </div>
@@ -1761,6 +1985,52 @@ function Schedule({
       >
         {dossierAppointment && (
           <div className="space-y-4 py-2 text-xs">
+            {/* Red-Flag Misconduct Notice if marked */}
+            {dossierAppointment.abuse_flagged && (
+              <div className="rounded-2xl border border-rose-300 bg-rose-50/80 p-3.5 text-rose-950 text-xs flex items-center gap-2.5">
+                <ShieldAlert className="size-4 text-rose-600 shrink-0" />
+                <div>
+                  <span className="font-bold block text-rose-950">
+                    Red-Flagged for Policy Misconduct ({dossierAppointment.abuse_reason})
+                  </span>
+                  <span className="text-[11px] text-rose-800">
+                    Session was terminated due to code-of-conduct violation and logged with Trust & Safety. Escrow consultation fee was credited to your earnings.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Birth Time Rectification (BTR) Notice */}
+            {dossierAppointment.btr_requested && (
+              <div
+                className={cn(
+                  "rounded-2xl border p-3.5 text-xs flex items-center gap-2.5",
+                  dossierAppointment.btr_fulfilled
+                    ? "border-emerald-300 bg-emerald-50 text-emerald-950"
+                    : "border-sky-300 bg-sky-50 text-sky-950"
+                )}
+              >
+                <Clock
+                  className={cn(
+                    "size-4 shrink-0",
+                    dossierAppointment.btr_fulfilled ? "text-emerald-600" : "text-sky-600"
+                  )}
+                />
+                <div>
+                  <span className="font-bold block">
+                    {dossierAppointment.btr_fulfilled
+                      ? "Birth Time Rectified by Seeker ✓"
+                      : "Birth Time Rectification (BTR) Requested"}
+                  </span>
+                  <span className="text-[11px] opacity-80">
+                    {dossierAppointment.btr_fulfilled
+                      ? `The seeker updated their exact birth parameters on ${dossierAppointment.btr_updated_at ? new Date(dossierAppointment.btr_updated_at).toLocaleString() : "recently"}. Pre-flight calculations refreshed.`
+                      : `Awaiting seeker confirmation. Request note: "${dossierAppointment.btr_request_note || "Please confirm exact hospital birth time."}"`}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Client No-Show Notice if marked */}
             {dossierAppointment.is_no_show && (
               <div className="rounded-2xl border border-rose-300 bg-rose-50/80 p-3.5 text-rose-900 text-xs flex items-center gap-2.5">
@@ -2154,6 +2424,167 @@ function Schedule({
             />
           </div>
         </div>
+      </Modal>
+
+      {/* Red-Flag & Abuse Shield Modal */}
+      <Modal
+        open={Boolean(redFlagAppointment)}
+        onClose={() => setRedFlagAppointment(null)}
+        title="Red-Flag Client & Report Misconduct (অনুপযুক্ত ক্লায়েন্ট রিপোর্ট)"
+        description="Terminates session immediately due to policy violation, logs an official report with Trust & Safety, and captures your consultation compensation."
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button variant="secondary" onClick={() => setRedFlagAppointment(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              loading={redFlagMutation.isPending}
+              onClick={() => redFlagMutation.mutate()}
+              className="font-bold bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              <Flag className="size-3.5 mr-1" />
+              Terminate & Red-Flag
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 py-2 text-xs">
+          <Alert tone="error">
+            <strong>Client Screening Shield:</strong> If a client behaves abusively or violates conduct, you have the full authority to terminate the session. The client's held escrow fee will not be refunded to them.
+          </Alert>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1.5">
+              Reason for Incident Flag *
+            </label>
+            <select
+              value={redFlagReason}
+              onChange={(e) => setRedFlagReason(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 bg-white focus:border-rose-500 focus:outline-none"
+            >
+              <option value="Abusive language / Verbal harassment">Abusive language / Verbal harassment (অশোভন আচরণ / কটূক্তি)</option>
+              <option value="Threats or Hostile intimidation">Threats or Hostile intimidation (হুমকি প্রদর্শন)</option>
+              <option value="Inappropriate or Vulgar behavior">Inappropriate or Vulgar behavior (অশ্লীল আচরণ)</option>
+              <option value="Fraudulent identity or Bad faith consultation">Fraudulent identity or Bad faith (ভুয়া তথ্য / অপব্যবহার)</option>
+              <option value="Other platform code-of-conduct violation">Other code-of-conduct violation (অন্যান্য নীতিমালা লঙ্ঘন)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1.5">
+              Incident Notes for Platform Audit
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Describe what occurred during the consultation session..."
+              value={redFlagNotes}
+              onChange={(e) => setRedFlagNotes(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-900 focus:border-rose-500 focus:outline-none"
+            />
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer pt-1">
+            <input
+              type="checkbox"
+              checked={redFlagBlacklist}
+              onChange={(e) => setRedFlagBlacklist(e.target.checked)}
+              className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 size-4"
+            />
+            <span className="font-semibold text-slate-800 text-xs">
+              Blacklist client from booking with me again (ব্যক্তিগত প্রোফাইল থেকে ব্লক)
+            </span>
+          </label>
+        </div>
+      </Modal>
+
+      {/* Request Birth Time Rectification (BTR) Modal */}
+      <Modal
+        open={Boolean(btrAppointment)}
+        onClose={() => setBtrAppointment(null)}
+        title="Request Birth Time Rectification (BTR)"
+        description="Notify the seeker to clarify or submit their exact verified birth time for maximum Vedic astrological accuracy."
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button variant="secondary" onClick={() => setBtrAppointment(null)}>
+              Cancel
+            </Button>
+            <Button
+              loading={btrMutation.isPending}
+              onClick={() => btrMutation.mutate()}
+              className="font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              <Clock className="size-3.5 mr-1" />
+              Send BTR Request
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 py-2 text-xs">
+          <Alert tone="info">
+            In Vedic astrology, divisional charts (D9 Navamsha) and Lagna sandhi change every few minutes. Requesting BTR alerts the client to provide exact hospital records.
+          </Alert>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1.5">
+              Preset Reasons (1-Click Fill)
+            </label>
+            <div className="flex flex-wrap gap-1.5 mb-2.5">
+              {[
+                "Lagna cusp / sandhi detected. Please confirm exact birth minute from hospital card.",
+                "Birth minute is approximate. Please verify exact time for accurate Navamsha D9 analysis.",
+                "Dasha transitions are sensitive. Kindly confirm exact time with family or birth record.",
+              ].map((preset, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setBtrNote(preset)}
+                  className="rounded-lg border border-indigo-200 bg-indigo-50/60 px-2.5 py-1 text-[11px] text-indigo-900 hover:bg-indigo-100 text-left transition-colors cursor-pointer"
+                >
+                  {preset.slice(0, 45)}...
+                </button>
+              ))}
+            </div>
+
+            <label className="block text-[11px] font-bold text-slate-800 mb-1">
+              Instructions for Seeker *
+            </label>
+            <textarea
+              rows={3}
+              value={btrNote}
+              onChange={(e) => setBtrNote(e.target.value)}
+              placeholder="e.g. Please check your hospital birth card or family records and update the exact minutes..."
+              className="w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+        </div>
+      </Modal>
+
+      {/* Unblock Client Modal */}
+      <Modal
+        open={Boolean(unblockTarget)}
+        onClose={() => setUnblockTarget(null)}
+        title="Unblock Client from My Profile?"
+        description={`Allow ${unblockTarget?.name ?? "this client"} to book future consultations with you again.`}
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button variant="secondary" onClick={() => setUnblockTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              loading={unblockMutation.isPending}
+              onClick={() => unblockTarget && unblockMutation.mutate(unblockTarget.user_id)}
+              className="font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <UserX className="size-3.5 mr-1" />
+              Confirm Unblock
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-xs text-slate-600 py-2 leading-relaxed">
+          Removing <strong>{unblockTarget?.name}</strong> from your blacklist will enable them to view your available calendar slots and book appointments as a normal seeker.
+        </p>
       </Modal>
     </div>
   );

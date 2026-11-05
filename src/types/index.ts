@@ -279,9 +279,13 @@ export function coinWord(coins: number): string {
 }
 
 // ------------------------------------------------------------------- calls
-export type Call = S["CallOut"];
+export type Call = S["CallOut"] & {
+  appointment_id?: string | null;
+};
 export type CallCredentials = S["CallCredentials"];
-export type CallSession = S["CallSessionOut"];
+export type CallSession = Omit<S["CallSessionOut"], "call"> & {
+  call: Call;
+};
 export type CallStatus = S["CallStatus"];
 export type CallParty = S["CallParty"];
 
@@ -391,6 +395,14 @@ export type Appointment = Omit<S["AppointmentOut"], "peer"> & {
   brahma_pause_reason?: string | null;
   brahma_pause_until?: string | null;
   rescue_deadline?: string | null;
+  abuse_flagged?: boolean;
+  abuse_reason?: string | null;
+  abuse_flagged_at?: string | null;
+  btr_requested?: boolean;
+  btr_request_note?: string | null;
+  btr_requested_at?: string | null;
+  btr_fulfilled?: boolean;
+  btr_updated_at?: string | null;
   peer?: S["AppointmentPeer"] | null;
   held_coins?: number;
   held_status?: string;
@@ -411,6 +423,18 @@ export type AppointmentCard = S["AppointmentCardOut"] & {
 };
 export type AvailabilityWindow = S["WindowOut"];
 export type AppointmentDayView = S["DayView"];
+
+export interface BlacklistedClient {
+  user_id: string;
+  name: string;
+  email_masked?: string | null;
+  phone_masked?: string | null;
+  avatar_url?: string | null;
+  blacklisted_at?: string | null;
+  last_reason?: string | null;
+  notes?: string | null;
+  total_reports: number;
+}
 
 /** What a booking's state is called on screen. */
 export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
