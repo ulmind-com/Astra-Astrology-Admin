@@ -382,6 +382,7 @@ export const appointmentApi = {
     price_paise?: number;
     block_minutes?: number;
     cancellation_window_minutes?: number;
+    buffer_minutes?: number;
   }) => api.patch<AppointmentCard>(endpoints.appointments.myCard, body),
 
   windows: (days = 60) =>
@@ -437,6 +438,15 @@ export const appointmentApi = {
       ends_at: string;
       minutes: number;
     }>(`/appointments/${id}/chamber`, {}),
+
+  activateBrahmaPause: (body: { duration_hours: number; reason?: string | null }) =>
+    api.post<{ pause_until: string; affected_appointments_count: number; reason?: string | null }>(
+      `/appointments/brahma-pause`,
+      body,
+    ),
+
+  resumeBrahmaPause: () =>
+    api.post<{ message: string }>(`/appointments/brahma-pause/resume`, {}),
 };
 
 // ----------------------------------------------------------------- reviews

@@ -40,7 +40,7 @@ import { toast } from "sonner";
 
 import { Alert, Avatar, Badge, Button, EmptyState, LoadingBlock, Modal } from "@/components/ui";
 import { GoogleCalendarSuite } from "@/components/appointments/google-calendar";
-import { appointmentApi } from "@/lib/api";
+import { appointmentApi, astrologerApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
@@ -232,9 +232,43 @@ function AppointmentHero({
   activeTab?: AppointmentPortalTab;
   onSelectTab?: (tab: AppointmentPortalTab) => void;
 }) {
+  const queryClient = useQueryClient();
   const { data: card } = useQuery({ queryKey: CARD_KEY, queryFn: () => appointmentApi.card() });
   const { data: windows } = useQuery({ queryKey: WINDOWS_KEY, queryFn: () => appointmentApi.windows() });
   const { data: bookings } = useQuery({ queryKey: SCHEDULE_KEY, queryFn: () => appointmentApi.schedule(false) });
+  const { data: profile } = useQuery({ queryKey: ["astrologer", "me"], queryFn: () => astrologerApi.me() });
+
+  const [openPauseModal, setOpenPauseModal] = React.useState(false);
+  const [pauseDuration, setPauseDuration] = React.useState(3);
+  const [pauseReason, setPauseReason] = React.useState("");
+
+  const isBrahmaPaused = Boolean(
+    profile?.brahma_pause_until && new Date(profile.brahma_pause_until).getTime() > Date.now()
+  );
+
+  const activatePause = useMutation({
+    mutationFn: () => appointmentApi.activateBrahmaPause({ duration_hours: pauseDuration, reason: pauseReason || null }),
+    onSuccess: (res) => {
+      void queryClient.invalidateQueries({ queryKey: ["astrologer", "me"] });
+      void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+      setOpenPauseModal(false);
+      setPauseReason("");
+      toast.success(
+        `Brahma Pause activated until ${new Date(res.pause_until).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}. ${res.affected_appointments_count} seeker(s) notified with rescue options.`
+      );
+    },
+    onError: (e: ApiError) => toast.error(e.message),
+  });
+
+  const resumePause = useMutation({
+    mutationFn: () => appointmentApi.resumeBrahmaPause(),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["astrologer", "me"] });
+      void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+      toast.success("Brahma Pause ended. Normal schedule restored!");
+    },
+    onError: (e: ApiError) => toast.error(e.message),
+  });
 
   const upcomingCount = (bookings ?? []).filter(isUpcoming).length;
   const todayCount = (bookings ?? []).filter((a) => isSameDay(a.starts_at)).length;
@@ -247,85 +281,207 @@ function AppointmentHero({
       : "0";
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-amber-50/25 to-white p-6 sm:p-8 shadow-[0_16px_40px_rgba(20,25,45,0.04)]">
-      {/* Background celestial glow decoration */}
-      <div className="pointer-events-none absolute -right-16 -top-16 size-72 rounded-full bg-gradient-to-br from-amber-300/20 via-orange-300/10 to-transparent blur-3xl" />
-      <div className="pointer-events-none absolute -left-16 -bottom-16 size-60 rounded-full bg-gradient-to-tr from-amber-200/20 to-transparent blur-2xl" />
-
-      <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2 max-w-xl">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100/80 px-3 py-1 text-xs font-bold text-amber-900 border border-amber-300/60 shadow-xs">
-              <Sparkles className="size-3.5 text-amber-600 fill-amber-600" />
-              <span>Astrologer Appointment Hub</span>
-            </span>
-
-            {isEnabled ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
-                <span className="relative flex size-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+    <div className="space-y-4">
+      {/* Active Brahma Pause Notice Banner */}
+      {isBrahmaPaused && (
+        <div className="rounded-3xl border border-purple-300 bg-gradient-to-r from-purple-50 via-purple-100/70 to-purple-50 p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in duration-300">
+          <div className="flex items-center gap-3.5">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-purple-600 text-white shadow-md">
+              <span className="text-lg">🕊️</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-display text-sm font-bold text-purple-950">
+                  Brahma Pause (Emergency Break) is Active
                 </span>
-                Calendar Live & Bookable
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 border border-slate-200">
-                <span className="size-2 rounded-full bg-slate-400" />
-                Calendar Paused
-              </span>
-            )}
+                <span className="rounded-full bg-purple-200/80 px-2 py-0.5 text-[10px] font-bold text-purple-900 animate-pulse">
+                  Live Offline
+                </span>
+              </div>
+              <p className="text-xs text-purple-800 font-medium mt-0.5">
+                Shield active until {new Date(profile!.brahma_pause_until!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })}.
+                Affected seekers have been notified with complimentary 1-click rescue choices.
+                {profile?.brahma_pause_reason ? ` (Reason: "${profile.brahma_pause_reason}")` : ""}
+              </p>
+            </div>
           </div>
-
-          <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-            Appointments & Consultation Manager
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">
-            Set your consultation fees, open custom time windows, and manage all your incoming client bookings from one place.
-          </p>
+          <Button
+            size="sm"
+            loading={resumePause.isPending}
+            onClick={() => resumePause.mutate()}
+            className="bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs shrink-0 cursor-pointer shadow-xs"
+          >
+            End Pause & Resume Schedule
+          </Button>
         </div>
+      )}
 
-        {/* Quick KPI Stat Pills */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 shrink-0">
-          <div
-            onClick={() => onSelectTab?.("rates_windows")}
-            className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px] cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all"
-          >
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rate / Min</p>
-            <p className="font-display text-lg sm:text-xl font-black text-amber-600">
-              ₹{perMinuteRate}
-            </p>
-            <p className="text-[10px] font-semibold text-slate-400">
-              ₹{card ? card.price_paise / 100 : 0} / {card?.block_minutes ?? 30}m
+      <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-amber-50/25 to-white p-6 sm:p-8 shadow-[0_16px_40px_rgba(20,25,45,0.04)]">
+        {/* Background celestial glow decoration */}
+        <div className="pointer-events-none absolute -right-16 -top-16 size-72 rounded-full bg-gradient-to-br from-amber-300/20 via-orange-300/10 to-transparent blur-3xl" />
+        <div className="pointer-events-none absolute -left-16 -bottom-16 size-60 rounded-full bg-gradient-to-tr from-amber-200/20 to-transparent blur-2xl" />
+
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-xl">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100/80 px-3 py-1 text-xs font-bold text-amber-900 border border-amber-300/60 shadow-xs">
+                <Sparkles className="size-3.5 text-amber-600 fill-amber-600" />
+                <span>Astrologer Appointment Hub</span>
+              </span>
+
+              {isEnabled ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
+                  <span className="relative flex size-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                  </span>
+                  Calendar Live & Bookable
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 border border-slate-200">
+                  <span className="size-2 rounded-full bg-slate-400" />
+                  Calendar Paused
+                </span>
+              )}
+
+              {/* Brahma Pause Trigger Button */}
+              {!isBrahmaPaused ? (
+                <button
+                  type="button"
+                  onClick={() => setOpenPauseModal(true)}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 px-3 py-1 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                  title="Pause consultations due to emergency"
+                >
+                  <span>🕊️ Brahma Pause (জরুরি বিরতি)</span>
+                </button>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 text-purple-900 border border-purple-300 px-3 py-1 text-xs font-bold shadow-2xs">
+                  <span>🕊️ On Pause</span>
+                </span>
+              )}
+            </div>
+
+            <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+              Appointments & Consultation Manager
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">
+              Set your consultation fees, open custom time windows, and manage all your incoming client bookings from one place.
             </p>
           </div>
 
-          <div
-            onClick={() => onSelectTab?.("calendar")}
-            className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px] cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all"
-          >
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Upcoming</p>
-            <p className="font-display text-lg sm:text-xl font-black text-slate-900">
-              {upcomingCount}
-            </p>
-            <p className="text-[10px] font-semibold text-emerald-600">
-              {todayCount} scheduled today
-            </p>
-          </div>
+          {/* Quick KPI Stat Pills */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 shrink-0">
+            <div
+              onClick={() => onSelectTab?.("rates_windows")}
+              className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px] cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rate / Min</p>
+              <p className="font-display text-lg sm:text-xl font-black text-amber-600">
+                ₹{perMinuteRate}
+              </p>
+              <p className="text-[10px] font-semibold text-slate-400">
+                ₹{card ? card.price_paise / 100 : 0} / {card?.block_minutes ?? 30}m
+              </p>
+            </div>
 
-          <div
-            onClick={() => onSelectTab?.("rates_windows")}
-            className="col-span-2 sm:col-span-1 rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px] cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all"
-          >
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Open Slots</p>
-            <p className="font-display text-lg sm:text-xl font-black text-slate-900">
-              {windowsCount}
-            </p>
-            <p className="text-[10px] font-semibold text-slate-400">
-              Available windows
-            </p>
+            <div
+              onClick={() => onSelectTab?.("calendar")}
+              className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px] cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Upcoming</p>
+              <p className="font-display text-lg sm:text-xl font-black text-slate-900">
+                {upcomingCount}
+              </p>
+              <p className="text-[10px] font-semibold text-emerald-600">
+                {todayCount} scheduled today
+              </p>
+            </div>
+
+            <div
+              onClick={() => onSelectTab?.("rates_windows")}
+              className="col-span-2 sm:col-span-1 rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px] cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Open Slots</p>
+              <p className="font-display text-lg sm:text-xl font-black text-slate-900">
+                {windowsCount}
+              </p>
+              <p className="text-[10px] font-semibold text-slate-400">
+                Available windows
+              </p>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Brahma Pause Modal */}
+      <Modal
+        open={openPauseModal}
+        onClose={() => setOpenPauseModal(false)}
+        title="Activate Brahma Pause (জরুরি বৈদিক বিরতি)"
+        description="Temporarily pause consultations due to personal emergencies or spiritual rites. Your live call availability will go offline, and booked seekers will be automatically offered complimentary 1-click rescue choices."
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button variant="secondary" onClick={() => setOpenPauseModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              loading={activatePause.isPending}
+              onClick={() => activatePause.mutate()}
+              className="bg-purple-700 hover:bg-purple-800 text-white font-bold"
+            >
+              Activate Brahma Pause
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 py-2 text-xs">
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1.5">
+              Pause Duration *
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { hours: 3, label: "3 Hours", sub: "Short emergency" },
+                { hours: 6, label: "6 Hours", sub: "Half day" },
+                { hours: 12, label: "12 Hours", sub: "Full day" },
+                { hours: 24, label: "24 Hours", sub: "Full day & night" },
+              ].map((opt) => (
+                <button
+                  key={opt.hours}
+                  type="button"
+                  onClick={() => setPauseDuration(opt.hours)}
+                  className={cn(
+                    "rounded-xl p-2.5 text-center transition-all border cursor-pointer",
+                    pauseDuration === opt.hours
+                      ? "bg-purple-50 border-purple-400 ring-2 ring-purple-500/20 text-purple-950 font-bold"
+                      : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+                  )}
+                >
+                  <p className="text-xs font-bold">{opt.label}</p>
+                  <p className="text-[9px] text-slate-500">{opt.sub}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1">
+              Reason / Message for Seekers (Optional)
+            </label>
+            <textarea
+              rows={2}
+              placeholder="e.g. Unforeseen personal emergency / Sacred temple rites"
+              value={pauseReason}
+              onChange={(e) => setPauseReason(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none"
+            />
+          </div>
+
+          <Alert tone="info">
+            <strong>Seeker Protection:</strong> Any seeker with an appointment during your pause will receive a dignified email offering either a 1-click free reschedule to tomorrow or an instant 100% refund.
+          </Alert>
+        </div>
+      </Modal>
     </div>
   );
 }
@@ -340,12 +496,14 @@ function PriceCard() {
 
   const [form, setForm] = React.useState({ rupees: "", block: "30" });
   const [cancelWindow, setCancelWindow] = React.useState<number>(30);
+  const [bufferMins, setBufferMins] = React.useState<number>(10);
   const [ready, setReady] = React.useState(false);
 
   React.useEffect(() => {
     if (card && !ready) {
       setForm({ rupees: String(card.price_paise / 100), block: String(card.block_minutes) });
       setCancelWindow(card.cancellation_window_minutes ?? 30);
+      setBufferMins(card.buffer_minutes ?? 10);
       setReady(true);
     }
   }, [card, ready]);
@@ -356,6 +514,7 @@ function PriceCard() {
       price_paise?: number;
       block_minutes?: number;
       cancellation_window_minutes?: number;
+      buffer_minutes?: number;
     }) => appointmentApi.updateCard(body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: CARD_KEY });
@@ -593,6 +752,39 @@ function PriceCard() {
         </div>
       </div>
 
+      {/* Inter-Session Meditation & Energy Buffer */}
+      <div className="space-y-2.5 pt-2 border-t border-slate-100">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+            <Sparkles className="size-3.5 text-purple-600" />
+            <span>Inter-Session Meditation Buffer (শক্তি পুনরুদ্ধার বাফার)</span>
+          </label>
+          <span className="text-[11px] font-bold text-purple-800 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-full">
+            {bufferMins} minutes
+          </span>
+        </div>
+        <p className="text-[11px] text-slate-500">
+          Automatic quiet interval after every consultation for spiritual cleansing and breathing room before your next seeker.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {[0, 5, 10, 15, 20].map((mins) => (
+            <button
+              key={mins}
+              type="button"
+              onClick={() => setBufferMins(mins)}
+              className={cn(
+                "rounded-xl px-3 py-1.5 text-xs font-bold transition-all border cursor-pointer",
+                bufferMins === mins
+                  ? "bg-purple-900 text-white border-purple-900 shadow-xs"
+                  : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+              )}
+            >
+              {mins === 0 ? "No Buffer (0m)" : `${mins} Mins`} {mins === 10 && "(Recommended)"}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Save Button */}
       <button
         type="button"
@@ -602,6 +794,7 @@ function PriceCard() {
             price_paise: Math.round(price * 100),
             block_minutes: block,
             cancellation_window_minutes: cancelWindow,
+            buffer_minutes: bufferMins,
             enabled: true,
           })
         }
