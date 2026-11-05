@@ -105,10 +105,12 @@ function dayRelative(iso: string): string {
 }
 
 type ScheduleTab = "upcoming" | "today" | "all" | "past";
+type AppointmentPortalTab = "calendar" | "rates_windows" | "ledger";
 
 export default function AppointmentsPage() {
   const { user } = useAuth();
   const isAstrologer = user?.role === "astrologer";
+  const [activeTab, setActiveTab] = React.useState<AppointmentPortalTab>("calendar");
 
   if (!isAstrologer) {
     return (
@@ -129,29 +131,106 @@ export default function AppointmentsPage() {
   return (
     <div className="space-y-8 pb-16">
       {/* Top Banner / Hero Overview */}
-      <AppointmentHero />
+      <AppointmentHero
+        activeTab={activeTab}
+        onSelectTab={(tab) => setActiveTab(tab)}
+      />
 
-      {/* Main Grid: Pricing Engine & Schedule Slots */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Smart Pricing & Simulator */}
-        <div className="lg:col-span-5 xl:col-span-5 space-y-6">
-          <PriceCard />
+      {/* Top Level Navigation Tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-2 bg-slate-100/80 rounded-2xl border border-slate-200">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setActiveTab("calendar")}
+            className={cn(
+              "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer",
+              activeTab === "calendar"
+                ? "bg-white text-slate-900 shadow-sm font-extrabold ring-1 ring-slate-900/5"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+            )}
+          >
+            <Calendar className="size-4 text-sky-600" />
+            <span>Interactive Google Calendar</span>
+            <span className="rounded-full bg-sky-100 text-sky-800 text-[10px] px-2 py-0.2 font-black">
+              Week/Month
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("rates_windows")}
+            className={cn(
+              "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer",
+              activeTab === "rates_windows"
+                ? "bg-white text-slate-900 shadow-sm font-extrabold ring-1 ring-slate-900/5"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+            )}
+          >
+            <Clock className="size-4 text-amber-600" />
+            <span>Fee Engine & Availability Windows</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("ledger")}
+            className={cn(
+              "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer",
+              activeTab === "ledger"
+                ? "bg-white text-slate-900 shadow-sm font-extrabold ring-1 ring-slate-900/5"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+            )}
+          >
+            <FileText className="size-4 text-emerald-600" />
+            <span>Client Dossier & Ledger</span>
+          </button>
         </div>
 
-        {/* Right Column: Time Availability Manager */}
-        <div className="lg:col-span-7 xl:col-span-7 space-y-6">
-          <OpenHours />
-        </div>
+        <p className="text-xs text-slate-500 font-medium px-2 hidden md:block">
+          {activeTab === "calendar"
+            ? "📅 Google Calendar time-grid with live needle, week/month views & 1-click slot creation."
+            : activeTab === "rates_windows"
+            ? "⚙️ Set consultation fees, grace periods, and open hours."
+            : "📋 Complete booking records, prescriptions, and escrow details."}
+        </p>
       </div>
 
-      {/* Full-Width Bookings & Schedule Table */}
-      <Schedule />
+      {/* 1. INTERACTIVE GOOGLE CALENDAR (PRIMARY TAB) */}
+      {activeTab === "calendar" && (
+        <div className="space-y-6">
+          <Schedule initialDisplayMode="calendar" />
+        </div>
+      )}
+
+      {/* 2. RATES & AVAILABILITY ENGINE TAB */}
+      {activeTab === "rates_windows" && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-5 xl:col-span-5 space-y-6">
+            <PriceCard />
+          </div>
+          <div className="lg:col-span-7 xl:col-span-7 space-y-6">
+            <OpenHours />
+          </div>
+        </div>
+      )}
+
+      {/* 3. BOOKINGS LEDGER TAB */}
+      {activeTab === "ledger" && (
+        <div className="space-y-6">
+          <Schedule initialDisplayMode="list" />
+        </div>
+      )}
     </div>
   );
 }
 
 /* ----------------------------------------------------------- hero glance */
-function AppointmentHero() {
+function AppointmentHero({
+  activeTab,
+  onSelectTab,
+}: {
+  activeTab?: AppointmentPortalTab;
+  onSelectTab?: (tab: AppointmentPortalTab) => void;
+}) {
   const { data: card } = useQuery({ queryKey: CARD_KEY, queryFn: () => appointmentApi.card() });
   const { data: windows } = useQuery({ queryKey: WINDOWS_KEY, queryFn: () => appointmentApi.windows() });
   const { data: bookings } = useQuery({ queryKey: SCHEDULE_KEY, queryFn: () => appointmentApi.schedule(false) });
@@ -206,7 +285,10 @@ function AppointmentHero() {
 
         {/* Quick KPI Stat Pills */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 shrink-0">
-          <div className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px]">
+          <div
+            onClick={() => onSelectTab?.("rates_windows")}
+            className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px] cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all"
+          >
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rate / Min</p>
             <p className="font-display text-lg sm:text-xl font-black text-amber-600">
               ₹{perMinuteRate}
@@ -216,7 +298,10 @@ function AppointmentHero() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px]">
+          <div
+            onClick={() => onSelectTab?.("calendar")}
+            className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px] cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all"
+          >
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Upcoming</p>
             <p className="font-display text-lg sm:text-xl font-black text-slate-900">
               {upcomingCount}
@@ -226,7 +311,10 @@ function AppointmentHero() {
             </p>
           </div>
 
-          <div className="col-span-2 sm:col-span-1 rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px]">
+          <div
+            onClick={() => onSelectTab?.("rates_windows")}
+            className="col-span-2 sm:col-span-1 rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px] cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all"
+          >
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Open Slots</p>
             <p className="font-display text-lg sm:text-xl font-black text-slate-900">
               {windowsCount}
@@ -780,9 +868,13 @@ function OpenHours() {
 }
 
 /* --------------------------------------------------------------- schedule */
-function Schedule() {
+function Schedule({
+  initialDisplayMode = "calendar",
+}: {
+  initialDisplayMode?: "calendar" | "list";
+}) {
   const queryClient = useQueryClient();
-  const [displayMode, setDisplayMode] = React.useState<"calendar" | "list">("calendar");
+  const [displayMode, setDisplayMode] = React.useState<"calendar" | "list">(initialDisplayMode);
   const [tab, setTab] = React.useState<ScheduleTab>("upcoming");
   const [cancelTargetId, setCancelTargetId] = React.useState<string | null>(null);
 
