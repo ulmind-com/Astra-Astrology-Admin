@@ -35,3 +35,4 @@ export interface SupportTicketUpdatePayload {
   priority?: TicketPriority;
   admin_notes?: string;
 }
+
