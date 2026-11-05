@@ -7,6 +7,7 @@ import {
   CalendarCheck,
   CalendarDays,
   Check,
+  CheckCircle2,
   ChevronRight,
   Clock,
   Coins,
@@ -248,18 +249,24 @@ function PriceCard() {
   });
 
   const [form, setForm] = React.useState({ rupees: "", block: "30" });
+  const [cancelWindow, setCancelWindow] = React.useState<number>(30);
   const [ready, setReady] = React.useState(false);
 
   React.useEffect(() => {
     if (card && !ready) {
       setForm({ rupees: String(card.price_paise / 100), block: String(card.block_minutes) });
+      setCancelWindow(card.cancellation_window_minutes ?? 30);
       setReady(true);
     }
   }, [card, ready]);
 
   const save = useMutation({
-    mutationFn: (body: { enabled?: boolean; price_paise?: number; block_minutes?: number }) =>
-      appointmentApi.updateCard(body),
+    mutationFn: (body: {
+      enabled?: boolean;
+      price_paise?: number;
+      block_minutes?: number;
+      cancellation_window_minutes?: number;
+    }) => appointmentApi.updateCard(body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: CARD_KEY });
       toast.success("Pricing preferences updated successfully!");
@@ -463,6 +470,39 @@ function PriceCard() {
         </div>
       )}
 
+      {/* Cancellation Grace Window (Rule 5) */}
+      <div className="space-y-2.5 pt-2 border-t border-slate-100">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+            <Clock className="size-3.5 text-amber-600" />
+            <span>Client Cancellation Grace Window</span>
+          </label>
+          <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
+            {cancelWindow} minutes
+          </span>
+        </div>
+        <p className="text-[11px] text-slate-500">
+          Clients can only cancel their booking within this window after reservation. Beyond this window, bookings are locked.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {[15, 30, 45, 60, 120].map((mins) => (
+            <button
+              key={mins}
+              type="button"
+              onClick={() => setCancelWindow(mins)}
+              className={cn(
+                "rounded-xl px-3 py-1.5 text-xs font-bold transition-all border cursor-pointer",
+                cancelWindow === mins
+                  ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                  : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+              )}
+            >
+              {mins} Mins {mins === 30 && "(Standard)"}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Save Button */}
       <button
         type="button"
@@ -471,6 +511,7 @@ function PriceCard() {
           save.mutate({
             price_paise: Math.round(price * 100),
             block_minutes: block,
+            cancellation_window_minutes: cancelWindow,
             enabled: true,
           })
         }
@@ -809,7 +850,16 @@ function Schedule() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
       setCancelTargetId(null);
-      toast.success("Appointment has been cancelled.");
+      toast.success("Appointment cancelled. Client has been 100% refunded.");
+    },
+    onError: (e: ApiError) => toast.error(e.message),
+  });
+
+  const complete = useMutation({
+    mutationFn: (id: string) => appointmentApi.complete(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+      toast.success("Appointment completed and balance coins captured!");
     },
     onError: (e: ApiError) => toast.error(e.message),
   });
@@ -1062,12 +1112,17 @@ function Schedule() {
                       <p className="font-display text-base font-black tabular-nums text-slate-900">
                         ₹{rupees(a.price_paise)}
                       </p>
-                      {a.balance_due_paise > 0 ? (
-                        <p className="text-xs font-bold text-amber-700">
-                          ₹{rupees(a.balance_due_paise)} to collect
+                      {a.status === "booked" ? (
+                        <p className="text-xs font-bold text-amber-700 flex items-center justify-end gap-1">
+                          <span>₹{rupees(a.balance_due_paise)} in escrow</span>
+                          <span className="text-[10px] text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded font-semibold">
+                            {a.held_coins ?? 0} coins
+                          </span>
                         </p>
+                      ) : a.status === "completed" ? (
+                        <p className="text-xs font-semibold text-emerald-600">Session Completed</p>
                       ) : (
-                        <p className="text-xs font-semibold text-emerald-600">Fully paid</p>
+                        <p className="text-xs font-semibold text-slate-400">Cancelled</p>
                       )}
                       <p className="text-[10px] text-slate-400 tabular-nums">
                         Deposit: ₹{rupees(a.deposit_paise)} ({a.deposit_coins} coins)
@@ -1136,6 +1191,19 @@ function Schedule() {
                         <Video className="size-3.5" />
                         <span>Enter Chamber</span>
                       </a>
+                    )}
+
+                    {/* Complete Session Action (Capture Escrow) */}
+                    {a.status === "booked" && (
+                      <button
+                        type="button"
+                        disabled={complete.isPending}
+                        onClick={() => complete.mutate(a.id)}
+                        className="rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                      >
+                        <CheckCircle2 className="size-3.5 text-emerald-600" />
+                        <span>Complete Session</span>
+                      </button>
                     )}
 
                     {/* Cancellation Trigger */}

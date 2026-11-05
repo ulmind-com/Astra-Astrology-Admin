@@ -377,8 +377,12 @@ export const appointmentApi = {
   /** The astrologer's own price card. */
   card: () => api.get<AppointmentCard>(endpoints.appointments.myCard),
 
-  updateCard: (body: { enabled?: boolean; price_paise?: number; block_minutes?: number }) =>
-    api.patch<AppointmentCard>(endpoints.appointments.myCard, body),
+  updateCard: (body: {
+    enabled?: boolean;
+    price_paise?: number;
+    block_minutes?: number;
+    cancellation_window_minutes?: number;
+  }) => api.patch<AppointmentCard>(endpoints.appointments.myCard, body),
 
   windows: (days = 60) =>
     api.get<AvailabilityWindow[]>(endpoints.appointments.myWindows, { query: { days } }),
@@ -393,6 +397,9 @@ export const appointmentApi = {
 
   cancel: (id: string, reason?: string) =>
     api.post<Appointment>(endpoints.appointments.cancel(id), { reason: reason ?? null }),
+
+  complete: (id: string) =>
+    api.post<Appointment>(`/appointments/${id}/complete`, {}),
 
   updatePrescription: (
     id: string,

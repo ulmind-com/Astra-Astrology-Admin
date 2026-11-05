@@ -374,10 +374,22 @@ export type Appointment = Omit<S["AppointmentOut"], "peer"> & {
   prescription?: VedicPrescription | null;
   muhurat_type?: string | null;
   peer?: S["AppointmentPeer"] | null;
+  held_coins?: number;
+  held_status?: string;
+  cancellation_window_minutes?: number;
+  cancel_deadline?: string | null;
+  can_cancel?: boolean;
+  completed_at?: string | null;
 };
-export type AppointmentQuote = S["AppointmentQuote"];
+export type AppointmentQuote = S["AppointmentQuote"] & {
+  balance_due_coins?: number;
+  total_coins?: number;
+  available_coins?: number;
+};
 export type AppointmentStatus = S["AppointmentStatus"];
-export type AppointmentCard = S["AppointmentCardOut"];
+export type AppointmentCard = S["AppointmentCardOut"] & {
+  cancellation_window_minutes?: number;
+};
 export type AvailabilityWindow = S["WindowOut"];
 export type AppointmentDayView = S["DayView"];
 
