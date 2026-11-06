@@ -38,13 +38,95 @@ import {
   LoadingBlock,
   Switch,
 } from "@/components/ui";
-import { cmsAdminApi, type HomePageCMSData } from "@/lib/api";
+import { cmsAdminApi, type HomePageCMSData, type HeroSlideConfig } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { useRequireAuth } from "@/providers/auth-provider";
 
-type ActiveTab = "hero" | "chakra" | "cards" | "stats" | "services" | "cta";
+type ActiveTab = "slides" | "hero" | "chakra" | "cards" | "stats" | "services" | "cta";
+
+const DEFAULT_SLIDES: HeroSlideConfig[] = [
+  {
+    id: "slide-1",
+    title: "Enjoy your relationship",
+    subtitle: "don't stress over it",
+    description: "Talk to India's top Vedic astrologers & tarot readers for instant relationship clarity.",
+    cta_text: "Consult for FREE",
+    cta_link: "/astrologers",
+    badge_text: "India's Best Astrology Platform",
+    badge_rating: "4.9/5",
+    image_url: "/images/hero-couple.jpg",
+    bg_gradient: "from-[#fffbf0] via-[#fff8dc] to-[#fceeb5]",
+    border_color: "border-[#ebd881]",
+  },
+  {
+    id: "slide-2",
+    title: "Know your destiny & future",
+    subtitle: "with free Vedic Janam Kundli",
+    description: "Accurate planetary calculations, dosha analysis, and personalized remedies by Vedic experts.",
+    cta_text: "Generate Free Kundli",
+    cta_link: "/kundli",
+    badge_text: "100% Free & Accurate Kundli",
+    badge_rating: "500k+ Created",
+    image_url: "/images/readings-kundli.jpg",
+    bg_gradient: "from-[#fff9e6] via-[#fff3cc] to-[#fde5a3]",
+    border_color: "border-[#e8ce6b]",
+  },
+  {
+    id: "slide-3",
+    title: "Check marriage compatibility",
+    subtitle: "find your perfect soulmate",
+    description: "Detailed 36-Gun Milan, Manglik Dosha report & life-long harmony analysis for bride & groom.",
+    cta_text: "Match Kundli Now",
+    cta_link: "/kundli-matching",
+    badge_text: "Trusted Matchmaking",
+    badge_rating: "36 Gunas Score",
+    image_url: "/images/readings-matchmaking.jpg",
+    bg_gradient: "from-[#fff6f0] via-[#ffeedd] to-[#ffdcb8]",
+    border_color: "border-[#f2b992]",
+  },
+  {
+    id: "slide-4",
+    title: "Unlock secrets in your palm",
+    subtitle: "with modern 3D AI biometrics",
+    description: "Explore heart, head & life lines with interactive real-time 3D hand visualization.",
+    cta_text: "Start Palm Reading",
+    cta_link: "/palm-reading",
+    badge_text: "Next-Gen 3D Biometrics",
+    badge_rating: "99% Precision",
+    image_url: "/images/readings-spirituality.jpg",
+    bg_gradient: "from-[#f3faf6] via-[#e2f5ec] to-[#c7eedb]",
+    border_color: "border-[#93dab7]",
+  },
+  {
+    id: "slide-5",
+    title: "Discover your true potential",
+    subtitle: "via Samudrika Shastra face scan",
+    description: "Biometric facial feature analysis revealing hidden personality traits, career paths & wealth.",
+    cta_text: "Scan Your Face",
+    cta_link: "/face-reading",
+    badge_text: "Instant AI Physiognomy",
+    badge_rating: "Camera Scan",
+    image_url: "/images/readings-tarot.jpg",
+    bg_gradient: "from-[#faf5ff] via-[#f3e8ff] to-[#e4ceff]",
+    border_color: "border-[#cfa7f7]",
+  },
+  {
+    id: "slide-6",
+    title: "Harmonize your living space",
+    subtitle: "attract wealth, peace & health",
+    description: "Interactive 16-zone Vastu directional compass and elemental balance remedies for home & office.",
+    cta_text: "Explore Vastu Guide",
+    cta_link: "/vastu",
+    badge_text: "Ancient Vedic Architecture",
+    badge_rating: "16 Zones",
+    image_url: "/images/readings-vastu.jpg",
+    bg_gradient: "from-[#fffdf0] via-[#fdf6cc] to-[#fce48b]",
+    border_color: "border-[#ebd36a]",
+  },
+];
 
 const DEFAULT_CMS_DATA: HomePageCMSData = {
+  hero_slides: DEFAULT_SLIDES,
   hero_eyebrow: "Explore the Horoscope",
   hero_title_line1: "WELCOME TO THE",
   hero_title_line2: "WORLD OF",
@@ -142,6 +224,50 @@ export default function HomepageCMSPage() {
         nextStats[index] = { ...nextStats[index], [field]: value };
       }
       return { ...prev, trust_stats: nextStats };
+    });
+    setIsDirty(true);
+  };
+
+  const updateSlide = <K extends keyof HeroSlideConfig>(index: number, field: K, value: HeroSlideConfig[K]) => {
+    setFormData((prev) => {
+      if (!prev) return prev;
+      const slides = [...(prev.hero_slides || DEFAULT_SLIDES)];
+      if (slides[index]) {
+        slides[index] = { ...slides[index], [field]: value };
+      }
+      return { ...prev, hero_slides: slides };
+    });
+    setIsDirty(true);
+  };
+
+  const addSlide = () => {
+    setFormData((prev) => {
+      if (!prev) return prev;
+      const slides = [...(prev.hero_slides || DEFAULT_SLIDES)];
+      const newSlide: HeroSlideConfig = {
+        id: `slide-${Date.now()}`,
+        title: "New Featured Service",
+        subtitle: "Consult expert astrologers today",
+        description: "Get personalized guidance from India's most verified Vedic scholars.",
+        cta_text: "Consult Now",
+        cta_link: "/astrologers",
+        badge_text: "Verified Platform",
+        badge_rating: "4.9/5",
+        image_url: "/images/hero-couple.jpg",
+        bg_gradient: "from-[#fffbf0] via-[#fff8dc] to-[#fceeb5]",
+        border_color: "border-[#ebd881]",
+      };
+      return { ...prev, hero_slides: [...slides, newSlide] };
+    });
+    setIsDirty(true);
+  };
+
+  const removeSlide = (index: number) => {
+    setFormData((prev) => {
+      if (!prev) return prev;
+      const slides = [...(prev.hero_slides || DEFAULT_SLIDES)];
+      slides.splice(index, 1);
+      return { ...prev, hero_slides: slides };
     });
     setIsDirty(true);
   };
@@ -282,7 +408,8 @@ export default function HomepageCMSPage() {
       {/* Tabs Bar */}
       <div className="mb-6 flex overflow-x-auto no-scrollbar gap-1 border-b border-border/60 pb-2">
         {[
-          { id: "hero", label: "Hero & Typography", icon: Sparkles },
+          { id: "slides", label: "Hero Banners / Slides", icon: Sparkles },
+          { id: "hero", label: "Hero Typography", icon: Sliders },
           { id: "chakra", label: "Celestial Chakra Wheel", icon: RotateCw },
           { id: "cards", label: "2x2 Feature Cards", icon: Layers },
           { id: "stats", label: "Trust Metrics", icon: Award },
@@ -307,6 +434,133 @@ export default function HomepageCMSPage() {
           );
         })}
       </div>
+
+      {/* ────────────────────────────────────────── TAB 0: HERO BANNERS & SLIDES */}
+      {activeTab === "slides" && (
+        <div className="grid gap-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-foreground">
+                Hero Banners & Slides ({formData.hero_slides?.length || DEFAULT_SLIDES.length})
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                These slides auto-rotate automatically on the homepage every 5 seconds. Each slide links to a specific service.
+              </p>
+            </div>
+            <Button size="sm" onClick={addSlide} className="text-xs">
+              + Add Slide
+            </Button>
+          </div>
+
+          <div className="space-y-4">
+            {(formData.hero_slides || DEFAULT_SLIDES).map((slide, idx) => (
+              <Card key={slide.id || idx} className="overflow-hidden">
+                <CardHeader className="bg-muted/40 py-3 px-4 flex flex-row items-center justify-between border-b border-border/50">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-6 items-center justify-center rounded-full bg-primary/20 text-primary font-bold text-xs">
+                      {idx + 1}
+                    </span>
+                    <span className="font-bold text-sm text-foreground">
+                      {slide.title} — {slide.subtitle}
+                    </span>
+                  </div>
+                  {(formData.hero_slides || DEFAULT_SLIDES).length > 1 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeSlide(idx)}
+                      className="h-7 text-xs text-destructive hover:bg-destructive/10"
+                    >
+                      Delete Slide
+                    </Button>
+                  )}
+                </CardHeader>
+                <CardBody className="p-4 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Field label="Title (Line 1)">
+                      <Input
+                        value={slide.title}
+                        onChange={(e) => updateSlide(idx, "title", e.target.value)}
+                        placeholder="Enjoy your relationship"
+                      />
+                    </Field>
+                    <Field label="Subtitle (Line 2)">
+                      <Input
+                        value={slide.subtitle}
+                        onChange={(e) => updateSlide(idx, "subtitle", e.target.value)}
+                        placeholder="don't stress over it"
+                      />
+                    </Field>
+                  </div>
+
+                  <Field label="Description">
+                    <Input
+                      value={slide.description || ""}
+                      onChange={(e) => updateSlide(idx, "description", e.target.value)}
+                      placeholder="Talk to India's top Vedic astrologers..."
+                    />
+                  </Field>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Field label="CTA Button Text">
+                      <Input
+                        value={slide.cta_text}
+                        onChange={(e) => updateSlide(idx, "cta_text", e.target.value)}
+                        placeholder="Consult for FREE"
+                      />
+                    </Field>
+                    <Field label="CTA Button Link">
+                      <Input
+                        value={slide.cta_link}
+                        onChange={(e) => updateSlide(idx, "cta_link", e.target.value)}
+                        placeholder="/astrologers"
+                      />
+                    </Field>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Field label="Badge Text">
+                      <Input
+                        value={slide.badge_text}
+                        onChange={(e) => updateSlide(idx, "badge_text", e.target.value)}
+                        placeholder="India's Best Astrology Platform"
+                      />
+                    </Field>
+                    <Field label="Badge Rating / Note">
+                      <Input
+                        value={slide.badge_rating || ""}
+                        onChange={(e) => updateSlide(idx, "badge_rating", e.target.value)}
+                        placeholder="4.9/5"
+                      />
+                    </Field>
+                    <Field label="Image URL">
+                      <Input
+                        value={slide.image_url}
+                        onChange={(e) => updateSlide(idx, "image_url", e.target.value)}
+                        placeholder="/images/hero-couple.jpg"
+                      />
+                    </Field>
+                  </div>
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button size="sm" onClick={addSlide} variant="outline" className="text-xs">
+              + Add Another Slide
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => saveMutation.mutate(formData)}
+              disabled={saveMutation.isPending}
+              className="text-xs"
+            >
+              {saveMutation.isPending ? "Saving..." : "Save All Banners"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* ────────────────────────────────────────── TAB 1: HERO & TYPOGRAPHY */}
       {activeTab === "hero" && (
