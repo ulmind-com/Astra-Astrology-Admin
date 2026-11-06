@@ -11,6 +11,7 @@ import type {
   AppointmentCard,
   Appointment,
   BlacklistedClient,
+  PrivateInviteLink,
   AddressInput,
   AddressUpdate,
   AdminEarningRow,
@@ -387,13 +388,29 @@ export const appointmentApi = {
     follow_up_enabled?: boolean;
     follow_up_window_days?: number;
     follow_up_max_messages?: number;
+    tatkal_enabled?: boolean;
+    tatkal_default_multiplier?: number;
   }) => api.patch<AppointmentCard>(endpoints.appointments.myCard, body),
 
   windows: (days = 60) =>
     api.get<AvailabilityWindow[]>(endpoints.appointments.myWindows, { query: { days } }),
 
-  addWindow: (starts_at: string, ends_at: string) =>
-    api.post<AvailabilityWindow>(endpoints.appointments.myWindows, { starts_at, ends_at }),
+  addWindow: (
+    starts_at: string,
+    ends_at: string,
+    extra?: {
+      is_tatkal?: boolean;
+      tatkal_multiplier?: number;
+      tatkal_fixed_paise?: number | null;
+      custom_title?: string | null;
+      is_private?: boolean;
+    },
+  ) =>
+    api.post<AvailabilityWindow>(endpoints.appointments.myWindows, {
+      starts_at,
+      ends_at,
+      ...(extra || {}),
+    }),
 
   removeWindow: (id: string) => api.delete<null>(endpoints.appointments.myWindow(id)),
 
@@ -480,6 +497,34 @@ export const appointmentApi = {
 
   sendFollowUpMessage: (id: string, text: string) =>
     api.post<Appointment>(`/appointments/${id}/follow-up/message`, { text }),
+
+  openTatkalWindow: (body: {
+    starts_at: string;
+    minutes?: number;
+    multiplier?: number;
+    fixed_paise?: number | null;
+    custom_title?: string;
+    is_private?: boolean;
+  }) => api.post<AvailabilityWindow>("/appointments/me/tatkal-window", body),
+
+  createPrivateLink: (body: {
+    title: string;
+    client_name?: string;
+    client_email?: string;
+    passcode?: string;
+    custom_price_paise?: number;
+    discount_percent?: number;
+    is_tatkal?: boolean;
+    max_uses?: number;
+    expires_in_hours?: number;
+    notes?: string;
+  }) => api.post<PrivateInviteLink>("/appointments/me/private-links", body),
+
+  getPrivateLinks: () =>
+    api.get<PrivateInviteLink[]>("/appointments/me/private-links"),
+
+  deletePrivateLink: (id: string) =>
+    api.delete<{ message: string }>(`/appointments/me/private-links/${id}`),
 };
 
 // ----------------------------------------------------------------- reviews
