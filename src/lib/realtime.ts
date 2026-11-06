@@ -74,7 +74,9 @@ export type LiveMessage =
   // thing to keep in step.
   | { type: "chat_message"; data: Record<string, string> }
   | { type: "chat_read"; data: Record<string, string> }
-  | { type: "chat_ended"; data: { session_id: string; reason?: string | null } };
+  | { type: "chat_ended"; data: { session_id: string; reason?: string | null } }
+  | { type: "whiteboard_event"; data: Record<string, any> }
+  | { type: "whiteboard_live"; data: Record<string, any> };
 
 /**
  * Whether this astrologer is actually at their desk.
@@ -106,7 +108,10 @@ function socketUrl(apiBase: string, token: string | null): string {
   return url.toString();
 }
 
-export type LiveConnection = { close: () => void };
+export type LiveConnection = {
+  close: () => void;
+  send: (data: string | object) => boolean;
+};
 
 /**
  * Opens the socket and keeps it open.
@@ -179,6 +184,13 @@ export function openLive(
   connect();
 
   return {
+    send: (data: string | object) => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(typeof data === "string" ? data : JSON.stringify(data));
+        return true;
+      }
+      return false;
+    },
     close: () => {
       closed = true;
       clearTimers();

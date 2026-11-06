@@ -509,6 +509,66 @@ export interface BlacklistedClient {
   total_reports: number;
 }
 
+export interface WhiteboardStrokePoint {
+  x: number;
+  y: number;
+}
+
+export interface WhiteboardStroke {
+  id?: string;
+  tool: "pen" | "highlighter" | "arrow" | "laser" | "stamp" | "eraser" | "house_select";
+  color: string;
+  width: number;
+  points: WhiteboardStrokePoint[];
+  symbol?: string | null;
+  stamp_icon?: string | null;
+  timestamp?: number;
+}
+
+export interface WhiteboardDrishti {
+  planet: string;
+  planet_name?: string;
+  from_house: number;
+  aspect_offsets: number[];
+  aspects_houses: number[];
+  nature: "auspicious" | "challenging" | "neutral";
+  label_en: string;
+  label_bn: string;
+}
+
+export interface WhiteboardPlanet {
+  name: string;
+  symbol?: string;
+  code?: string;
+  sign_num: number;
+  house_num: number;
+  d9_sign_num?: number;
+  d9_house_num?: number;
+  is_retrograde?: boolean;
+  degree?: number;
+  is_transit?: boolean;
+}
+
+export interface WhiteboardData {
+  id: string;
+  call_id: string;
+  appointment_id?: string | null;
+  is_open: boolean;
+  chart_style: "north" | "south" | "east" | "wheel";
+  active_tab: "d1" | "d9" | "transit" | "freehand";
+  client_name?: string | null;
+  birth_date?: string | null;
+  birth_time?: string | null;
+  birth_place?: string | null;
+  asc_sign_num: number;
+  planets: WhiteboardPlanet[];
+  transit_planets: WhiteboardPlanet[];
+  drishti?: WhiteboardDrishti | null;
+  highlighted_houses: number[];
+  strokes: WhiteboardStroke[];
+  version: number;
+}
+
 /** What a booking's state is called on screen. */
 export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
   booked: "Booked",

@@ -1,14 +1,15 @@
 "use client";
 
-import { Clock, Flag, Phone, PhoneOff, Video } from "lucide-react";
+import { Clock, Flag, Phone, PhoneOff, Sparkles, Video } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
 import { CallRoom } from "@/components/call/call-room";
+import { CosmicWhiteboard } from "@/components/call/cosmic-whiteboard";
 import { Alert, Avatar, Button, LoadingBlock, Modal } from "@/components/ui";
 import { useCall, useCallActions, useCallHeartbeat, useCallTimer } from "@/hooks/use-call";
-import { appointmentApi } from "@/lib/api";
+import { appointmentApi, whiteboardApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
@@ -44,6 +45,8 @@ export default function AstrologerCallPage() {
   const [extendMinutes, setExtendMinutes] = React.useState<number>(10);
   const [offeringExtension, setOfferingExtension] = React.useState(false);
 
+  const [whiteboardOpen, setWhiteboardOpen] = React.useState(false);
+
   React.useEffect(() => {
     if (call && !isCallLive(call.status)) {
       const timer = setTimeout(() => router.replace("/me"), 3000);
@@ -72,6 +75,19 @@ export default function AstrologerCallPage() {
         <div className="absolute inset-0 bg-cosmos" />
       )}
 
+      {connected && (
+        <CosmicWhiteboard
+          callId={id}
+          peerUserId={call.user_id}
+          role="astrologer"
+          isOpen={whiteboardOpen}
+          onClose={() => {
+            setWhiteboardOpen(false);
+            void whiteboardApi.toggle(id);
+          }}
+        />
+      )}
+
       {connected && call.billing && (
         <div className="absolute inset-x-0 top-16 z-10 px-3">
           <BookedTime billing={call.billing} elapsedSeconds={seconds} onDark />
@@ -88,6 +104,23 @@ export default function AstrologerCallPage() {
             </p>
           </div>
           <div className="pointer-events-auto flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={() => {
+                setWhiteboardOpen((v) => !v);
+                void whiteboardApi.toggle(id);
+              }}
+              className={cn(
+                "text-xs font-bold transition-all shadow-sm",
+                whiteboardOpen
+                  ? "bg-amber-400 text-slate-950 border border-amber-300 ring-2 ring-amber-400/50"
+                  : "bg-amber-950/70 hover:bg-amber-900 text-amber-200 border border-amber-500/40",
+              )}
+              title="Toggle live Kundali cosmic whiteboard"
+            >
+              <Sparkles className="size-3.5 mr-1 text-amber-300" />
+              Cosmic Whiteboard
+            </Button>
             {call.appointment_id && (
               <>
                 {call.extension_offer?.status === "pending" ? (
