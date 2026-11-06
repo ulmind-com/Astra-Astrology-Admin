@@ -435,6 +435,12 @@ export type Appointment = Omit<S["AppointmentOut"], "peer"> & {
     text: string;
     sent_at: string;
   }>;
+  is_tatkal?: boolean;
+  tatkal_multiplier?: number | null;
+  tatkal_premium_paise?: number;
+  tatkal_premium_coins?: number;
+  is_private?: boolean;
+  invite_code?: string | null;
   peer?: S["AppointmentPeer"] | null;
   held_coins?: number;
   held_status?: string;
@@ -447,6 +453,11 @@ export type AppointmentQuote = S["AppointmentQuote"] & {
   balance_due_coins?: number;
   total_coins?: number;
   available_coins?: number;
+  is_tatkal?: boolean;
+  tatkal_multiplier?: number;
+  tatkal_premium_paise?: number;
+  tatkal_premium_coins?: number;
+  is_private?: boolean;
 };
 export type AppointmentStatus = S["AppointmentStatus"];
 export type AppointmentCard = S["AppointmentCardOut"] & {
@@ -455,9 +466,36 @@ export type AppointmentCard = S["AppointmentCardOut"] & {
   follow_up_enabled?: boolean;
   follow_up_window_days?: number;
   follow_up_max_messages?: number;
+  tatkal_enabled?: boolean;
+  tatkal_default_multiplier?: number;
 };
-export type AvailabilityWindow = S["WindowOut"];
+export type AvailabilityWindow = S["WindowOut"] & {
+  is_tatkal?: boolean;
+  tatkal_multiplier?: number;
+  tatkal_fixed_paise?: number | null;
+  custom_title?: string | null;
+  is_private?: boolean;
+};
 export type AppointmentDayView = S["DayView"];
+
+export interface PrivateInviteLink {
+  id: string;
+  astrologer_id: string;
+  invite_code: string;
+  title: string;
+  client_name?: string | null;
+  client_email?: string | null;
+  has_passcode: boolean;
+  custom_price_paise?: number | null;
+  discount_percent?: number | null;
+  is_tatkal: boolean;
+  max_uses: number;
+  uses_count: number;
+  expires_at?: string | null;
+  is_active: boolean;
+  created_at: string;
+  notes?: string | null;
+}
 
 export interface BlacklistedClient {
   user_id: string;

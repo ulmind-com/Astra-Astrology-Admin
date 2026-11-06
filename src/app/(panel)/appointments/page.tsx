@@ -27,6 +27,10 @@ import {
   PhoneCall,
   Plus,
   RefreshCw,
+  Copy,
+  Lock,
+  Unlock,
+  Link2,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
@@ -52,6 +56,7 @@ import {
   APPOINTMENT_STATUS_LABELS,
   type Appointment,
   type BlacklistedClient,
+  type PrivateInviteLink,
   type VedicPrescription,
 } from "@/types";
 
@@ -68,6 +73,7 @@ const CARD_KEY = ["appointments", "card"] as const;
 const WINDOWS_KEY = ["appointments", "windows"] as const;
 const SCHEDULE_KEY = ["appointments", "schedule"] as const;
 const BLACKLIST_KEY = ["appointments", "blacklist"] as const;
+const PRIVATE_LINKS_KEY = ["appointments", "private_links"] as const;
 
 /** A date-time input wants "YYYY-MM-DDTHH:mm" in the browser's own timezone. */
 function toLocalInput(date: Date): string {
@@ -116,7 +122,7 @@ function dayRelative(iso: string): string {
 }
 
 type ScheduleTab = "upcoming" | "today" | "all" | "past";
-type AppointmentPortalTab = "calendar" | "rates_windows" | "ledger";
+type AppointmentPortalTab = "calendar" | "rates_windows" | "vip_private" | "ledger";
 
 export default function AppointmentsPage() {
   const { user } = useAuth();
@@ -183,6 +189,23 @@ export default function AppointmentsPage() {
 
           <button
             type="button"
+            onClick={() => setActiveTab("vip_private")}
+            className={cn(
+              "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer",
+              activeTab === "vip_private"
+                ? "bg-white text-slate-900 shadow-sm font-extrabold ring-1 ring-slate-900/5"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+            )}
+          >
+            <Zap className="size-4 text-amber-500 fill-amber-500/20" />
+            <span>VIP Tatkal & Private Links</span>
+            <span className="rounded-full bg-amber-100 text-amber-800 text-[10px] px-2 py-0.2 font-black">
+              VIP / জরুরি
+            </span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab("ledger")}
             className={cn(
               "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer",
@@ -201,6 +224,8 @@ export default function AppointmentsPage() {
             ? "📅 Google Calendar time-grid with live needle, week/month views & 1-click slot creation."
             : activeTab === "rates_windows"
             ? "⚙️ Set consultation fees, grace periods, and open hours."
+            : activeTab === "vip_private"
+            ? "⚡ Emergency Tatkal slots at premium rates & secret passcode-protected VIP booking links."
             : "📋 Complete booking records, prescriptions, and escrow details."}
         </p>
       </div>
@@ -224,7 +249,14 @@ export default function AppointmentsPage() {
         </div>
       )}
 
-      {/* 3. BOOKINGS LEDGER TAB */}
+      {/* 3. VIP TATKAL & PRIVATE LINKS TAB */}
+      {activeTab === "vip_private" && (
+        <div className="space-y-6">
+          <VipTatkalAndPrivateManager />
+        </div>
+      )}
+
+      {/* 4. BOOKINGS LEDGER TAB */}
       {activeTab === "ledger" && (
         <div className="space-y-6">
           <Schedule initialDisplayMode="list" />
@@ -510,6 +542,8 @@ function PriceCard() {
   const [followUpEnabled, setFollowUpEnabled] = React.useState<boolean>(true);
   const [followUpDays, setFollowUpDays] = React.useState<number>(7);
   const [followUpMaxQuestions, setFollowUpMaxQuestions] = React.useState<number>(3);
+  const [tatkalEnabled, setTatkalEnabled] = React.useState<boolean>(true);
+  const [tatkalMultiplier, setTatkalMultiplier] = React.useState<number>(1.5);
   const [ready, setReady] = React.useState(false);
 
   React.useEffect(() => {
@@ -520,6 +554,8 @@ function PriceCard() {
       setFollowUpEnabled(card.follow_up_enabled ?? true);
       setFollowUpDays(card.follow_up_window_days ?? 7);
       setFollowUpMaxQuestions(card.follow_up_max_messages ?? 3);
+      setTatkalEnabled(card.tatkal_enabled ?? true);
+      setTatkalMultiplier(card.tatkal_default_multiplier ?? 1.5);
       setReady(true);
     }
   }, [card, ready]);
@@ -534,6 +570,8 @@ function PriceCard() {
       follow_up_enabled?: boolean;
       follow_up_window_days?: number;
       follow_up_max_messages?: number;
+      tatkal_enabled?: boolean;
+      tatkal_default_multiplier?: number;
     }) => appointmentApi.updateCard(body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: CARD_KEY });
@@ -879,6 +917,61 @@ function PriceCard() {
         )}
       </div>
 
+      {/* Emergency Tatkal Multiplier Defaults */}
+      <div className="space-y-3 rounded-2xl border border-amber-200/80 bg-gradient-to-br from-amber-500/5 via-yellow-500/5 to-amber-500/10 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Zap className="size-4 text-amber-600 fill-amber-500/20" />
+            <span className="text-xs font-bold text-slate-800">
+              VIP Tatkal Consultation Multiplier (জরুরি স্লট রেট)
+            </span>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={tatkalEnabled}
+              onChange={(e) => setTatkalEnabled(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
+          </label>
+        </div>
+
+        <p className="text-[11px] text-slate-600 leading-relaxed">
+          Default multiplier charged when opening instant emergency Tatkal windows outside or alongside normal hours.
+        </p>
+
+        {tatkalEnabled && (
+          <div className="space-y-1.5 pt-1 border-t border-amber-200/50">
+            <span className="text-[10px] uppercase font-bold text-slate-500 block">
+              Default Emergency Multiplier (ডিফল্ট প্রিমিয়াম গুণক)
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {[1.25, 1.5, 1.75, 2.0, 2.5, 3.0].map((mult) => (
+                <button
+                  key={mult}
+                  type="button"
+                  onClick={() => setTatkalMultiplier(mult)}
+                  className={cn(
+                    "rounded-xl px-3 py-1.5 text-xs font-bold transition-all border cursor-pointer",
+                    tatkalMultiplier === mult
+                      ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                      : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                  )}
+                >
+                  {mult}x {mult === 1.5 && "(Standard Tatkal)"} {mult === 2.0 && "(Double)"}
+                </button>
+              ))}
+            </div>
+            {price > 0 && (
+              <p className="text-[11px] font-semibold text-amber-800 pt-1">
+                ⚡ Tatkal Session: ~₹{Math.round(price * tatkalMultiplier)} per {block} mins
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Save Button */}
       <button
         type="button"
@@ -892,6 +985,8 @@ function PriceCard() {
             follow_up_enabled: followUpEnabled,
             follow_up_window_days: followUpDays,
             follow_up_max_messages: followUpMaxQuestions,
+            tatkal_enabled: tatkalEnabled,
+            tatkal_default_multiplier: tatkalMultiplier,
             enabled: true,
           })
         }
@@ -2904,6 +2999,791 @@ function Schedule({
             />
           </div>
         </div>
+      </Modal>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------- VIP Tatkal & Private Manager */
+function VipTatkalAndPrivateManager() {
+  const queryClient = useQueryClient();
+  const { data: windows, isLoading: windowsLoading } = useQuery({
+    queryKey: WINDOWS_KEY,
+    queryFn: () => appointmentApi.windows(60),
+  });
+  const { data: links, isLoading: linksLoading } = useQuery({
+    queryKey: PRIVATE_LINKS_KEY,
+    queryFn: () => appointmentApi.getPrivateLinks(),
+  });
+  const { data: card } = useQuery({
+    queryKey: CARD_KEY,
+    queryFn: () => appointmentApi.card(),
+  });
+
+  // Tatkal Modal State
+  const [openTatkalModal, setOpenTatkalModal] = React.useState(false);
+  const [tatkalStart, setTatkalStart] = React.useState(() => {
+    const d = new Date(Date.now() + 15 * 60 * 1000);
+    d.setMinutes(Math.ceil(d.getMinutes() / 15) * 15, 0, 0);
+    return toLocalInput(d);
+  });
+  const [tatkalDuration, setTatkalDuration] = React.useState<number>(30);
+  const [tatkalMultiplier, setTatkalMultiplier] = React.useState<number>(1.5);
+  const [tatkalFixedRupees, setTatkalFixedRupees] = React.useState<string>("");
+  const [tatkalTitle, setTatkalTitle] = React.useState<string>("VIP Tatkal Emergency Slot");
+
+  // Private Link Modal State
+  const [openPrivateModal, setOpenPrivateModal] = React.useState(false);
+  const [linkTitle, setLinkTitle] = React.useState("");
+  const [clientName, setClientName] = React.useState("");
+  const [clientEmail, setClientEmail] = React.useState("");
+  const [passcode, setPasscode] = React.useState("");
+  const [pricingMode, setPricingMode] = React.useState<"standard" | "multiplier" | "fixed" | "discount">("standard");
+  const [linkMultiplier, setLinkMultiplier] = React.useState<number>(1.5);
+  const [customRupees, setCustomRupees] = React.useState("");
+  const [discountPercent, setDiscountPercent] = React.useState(20);
+  const [maxUses, setMaxUses] = React.useState<number>(1);
+  const [expiresHours, setExpiresHours] = React.useState<number>(48);
+  const [notes, setNotes] = React.useState("");
+
+  // Mutations
+  const createTatkal = useMutation({
+    mutationFn: (body: {
+      starts_at: string;
+      minutes: number;
+      multiplier?: number;
+      fixed_paise?: number | null;
+      custom_title?: string;
+    }) => appointmentApi.openTatkalWindow(body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: WINDOWS_KEY });
+      setOpenTatkalModal(false);
+      toast.success("Emergency Tatkal Window created successfully!");
+    },
+    onError: (e: ApiError) => toast.error(e.message),
+  });
+
+  const createPrivateLink = useMutation({
+    mutationFn: (body: {
+      title: string;
+      client_name?: string;
+      client_email?: string;
+      passcode?: string;
+      custom_price_paise?: number;
+      discount_percent?: number;
+      is_tatkal?: boolean;
+      max_uses?: number;
+      expires_in_hours?: number;
+      notes?: string;
+    }) => appointmentApi.createPrivateLink(body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: PRIVATE_LINKS_KEY });
+      setOpenPrivateModal(false);
+      setLinkTitle("");
+      setClientName("");
+      setClientEmail("");
+      setPasscode("");
+      setCustomRupees("");
+      setNotes("");
+      toast.success("Private invite link generated!");
+    },
+    onError: (e: ApiError) => toast.error(e.message),
+  });
+
+  const removeWindow = useMutation({
+    mutationFn: (id: string) => appointmentApi.removeWindow(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: WINDOWS_KEY });
+      toast.success("Tatkal window removed.");
+    },
+    onError: (e: ApiError) => toast.error(e.message),
+  });
+
+  const deleteLink = useMutation({
+    mutationFn: (id: string) => appointmentApi.deletePrivateLink(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: PRIVATE_LINKS_KEY });
+      toast.success("Private invite link revoked.");
+    },
+    onError: (e: ApiError) => toast.error(e.message),
+  });
+
+  const tatkalWindows = (windows || []).filter((w) => w.is_tatkal);
+
+  const copyToClipboard = (inviteCode: string) => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    let webOrigin = origin.replace(":3001", ":3000").replace("admin.", "");
+    if (!webOrigin.startsWith("http")) {
+      webOrigin = "https://astra-astrology.com";
+    }
+    const fullUrl = `${webOrigin}/appointments/private/${inviteCode}`;
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(fullUrl).then(
+        () => toast.success("Private invite link copied to clipboard!"),
+        () => toast.error("Failed to copy link")
+      );
+    } else {
+      toast.info(`Link: ${fullUrl}`);
+    }
+  };
+
+  const handleOpenTatkalSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsedDate = new Date(tatkalStart);
+    if (isNaN(parsedDate.getTime())) {
+      toast.error("Please enter a valid start time");
+      return;
+    }
+    const fixedPaise = tatkalFixedRupees ? Math.round(Number(tatkalFixedRupees) * 100) : null;
+    createTatkal.mutate({
+      starts_at: parsedDate.toISOString(),
+      minutes: tatkalDuration,
+      multiplier: fixedPaise ? undefined : tatkalMultiplier,
+      fixed_paise: fixedPaise,
+      custom_title: tatkalTitle.trim() || undefined,
+    });
+  };
+
+  const handleCreatePrivateLinkSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!linkTitle.trim()) {
+      toast.error("Please provide a title for the private link");
+      return;
+    }
+    let customPaise: number | undefined = undefined;
+    let discount: number | undefined = undefined;
+    let isTatkal = false;
+
+    if (pricingMode === "fixed" && customRupees) {
+      customPaise = Math.round(Number(customRupees) * 100);
+    } else if (pricingMode === "discount") {
+      discount = discountPercent;
+    } else if (pricingMode === "multiplier") {
+      isTatkal = true;
+    }
+
+    createPrivateLink.mutate({
+      title: linkTitle.trim(),
+      client_name: clientName.trim() || undefined,
+      client_email: clientEmail.trim() || undefined,
+      passcode: passcode.trim() || undefined,
+      custom_price_paise: customPaise,
+      discount_percent: discount,
+      is_tatkal: isTatkal,
+      max_uses: maxUses,
+      expires_in_hours: expiresHours,
+      notes: notes.trim() || undefined,
+    });
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Hero Header */}
+      <div className="rounded-3xl border border-amber-200/90 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-500/15 p-6 sm:p-8 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 rounded-full bg-amber-100 border border-amber-300 px-3 py-1 text-xs font-black text-amber-900 uppercase tracking-wider">
+              <Zap className="size-3.5 fill-amber-600 text-amber-600" />
+              <span>VIP & Emergency Authority</span>
+            </div>
+            <h2 className="font-display text-2xl font-black text-slate-900 tracking-tight">
+              VIP Tatkal Slots & Private Invite Links
+            </h2>
+            <p className="text-sm text-slate-600 max-w-2xl leading-relaxed">
+              Open immediate emergency slots at premium rates when regular bookings are full, or issue discreet, password-protected private booking links for celebrity seekers.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                const d = new Date(Date.now() + 15 * 60 * 1000);
+                d.setMinutes(Math.ceil(d.getMinutes() / 15) * 15, 0, 0);
+                setTatkalStart(toLocalInput(d));
+                setOpenTatkalModal(true);
+              }}
+              className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-2.5 text-xs font-black text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer"
+            >
+              <Zap className="size-4 fill-white" />
+              <span>+ Open Tatkal Slot</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setOpenPrivateModal(true)}
+              className="flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-xs font-black text-white shadow-md hover:bg-slate-800 hover:scale-[1.02] transition-all cursor-pointer"
+            >
+              <Lock className="size-4 text-amber-400" />
+              <span>+ Generate Private Link</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Active Tatkal Slots (5 cols) */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap className="size-4 text-amber-600 fill-amber-600" />
+              <h3 className="font-display text-base font-bold text-slate-900">
+                Active Emergency Tatkal Slots
+              </h3>
+            </div>
+            <span className="text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">
+              {tatkalWindows.length} Active
+            </span>
+          </div>
+
+          {windowsLoading ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6">
+              <LoadingBlock label="Loading Tatkal windows…" />
+            </div>
+          ) : tatkalWindows.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-amber-200 bg-amber-50/40 p-8 text-center space-y-3">
+              <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+                <Zap className="size-6 fill-amber-600 text-amber-600" />
+              </div>
+              <h4 className="font-bold text-slate-800 text-sm">No Emergency Slots Open</h4>
+              <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                Need to accommodate an urgent seeker? Open an immediate Tatkal window with custom premium pricing.
+              </p>
+              <button
+                type="button"
+                onClick={() => setOpenTatkalModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-amber-700 transition-colors shadow-xs cursor-pointer"
+              >
+                <Plus className="size-3.5 stroke-[3]" />
+                <span>Open Instant Tatkal</span>
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {tatkalWindows.map((win) => {
+                const start = new Date(win.starts_at);
+                const end = new Date(win.ends_at);
+                const durationMins = Math.round((end.getTime() - start.getTime()) / 60000);
+                const mult = win.tatkal_multiplier ?? 1.5;
+
+                return (
+                  <div
+                    key={win.id}
+                    className="group relative rounded-2xl border border-amber-200 bg-white p-4 shadow-sm hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-300 px-2 py-0.5 text-[10px] font-black text-amber-800 uppercase tracking-wide">
+                            <Zap className="size-3 fill-amber-600 text-amber-600" />
+                            {win.tatkal_fixed_paise ? `₹${rupees(win.tatkal_fixed_paise)} Fixed` : `${mult}x Premium`}
+                          </span>
+                          {win.is_private && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 border border-slate-300 px-1.5 py-0.5 text-[10px] font-bold text-slate-700">
+                              <Lock className="size-2.5" />
+                              Private
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="font-bold text-sm text-slate-900">
+                          {win.custom_title || "VIP Tatkal Consultation"}
+                        </h4>
+                        <p className="text-xs text-slate-600 font-medium">
+                          📅 {dayLabel(win.starts_at)} • {clock(win.starts_at)} – {clock(win.ends_at)}
+                        </p>
+                        <p className="text-[11px] text-slate-400">
+                          Duration: {durationMins} minutes
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => removeWindow.mutate(win.id)}
+                        disabled={removeWindow.isPending}
+                        className="rounded-xl p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                        title="Remove Tatkal Window"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Private Invite-Only Links Directory (7 cols) */}
+        <div className="lg:col-span-7 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Lock className="size-4 text-slate-700" />
+              <h3 className="font-display text-base font-bold text-slate-900">
+                Discreet & Private Invite Links
+              </h3>
+            </div>
+            <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+              {links?.length ?? 0} Generated
+            </span>
+          </div>
+
+          {linksLoading ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6">
+              <LoadingBlock label="Loading private links…" />
+            </div>
+          ) : !links || links.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center space-y-3">
+              <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
+                <Link2 className="size-6" />
+              </div>
+              <h4 className="font-bold text-slate-800 text-sm">No Private Links Generated</h4>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Generate dedicated private booking links for discreet VIP clients. Links do not show up on your public profile and can be locked with a PIN code.
+              </p>
+              <button
+                type="button"
+                onClick={() => setOpenPrivateModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-slate-800 transition-colors shadow-xs cursor-pointer"
+              >
+                <Plus className="size-3.5 stroke-[3]" />
+                <span>Create First Private Link</span>
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {links.map((link) => {
+                const isExhausted = link.uses_count >= link.max_uses;
+                const isExpired = link.expires_at ? new Date(link.expires_at).getTime() < Date.now() : false;
+                const isLive = link.is_active && !isExhausted && !isExpired;
+
+                return (
+                  <div
+                    key={link.id}
+                    className={cn(
+                      "rounded-2xl border p-4 transition-all space-y-3",
+                      isLive
+                        ? "border-slate-200 bg-white shadow-sm hover:shadow-md"
+                        : "border-slate-200/60 bg-slate-50/70 opacity-75"
+                    )}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider",
+                            isLive
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                              : isExhausted
+                              ? "bg-amber-100 text-amber-800 border border-amber-300"
+                              : "bg-rose-100 text-rose-800 border border-rose-300"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "size-1.5 rounded-full",
+                              isLive ? "bg-emerald-500" : isExhausted ? "bg-amber-500" : "bg-rose-500"
+                            )}
+                          />
+                          {isLive ? "Active Link" : isExhausted ? "Used Up" : "Expired"}
+                        </span>
+
+                        {link.has_passcode ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                            <Lock className="size-2.5 text-amber-600" />
+                            PIN Protected
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                            <Unlock className="size-2.5" />
+                            Direct Access
+                          </span>
+                        )}
+
+                        {link.is_tatkal && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                            <Zap className="size-2.5 fill-amber-600" />
+                            Tatkal
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(link.invite_code)}
+                          className="flex items-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
+                          title="Copy Private Link"
+                        >
+                          <Copy className="size-3.5" />
+                          <span>Copy Link</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => deleteLink.mutate(link.id)}
+                          disabled={deleteLink.isPending}
+                          className="rounded-xl p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          title="Revoke Link"
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <p className="font-bold text-sm text-slate-900">{link.title}</p>
+                        {link.client_name && (
+                          <p className="text-slate-600 font-medium mt-0.5">
+                            Client: <span className="font-bold text-slate-800">{link.client_name}</span>
+                          </p>
+                        )}
+                        {link.notes && (
+                          <p className="text-[11px] text-slate-500 italic mt-1">"{link.notes}"</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-1 sm:text-right">
+                        <p className="text-slate-600">
+                          Rate:{" "}
+                          <span className="font-bold text-slate-900">
+                            {link.custom_price_paise
+                              ? `₹${rupees(link.custom_price_paise)} Fixed`
+                              : link.discount_percent
+                              ? `${link.discount_percent}% Off`
+                              : link.is_tatkal
+                              ? "Tatkal Rate"
+                              : "Standard Rate"}
+                          </span>
+                        </p>
+                        <p className="text-slate-500">
+                          Usage: <span className="font-bold text-slate-700">{link.uses_count}</span> of{" "}
+                          <span className="font-bold text-slate-700">{link.max_uses}</span> bookings
+                        </p>
+                        <p className="text-[11px] text-slate-400">
+                          Expires: {link.expires_at ? new Date(link.expires_at).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }) : "Never"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* MODAL 1: Open Emergency Tatkal Window */}
+      <Modal
+        open={openTatkalModal}
+        onClose={() => setOpenTatkalModal(false)}
+        title="⚡ Open Emergency Tatkal Window"
+      >
+        <form onSubmit={handleOpenTatkalSubmit} className="space-y-4">
+          <Alert tone="info">
+            Emergency Tatkal windows are marked with a golden badge and allow seekers to book at premium fees even during off-hours or peak times.
+          </Alert>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
+              Window Title / Purpose
+            </label>
+            <input
+              type="text"
+              value={tatkalTitle}
+              onChange={(e) => setTatkalTitle(e.target.value)}
+              placeholder="e.g. VIP Tatkal Emergency Slot"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
+                Start Date & Time *
+              </label>
+              <input
+                type="datetime-local"
+                value={tatkalStart}
+                onChange={(e) => setTatkalStart(e.target.value)}
+                required
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
+                Duration (Minutes) *
+              </label>
+              <select
+                value={tatkalDuration}
+                onChange={(e) => setTatkalDuration(Number(e.target.value))}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+              >
+                <option value={30}>30 Minutes</option>
+                <option value={45}>45 Minutes</option>
+                <option value={60}>60 Minutes (1 Hour)</option>
+                <option value={90}>90 Minutes (1.5 Hours)</option>
+                <option value={120}>120 Minutes (2 Hours)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+              Emergency Pricing Model
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <span className="text-[11px] font-semibold text-slate-600 block mb-1">
+                  Multiplier Option
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {[1.25, 1.5, 1.75, 2.0, 2.5].map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => {
+                        setTatkalMultiplier(m);
+                        setTatkalFixedRupees("");
+                      }}
+                      className={cn(
+                        "rounded-lg px-2.5 py-1 text-xs font-bold border transition-all cursor-pointer",
+                        !tatkalFixedRupees && tatkalMultiplier === m
+                          ? "bg-amber-600 text-white border-amber-600"
+                          : "bg-slate-50 text-slate-700 border-slate-200"
+                      )}
+                    >
+                      {m}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[11px] font-semibold text-slate-600 block mb-1">
+                  Or Fixed Fee (₹)
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  step={50}
+                  value={tatkalFixedRupees}
+                  onChange={(e) => setTatkalFixedRupees(e.target.value)}
+                  placeholder="e.g. 1500"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-1.5 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <Button variant="outline" type="button" onClick={() => setOpenTatkalModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={createTatkal.isPending}
+              className="bg-amber-600 text-white hover:bg-amber-700"
+            >
+              {createTatkal.isPending ? "Opening Window..." : "Open Tatkal Window"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* MODAL 2: Create Private Invite Link */}
+      <Modal
+        open={openPrivateModal}
+        onClose={() => setOpenPrivateModal(false)}
+        title="🔒 Generate VIP Private Invite Link"
+      >
+        <form onSubmit={handleCreatePrivateLinkSubmit} className="space-y-4">
+          <Alert tone="info">
+            Private links do not appear on your public profile or marketplace directory. Only clients who receive this link (and know the optional PIN) can book.
+          </Alert>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
+              Link Title / Description *
+            </label>
+            <input
+              type="text"
+              required
+              value={linkTitle}
+              onChange={(e) => setLinkTitle(e.target.value)}
+              placeholder="e.g. Private Kundali Reading for Mr. Singhania"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
+                Client Name (Optional)
+              </label>
+              <input
+                type="text"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                placeholder="e.g. Vikram Singhania"
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
+                Secret Passcode / PIN (Optional)
+              </label>
+              <input
+                type="text"
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                placeholder="e.g. 7869 or VIP2026"
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none font-mono"
+              />
+              <span className="text-[10px] text-slate-400">Leave blank for open access via URL</span>
+            </div>
+          </div>
+
+          {/* Pricing override options */}
+          <div className="space-y-2 pt-1 border-t border-slate-100">
+            <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+              Pricing Mode
+            </label>
+            <div className="grid grid-cols-4 gap-1.5">
+              {[
+                { id: "standard", label: "Standard Rate" },
+                { id: "multiplier", label: "Tatkal (1.5x)" },
+                { id: "fixed", label: "Custom ₹" },
+                { id: "discount", label: "Discount %" },
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setPricingMode(opt.id as any)}
+                  className={cn(
+                    "rounded-xl px-2 py-1.5 text-xs font-bold border transition-all cursor-pointer text-center",
+                    pricingMode === opt.id
+                      ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {pricingMode === "fixed" && (
+              <div className="pt-2">
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  Custom Fixed Fee for this Session (₹)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step={50}
+                  value={customRupees}
+                  onChange={(e) => setCustomRupees(e.target.value)}
+                  placeholder="e.g. 2500"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+            )}
+
+            {pricingMode === "discount" && (
+              <div className="pt-2">
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  Discount Percentage (%)
+                </label>
+                <div className="flex gap-2">
+                  {[10, 20, 25, 50].map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setDiscountPercent(d)}
+                      className={cn(
+                        "rounded-xl px-3 py-1 text-xs font-bold border transition-all cursor-pointer",
+                        discountPercent === d
+                          ? "bg-amber-600 text-white border-amber-600"
+                          : "bg-white text-slate-700 border-slate-200"
+                      )}
+                    >
+                      {d}% Off
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 pt-1 border-t border-slate-100">
+            <div>
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
+                Maximum Uses *
+              </label>
+              <select
+                value={maxUses}
+                onChange={(e) => setMaxUses(Number(e.target.value))}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+              >
+                <option value={1}>1-Time Use Only (Single Booking)</option>
+                <option value={2}>2 Bookings</option>
+                <option value={3}>3 Bookings</option>
+                <option value={5}>5 Bookings</option>
+                <option value={10}>10 Bookings</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
+                Link Expiry Window *
+              </label>
+              <select
+                value={expiresHours}
+                onChange={(e) => setExpiresHours(Number(e.target.value))}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+              >
+                <option value={24}>24 Hours (1 Day)</option>
+                <option value={48}>48 Hours (2 Days)</option>
+                <option value={72}>72 Hours (3 Days)</option>
+                <option value={168}>7 Days (1 Week)</option>
+                <option value={720}>30 Days (1 Month)</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
+              Internal Notes (Optional)
+            </label>
+            <input
+              type="text"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="e.g. VIP referral from Chairman Office"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <Button variant="outline" type="button" onClick={() => setOpenPrivateModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={createPrivateLink.isPending}
+              className="bg-slate-900 text-white hover:bg-slate-800"
+            >
+              {createPrivateLink.isPending ? "Generating..." : "Generate Private Link"}
+            </Button>
+          </div>
+        </form>
       </Modal>
     </div>
   );
