@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
+import { AstroCoPilot } from "@/components/call/astro-copilot";
 import { CallRoom } from "@/components/call/call-room";
 import { CosmicWhiteboard } from "@/components/call/cosmic-whiteboard";
 import { Alert, Avatar, Button, LoadingBlock, Modal } from "@/components/ui";
@@ -74,6 +75,9 @@ export default function AstrologerCallPage() {
       ) : (
         <div className="absolute inset-0 bg-cosmos" />
       )}
+
+      {/* Live Co-Pilot. Docked left, clear of the whiteboard on the right. */}
+      {connected && <AstroCoPilot callId={id} enabled />}
 
       {connected && (
         <CosmicWhiteboard

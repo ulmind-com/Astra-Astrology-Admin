@@ -55,6 +55,17 @@ export const endpoints = {
     end: (id: string) => `/calls/${id}/end`,
     extend: (id: string) => `/calls/${id}/extend`,
     heartbeat: (id: string) => `/calls/${id}/heartbeat`,
+    copilot: (id: string) => `/calls/${id}/copilot`,
+  },
+
+  milan: {
+    active: "/milan/active",
+    incoming: "/milan/incoming/mine",
+    detail: (id: string) => `/milan/${id}`,
+    accept: (id: string) => `/milan/${id}/accept`,
+    decline: (id: string) => `/milan/${id}/decline`,
+    heartbeat: (id: string) => `/milan/${id}/heartbeat`,
+    end: (id: string) => `/milan/${id}/end`,
   },
 
   appointments: {

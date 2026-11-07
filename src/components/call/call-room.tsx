@@ -21,12 +21,21 @@ export function CallRoom({
   onLeave,
   className,
   audioOnly = false,
+  group = false,
 }: {
   credentials: CallCredentials;
   onLeave: () => void;
   className?: string;
   /** A voice call is the same room with the camera left off. */
   audioOnly?: boolean;
+  /**
+   * A multi-party chamber rather than a 1:1 call.
+   *
+   * This changes two things that would otherwise be wrong with more than two
+   * people in the room: the layout becomes a grid, and one person leaving
+   * stops meaning the session is over.
+   */
+  group?: boolean;
 }) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -57,11 +66,17 @@ export function CallRoom({
         instance = ZegoUIKitPrebuilt.create(kitToken);
         instance.joinRoom({
           container: containerRef.current,
-          scenario: { mode: ZegoUIKitPrebuilt.OneONoneCall },
+          scenario: {
+            mode: group
+              ? ZegoUIKitPrebuilt.GroupCall
+              : ZegoUIKitPrebuilt.OneONoneCall,
+          },
           showPreJoinView: false,
           showScreenSharingButton: false,
           showRoomDetailsButton: false,
-          showUserList: false,
+          // Worth having in a chamber, where knowing who has actually
+          // arrived is half the point.
+          showUserList: group,
           showTextChat: false,
           turnOnCameraWhenJoining: !audioOnly,
           turnOnMicrophoneWhenJoining: true,
@@ -72,8 +87,10 @@ export function CallRoom({
           // Leaving the room is reported to our server too — the room is the
           // pipe, but the session is ours.
           onLeaveRoom: () => leaveRef.current(),
-          // When the other person drops out there is nobody left to talk to.
-          onUserLeave: () => leaveRef.current(),
+          // In a 1:1 call the other person dropping out ends it. In a chamber
+          // it does not: a guardian hanging up must not close the
+          // consultation on everyone still in the room.
+          ...(group ? {} : { onUserLeave: () => leaveRef.current() }),
         });
       } catch (e) {
         if (!cancelled) {
@@ -97,7 +114,7 @@ export function CallRoom({
     // Re-joining on a changed token would drop the live call, so this runs
     // once per room.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [credentials.room_id, audioOnly]);
+  }, [credentials.room_id, audioOnly, group]);
 
   if (error) {
     return (

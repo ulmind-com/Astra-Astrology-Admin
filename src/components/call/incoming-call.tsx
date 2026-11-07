@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageCircle, Phone, PhoneOff, Video } from "lucide-react";
+import { MessageCircle, Phone, PhoneOff, Users, Video } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { Avatar, Button } from "@/components/ui";
 import { useActiveCall, useCallActions } from "@/hooks/use-call";
 import { useAlertOn, useLoopingSound } from "@/hooks/use-sound";
 import { useActiveChat, useChatActions } from "@/hooks/use-chat";
+import { useIncomingMilan, useMilanActions } from "@/hooks/use-milan";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/providers/auth-provider";
 
@@ -30,15 +31,20 @@ export function IncomingCallWatcher() {
   const { data: chatData } = useActiveChat(isAstrologer);
   const chatActions = useChatActions();
 
+  const { data: milan } = useIncomingMilan(isAstrologer);
+  const milanActions = useMilanActions();
+
   const call = data?.call;
   const ringing = call?.status === "ringing";
 
   const chat = chatData?.chat;
   const chatWaiting = chat?.status === "requested";
 
+  const milanRinging = milan?.status === "ringing";
+
   // A ringing call rings, for as long as it is ringing. Stops by itself the
   // moment it is answered, declined, or the caller gives up.
-  useLoopingSound("ring", ringing);
+  useLoopingSound("ring", ringing || milanRinging);
 
   // A chat has no ringing state — someone is simply waiting — so it gets one
   // alert rather than a tone that would have to be silenced by hand.
@@ -53,10 +59,69 @@ export function IncomingCallWatcher() {
     if (chat?.status === "active") router.push(`/chat/${chat.id}`);
   }, [chat?.status, chat?.id, router]);
 
+  React.useEffect(() => {
+    if (milan?.status === "active") router.push(`/milan/${milan.id}`);
+  }, [milan?.status, milan?.id, router]);
+
   if (!isAstrologer) return null;
 
-  // A call interrupts; a chat can wait. If both somehow arrive, the call wins.
-  if (!ringing && chatWaiting && chat) {
+  // Checked first: a chamber has people already waiting in it.
+  if (milanRinging && milan) {
+    return (
+      <div className="fixed inset-x-0 bottom-0 z-50 p-4 sm:inset-auto sm:right-6 sm:top-6 sm:w-80">
+        <div className="card-surface overflow-hidden rounded-2xl border border-border shadow-2xl">
+          <div className="bg-cosmos px-5 py-4 text-brand-950">
+            <p className="flex items-center gap-2 text-xs text-ink-600">
+              <Users className="size-3.5" />
+              Multi-party chamber
+            </p>
+            <div className="mt-3 min-w-0">
+              <p className="truncate font-semibold">{milan.host_name ?? "Someone"}</p>
+              <p className="text-xs text-ink-600">
+                {milan.seats_taken > 0
+                  ? `with ${milan.seats_taken} other${milan.seats_taken === 1 ? "" : "s"} invited`
+                  : "is opening a chamber…"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2 p-4">
+            <Button
+              variant="secondary"
+              className="flex-1"
+              disabled={milanActions.decline.isPending}
+              onClick={() =>
+                milanActions.decline.mutate(milan.id, {
+                  onError: (e: Error) => toast.error((e as ApiError).message),
+                })
+              }
+            >
+              <PhoneOff className="size-4" />
+              Decline
+            </Button>
+            <Button
+              className="flex-1 bg-success text-brand-950 hover:bg-success"
+              disabled={milanActions.accept.isPending}
+              onClick={() =>
+                milanActions.accept.mutate(milan.id, {
+                  onSuccess: () => router.push(`/milan/${milan.id}`),
+                  onError: (e: Error) => toast.error((e as ApiError).message),
+                })
+              }
+            >
+              <Users className="size-4" />
+              Join
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // A call or a chamber interrupts; a chat can wait. A chamber is a booked,
+  // multi-party session with people already waiting in it, so it outranks
+  // both of the others.
+  if (!ringing && !milanRinging && chatWaiting && chat) {
     return (
       <div className="fixed inset-x-0 bottom-0 z-50 p-4 sm:inset-auto sm:right-6 sm:top-6 sm:w-80">
         <div className="card-surface overflow-hidden rounded-2xl border border-border shadow-2xl">

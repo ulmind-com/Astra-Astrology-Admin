@@ -60,6 +60,8 @@ import type {
   WhiteboardData,
   WhiteboardStroke,
 } from "@/types";
+import type { CoPilotSummary } from "@/types/copilot";
+import type { MilanRoom, MilanRoomSession } from "@/types/milan";
 
 // ------------------------------------------------------------------- auth
 export const authApi = {
@@ -337,12 +339,34 @@ export const callApi = {
 
   heartbeat: (id: string) => api.post<Call>(endpoints.calls.heartbeat(id), {}),
 
+  /** The live Co-Pilot summary for this call's client. Only this call's
+   *  astrologer may read it, and only while the session is live. Omitting
+   *  the language lets the backend answer in the astrologer's own. */
+  copilot: (id: string) => api.get<CoPilotSummary>(endpoints.calls.copilot(id)),
+
   extend: (id: string, extra_minutes: number) =>
     api.post<Call>(endpoints.calls.extend(id), { extra_minutes }),
 
   history: (params: { page?: number; limit?: number } = {}) =>
     api.get<{ items: Call[]; meta: PageMeta }>(endpoints.calls.history, { query: params }),
 };
+
+// ------------------------------------------------------------------ milan
+/** The multi-party Vedic chamber, from the astrologer's side. Opening one,
+ *  inviting guests and paying for it are all the host's, on the user site. */
+export const milanApi = {
+  active: () => api.get<MilanRoomSession | null>(endpoints.milan.active),
+  incoming: () => api.get<MilanRoom | null>(endpoints.milan.incoming),
+  get: (id: string) => api.get<MilanRoomSession>(endpoints.milan.detail(id)),
+  accept: (id: string) => api.post<MilanRoomSession>(endpoints.milan.accept(id), {}),
+  decline: (id: string) => api.post<MilanRoom>(endpoints.milan.decline(id), {}),
+  heartbeat: (id: string) => api.post<MilanRoom>(endpoints.milan.heartbeat(id), {}),
+  end: (id: string, reason?: string) =>
+    api.post<MilanRoom>(endpoints.milan.end(id), null, {
+      query: reason ? { reason } : undefined,
+    }),
+};
+
 
 // -------------------------------------------------------------- whiteboard
 export const whiteboardApi = {
