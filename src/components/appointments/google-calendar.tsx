@@ -2,6 +2,7 @@
 
 import {
   Calendar as CalendarIcon,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -433,10 +434,12 @@ export function GoogleCalendarSuite({
       {view === "agenda" && (
         <AgendaCalendarView
           bookings={bookings}
+          windows={windows}
           onOpenSession={onOpenSession}
           onOpenPrescription={onOpenPrescription}
           onCancelAppointment={onCancelAppointment}
           onCompleteAppointment={onCompleteAppointment}
+          onDeleteWindow={(w) => setDeleteTargetWindow(w)}
           getGoogleCalendarUrl={getGoogleCalendarUrl}
         />
       )}
@@ -1282,27 +1285,59 @@ function DayCalendarView({
                         {formatTime(new Date(b.starts_at))} – {formatTime(new Date(b.ends_at))} ({b.minutes} min)
                       </p>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenPrescription(b);
-                          }}
-                          className="text-amber-700 font-bold hover:underline"
-                        >
-                          📜 Prescription
-                        </button>
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs flex-wrap gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenPrescription(b);
+                            }}
+                            className="text-amber-700 font-bold hover:underline cursor-pointer"
+                          >
+                            📜 Prescription
+                          </button>
 
-                        <a
-                          href={getGoogleCalendarUrl(b)}
-                          target="_blank"
-                          rel="noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-sky-600 font-bold hover:underline"
-                        >
-                          📅 Add to GCal
-                        </a>
+                          <a
+                            href={getGoogleCalendarUrl(b)}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-sky-600 font-bold hover:underline"
+                          >
+                            📅 GCal
+                          </a>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {b.status === "booked" && now.getTime() >= new Date(b.starts_at).getTime() && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onCompleteAppointment(b.id);
+                              }}
+                              className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-700 transition-colors shadow-2xs cursor-pointer"
+                            >
+                              <CheckCircle2 className="size-3" />
+                              <span>Complete</span>
+                            </button>
+                          )}
+
+                          {b.status === "booked" && new Date(b.starts_at).getTime() > now.getTime() && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onCancelAppointment(b.id);
+                              }}
+                              className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="size-3" />
+                              <span>Cancel</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1329,17 +1364,21 @@ function DayCalendarView({
 ========================================================================= */
 function AgendaCalendarView({
   bookings,
+  windows = [],
   onOpenSession,
   onOpenPrescription,
   onCancelAppointment,
   onCompleteAppointment,
+  onDeleteWindow,
   getGoogleCalendarUrl,
 }: {
   bookings: Appointment[];
+  windows?: Array<{ id: string; day: string; starts_at: string; ends_at: string; is_tatkal?: boolean; custom_title?: string | null }>;
   onOpenSession: (appointment: Appointment) => void;
   onOpenPrescription: (appointment: Appointment) => void;
   onCancelAppointment: (appointmentId: string) => void;
   onCompleteAppointment: (appointmentId: string) => void;
+  onDeleteWindow?: (w: { id: string; starts_at: string; ends_at: string; day: string }) => void;
   getGoogleCalendarUrl: (a: Appointment) => string;
 }) {
   const sorted = React.useMemo(() => {
@@ -1348,79 +1387,199 @@ function AgendaCalendarView({
     );
   }, [bookings]);
 
-  if (!sorted.length) {
+  const hasBookings = sorted.length > 0;
+  const hasWindows = windows && windows.length > 0;
+
+  if (!hasBookings && !hasWindows) {
     return (
       <div className="p-12 text-center text-slate-400">
         <Clock className="size-10 mx-auto text-slate-300 mb-2" />
-        <p className="text-sm font-bold text-slate-700">No scheduled appointments on record</p>
+        <p className="text-sm font-bold text-slate-700">No scheduled appointments or open slots on record</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-4">
-      {sorted.map((b) => {
-        const s = new Date(b.starts_at);
-        const e = new Date(b.ends_at);
-        const pillar = b.consultation_pillar ? PILLAR_ICONS[b.consultation_pillar] : null;
+    <div className="p-6 space-y-6">
+      {/* 1. Scheduled Bookings Feed */}
+      {hasBookings && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+              <CalendarIcon className="size-4 text-amber-600" />
+              <span>Scheduled Client Consultations ({sorted.length})</span>
+            </h3>
+            <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+              Sorted chronologically
+            </span>
+          </div>
 
-        return (
-          <div
-            key={b.id}
-            onClick={() => onOpenSession(b)}
-            className="rounded-2xl border border-slate-200 bg-white p-4.5 hover:border-slate-300 transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs"
-          >
-            <div className="flex items-start gap-3.5">
-              <Avatar name={b.peer?.name || "Client"} src={b.peer?.avatar_url ?? undefined} size="md" />
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-sm text-slate-900">{b.peer?.name || "Client"}</h4>
-                  {b.is_no_show ? (
-                    <Badge tone="gold">Client No-Show</Badge>
-                  ) : (
-                    <Badge tone={b.status === "booked" ? "green" : b.status === "completed" ? "blue" : "red"}>
-                      {APPOINTMENT_STATUS_LABELS[b.status]}
-                    </Badge>
+          <div className="space-y-3.5">
+            {sorted.map((b) => {
+              const s = new Date(b.starts_at);
+              const e = new Date(b.ends_at);
+              const pillar = b.consultation_pillar ? PILLAR_ICONS[b.consultation_pillar] : null;
+              const nowMs = Date.now();
+              const startsMs = s.getTime();
+              const canComplete = b.status === "booked" && nowMs >= startsMs;
+              const canCancel = b.status === "booked" && startsMs > nowMs;
+
+              return (
+                <div
+                  key={b.id}
+                  onClick={() => onOpenSession(b)}
+                  className="rounded-2xl border border-slate-200 bg-white p-4.5 hover:border-slate-300 transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs"
+                >
+                  <div className="flex items-start gap-3.5">
+                    <Avatar name={b.peer?.name || "Client"} src={b.peer?.avatar_url ?? undefined} size="md" />
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-bold text-sm text-slate-900">{b.peer?.name || "Client"}</h4>
+                        {b.is_no_show ? (
+                          <Badge tone="gold">Client No-Show</Badge>
+                        ) : (
+                          <Badge tone={b.status === "booked" ? "green" : b.status === "completed" ? "blue" : "red"}>
+                            {APPOINTMENT_STATUS_LABELS[b.status]}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5">
+                        📅 {s.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {formatTime(s)} – {formatTime(e)} ({b.minutes} mins)
+                      </p>
+                      {pillar && (
+                        <p className="text-xs text-amber-700 font-semibold mt-1">
+                          {pillar.icon} {pillar.label}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <a
+                      href={getGoogleCalendarUrl(b)}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all"
+                    >
+                      📅 Add to GCal
+                    </a>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenPrescription(b);
+                      }}
+                    >
+                      📜 Prescription
+                    </Button>
+
+                    {/* Complete Session Action Button */}
+                    {canComplete && (
+                      <Button
+                        size="sm"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCompleteAppointment(b.id);
+                        }}
+                      >
+                        <CheckCircle2 className="size-3.5 mr-1" />
+                        Complete
+                      </Button>
+                    )}
+
+                    {/* Cancel / Delete Booking Action Button */}
+                    {canCancel && (
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCancelAppointment(b.id);
+                        }}
+                      >
+                        <Trash2 className="size-3.5 mr-1" />
+                        Cancel
+                      </Button>
+                    )}
+
+                    <Button size="sm" onClick={() => onOpenSession(b)}>
+                      Open Session
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 2. Open Availability Windows (Active Booking Slots) */}
+      {hasWindows && (
+        <div className={cn("space-y-3", hasBookings && "pt-6 border-t border-slate-200/80")}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="size-4 text-sky-600" />
+              <h3 className="font-extrabold text-sm text-slate-900">
+                Open Availability Windows ({windows.length})
+              </h3>
+            </div>
+            <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+              Slots open for seeker bookings
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {windows.map((w) => {
+              const ws = new Date(w.starts_at);
+              const we = new Date(w.ends_at);
+              const durationMins = Math.round((we.getTime() - ws.getTime()) / 60000);
+              return (
+                <div
+                  key={w.id}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-sky-200 bg-sky-50/40 p-3.5 shadow-2xs hover:border-sky-300 transition-all"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-slate-900 tabular-nums">
+                        {formatTime(ws)} – {formatTime(we)}
+                      </span>
+                      {w.is_tatkal && (
+                        <span className="rounded-full bg-amber-100 text-amber-800 px-1.5 py-0.2 text-[9px] font-extrabold">
+                          VIP Tatkal
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      📅 {ws.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {durationMins}m
+                    </p>
+                    {w.custom_title && (
+                      <p className="text-[10px] text-indigo-700 font-bold truncate max-w-[160px]">
+                        {w.custom_title}
+                      </p>
+                    )}
+                  </div>
+
+                  {onDeleteWindow && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onDeleteWindow(w)}
+                      className="text-rose-600 border-rose-200 hover:bg-rose-50 text-xs font-bold shrink-0"
+                      title="Delete this open availability slot"
+                    >
+                      <Trash2 className="size-3.5 mr-1" />
+                      Delete
+                    </Button>
                   )}
                 </div>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  📅 {s.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {formatTime(s)} – {formatTime(e)} ({b.minutes} mins)
-                </p>
-                {pillar && (
-                  <p className="text-xs text-amber-700 font-semibold mt-1">
-                    {pillar.icon} {pillar.label}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <a
-                href={getGoogleCalendarUrl(b)}
-                target="_blank"
-                rel="noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all"
-              >
-                📅 Add to GCal
-              </a>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenPrescription(b);
-                }}
-              >
-                Prescription
-              </Button>
-              <Button size="sm" onClick={() => onOpenSession(b)}>
-                Open Session
-              </Button>
-            </div>
+              );
+            })}
           </div>
-        );
-      })}
+        </div>
+      )}
     </div>
   );
 }
