@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Flag, Lock, Phone, PhoneOff, Save, Sparkles, Video } from "lucide-react";
+import { Clock, Flag, Lock, Moon, Phone, PhoneOff, Save, Sparkles, Sun, Video } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -47,6 +47,24 @@ export default function AstrologerCallPage() {
   const [offeringExtension, setOfferingExtension] = React.useState(false);
 
   const [whiteboardOpen, setWhiteboardOpen] = React.useState(false);
+
+  // Theme State (Supports Ultra Pro Light & Dark)
+  const [theme, setTheme] = React.useState<"light" | "dark">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("astra_call_theme");
+      if (saved === "light" || saved === "dark") return saved;
+    }
+    return "light";
+  });
+  const isDark = theme === "dark";
+
+  const toggleTheme = () => {
+    const next = isDark ? "light" : "dark";
+    setTheme(next);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("astra_call_theme", next);
+    }
+  };
 
   const [vaultOpen, setVaultOpen] = React.useState(false);
   const [vaultNotes, setVaultNotes] = React.useState("");
@@ -99,7 +117,12 @@ export default function AstrologerCallPage() {
   const Icon = isVideo ? Video : Phone;
 
   return (
-    <div className="relative flex h-[calc(100dvh-7rem)] flex-col overflow-hidden rounded-2xl bg-night-950 text-white shadow-sm">
+    <div
+      className={cn(
+        "relative flex h-[calc(100dvh-7rem)] flex-col overflow-hidden rounded-2xl shadow-sm transition-colors duration-300",
+        isDark ? "bg-night-950 text-white" : "bg-[#fcf9f2] text-slate-900 border border-[#ecdcb0]",
+      )}
+    >
       {connected && data?.credentials ? (
         <CallRoom
           credentials={data.credentials}
@@ -124,25 +147,48 @@ export default function AstrologerCallPage() {
             setWhiteboardOpen(false);
             void whiteboardApi.toggle(id);
           }}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
       )}
 
       {connected && call.billing && (
         <div className="absolute inset-x-0 top-16 z-10 px-3">
-          <BookedTime billing={call.billing} elapsedSeconds={seconds} onDark />
+          <BookedTime billing={call.billing} elapsedSeconds={seconds} onDark={isDark} />
         </div>
       )}
 
       {connected ? (
-        <header className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-3 bg-gradient-to-b from-black/70 to-transparent px-4 py-3">
+        <header
+          className={cn(
+            "pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-3 px-4 py-3 transition-colors",
+            isDark
+              ? "bg-gradient-to-b from-black/80 to-transparent text-white"
+              : "bg-gradient-to-b from-black/60 to-transparent text-white drop-shadow-xs",
+          )}
+        >
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">{call.peer?.name}</p>
-            <p className="flex items-center gap-1.5 text-xs text-white/70">
+            <p className="truncate text-sm font-semibold text-white">{call.peer?.name}</p>
+            <p className="flex items-center gap-1.5 text-xs text-white/80">
               <span className="size-1.5 rounded-full bg-success" />
               {formatDuration(seconds)}
             </p>
           </div>
           <div className="pointer-events-auto flex items-center gap-2">
+            {/* Call Room Light / Dark Mode Toggle */}
+            <button
+              onClick={toggleTheme}
+              className={cn(
+                "flex size-8 items-center justify-center rounded-xl transition-all shadow-sm",
+                isDark
+                  ? "bg-white/10 hover:bg-white/20 text-amber-300 border border-white/10"
+                  : "bg-white/90 hover:bg-white text-amber-700 border border-amber-300 shadow-xs",
+              )}
+              title={isDark ? "Switch to Sacred Ivory Light Mode" : "Switch to Cosmic Night Dark Mode"}
+            >
+              {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            </button>
+
             <Button
               size="sm"
               onClick={() => {
@@ -153,11 +199,13 @@ export default function AstrologerCallPage() {
                 "text-xs font-bold transition-all shadow-sm",
                 whiteboardOpen
                   ? "bg-amber-400 text-slate-950 border border-amber-300 ring-2 ring-amber-400/50"
-                  : "bg-amber-950/70 hover:bg-amber-900 text-amber-200 border border-amber-500/40",
+                  : isDark
+                    ? "bg-amber-950/70 hover:bg-amber-900 text-amber-200 border border-amber-500/40"
+                    : "bg-white hover:bg-amber-50 text-[#78350f] border border-amber-300 shadow-xs font-bold",
               )}
               title="Toggle live Kundali cosmic whiteboard"
             >
-              <Sparkles className="size-3.5 mr-1 text-amber-300" />
+              <Sparkles className="size-3.5 mr-1 text-amber-400" />
               Cosmic Whiteboard
             </Button>
             {call.appointment_id && (
