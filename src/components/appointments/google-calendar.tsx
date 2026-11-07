@@ -18,6 +18,7 @@ import {
   MessageSquare,
   PhoneCall,
   Plus,
+  RefreshCw,
   ShieldAlert,
   Sparkles,
   Trash2,
@@ -28,9 +29,11 @@ import {
   Zap,
 } from "lucide-react";
 import * as React from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Avatar, Badge, Button, Modal } from "@/components/ui";
+import { appointmentApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
   checkRahuKaalCollision,
@@ -81,6 +84,29 @@ function formatDateKey(d: Date): string {
 
 const HOURS = Array.from({ length: 18 }, (_, i) => i + 6); // 6 AM to 11 PM (18 hours)
 const HOUR_HEIGHT = 64; // pixels per hour
+
+export function GoogleIcon({ className = "size-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+        fill="#EA4335"
+      />
+    </svg>
+  );
+}
 
 export function GoogleCalendarSuite({
   bookings,
@@ -140,6 +166,73 @@ export function GoogleCalendarSuite({
   });
 
   const [isOpeningSlot, setIsOpeningSlot] = React.useState(false);
+
+  // Google Calendar 2-Way Sync integration
+  const queryClient = useQueryClient();
+  const { data: googleSync } = useQuery({
+    queryKey: ["google_calendar_status"],
+    queryFn: () => appointmentApi.getGoogleCalendarStatus(),
+  });
+
+  const [isConnectingGoogle, setIsConnectingGoogle] = React.useState(false);
+
+  const syncGoogleMutation = useMutation({
+    mutationFn: () => appointmentApi.syncGoogleCalendar(),
+    onSuccess: (data) => {
+      toast.success(
+        data.message || `Google Calendar synced! ${data.busy_count} external commitments shielded.`
+      );
+      void queryClient.invalidateQueries({ queryKey: ["google_calendar_status"] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "schedule"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to sync with Google Calendar.");
+    },
+  });
+
+  const disconnectGoogleMutation = useMutation({
+    mutationFn: () => appointmentApi.disconnectGoogleCalendar(),
+    onSuccess: () => {
+      toast.success("Google Calendar disconnected.");
+      void queryClient.invalidateQueries({ queryKey: ["google_calendar_status"] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "schedule"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to disconnect Google Calendar.");
+    },
+  });
+
+  const handleConnectGoogle = async () => {
+    setIsConnectingGoogle(true);
+    try {
+      const redirectUri = typeof window !== "undefined" ? `${window.location.origin}/appointments` : undefined;
+      const res = await appointmentApi.getGoogleCalendarAuthUrl(redirectUri);
+      if (res.auth_url) {
+        window.location.href = res.auth_url;
+      } else {
+        toast.error("Could not obtain Google authentication URL.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to initiate Google Calendar connection.");
+    } finally {
+      setIsConnectingGoogle(false);
+    }
+  };
+
+  // Check if quick slot modal collides with any Google Calendar busy intervals
+  const collidingBusyIntervals = React.useMemo(() => {
+    if (!googleSync?.connected || !googleSync?.busy_intervals) return [];
+    const from = new Date(quickSlotModal.date);
+    from.setHours(quickSlotModal.startHour, quickSlotModal.startMinute, 0, 0);
+    const to = new Date(quickSlotModal.date);
+    to.setHours(quickSlotModal.endHour, quickSlotModal.endMinute, 0, 0);
+
+    return googleSync.busy_intervals.filter((bi) => {
+      const s = new Date(bi.starts_at);
+      const e = new Date(bi.ends_at);
+      return s < to && e > from;
+    });
+  }, [googleSync, quickSlotModal]);
 
   // Live real-time tick for current time red line (updates every 30s)
   const [now, setNow] = React.useState<Date>(() => new Date());
@@ -408,6 +501,82 @@ export function GoogleCalendarSuite({
         </div>
       </div>
 
+      {/* 2.4 Google Calendar 2-Way Bidirectional Sync HUD Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-2.5 bg-gradient-to-r from-indigo-50/80 via-purple-50/50 to-sky-50/60 border-b border-slate-100 text-xs font-semibold">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <GoogleIcon className="size-4" />
+            <span className="font-extrabold text-slate-800 text-[11px] tracking-wide uppercase">
+              দ্বিমুখী গুগল ক্যালেন্ডার সিঙ্ক (2-Way Sync):
+            </span>
+          </div>
+
+          {googleSync?.connected ? (
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100/90 border border-emerald-300 px-2.5 py-0.5 text-[11px] font-bold text-emerald-950">
+                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>সংযুক্ত: {googleSync.email || "Primary Calendar"}</span>
+              </span>
+
+              <span className="inline-flex items-center gap-1 rounded-full bg-purple-100/90 border border-purple-300 px-2.5 py-0.5 text-[11px] font-bold text-purple-900">
+                <span>🛡️ {googleSync.busy_count}টি বাহ্যিক ইভেন্ট আস্ট্রা স্লটে সুরক্ষিত (Blocked)</span>
+              </span>
+
+              {googleSync.last_synced_at && (
+                <span className="text-[10px] text-slate-500 font-medium hidden md:inline">
+                  সর্বশেষ সিঙ্ক: {new Date(googleSync.last_synced_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
+            </div>
+          ) : (
+            <span className="text-[11px] text-slate-600 font-medium">
+              ব্যক্তিগত ডক্টর বা ফ্যামিলি অ্যাপয়েন্টমেন্টের সময় স্বয়ংক্রিয়ভাবে আস্ট্রার বুকিং বন্ধ রাখতে গুগল ক্যালেন্ডার যুক্ত করুন।
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {googleSync?.connected ? (
+            <>
+              <button
+                type="button"
+                onClick={() => syncGoogleMutation.mutate()}
+                disabled={syncGoogleMutation.isPending}
+                className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-indigo-700 hover:bg-indigo-50 hover:text-indigo-900 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                title="Refresh busy periods from Google Calendar now"
+              >
+                <RefreshCw className={cn("size-3 text-indigo-600", syncGoogleMutation.isPending && "animate-spin")} />
+                <span>{syncGoogleMutation.isPending ? "সিঙ্ক হচ্ছে..." : "এখনই সিঙ্ক করুন (Sync)"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm("Are you sure you want to disconnect Google Calendar sync? External events will no longer block bookings.")) {
+                    disconnectGoogleMutation.mutate();
+                  }
+                }}
+                disabled={disconnectGoogleMutation.isPending}
+                className="flex items-center gap-1 rounded-xl bg-white border border-rose-200 px-2 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                title="Disconnect Google Calendar"
+              >
+                <span>সংযোগ বিচ্ছিন্ন (Disconnect)</span>
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={handleConnectGoogle}
+              disabled={isConnectingGoogle}
+              className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:border-slate-400 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+            >
+              <GoogleIcon className="size-3.5" />
+              <span>{isConnectingGoogle ? "সংযোগ স্থাপন হচ্ছে..." : "গুগল ক্যালেন্ডার যুক্ত করুন"}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* 2.5 Panchang & Rahu Kaal Shield Real-time HUD Strip */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-2.5 bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-emerald-500/10 border-b border-slate-100 text-xs font-semibold select-none">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -463,6 +632,7 @@ export function GoogleCalendarSuite({
           onOpenSession={onOpenSession}
           getGoogleCalendarUrl={getGoogleCalendarUrl}
           onDeleteWindow={(w) => setDeleteTargetWindow(w)}
+          busyIntervals={googleSync?.busy_intervals ?? []}
         />
       )}
 
@@ -476,6 +646,7 @@ export function GoogleCalendarSuite({
             setView("day");
           }}
           onOpenSession={onOpenSession}
+          busyIntervals={googleSync?.busy_intervals ?? []}
         />
       )}
 
@@ -492,6 +663,7 @@ export function GoogleCalendarSuite({
           onCompleteAppointment={onCompleteAppointment}
           getGoogleCalendarUrl={getGoogleCalendarUrl}
           onDeleteWindow={(w) => setDeleteTargetWindow(w)}
+          busyIntervals={googleSync?.busy_intervals ?? []}
         />
       )}
 
@@ -505,6 +677,7 @@ export function GoogleCalendarSuite({
           onCompleteAppointment={onCompleteAppointment}
           onDeleteWindow={(w) => setDeleteTargetWindow(w)}
           getGoogleCalendarUrl={getGoogleCalendarUrl}
+          busyIntervals={googleSync?.busy_intervals ?? []}
         />
       )}
 
@@ -650,6 +823,28 @@ export function GoogleCalendarSuite({
               </div>
             );
           })()}
+
+          {/* Google Calendar External Event Collision Warning */}
+          {collidingBusyIntervals.length > 0 && (
+            <div className="rounded-2xl border-2 border-purple-300 bg-purple-50/90 p-4 space-y-2 text-purple-950 shadow-xs">
+              <div className="flex items-center gap-2 font-black text-purple-900 text-xs sm:text-sm">
+                <GoogleIcon className="size-4" />
+                <span>⚠️ গুগল ক্যালেন্ডার ব্যস্ততা সংঘাত (Google Calendar Collision)</span>
+              </div>
+              <p className="text-xs text-purple-800 leading-normal">
+                আপনার গুগল ক্যালেন্ডারে এই সময়ে ব্যক্তিগত ব্যস্ততা রয়েছে:{" "}
+                <span className="font-bold">
+                  {collidingBusyIntervals
+                    .map(
+                      (bi) =>
+                        `${formatTime(new Date(bi.starts_at))} – ${formatTime(new Date(bi.ends_at))} (${bi.title})`
+                    )
+                    .join(", ")}
+                </span>
+                । আস্ট্রার ক্যালেন্ডার শিল্ড স্বয়ংক্রিয়ভাবে ঐ নির্দিষ্ট সময়ে ক্লায়েন্ট বুকিং ব্লক রাখবে।
+              </p>
+            </div>
+          )}
 
           {/* Already open slots on this selected date */}
           {(() => {
@@ -948,6 +1143,7 @@ function WeekCalendarView({
   onOpenSession,
   getGoogleCalendarUrl,
   onDeleteWindow,
+  busyIntervals = [],
 }: {
   weekDays: Date[];
   bookings: Appointment[];
@@ -957,6 +1153,7 @@ function WeekCalendarView({
   onOpenSession: (appointment: Appointment) => void;
   getGoogleCalendarUrl: (a: Appointment) => string;
   onDeleteWindow?: (w: { id: string; starts_at: string; ends_at: string; day: string }) => void;
+  busyIntervals?: Array<{ starts_at: string; ends_at: string; title: string; source: string; is_external: boolean }>;
 }) {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -1055,6 +1252,12 @@ function WeekCalendarView({
           const dayBookings = bookings.filter((b) => {
             const bStart = new Date(b.starts_at);
             return formatDateKey(bStart) === dateKey;
+          });
+
+          // Google Calendar external busy intervals on this day
+          const dayBusy = busyIntervals.filter((bi) => {
+            const biStart = new Date(bi.starts_at);
+            return formatDateKey(biStart) === dateKey;
           });
 
           // Current time needle position (if today)
@@ -1180,6 +1383,44 @@ function WeekCalendarView({
                 );
               })}
 
+              {/* External Google Calendar Busy Intervals (Astra Shielded Blocks) */}
+              {dayBusy.map((bi, idx) => {
+                const s = new Date(bi.starts_at);
+                const e = new Date(bi.ends_at);
+                const startMins = Math.max(0, (s.getHours() - 6) * 60 + s.getMinutes());
+                const endMins = Math.min(HOURS.length * 60, (e.getHours() - 6) * 60 + e.getMinutes());
+                const top = (startMins / 60) * HOUR_HEIGHT;
+                const height = Math.max(26, ((endMins - startMins) / 60) * HOUR_HEIGHT);
+
+                return (
+                  <div
+                    key={`gcal-busy-${idx}-${bi.starts_at}`}
+                    style={{ top: `${top}px`, height: `${height}px` }}
+                    className="absolute inset-x-1 rounded-xl bg-gradient-to-r from-purple-500/25 via-indigo-500/20 to-purple-600/20 border-2 border-purple-400/80 p-2 z-15 backdrop-blur-[1px] shadow-xs flex flex-col justify-between overflow-hidden group/gcal hover:border-purple-500 transition-all"
+                    title={`[গুগল ক্যালেন্ডার ব্যস্ততা] ${bi.title}: ${formatTime(s)} - ${formatTime(e)}. External commitment blocks Astra client reservations.`}
+                  >
+                    <div className="flex items-center justify-between gap-1 leading-tight">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <GoogleIcon className="size-3.5 shrink-0" />
+                        <span className="font-black text-[10px] text-purple-950 truncate">
+                          {bi.title || "ব্যস্ত (Busy)"}
+                        </span>
+                      </div>
+                      <span className="rounded bg-purple-200/90 px-1 py-0.2 text-[8px] font-black uppercase text-purple-900 shrink-0">
+                        Shielded
+                      </span>
+                    </div>
+
+                    {height >= 42 && (
+                      <div className="flex items-center justify-between text-[9px] font-bold text-purple-800">
+                        <span>{formatTime(s)} – {formatTime(e)}</span>
+                        <span className="text-[8px] text-purple-700 font-extrabold">🛡️ বুকিং ব্লকড</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
               {/* Booked Appointments (Event Cards) */}
               {dayBookings.map((b) => {
                 const s = new Date(b.starts_at);
@@ -1289,12 +1530,14 @@ function MonthCalendarView({
   windows,
   onSelectDate,
   onOpenSession,
+  busyIntervals = [],
 }: {
   currentDate: Date;
   bookings: Appointment[];
   windows: Array<{ id: string; day: string; starts_at: string; ends_at: string }>;
   onSelectDate: (d: Date) => void;
   onOpenSession: (appointment: Appointment) => void;
+  busyIntervals?: Array<{ starts_at: string; ends_at: string; title: string; source: string; is_external: boolean }>;
 }) {
   const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   const startDay = monthStart.getDay(); // 0 is Sunday
@@ -1335,6 +1578,7 @@ function MonthCalendarView({
 
           const dayBookings = bookings.filter((b) => formatDateKey(new Date(b.starts_at)) === key);
           const dayWindows = windows.filter((w) => formatDateKey(new Date(w.starts_at)) === key);
+          const dayBusyCount = busyIntervals.filter((bi) => formatDateKey(new Date(bi.starts_at)) === key).length;
 
           return (
             <div
@@ -1391,6 +1635,13 @@ function MonthCalendarView({
                     +{dayBookings.length - 3} more
                   </p>
                 )}
+
+                {dayBusyCount > 0 && (
+                  <div className="rounded-md px-1.5 py-0.5 text-[8.5px] font-bold bg-purple-100 text-purple-900 border border-purple-200 truncate flex items-center gap-1 shadow-2xs">
+                    <GoogleIcon className="size-2.5 shrink-0" />
+                    <span>{dayBusyCount} Google busy</span>
+                  </div>
+                )}
               </div>
 
               <div className="text-[9px] text-slate-400 group-hover:text-sky-600 transition-colors pt-1">
@@ -1419,6 +1670,7 @@ function DayCalendarView({
   onCompleteAppointment,
   getGoogleCalendarUrl,
   onDeleteWindow,
+  busyIntervals = [],
 }: {
   date: Date;
   bookings: Appointment[];
@@ -1431,12 +1683,14 @@ function DayCalendarView({
   onCompleteAppointment: (appointmentId: string) => void;
   getGoogleCalendarUrl: (a: Appointment) => string;
   onDeleteWindow?: (w: { id: string; starts_at: string; ends_at: string; day: string }) => void;
+  busyIntervals?: Array<{ starts_at: string; ends_at: string; title: string; source: string; is_external: boolean }>;
 }) {
   const dateKey = formatDateKey(date);
   const isToday = dateKey === formatDateKey(now);
 
   const dayBookings = bookings.filter((b) => formatDateKey(new Date(b.starts_at)) === dateKey);
   const dayWindows = windows.filter((w) => formatDateKey(new Date(w.starts_at)) === dateKey);
+  const dayBusy = busyIntervals.filter((bi) => formatDateKey(new Date(bi.starts_at)) === dateKey);
 
   return (
     <div className="p-6 space-y-6">
@@ -1511,6 +1765,46 @@ function DayCalendarView({
         </div>
       )}
 
+      {/* Active Google Calendar Busy Intervals on this Day */}
+      {dayBusy.length > 0 && (
+        <div className="rounded-2xl border border-purple-200/90 bg-purple-50/70 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-purple-950 flex items-center gap-1.5">
+              <GoogleIcon className="size-4" />
+              <span>গুগল ক্যালেন্ডার বাহ্যিক ব্যস্ততা (Google Calendar Busy Periods)</span>
+            </span>
+            <span className="text-[11px] font-bold text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-full border border-purple-200">
+              {dayBusy.length} বাহ্যিক ইভেন্ট সুরক্ষিত
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+            {dayBusy.map((bi, idx) => {
+              const s = new Date(bi.starts_at);
+              const e = new Date(bi.ends_at);
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between gap-2 rounded-xl border border-purple-200 bg-white p-3 shadow-2xs"
+                >
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-bold text-purple-950 truncate max-w-[180px]">
+                      {bi.title}
+                    </p>
+                    <p className="text-[10px] text-purple-700 font-semibold tabular-nums">
+                      {formatTime(s)} – {formatTime(e)}
+                    </p>
+                  </div>
+                  <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[9px] font-black uppercase text-purple-900 shrink-0">
+                    Shielded
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Hourly View */}
       <div className="space-y-4">
         {HOURS.map((h) => {
@@ -1530,6 +1824,12 @@ function DayCalendarView({
             const s = new Date(w.starts_at);
             const e = new Date(w.ends_at);
             return s <= hourStart && hourEnd <= e;
+          });
+
+          const hourBusy = dayBusy.filter((item) => {
+            const s = new Date(item.starts_at);
+            const e = new Date(item.ends_at);
+            return s < hourEnd && e > hourStart;
           });
 
           return (
@@ -1598,6 +1898,13 @@ function DayCalendarView({
                 {pBadge.type === "shubh" && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-teal-100 border border-teal-200 text-teal-900 px-2.5 py-0.5 text-[11px] font-bold shadow-2xs">
                     <span>🌿 {pBadge.badgeBn}</span>
+                  </span>
+                )}
+
+                {hourBusy.length > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 border border-purple-300 text-purple-900 px-2.5 py-0.5 text-[11px] font-black shadow-2xs">
+                    <GoogleIcon className="size-3" />
+                    <span>গুগল ক্যালেন্ডার ব্যস্ত ({hourBusy.map((b) => `${formatTime(new Date(b.starts_at))}-${formatTime(new Date(b.ends_at))}`).join(", ")})</span>
                   </span>
                 )}
               </div>
@@ -1711,6 +2018,7 @@ function AgendaCalendarView({
   onCompleteAppointment,
   onDeleteWindow,
   getGoogleCalendarUrl,
+  busyIntervals = [],
 }: {
   bookings: Appointment[];
   windows?: Array<{ id: string; day: string; starts_at: string; ends_at: string; is_tatkal?: boolean; custom_title?: string | null }>;
@@ -1720,6 +2028,7 @@ function AgendaCalendarView({
   onCompleteAppointment: (appointmentId: string) => void;
   onDeleteWindow?: (w: { id: string; starts_at: string; ends_at: string; day: string }) => void;
   getGoogleCalendarUrl: (a: Appointment) => string;
+  busyIntervals?: Array<{ starts_at: string; ends_at: string; title: string; source: string; is_external: boolean }>;
 }) {
   const sorted = React.useMemo(() => {
     return [...bookings].sort(
@@ -1729,8 +2038,9 @@ function AgendaCalendarView({
 
   const hasBookings = sorted.length > 0;
   const hasWindows = windows && windows.length > 0;
+  const hasBusy = busyIntervals && busyIntervals.length > 0;
 
-  if (!hasBookings && !hasWindows) {
+  if (!hasBookings && !hasWindows && !hasBusy) {
     return (
       <div className="p-12 text-center text-slate-400">
         <Clock className="size-10 mx-auto text-slate-300 mb-2" />
@@ -1914,6 +2224,51 @@ function AgendaCalendarView({
                       Delete
                     </Button>
                   )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 3. Google Calendar External Busy Periods */}
+      {hasBusy && (
+        <div className="space-y-4 pt-2">
+          <div className="flex items-center justify-between">
+            <h3 className="font-extrabold text-sm text-purple-950 flex items-center gap-2">
+              <GoogleIcon className="size-4" />
+              <span>গুগল ক্যালেন্ডার বাহ্যিক ব্যস্ততা ({busyIntervals.length})</span>
+            </h3>
+            <span className="text-xs text-purple-700 font-semibold hidden sm:inline">
+              আস্ট্রা প্ল্যাটফর্ম এই সময়ে ক্লায়েন্ট বুকিং স্বয়ংক্রিয়ভাবে ব্লক রেখেছে
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {busyIntervals.map((bi, idx) => {
+              const s = new Date(bi.starts_at);
+              const e = new Date(bi.ends_at);
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-purple-200 bg-purple-50/50 p-3.5 shadow-2xs hover:border-purple-300 transition-all"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-purple-950 tabular-nums">
+                        {formatTime(s)} – {formatTime(e)}
+                      </span>
+                      <span className="rounded-full bg-purple-100 text-purple-800 px-1.5 py-0.2 text-[9px] font-extrabold">
+                        Shielded
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-purple-800 font-bold truncate max-w-[180px]">
+                      {bi.title}
+                    </p>
+                    <p className="text-[10px] text-purple-600 font-medium">
+                      📅 {s.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                    </p>
+                  </div>
                 </div>
               );
             })}

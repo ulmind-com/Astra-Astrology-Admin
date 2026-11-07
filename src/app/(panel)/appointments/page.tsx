@@ -134,6 +134,36 @@ export default function AppointmentsPage() {
   const { user } = useAuth();
   const isAstrologer = user?.role === "astrologer";
   const [activeTab, setActiveTab] = React.useState<AppointmentPortalTab>("calendar");
+  const queryClient = useQueryClient();
+
+  // Listen for Google Calendar OAuth Callback
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (code) {
+      const redirectUri = `${window.location.origin}/appointments`;
+      appointmentApi
+        .googleCalendarCallback(code, redirectUri)
+        .then((res) => {
+          toast.success(
+            res.message || `Google Calendar connected (${res.email})! Bidirectional sync is active.`
+          );
+          const url = new URL(window.location.href);
+          url.searchParams.delete("code");
+          url.searchParams.delete("scope");
+          url.searchParams.delete("state");
+          url.searchParams.delete("google_sync");
+          window.history.replaceState({}, document.title, url.pathname);
+          void queryClient.invalidateQueries({ queryKey: ["google_calendar_status"] });
+          void queryClient.invalidateQueries({ queryKey: WINDOWS_KEY });
+          void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+        })
+        .catch((err: any) => {
+          toast.error(err?.message || "Failed to complete Google Calendar connection.");
+        });
+    }
+  }, [queryClient]);
 
   if (!isAstrologer) {
     return (
@@ -1017,6 +1047,10 @@ function OpenHours() {
     queryKey: WINDOWS_KEY,
     queryFn: () => appointmentApi.windows(),
   });
+  const { data: gcalStatus } = useQuery({
+    queryKey: ["google_calendar_status"],
+    queryFn: () => appointmentApi.getGoogleCalendarStatus(),
+  });
 
   // Default time picker state
   const [from, setFrom] = React.useState(() => {
@@ -1101,6 +1135,37 @@ function OpenHours() {
         <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700 border border-sky-200/70">
           {(windows ?? []).length} Slots Active
         </span>
+      </div>
+
+      {/* Google Calendar 2-Way Sync Integration Notice */}
+      <div
+        className={cn(
+          "rounded-2xl border p-3.5 text-xs font-semibold flex items-center justify-between gap-3",
+          gcalStatus?.connected
+            ? "bg-purple-50/70 border-purple-200 text-purple-950"
+            : "bg-slate-50 border-slate-200 text-slate-700"
+        )}
+      >
+        <div className="flex items-center gap-2.5">
+          <CalendarCheck
+            className={cn(
+              "size-4 shrink-0",
+              gcalStatus?.connected ? "text-purple-600" : "text-slate-400"
+            )}
+          />
+          <span>
+            {gcalStatus?.connected
+              ? `দ্বিমুখী গুগল ক্যালেন্ডার সিঙ্ক সক্রিয় (${gcalStatus.email}): আপনার ব্যক্তিগত ইভেন্টের সময় আস্ট্রা স্বয়ংক্রিয়ভাবে স্লট সুরক্ষিত (ব্লক) রাখবে।`
+              : "দ্বিমুখী ক্যালেন্ডার সিঙ্ক: আপনার গুগল ক্যালেন্ডার সংযুক্ত করলে ব্যক্তিগত কাজের সময় আস্ট্রা স্লট বন্ধ রাখবে।"}
+          </span>
+        </div>
+        {gcalStatus?.connected ? (
+          <span className="rounded-full bg-purple-100 border border-purple-300 px-2.5 py-0.5 text-[11px] font-bold text-purple-900 shrink-0">
+            {gcalStatus.busy_count}টি ইভেন্ট সুরক্ষিত
+          </span>
+        ) : (
+          <span className="text-[11px] text-sky-600 font-bold shrink-0">ক্যালেন্ডার ট্যাবে যুক্ত করুন</span>
+        )}
       </div>
 
       {/* Quick Time Presets */}

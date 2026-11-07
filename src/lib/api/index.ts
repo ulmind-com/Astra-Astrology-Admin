@@ -599,6 +599,35 @@ export const appointmentApi = {
 
   deletePrivateLink: (id: string) =>
     api.delete<{ message: string }>(`/appointments/me/private-links/${id}`),
+
+  getGoogleCalendarAuthUrl: (redirectUri?: string) =>
+    api.get<{ configured: boolean; auth_url: string; mode: string; message: string }>(
+      `/appointments/google-calendar/auth-url${redirectUri ? `?redirect_uri=${encodeURIComponent(redirectUri)}` : ""}`
+    ),
+
+  googleCalendarCallback: (code: string, redirectUri?: string) =>
+    api.post<{ connected: boolean; email: string; mode: string; message: string }>(
+      "/appointments/google-calendar/callback",
+      { code, redirect_uri: redirectUri }
+    ),
+
+  syncGoogleCalendar: () =>
+    api.post<{ connected: boolean; email: string; busy_count: number; message: string }>(
+      "/appointments/google-calendar/sync"
+    ),
+
+  disconnectGoogleCalendar: () =>
+    api.post<{ connected: boolean }>("/appointments/google-calendar/disconnect"),
+
+  getGoogleCalendarStatus: () =>
+    api.get<{
+      connected: boolean;
+      email: string | null;
+      sync_enabled: boolean;
+      last_synced_at: string | null;
+      busy_count: number;
+      busy_intervals: Array<{ starts_at: string; ends_at: string; title: string; source: string; is_external: boolean }>;
+    }>("/appointments/google-calendar/status"),
 };
 
 // ----------------------------------------------------------------- reviews
