@@ -46,6 +46,7 @@ import type {
   OtpSentResult,
   PageMeta,
   PaginatedAstrologers,
+  PaginatedResult,
   PaymentOrder,
   PaymentOrderStatus,
   PlatformSettings,
@@ -445,9 +446,26 @@ export const earningsApi = {
 
   balance: () => api.get<AstrologerEarningsBalance>("/astrologers/me/earnings/balance"),
 
-  recent: (limit = 50, skip = 0, mode?: string) =>
+  recent: (limit = 50, skip = 0, mode?: string, search?: string) =>
     api.get<EarningRow[]>(endpoints.astrologers.myEarningsRecent, {
-      query: { limit, skip, mode: mode || undefined },
+      query: { limit, skip, mode: mode || undefined, search: search || undefined },
+    }),
+
+  paginated: (params: {
+    page?: number;
+    limit?: number;
+    mode?: string;
+    search?: string;
+    window?: string;
+  }) =>
+    api.get<PaginatedResult<EarningRow>>("/astrologers/me/earnings/paginated", {
+      query: {
+        page: params.page ?? 1,
+        limit: params.limit ?? 10,
+        mode: params.mode || undefined,
+        search: params.search || undefined,
+        window: params.window || undefined,
+      },
     }),
 
   requestPayout: (body: {
@@ -476,6 +494,21 @@ export const earningsApi = {
 
   adminRejectPayout: (id: string, body: { rejection_reason: string }) =>
     api.post<AstrologerPayoutRecord>(`/admin/earnings/payouts/${id}/reject`, body),
+
+  adminPaginated: (params: {
+    page?: number;
+    limit?: number;
+    mode?: string;
+    search?: string;
+  }) =>
+    api.get<PaginatedResult<AdminEarningRow>>("/admin/earnings/paginated", {
+      query: {
+        page: params.page ?? 1,
+        limit: params.limit ?? 20,
+        mode: params.mode || undefined,
+        search: params.search || undefined,
+      },
+    }),
 };
 
 // ------------------------------------------------------------ appointments

@@ -25,6 +25,11 @@ export type ApiErrorBody = {
 
 export type PageMeta = S["PageMeta"];
 
+export interface PaginatedResult<T> {
+  items: T[];
+  meta: PageMeta;
+}
+
 // -------------------------------------------------------------------- auth
 export type AuthResult = S["AuthResult"];
 export type TokenPair = S["TokenPair"];

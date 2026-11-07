@@ -5,11 +5,15 @@ import {
   Activity,
   AlertCircle,
   ArrowDownRight,
+  ArrowLeft,
+  ArrowRight,
   ArrowUpRight,
   Banknote,
   Building,
   Calendar,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Coins,
   Copy,
@@ -98,7 +102,6 @@ function getModeBadge(mode: ConsultationMode) {
 
 export default function EarningsPage() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const isAstrologer = user?.role === "astrologer";
   const { ready } = useRequireAuth({
     roles: ["astrologer", "admin", "super_admin"],
@@ -112,10 +115,23 @@ export default function EarningsPage() {
   const [adminTab, setAdminTab] = React.useState<"ledger" | "payout_desk">("ledger");
   const [adminPayoutFilter, setAdminPayoutFilter] = React.useState<string>("all");
 
-  // Filters & Inspections
+  // Astrologer Search, Filter & Pagination State
   const [search, setSearch] = React.useState("");
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
   const [selectedMode, setSelectedMode] = React.useState<ConsultationMode | "">("");
-  const [previewRow, setPreviewRow] = React.useState<AdminEarningRow | null>(null);
+  const [selectedWindow, setSelectedWindow] = React.useState<string>("");
+  const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(10);
+
+  // Admin Ledger Search, Filter & Pagination State
+  const [adminSearch, setAdminSearch] = React.useState("");
+  const [debouncedAdminSearch, setDebouncedAdminSearch] = React.useState("");
+  const [adminMode, setAdminMode] = React.useState<ConsultationMode | "">("");
+  const [adminPage, setAdminPage] = React.useState(1);
+  const [adminPageSize, setAdminPageSize] = React.useState(20);
+
+  // Inspection drawer state (works for both Astrologer and Admin)
+  const [previewRow, setPreviewRow] = React.useState<any | null>(null);
 
   // Modals state
   const [isPayoutModalOpen, setIsPayoutModalOpen] = React.useState(false);
@@ -143,6 +159,23 @@ export default function EarningsPage() {
   const [adminNotes, setAdminNotes] = React.useState("");
   const [rejectionReason, setRejectionReason] = React.useState("");
 
+  // Debounce search input
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedAdminSearch(adminSearch);
+      setAdminPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [adminSearch]);
+
   // =========================================================================
   // ASTROLOGER QUERIES
   // =========================================================================
@@ -165,9 +198,25 @@ export default function EarningsPage() {
     enabled: ready && isAstrologer,
   });
 
-  const recent = useQuery({
-    queryKey: ["earnings", "recent", selectedMode],
-    queryFn: () => earningsApi.recent(100, 0, selectedMode || undefined),
+  // Paginated Consultations for Astrologer with Search & Filter
+  const paginatedConsultations = useQuery({
+    queryKey: [
+      "earnings",
+      "paginated",
+      page,
+      pageSize,
+      selectedMode,
+      debouncedSearch,
+      selectedWindow,
+    ],
+    queryFn: () =>
+      earningsApi.paginated({
+        page,
+        limit: pageSize,
+        mode: selectedMode || undefined,
+        search: debouncedSearch || undefined,
+        window: selectedWindow || undefined,
+      }),
     enabled: ready && isAstrologer,
   });
 
@@ -207,6 +256,26 @@ export default function EarningsPage() {
     queryFn: () => adminSettingsApi.recentEarnings(100),
     enabled: ready && !isAstrologer,
     refetchInterval: 10000,
+  });
+
+  const adminPaginatedLedger = useQuery({
+    queryKey: [
+      "admin",
+      "earnings",
+      "paginated",
+      adminPage,
+      adminPageSize,
+      adminMode,
+      debouncedAdminSearch,
+    ],
+    queryFn: () =>
+      earningsApi.adminPaginated({
+        page: adminPage,
+        limit: adminPageSize,
+        mode: adminMode || undefined,
+        search: debouncedAdminSearch || undefined,
+      }),
+    enabled: ready && !isAstrologer && adminTab === "ledger",
   });
 
   const adminPayouts = useQuery({
@@ -330,19 +399,17 @@ export default function EarningsPage() {
 
     const withdrawableRupees = Math.floor(balanceData.withdrawable_balance_paise / 100);
     const minPayoutRupees = Math.floor(balanceData.min_payout_amount_paise / 100);
-    const canWithdraw = withdrawableRupees >= minPayoutRupees && balanceData.has_bank_details;
 
-    const consultationsList = recent.data || [];
-    const filteredConsultations = consultationsList.filter((row) => {
-      if (!search.trim()) return true;
-      const q = search.toLowerCase();
-      return (
-        row.user_name?.toLowerCase().includes(q) ||
-        row.user_id?.toLowerCase().includes(q) ||
-        row.id.toLowerCase().includes(q) ||
-        row.mode.toLowerCase().includes(q)
-      );
-    });
+    const consultationsPageData = paginatedConsultations.data;
+    const consultationsList = consultationsPageData?.items || [];
+    const meta = consultationsPageData?.meta || {
+      page: 1,
+      limit: pageSize,
+      total: 0,
+      total_pages: 1,
+      has_next: false,
+      has_prev: false,
+    };
 
     return (
       <div className="space-y-6">
@@ -368,15 +435,16 @@ export default function EarningsPage() {
                 void mine.refetch();
                 void astroBalance.refetch();
                 void astroPayouts.refetch();
-                void recent.refetch();
+                void paginatedConsultations.refetch();
               }}
-              disabled={astroBalance.isFetching}
+              disabled={astroBalance.isFetching || paginatedConsultations.isFetching}
               className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
             >
               <RefreshCw
                 className={cn(
                   "size-3.5",
-                  astroBalance.isFetching && "animate-spin text-[#D97706]"
+                  (astroBalance.isFetching || paginatedConsultations.isFetching) &&
+                    "animate-spin text-[#D97706]"
                 )}
               />
               <span>Refresh Vault</span>
@@ -386,7 +454,7 @@ export default function EarningsPage() {
 
         {/* 4 Hero Financial Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          {/* Card 1: Available Withdrawable Balance (Hero Gold/Emerald Gradient) */}
+          {/* Card 1: Available Withdrawable Balance */}
           <div className="relative overflow-hidden rounded-[26px] bg-gradient-to-br from-[#065F46] via-[#047857] to-[#10B981] p-5 text-white shadow-[0_14px_30px_-6px_rgba(16,185,129,0.45)] flex flex-col justify-between min-h-[160px]">
             <div className="pointer-events-none absolute -right-6 -bottom-6 size-32 rounded-full bg-white/10 blur-xl" />
             <div className="flex items-center justify-between">
@@ -534,7 +602,7 @@ export default function EarningsPage() {
                 astroTab === "consultations" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
               )}
             >
-              {consultationsList.length}
+              {meta.total}
             </span>
           </button>
 
@@ -578,60 +646,111 @@ export default function EarningsPage() {
           </button>
         </div>
 
-        {/* TAB 1: CONSULTATIONS LOG */}
+        {/* TAB 1: CONSULTATIONS LOG (FULL SEARCH, MODE FILTER & PAGINATION) */}
         {astroTab === "consultations" && (
           <div className="space-y-4">
             {/* Filter Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] bg-white p-4 border border-slate-100/90 shadow-sm">
-              <div className="relative w-full max-w-sm">
-                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by client or session ID…"
-                  className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-9 pr-8 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F59E0B]/30"
-                />
-                {search && (
-                  <button
-                    onClick={() => setSearch("")}
-                    className="absolute top-1/2 right-2.5 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                )}
-              </div>
+            <div className="space-y-3 rounded-[24px] bg-white p-4 border border-slate-100/90 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                {/* Search Box */}
+                <div className="relative w-full sm:w-72">
+                  <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by client name or ID…"
+                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-9 pr-8 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F59E0B]/30"
+                  />
+                  {search && (
+                    <button
+                      onClick={() => setSearch("")}
+                      className="absolute top-1/2 right-2.5 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  )}
+                </div>
 
-              {/* Consultation Mode Filter Tabs */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                {[
-                  { id: "", label: "All Sessions" },
-                  { id: "chat", label: "💬 Chat" },
-                  { id: "call", label: "📞 Voice" },
-                  { id: "video", label: "📹 Video" },
-                  { id: "appointment", label: "📅 Appointments" },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setSelectedMode(tab.id as ConsultationMode | "")}
-                    className={cn(
-                      "rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer",
-                      selectedMode === tab.id
-                        ? "bg-[#D97706] text-white shadow-xs"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                    )}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
+                {/* Consultation Mode Filter Tabs */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {[
+                    { id: "", label: "All Sessions" },
+                    { id: "chat", label: "💬 Chat" },
+                    { id: "call", label: "📞 Voice" },
+                    { id: "video", label: "📹 Video" },
+                    { id: "appointment", label: "📅 Appointments" },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        setSelectedMode(tab.id as ConsultationMode | "");
+                        setPage(1);
+                      }}
+                      className={cn(
+                        "rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer",
+                        selectedMode === tab.id
+                          ? "bg-[#D97706] text-white shadow-xs"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      )}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Time Window Tabs */}
+                <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200/60">
+                  {[
+                    { id: "", label: "All Time" },
+                    { id: "today", label: "Today" },
+                    { id: "this_week", label: "This Week" },
+                    { id: "this_month", label: "This Month" },
+                  ].map((w) => (
+                    <button
+                      key={w.id}
+                      onClick={() => {
+                        setSelectedWindow(w.id);
+                        setPage(1);
+                      }}
+                      className={cn(
+                        "rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer",
+                        selectedWindow === w.id
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-500 hover:text-slate-900"
+                      )}
+                    >
+                      {w.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* Consultations Table */}
             <div className="overflow-hidden rounded-[26px] bg-white border border-slate-100/90 shadow-[0_12px_32px_rgba(20,25,45,0.03)]">
-              {filteredConsultations.length === 0 ? (
+              {paginatedConsultations.isLoading ? (
                 <div className="py-16 text-center text-xs text-slate-400">
-                  No consultations found matching your filter criteria.
+                  <RefreshCw className="size-6 animate-spin mx-auto text-[#D97706] mb-2" />
+                  <span>Loading consultations ledger…</span>
+                </div>
+              ) : consultationsList.length === 0 ? (
+                <div className="py-16 text-center text-xs text-slate-400">
+                  <Receipt className="size-8 mx-auto text-slate-300 mb-2" />
+                  <p className="font-bold text-slate-700">No consultations found matching your criteria</p>
+                  {(search || selectedMode || selectedWindow) && (
+                    <button
+                      onClick={() => {
+                        setSearch("");
+                        setSelectedMode("");
+                        setSelectedWindow("");
+                        setPage(1);
+                      }}
+                      className="mt-3 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
+                    >
+                      Reset filters
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -643,15 +762,20 @@ export default function EarningsPage() {
                         <th className="py-4 px-4">Session Type</th>
                         <th className="py-4 px-4 text-right">Client Coins</th>
                         <th className="py-4 px-4 text-right">Duration</th>
-                        <th className="py-4 pr-6 pl-4 text-right">Credited Payout</th>
+                        <th className="py-4 px-4 text-right">Credited Payout</th>
+                        <th className="py-4 pr-6 pl-4 text-right">Receipt</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {filteredConsultations.map((row) => {
+                      {consultationsList.map((row) => {
                         const badge = getModeBadge(row.mode);
                         const Icon = badge.icon;
                         return (
-                          <tr key={row.id} className="hover:bg-amber-50/20 transition-colors">
+                          <tr
+                            key={row.id}
+                            onClick={() => setPreviewRow(row)}
+                            className="hover:bg-amber-50/20 transition-colors cursor-pointer group"
+                          >
                             <td className="py-4 pl-6 pr-4 whitespace-nowrap">
                               <div className="flex items-center gap-3">
                                 <Avatar
@@ -661,7 +785,7 @@ export default function EarningsPage() {
                                   className="size-8"
                                 />
                                 <div>
-                                  <span className="font-bold text-slate-900 block text-xs">
+                                  <span className="font-bold text-slate-900 group-hover:text-[#D97706] transition-colors block text-xs">
                                     {row.user_name || "Client Consultation"}
                                   </span>
                                   <span className="text-[10px] text-slate-400 font-mono">
@@ -697,14 +821,82 @@ export default function EarningsPage() {
                             <td className="py-4 px-4 text-right font-mono font-bold text-slate-700">
                               {row.minutes} min
                             </td>
-                            <td className="py-4 pr-6 pl-4 text-right font-mono text-sm font-black text-emerald-600">
+                            <td className="py-4 px-4 text-right font-mono text-sm font-black text-emerald-600">
                               +{formatEarning(row.earning_paise)}
+                            </td>
+                            <td
+                              className="py-4 pr-6 pl-4 text-right whitespace-nowrap"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                onClick={() => setPreviewRow(row)}
+                                className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-900 hover:text-white transition-all cursor-pointer"
+                              >
+                                Inspect
+                              </button>
                             </td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* Pagination Footer */}
+              {meta.total > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-4 p-4 border-t border-slate-100 bg-slate-50/60">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-slate-500">
+                      Showing{" "}
+                      <span className="font-bold text-slate-900">
+                        {Math.min((page - 1) * pageSize + 1, meta.total)}
+                      </span>{" "}
+                      to{" "}
+                      <span className="font-bold text-slate-900">
+                        {Math.min(page * pageSize, meta.total)}
+                      </span>{" "}
+                      of <span className="font-bold text-slate-900">{meta.total}</span> consultations
+                    </span>
+
+                    <select
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setPage(1);
+                      }}
+                      className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-bold text-slate-700 focus:outline-none"
+                    >
+                      <option value={10}>10 per page</option>
+                      <option value={20}>20 per page</option>
+                      <option value={50}>50 per page</option>
+                      <option value={100}>100 per page</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={!meta.has_prev}
+                      className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                    >
+                      <ChevronLeft className="size-4" />
+                      <span>Previous</span>
+                    </button>
+
+                    <span className="px-3 py-1 text-xs font-bold font-mono text-slate-800">
+                      Page {page} of {meta.total_pages || 1}
+                    </span>
+
+                    <button
+                      onClick={() => setPage((p) => Math.min(meta.total_pages, p + 1))}
+                      disabled={!meta.has_next}
+                      className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                    >
+                      <span>Next</span>
+                      <ChevronRight className="size-4" />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -858,7 +1050,6 @@ export default function EarningsPage() {
         {/* TAB 3: BANK & UPI SETTINGS */}
         {astroTab === "banking" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Card 1: Bank Account Coordinates */}
             <div className="rounded-[26px] bg-white p-6 border border-slate-100 shadow-[0_10px_28px_rgba(20,25,45,0.03)] space-y-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -923,7 +1114,6 @@ export default function EarningsPage() {
               </button>
             </div>
 
-            {/* Card 2: UPI Virtual Payment Address */}
             <div className="rounded-[26px] bg-white p-6 border border-slate-100 shadow-[0_10px_28px_rgba(20,25,45,0.03)] space-y-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -969,7 +1159,7 @@ export default function EarningsPage() {
           </div>
         )}
 
-        {/* ── MODAL: REQUEST PAYOUT ── */}
+        {/* ── MODALS (REQUEST PAYOUT & BANK DETAILS) ── */}
         {isPayoutModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
@@ -996,7 +1186,6 @@ export default function EarningsPage() {
               </div>
 
               <div className="mt-5 space-y-4">
-                {/* Available Balance Pill */}
                 <div className="flex items-center justify-between rounded-2xl bg-emerald-50/70 p-3.5 border border-emerald-100">
                   <span className="text-xs font-semibold text-emerald-800">Available to Withdraw:</span>
                   <span className="font-mono text-base font-black text-emerald-900">
@@ -1004,7 +1193,6 @@ export default function EarningsPage() {
                   </span>
                 </div>
 
-                {/* Amount Input */}
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1.5">
                     Withdrawal Amount (₹)
@@ -1050,7 +1238,6 @@ export default function EarningsPage() {
                   </div>
                 </div>
 
-                {/* Payout Method Selector */}
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1.5">
                     Disbursement Channel
@@ -1100,7 +1287,6 @@ export default function EarningsPage() {
                   </div>
                 </div>
 
-                {/* Calculation breakdown */}
                 {parseFloat(payoutAmountRupees) > 0 && (
                   <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 space-y-1.5 text-[11px]">
                     <div className="flex justify-between text-slate-600">
@@ -1154,7 +1340,6 @@ export default function EarningsPage() {
           </div>
         )}
 
-        {/* ── MODAL: UPDATE BANK DETAILS ── */}
         {isBankModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
@@ -1264,7 +1449,7 @@ export default function EarningsPage() {
                       type="text"
                       value={bankForm.upi_id}
                       onChange={(e) => setBankForm({ ...bankForm, upi_id: e.target.value })}
-                      placeholder="e.g. mobile@upi or user@okhdfcbank"
+                      placeholder="e.g. mobile@upi"
                       className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 font-mono text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#F59E0B]/30"
                     />
                   </div>
@@ -1308,6 +1493,144 @@ export default function EarningsPage() {
             </div>
           </div>
         )}
+
+        {/* ── INTERACTIVE CONSULTATION SPLIT RECEIPT DRAWER FOR ASTROLOGER ── */}
+        {previewRow && (
+          <div className="fixed inset-0 z-50 flex justify-end">
+            <div
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-md transition-opacity"
+              onClick={() => setPreviewRow(null)}
+            />
+            <div className="relative z-10 flex h-full w-full max-w-lg flex-col bg-white shadow-2xl border-l border-slate-100 overflow-hidden animate-in slide-in-from-right duration-300">
+              <div className="relative p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
+                <button
+                  onClick={() => setPreviewRow(null)}
+                  className="absolute top-4 right-4 flex size-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                >
+                  <X className="size-4" />
+                </button>
+                <div className="flex items-center gap-3">
+                  <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#D97706] to-[#F59E0B] text-white shadow-md">
+                    <Receipt className="size-6 stroke-[2.2]" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-lg font-black text-white tracking-tight">
+                      Consultation Earning Receipt
+                    </h3>
+                    <p className="text-xs font-semibold text-slate-400">
+                      Vedic consultation record & credited payout
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 rounded-2xl bg-white/10 backdrop-blur-md p-4 border border-white/10 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">
+                      Credited Payout
+                    </span>
+                    <span className="font-mono text-2xl font-black text-emerald-400">
+                      +{formatEarning(previewRow.earning_paise)}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">
+                      Session Length
+                    </span>
+                    <span className="font-mono text-xl font-bold text-amber-300">
+                      {previewRow.minutes} Minutes
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 text-xs font-semibold">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 space-y-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                    Client Details
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      src={previewRow.user_avatar || previewRow.user_image_url}
+                      name={previewRow.user_name || "Client"}
+                      size="sm"
+                      className="size-9"
+                    />
+                    <div>
+                      <p className="font-bold text-slate-900 text-sm">
+                        {previewRow.user_name || "Client Consultation"}
+                      </p>
+                      <p className="text-[10px] font-mono text-slate-400">
+                        Client ID: {previewRow.user_id || "—"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-100 bg-white p-4 space-y-2.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                    Session Logistics
+                  </span>
+                  <div className="flex items-center justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Consultation Channel:</span>
+                    <span className="font-bold text-slate-900">
+                      {MODE_LABELS[previewRow.mode as ConsultationMode] || previewRow.mode}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Client Coins Charged:</span>
+                    <span className="font-mono font-bold text-slate-900">
+                      {previewRow.coins_charged != null ? `${formatCoins(previewRow.coins_charged)} Coins` : "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-slate-500">Timestamp (IST):</span>
+                    <span className="text-slate-800 font-bold">
+                      {formatDateTime(previewRow.created_at)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Consultation Ledger ID
+                    </span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(previewRow.id);
+                        toast.success("Ledger ID copied to clipboard");
+                      }}
+                      className="flex items-center gap-1 text-[10px] text-amber-700 hover:text-amber-900 cursor-pointer"
+                    >
+                      <Copy className="size-3" />
+                      <span>Copy</span>
+                    </button>
+                  </div>
+                  <p className="font-mono text-[11px] text-slate-600 break-all select-all">
+                    {previewRow.id}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 text-[11px] text-slate-400 pt-2">
+                  <ShieldCheck className="size-4 text-emerald-600 shrink-0" />
+                  <span>Permanent double-entry revenue record. Immutable and audited.</span>
+                </div>
+              </div>
+
+              <div className="p-4 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-500">
+                  Astra Blink Revenue Engine v2.5
+                </span>
+                <button
+                  onClick={() => setPreviewRow(null)}
+                  className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Close Receipt
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -1329,19 +1652,16 @@ export default function EarningsPage() {
   const recentList = platformRecent.data || [];
   const payoutsList = adminPayouts.data || [];
 
-  // Filtered recent rows by search or mode
-  const filteredRows = recentList.filter((row) => {
-    const matchesMode = selectedMode ? row.mode === selectedMode : true;
-    if (!matchesMode) return false;
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    return (
-      row.astrologer_name?.toLowerCase().includes(q) ||
-      row.astrologer_id.toLowerCase().includes(q) ||
-      row.id.toLowerCase().includes(q) ||
-      MODE_LABELS[row.mode]?.toLowerCase().includes(q)
-    );
-  });
+  const adminLedgerPageData = adminPaginatedLedger.data;
+  const adminRows = adminLedgerPageData?.items || [];
+  const adminMeta = adminLedgerPageData?.meta || {
+    page: 1,
+    limit: adminPageSize,
+    total: 0,
+    total_pages: 1,
+    has_next: false,
+    has_prev: false,
+  };
 
   const effectiveCommissionPercent =
     totals.gross_paise > 0
@@ -1381,21 +1701,21 @@ export default function EarningsPage() {
           </p>
         </div>
 
-        {/* Sync Button */}
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => {
               void platform.refetch();
               void platformRecent.refetch();
+              void adminPaginatedLedger.refetch();
               void adminPayouts.refetch();
             }}
-            disabled={platform.isFetching || platformRecent.isFetching}
+            disabled={platform.isFetching || adminPaginatedLedger.isFetching}
             className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
           >
             <RefreshCw
               className={cn(
                 "size-3.5",
-                (platform.isFetching || platformRecent.isFetching) &&
+                (platform.isFetching || adminPaginatedLedger.isFetching) &&
                   "animate-spin text-[#D97706]"
               )}
             />
@@ -1441,7 +1761,6 @@ export default function EarningsPage() {
       {/* ── TAB 1: ADMIN LEDGER & REVENUE ENGINE ── */}
       {adminTab === "ledger" && (
         <div className="space-y-6">
-          {/* Continuous Live Revenue Marquee */}
           {recentList.length > 0 && (
             <div className="relative overflow-hidden rounded-[22px] bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-2.5 sm:p-3 text-white shadow-lg border border-slate-800/90">
               <div className="flex items-center gap-3">
@@ -1482,7 +1801,6 @@ export default function EarningsPage() {
 
           {/* 4 DealDeck 3D KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
-            {/* Card 1: Gross Revenue */}
             <div className="relative overflow-hidden rounded-[26px] bg-gradient-to-br from-[#B45309] via-[#D97706] to-[#F59E0B] p-5 text-white shadow-[0_14px_30px_-6px_rgba(217,119,6,0.45)] flex flex-col justify-between min-h-[155px]">
               <div className="pointer-events-none absolute -right-6 -bottom-6 size-32 rounded-full bg-white/10 blur-xl" />
               <div className="flex items-center justify-between">
@@ -1509,7 +1827,6 @@ export default function EarningsPage() {
               </div>
             </div>
 
-            {/* Card 2: Your Commission */}
             <div className="rounded-[26px] bg-white p-5 border border-amber-200/90 shadow-[0_10px_28px_rgba(217,119,6,0.06)] flex flex-col justify-between min-h-[155px]">
               <div className="flex items-center justify-between">
                 <div className="flex size-10 items-center justify-center rounded-2xl bg-amber-50 text-[#D97706]">
@@ -1534,7 +1851,6 @@ export default function EarningsPage() {
               </div>
             </div>
 
-            {/* Card 3: Paid to Astrologers */}
             <div className="rounded-[26px] bg-white p-5 border border-emerald-100/90 shadow-[0_10px_28px_rgba(16,185,129,0.05)] flex flex-col justify-between min-h-[155px]">
               <div className="flex items-center justify-between">
                 <div className="flex size-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
@@ -1559,7 +1875,6 @@ export default function EarningsPage() {
               </div>
             </div>
 
-            {/* Card 4: Revenue Split Meter */}
             <div className="rounded-[26px] bg-white p-5 border border-slate-100/90 shadow-[0_10px_28px_rgba(20,25,45,0.03)] flex flex-col justify-between min-h-[155px]">
               <div className="flex items-center justify-between">
                 <div className="flex size-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
@@ -1602,14 +1917,14 @@ export default function EarningsPage() {
                 <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  value={adminSearch}
+                  onChange={(e) => setAdminSearch(e.target.value)}
                   placeholder="Filter by astrologer name, specialist ID or session mode…"
                   className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50/70 pl-10 pr-9 text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 transition-all focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F59E0B]/30 focus:border-[#D97706]"
                 />
-                {search && (
+                {adminSearch && (
                   <button
-                    onClick={() => setSearch("")}
+                    onClick={() => setAdminSearch("")}
                     className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:text-slate-600"
                   >
                     <X className="size-3.5" />
@@ -1628,10 +1943,13 @@ export default function EarningsPage() {
                 ].map((tab) => (
                   <button
                     key={tab.id}
-                    onClick={() => setSelectedMode(tab.id as ConsultationMode | "")}
+                    onClick={() => {
+                      setAdminMode(tab.id as ConsultationMode | "");
+                      setAdminPage(1);
+                    }}
                     className={cn(
                       "flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer",
-                      selectedMode === tab.id
+                      adminMode === tab.id
                         ? "bg-slate-900 text-white shadow-xs"
                         : "bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 hover:text-slate-900"
                     )}
@@ -1640,7 +1958,7 @@ export default function EarningsPage() {
                     <span
                       className={cn(
                         "text-[10px] px-1.5 py-0.2 rounded-md font-mono",
-                        selectedMode === tab.id
+                        adminMode === tab.id
                           ? "bg-white/20 text-white"
                           : "bg-slate-200/60 text-slate-500"
                       )}
@@ -1654,7 +1972,7 @@ export default function EarningsPage() {
           </div>
 
           {/* Table */}
-          {filteredRows.length === 0 ? (
+          {adminRows.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-[28px] bg-white py-16 px-4 text-center border border-slate-100 shadow-sm">
               <div className="flex size-14 items-center justify-center rounded-2xl bg-amber-50 text-[#D97706] mb-3">
                 <Receipt className="size-7" />
@@ -1682,7 +2000,7 @@ export default function EarningsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredRows.map((row) => {
+                    {adminRows.map((row) => {
                       const badge = getModeBadge(row.mode);
                       const Icon = badge.icon;
                       return (
@@ -1774,6 +2092,63 @@ export default function EarningsPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Admin Pagination Footer */}
+              {adminMeta.total > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-4 p-4 border-t border-slate-100 bg-slate-50/60">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-slate-500">
+                      Showing{" "}
+                      <span className="font-bold text-slate-900">
+                        {Math.min((adminPage - 1) * adminPageSize + 1, adminMeta.total)}
+                      </span>{" "}
+                      to{" "}
+                      <span className="font-bold text-slate-900">
+                        {Math.min(adminPage * adminPageSize, adminMeta.total)}
+                      </span>{" "}
+                      of <span className="font-bold text-slate-900">{adminMeta.total}</span> sessions
+                    </span>
+
+                    <select
+                      value={adminPageSize}
+                      onChange={(e) => {
+                        setAdminPageSize(Number(e.target.value));
+                        setAdminPage(1);
+                      }}
+                      className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-bold text-slate-700 focus:outline-none"
+                    >
+                      <option value={10}>10 per page</option>
+                      <option value={20}>20 per page</option>
+                      <option value={50}>50 per page</option>
+                      <option value={100}>100 per page</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setAdminPage((p) => Math.max(1, p - 1))}
+                      disabled={!adminMeta.has_prev}
+                      className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                    >
+                      <ChevronLeft className="size-4" />
+                      <span>Previous</span>
+                    </button>
+
+                    <span className="px-3 py-1 text-xs font-bold font-mono text-slate-800">
+                      Page {adminPage} of {adminMeta.total_pages || 1}
+                    </span>
+
+                    <button
+                      onClick={() => setAdminPage((p) => Math.min(adminMeta.total_pages, p + 1))}
+                      disabled={!adminMeta.has_next}
+                      className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                    >
+                      <span>Next</span>
+                      <ChevronRight className="size-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1782,7 +2157,6 @@ export default function EarningsPage() {
       {/* ── TAB 2: ADMIN PAYOUT SETTLEMENT DESK ── */}
       {adminTab === "payout_desk" && (
         <div className="space-y-4">
-          {/* Status Filter Bar */}
           <div className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] bg-white p-4 border border-slate-100 shadow-sm">
             <div>
               <h4 className="font-bold text-slate-900 text-sm">Astrologer Withdrawal Requests</h4>
@@ -1813,7 +2187,6 @@ export default function EarningsPage() {
             </div>
           </div>
 
-          {/* Payouts Table */}
           <div className="overflow-hidden rounded-[26px] bg-white border border-slate-100/90 shadow-[0_12px_32px_rgba(20,25,45,0.03)]">
             {payoutsList.length === 0 ? (
               <div className="py-16 text-center text-xs text-slate-400">
@@ -1955,7 +2328,7 @@ export default function EarningsPage() {
         </div>
       )}
 
-      {/* ── MODAL: ADMIN SETTLE PAYOUT (ENTER UTR) ── */}
+      {/* ── MODAL: ADMIN SETTLE PAYOUT ── */}
       {settlePayoutTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -1970,7 +2343,7 @@ export default function EarningsPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 text-base">Settle Astrologer Payout</h3>
-                  <p className="text-xs text-slate-400">Confirm bank disburshment with UTR</p>
+                  <p className="text-xs text-slate-400">Confirm bank disbursement with UTR</p>
                 </div>
               </div>
               <button
@@ -2003,7 +2376,7 @@ export default function EarningsPage() {
                   type="text"
                   value={utrNumber}
                   onChange={(e) => setUtrNumber(e.target.value)}
-                  placeholder="e.g. HDFC20261108123456 or UPI Reference ID"
+                  placeholder="e.g. HDFC20261108123456"
                   className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 font-mono text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                 />
               </div>
@@ -2135,21 +2508,19 @@ export default function EarningsPage() {
         </div>
       )}
 
-      {/* ── 6. INTERACTIVE SLIDE-OVER 3D REVENUE SPLIT INSPECTOR ── */}
+      {/* ── 6. INTERACTIVE SLIDE-OVER 3D REVENUE SPLIT INSPECTOR (ADMIN VIEW) ── */}
       {previewRow && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-md transition-opacity animate-in fade-in duration-200"
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-md transition-opacity"
             onClick={() => setPreviewRow(null)}
           />
 
           <div className="relative z-10 flex h-full w-full max-w-lg flex-col bg-white shadow-2xl border-l border-slate-100 overflow-hidden animate-in slide-in-from-right duration-300">
-            {/* Header */}
             <div className="relative p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
               <button
                 onClick={() => setPreviewRow(null)}
                 className="absolute top-4 right-4 flex size-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
-                aria-label="Close"
               >
                 <X className="size-4" />
               </button>
@@ -2168,7 +2539,6 @@ export default function EarningsPage() {
                 </div>
               </div>
 
-              {/* Big Gross Banner */}
               <div className="mt-5 rounded-2xl bg-white/10 backdrop-blur-md p-4 border border-white/10 flex items-center justify-between">
                 <div>
                   <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">
@@ -2189,9 +2559,7 @@ export default function EarningsPage() {
               </div>
             </div>
 
-            {/* Split Breakdown Waterfall */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4 text-xs font-semibold scrollbar-thin">
-              {/* Specialist Profile */}
               <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                   Astrologer / Specialist
@@ -2204,13 +2572,11 @@ export default function EarningsPage() {
                 </p>
               </div>
 
-              {/* Revenue Waterfall Breakdown */}
               <div className="rounded-2xl border border-slate-100 bg-white p-4 space-y-3">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                   3-Way Split Accounting Waterfall
                 </span>
 
-                {/* 1. Gross */}
                 <div className="flex items-center justify-between py-2 border-b border-slate-100">
                   <div className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-slate-400" />
@@ -2221,25 +2587,23 @@ export default function EarningsPage() {
                   </span>
                 </div>
 
-                {/* 2. Platform Cut */}
                 <div className="flex items-center justify-between py-2 border-b border-slate-100 bg-amber-50/50 -mx-4 px-4">
                   <div className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-[#D97706]" />
                     <span className="text-amber-900 font-bold">
-                      Platform Fee ({previewRow.commission_percent}% Cut):
+                      Platform Fee ({previewRow.commission_percent || 30}% Cut):
                     </span>
                   </div>
                   <span className="font-mono text-sm font-black text-[#D97706]">
-                    +{formatEarning(previewRow.commission_paise)}
+                    +{formatEarning(previewRow.commission_paise || (previewRow.gross_paise - previewRow.earning_paise))}
                   </span>
                 </div>
 
-                {/* 3. Astrologer Net */}
                 <div className="flex items-center justify-between py-2 border-b border-slate-100 bg-emerald-50/50 -mx-4 px-4">
                   <div className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-emerald-500" />
                     <span className="text-emerald-900 font-bold">
-                      Astrologer Payout ({100 - previewRow.commission_percent}% Net):
+                      Astrologer Payout ({100 - (previewRow.commission_percent || 30)}% Net):
                     </span>
                   </div>
                   <span className="font-mono text-sm font-black text-emerald-600">
@@ -2247,27 +2611,25 @@ export default function EarningsPage() {
                   </span>
                 </div>
 
-                {/* Visual Ratio */}
                 <div className="pt-2">
                   <div className="flex h-3 w-full overflow-hidden rounded-full bg-slate-100">
                     <div
                       className="bg-[#D97706]"
-                      style={{ width: `${previewRow.commission_percent}%` }}
-                      title={`Platform: ${previewRow.commission_percent}%`}
+                      style={{ width: `${previewRow.commission_percent || 30}%` }}
+                      title={`Platform: ${previewRow.commission_percent || 30}%`}
                     />
                     <div
                       className="bg-emerald-500 flex-1"
-                      title={`Astrologer: ${100 - previewRow.commission_percent}%`}
+                      title={`Astrologer: ${100 - (previewRow.commission_percent || 30)}%`}
                     />
                   </div>
                   <div className="mt-1 flex items-center justify-between text-[10px] text-slate-400 font-semibold">
-                    <span>Platform Fee ({previewRow.commission_percent}%)</span>
-                    <span>Astrologer ({100 - previewRow.commission_percent}%)</span>
+                    <span>Platform Fee ({previewRow.commission_percent || 30}%)</span>
+                    <span>Astrologer ({100 - (previewRow.commission_percent || 30)}%)</span>
                   </div>
                 </div>
               </div>
 
-              {/* Consultation Details */}
               <div className="rounded-2xl border border-slate-100 bg-white p-4 space-y-2.5">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                   Session Logistics
@@ -2276,14 +2638,14 @@ export default function EarningsPage() {
                 <div className="flex items-center justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500">Consultation Channel:</span>
                   <span className="font-bold text-slate-900">
-                    {MODE_LABELS[previewRow.mode] || previewRow.mode}
+                    {MODE_LABELS[previewRow.mode as ConsultationMode] || previewRow.mode}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500">User Coins Deducted:</span>
                   <span className="font-mono font-bold text-slate-900">
-                    {previewRow.coins_charged} Coins
+                    {previewRow.coins_charged != null ? `${previewRow.coins_charged} Coins` : "—"}
                   </span>
                 </div>
 
@@ -2295,7 +2657,6 @@ export default function EarningsPage() {
                 </div>
               </div>
 
-              {/* Cryptographic Session ID */}
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Consultation Ledger ID
@@ -2311,7 +2672,6 @@ export default function EarningsPage() {
               </div>
             </div>
 
-            {/* Footer */}
             <div className="p-4 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-500">
                 Astra Blink Revenue Engine v2.5
