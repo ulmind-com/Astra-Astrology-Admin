@@ -32,6 +32,7 @@ import {
   Lock,
   Unlock,
   Link2,
+  Loader2,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
@@ -1265,7 +1266,24 @@ function Schedule({
   const [displayMode, setDisplayMode] = React.useState<"calendar" | "list" | "blacklist">(initialDisplayMode);
   const [tab, setTab] = React.useState<ScheduleTab>("upcoming");
   const [cancelTargetId, setCancelTargetId] = React.useState<string | null>(null);
-  const [enteringChamber, setEnteringChamber] = React.useState(false);
+  const [enteringChamberId, setEnteringChamberId] = React.useState<string | null>(null);
+
+  const handleEnterChamber = async (appointmentId: string) => {
+    setEnteringChamberId(appointmentId);
+    try {
+      const res = await appointmentApi.joinChamber(appointmentId);
+      const callId = (res as any)?.call_id || (res as any)?.data?.call_id;
+      if (callId) {
+        router.push(`/call/${callId}`);
+      } else {
+        toast.error("Could not obtain chamber credentials. Please try again.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to enter consultation chamber.");
+    } finally {
+      setEnteringChamberId(null);
+    }
+  };
 
   // Availability windows query for Google Calendar integration
   const { data: windows } = useQuery({
@@ -1794,7 +1812,7 @@ function Schedule({
             const startsMs = new Date(a.starts_at).getTime();
             const endsMs = new Date(a.ends_at).getTime();
             const now = Date.now();
-            const isLiveWindow = a.status === "booked" && startsMs - now <= 15 * 60_000 && endsMs >= now;
+            const isLiveWindow = a.status === "booked" && now >= startsMs - 10 * 60_000 && now <= endsMs + 15 * 60_000;
             const pillar = a.consultation_pillar ? PILLAR_LABELS[a.consultation_pillar] : null;
             const hasPrescription = Boolean(
               a.prescription?.gemstone || a.prescription?.rudraksha || a.prescription?.mantra,
@@ -1943,17 +1961,23 @@ function Schedule({
 
                     {/* Enter Chamber (Live) */}
                     {isLiveWindow && (
-                      <a
-                        href={`/calls`}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm animate-pulse"
+                      <button
+                        type="button"
+                        disabled={enteringChamberId === a.id}
+                        onClick={() => handleEnterChamber(a.id)}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm animate-pulse cursor-pointer disabled:opacity-50"
                       >
-                        <Video className="size-3.5" />
-                        <span>Enter Chamber</span>
-                      </a>
+                        {enteringChamberId === a.id ? (
+                          <Loader2 className="size-3.5 animate-spin" />
+                        ) : (
+                          <Video className="size-3.5" />
+                        )}
+                        <span>{enteringChamberId === a.id ? "Entering..." : "Enter Chamber"}</span>
+                      </button>
                     )}
 
-                    {/* Complete Session Action (Capture Escrow) */}
-                    {a.status === "booked" && (
+                    {/* Complete Session Action (Capture Escrow) - Only eligible after session start time */}
+                    {a.status === "booked" && now >= startsMs && (
                       <button
                         type="button"
                         disabled={complete.isPending}
@@ -2105,29 +2129,20 @@ function Schedule({
                     const nowMs = Date.now();
                     const isLiveWindow = nowMs >= startMs - 10 * 60_000 && nowMs <= endMs + 15 * 60_000;
                     if (!isLiveWindow) return null;
+                    const isEntering = enteringChamberId === dossierAppointment.id;
                     return (
                       <Button
                         size="sm"
-                        disabled={enteringChamber}
-                        onClick={async () => {
-                          setEnteringChamber(true);
-                          try {
-                            const res = await appointmentApi.joinChamber(dossierAppointment.id);
-                            if (res?.call_id) {
-                              router.push(`/call/${res.call_id}`);
-                            } else {
-                              toast.error("Could not prepare chamber.");
-                            }
-                          } catch (err: any) {
-                            toast.error(err?.message || "Failed to enter chamber.");
-                          } finally {
-                            setEnteringChamber(false);
-                          }
-                        }}
+                        disabled={isEntering}
+                        onClick={() => handleEnterChamber(dossierAppointment.id)}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md"
                       >
-                        <Video className="size-3.5 mr-1" />
-                        {enteringChamber ? "Entering..." : "Enter Live Chamber"}
+                        {isEntering ? (
+                          <Loader2 className="size-3.5 mr-1 animate-spin" />
+                        ) : (
+                          <Video className="size-3.5 mr-1" />
+                        )}
+                        {isEntering ? "Entering..." : "Enter Live Chamber"}
                       </Button>
                     );
                   })()}
