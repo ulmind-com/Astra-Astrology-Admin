@@ -1575,19 +1575,19 @@ function Schedule({
   return (
     <div className="space-y-6">
       {/* Top View Selector Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-3xl border border-slate-200/90 bg-white shadow-xs">
-        <div className="flex items-center gap-2.5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0c1220] shadow-xs transition-colors">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <button
             type="button"
             onClick={() => setDisplayMode("calendar")}
             className={cn(
               "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
               displayMode === "calendar"
-                ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md ring-2 ring-amber-400/20"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800 dark:hover:bg-slate-800"
             )}
           >
-            <Calendar className="size-4 text-sky-400" />
+            <Calendar className="size-4 text-sky-500 dark:text-sky-400" />
             <span>Google Calendar Schedule</span>
           </button>
 
@@ -1597,11 +1597,11 @@ function Schedule({
             className={cn(
               "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
               displayMode === "list"
-                ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md ring-2 ring-amber-400/20"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800 dark:hover:bg-slate-800"
             )}
           >
-            <FileText className="size-4 text-amber-400" />
+            <FileText className="size-4 text-amber-500 dark:text-amber-400" />
             <span>Bookings Ledger ({allBookings.length})</span>
           </button>
 
@@ -1611,8 +1611,8 @@ function Schedule({
             className={cn(
               "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
               displayMode === "blacklist"
-                ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md ring-2 ring-amber-400/20"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800 dark:hover:bg-slate-800"
             )}
           >
             <ShieldAlert className="size-4 text-rose-500" />
@@ -1620,7 +1620,7 @@ function Schedule({
           </button>
         </div>
 
-        <p className="text-xs text-slate-500 font-medium hidden sm:block">
+        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium hidden sm:block">
           {displayMode === "calendar"
             ? "📅 Interactive Google Calendar view with live time indicator and 1-click slot activation."
             : displayMode === "blacklist"
@@ -2076,6 +2076,7 @@ function Schedule({
         onClose={() => setDossierAppointment(null)}
         title="Client Astrological Dossier & AI Pre-Flight"
         description="Comprehensive pre-consultation details, cosmic resonance index, and automated AI astrological briefing."
+        size="xl"
         footer={
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
             <div className="flex items-center gap-2 flex-wrap">
@@ -2085,7 +2086,7 @@ function Schedule({
                   onClick={() => {
                     window.open(appointmentApi.getCertificateHtmlUrl(dossierAppointment.id), "_blank");
                   }}
-                  className="border-amber-500/30 text-amber-600 hover:bg-amber-50 font-bold text-xs"
+                  className="border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 font-bold text-xs"
                 >
                   <FileText className="size-3.5 mr-1.5" />
                   View Divya Certificate
@@ -2140,9 +2141,9 @@ function Schedule({
                       });
                       setRescheduleAppointment(dossierAppointment);
                     }}
-                    className="border-amber-500/30 text-amber-800 hover:bg-amber-50 text-xs font-bold"
+                    className="border-amber-500/30 text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-xs font-bold"
                   >
-                    <CalendarDays className="size-3.5 mr-1 text-amber-600" />
+                    <CalendarDays className="size-3.5 mr-1 text-amber-600 dark:text-amber-400" />
                     {dossierAppointment.rescheduled_count && dossierAppointment.rescheduled_count >= 1
                       ? "Rescheduled (1/1 Used)"
                       : "Courtesy Reschedule (১-বার ফ্রি)"}
@@ -2163,9 +2164,9 @@ function Schedule({
                       setNoShowReason("");
                       setNoShowAppointment(dossierAppointment);
                     }}
-                    className="border-rose-300 text-rose-700 hover:bg-rose-50 text-xs font-bold"
+                    className="border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold"
                   >
-                    <AlertCircle className="size-3.5 mr-1 text-rose-600" />
+                    <AlertCircle className="size-3.5 mr-1 text-rose-600 dark:text-rose-400" />
                     Mark No-Show
                   </Button>
 
@@ -2179,13 +2180,13 @@ function Schedule({
                     className={cn(
                       "text-xs font-bold",
                       dossierAppointment.btr_fulfilled
-                        ? "border-emerald-300 text-emerald-800 bg-emerald-50/50"
+                        ? "border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/40"
                         : dossierAppointment.btr_requested
-                        ? "border-sky-300 text-sky-800 bg-sky-50/50"
-                        : "border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                        ? "border-sky-300 dark:border-sky-700 text-sky-800 dark:text-sky-300 bg-sky-50/50 dark:bg-sky-950/40"
+                        : "border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
                     )}
                   >
-                    <Clock className="size-3.5 mr-1 text-indigo-600" />
+                    <Clock className="size-3.5 mr-1 text-indigo-600 dark:text-indigo-400" />
                     {dossierAppointment.btr_fulfilled
                       ? "BTR Rectified ✓"
                       : dossierAppointment.btr_requested
@@ -2202,9 +2203,9 @@ function Schedule({
                       setRedFlagBlacklist(true);
                       setRedFlagAppointment(dossierAppointment);
                     }}
-                    className="border-rose-300 text-rose-700 hover:bg-rose-50 text-xs font-bold"
+                    className="border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold"
                   >
-                    <Flag className="size-3.5 mr-1 text-rose-600" />
+                    <Flag className="size-3.5 mr-1 text-rose-600 dark:text-rose-400" />
                     Red-Flag / Shield
                   </Button>
                 </>
@@ -2221,13 +2222,13 @@ function Schedule({
           <div className="space-y-4 py-2 text-xs">
             {/* Red-Flag Misconduct Notice if marked */}
             {dossierAppointment.abuse_flagged && (
-              <div className="rounded-2xl border border-rose-300 bg-rose-50/80 p-3.5 text-rose-950 text-xs flex items-center gap-2.5">
-                <ShieldAlert className="size-4 text-rose-600 shrink-0" />
+              <div className="rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50/80 dark:bg-rose-950/60 p-3.5 text-rose-950 dark:text-rose-200 text-xs flex items-center gap-2.5">
+                <ShieldAlert className="size-4 text-rose-600 dark:text-rose-400 shrink-0" />
                 <div>
-                  <span className="font-bold block text-rose-950">
+                  <span className="font-bold block text-rose-950 dark:text-rose-200">
                     Red-Flagged for Policy Misconduct ({dossierAppointment.abuse_reason})
                   </span>
-                  <span className="text-[11px] text-rose-800">
+                  <span className="text-[11px] text-rose-800 dark:text-rose-300">
                     Session was terminated due to code-of-conduct violation and logged with Trust & Safety. Escrow consultation fee was credited to your earnings.
                   </span>
                 </div>
@@ -2240,14 +2241,14 @@ function Schedule({
                 className={cn(
                   "rounded-2xl border p-3.5 text-xs flex items-center gap-2.5",
                   dossierAppointment.btr_fulfilled
-                    ? "border-emerald-300 bg-emerald-50 text-emerald-950"
-                    : "border-sky-300 bg-sky-50 text-sky-950"
+                    ? "border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-200"
+                    : "border-sky-300 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/60 text-sky-950 dark:text-sky-200"
                 )}
               >
                 <Clock
                   className={cn(
                     "size-4 shrink-0",
-                    dossierAppointment.btr_fulfilled ? "text-emerald-600" : "text-sky-600"
+                    dossierAppointment.btr_fulfilled ? "text-emerald-600 dark:text-emerald-400" : "text-sky-600 dark:text-sky-400"
                   )}
                 />
                 <div>
@@ -2267,11 +2268,11 @@ function Schedule({
 
             {/* Client No-Show Notice if marked */}
             {dossierAppointment.is_no_show && (
-              <div className="rounded-2xl border border-rose-300 bg-rose-50/80 p-3.5 text-rose-900 text-xs flex items-center gap-2.5">
-                <AlertCircle className="size-4 text-rose-600 shrink-0" />
+              <div className="rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50/80 dark:bg-rose-950/60 p-3.5 text-rose-900 dark:text-rose-200 text-xs flex items-center gap-2.5">
+                <AlertCircle className="size-4 text-rose-600 dark:text-rose-400 shrink-0" />
                 <div>
-                  <span className="font-bold block text-rose-950">Client No-Show / Missed Consultation</span>
-                  <span className="text-[11px] text-rose-700">
+                  <span className="font-bold block text-rose-950 dark:text-rose-100">Client No-Show / Missed Consultation</span>
+                  <span className="text-[11px] text-rose-700 dark:text-rose-300">
                     The astrologer waited for {dossierAppointment.no_show_wait_minutes || 15} minutes in the chamber.
                     The session was closed and the escrow fee was settled as compensation.
                   </span>
@@ -2281,11 +2282,11 @@ function Schedule({
 
             {/* Courtesy Reschedule Notice if applied */}
             {Boolean(dossierAppointment.rescheduled_count && dossierAppointment.rescheduled_count > 0) && (
-              <div className="rounded-2xl border border-amber-300 bg-amber-50/70 p-3 text-amber-950 text-xs flex items-center gap-2.5">
-                <CalendarDays className="size-4 text-amber-600 shrink-0" />
+              <div className="rounded-2xl border border-amber-300 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-950/60 p-3 text-amber-950 dark:text-amber-200 text-xs flex items-center gap-2.5">
+                <CalendarDays className="size-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <div>
                   <span className="font-bold block">Courtesy Reschedule Applied (1/1 Used)</span>
-                  <span className="text-[11px] text-amber-800">
+                  <span className="text-[11px] text-amber-800 dark:text-amber-300">
                     Moved to current slot by the astrologer without charging extra fees.
                     {dossierAppointment.reschedule_reason ? ` Note: "${dossierAppointment.reschedule_reason}"` : ""}
                   </span>
@@ -2294,7 +2295,7 @@ function Schedule({
             )}
 
             {/* Client Profile Header with Cosmic Synergy Score */}
-            <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3.5 border border-slate-200">
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 dark:bg-slate-900/90 p-3.5 border border-slate-200 dark:border-slate-800 transition-colors">
               <div className="flex items-center gap-3 min-w-0">
                 <Avatar
                   name={dossierAppointment.peer?.name || "Client"}
@@ -2302,17 +2303,17 @@ function Schedule({
                   size="md"
                 />
                 <div className="min-w-0 flex-1">
-                  <h4 className="font-display font-bold text-sm text-slate-900 truncate">
+                  <h4 className="font-display font-bold text-sm text-slate-900 dark:text-white truncate">
                     {dossierAppointment.peer?.name || "Client"}
                   </h4>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     Appointment Session · {dossierAppointment.minutes} mins · {dayRelative(dossierAppointment.starts_at)}
                   </p>
                 </div>
               </div>
 
               <div className="text-right shrink-0">
-                <span className="inline-flex items-center gap-1 rounded-full bg-linear-to-r from-amber-500/10 to-orange-500/15 border border-amber-500/30 px-2.5 py-1 text-[11px] font-bold text-amber-700">
+                <span className="inline-flex items-center gap-1 rounded-full bg-linear-to-r from-amber-500/10 to-orange-500/15 dark:from-amber-500/20 dark:to-orange-500/25 border border-amber-500/30 dark:border-amber-500/40 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:text-amber-300">
                   <Sparkles className="size-3 text-amber-500" />
                   <span>{dossierAppointment.cosmic_synergy_score || 88}% Synergy</span>
                 </span>
@@ -2320,23 +2321,23 @@ function Schedule({
             </div>
 
             {/* AI Astrological Pre-Flight Intelligence Dossier */}
-            <div className="rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/70 via-indigo-50/30 to-purple-50/40 p-4 space-y-3">
+            <div className="rounded-2xl border border-indigo-200/80 dark:border-indigo-500/30 bg-gradient-to-br from-indigo-50/70 via-indigo-50/30 to-purple-50/40 dark:from-indigo-950/60 dark:via-purple-950/40 dark:to-slate-900/90 p-4 space-y-3 transition-colors">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] font-bold text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="size-3.5 text-indigo-600" />
+                <p className="text-[11px] font-bold text-indigo-950 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="size-3.5 text-indigo-600 dark:text-indigo-400" />
                   <span>🔮 AI Astrological Pre-Flight Intelligence (T-15m)</span>
                 </p>
                 {isLoadingPreflight && (
-                  <span className="text-[10px] text-indigo-500 animate-pulse">Synthesizing Kundli...</span>
+                  <span className="text-[10px] text-indigo-500 dark:text-indigo-400 animate-pulse">Synthesizing Kundli...</span>
                 )}
               </div>
 
               {preflightData ? (
                 <div className="space-y-2.5 text-[11px]">
                   {/* Planetary Gochars */}
-                  <div className="rounded-xl bg-white/90 p-2.5 border border-indigo-100 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-indigo-700 block">Planetary Gochar Transits</span>
-                    <ul className="list-disc list-inside space-y-0.5 text-slate-700 text-[11px]">
+                  <div className="rounded-xl bg-white/95 dark:bg-slate-900/90 p-2.5 border border-indigo-100 dark:border-indigo-500/30 space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-indigo-700 dark:text-indigo-400 block">Planetary Gochar Transits</span>
+                    <ul className="list-disc list-inside space-y-0.5 text-slate-700 dark:text-slate-300 text-[11px]">
                       <li>{preflightData.planetary_transits?.saturn_gochar || "Saturn in active transit restructuring"}</li>
                       <li>{preflightData.planetary_transits?.jupiter_gochar || "Jupiter in auspicious trine aspect"}</li>
                       <li>{preflightData.planetary_transits?.rahu_ketu_axis || "Karmic nodal alignment on pivotal axis"}</li>
@@ -2344,9 +2345,9 @@ function Schedule({
                   </div>
 
                   {/* AI Strategic Directives */}
-                  <div className="rounded-xl bg-white/90 p-2.5 border border-indigo-100 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-indigo-700 block">Consultation Guidance Synthesis</span>
-                    <ul className="list-disc list-inside space-y-1 text-slate-700 text-[11px]">
+                  <div className="rounded-xl bg-white/95 dark:bg-slate-900/90 p-2.5 border border-indigo-100 dark:border-indigo-500/30 space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-indigo-700 dark:text-indigo-400 block">Consultation Guidance Synthesis</span>
+                    <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
                       {(preflightData.ai_executive_summary || []).map((summary: string, idx: number) => (
                         <li key={idx} className="leading-relaxed">{summary}</li>
                       ))}
@@ -2354,7 +2355,7 @@ function Schedule({
                   </div>
                 </div>
               ) : (
-                <div className="rounded-xl bg-white/80 p-3 text-slate-500 italic text-[11px]">
+                <div className="rounded-xl bg-white/80 dark:bg-slate-900/80 p-3 text-slate-500 dark:text-slate-400 italic text-[11px]">
                   AI Astrological pre-flight briefing is generating automatically based on client birth chart...
                 </div>
               )}
@@ -2362,12 +2363,12 @@ function Schedule({
 
             {/* Consultation Focus Pillar */}
             {dossierAppointment.consultation_pillar && (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-3.5 space-y-1">
-                <p className="text-[10px] uppercase font-bold text-amber-700 flex items-center gap-1.5">
-                  <Compass className="size-3.5 text-amber-600" />
+              <div className="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-950/40 p-3.5 space-y-1 transition-colors">
+                <p className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                  <Compass className="size-3.5 text-amber-600 dark:text-amber-400" />
                   <span>Primary Consultation Focus Pillar</span>
                 </p>
-                <p className="font-bold text-slate-900 text-sm">
+                <p className="font-bold text-slate-900 dark:text-amber-100 text-sm">
                   {PILLAR_LABELS[dossierAppointment.consultation_pillar]?.icon}{" "}
                   {PILLAR_LABELS[dossierAppointment.consultation_pillar]?.label || dossierAppointment.consultation_pillar}
                 </p>
@@ -2375,72 +2376,72 @@ function Schedule({
             )}
 
             {/* Birth Details Snapshot */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-2.5">
-              <p className="text-[11px] font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                <Calendar className="size-3.5 text-amber-600" />
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-3.5 space-y-2.5 transition-colors">
+              <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                <Calendar className="size-3.5 text-amber-600 dark:text-amber-400" />
                 <span>Birth Chart Coordinates</span>
               </p>
 
               {dossierAppointment.birth_details ? (
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
-                    <span className="text-[10px] text-slate-400 block">Date of Birth</span>
-                    <span className="font-bold text-slate-800">
+                  <div className="rounded-xl bg-slate-50 dark:bg-slate-800/80 p-2.5 border border-slate-100 dark:border-slate-700/60">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-semibold">Date of Birth</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-100">
                       {dossierAppointment.birth_details.date_of_birth || dossierAppointment.birth_details.dob || "Not specified"}
                     </span>
                   </div>
-                  <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
-                    <span className="text-[10px] text-slate-400 block">Time of Birth</span>
-                    <span className="font-bold text-slate-800">
+                  <div className="rounded-xl bg-slate-50 dark:bg-slate-800/80 p-2.5 border border-slate-100 dark:border-slate-700/60">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-semibold">Time of Birth</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-100">
                       {dossierAppointment.birth_details.time_of_birth || dossierAppointment.birth_details.tob || "Not specified"}
                     </span>
                   </div>
-                  <div className="col-span-2 rounded-xl bg-slate-50 p-2.5 border border-slate-100">
-                    <span className="text-[10px] text-slate-400 block">Place of Birth</span>
-                    <span className="font-bold text-slate-800">
+                  <div className="col-span-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 p-2.5 border border-slate-100 dark:border-slate-700/60">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-semibold">Place of Birth</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-100">
                       {dossierAppointment.birth_details.place_of_birth || dossierAppointment.birth_details.pob || "Not specified"}
                     </span>
                   </div>
                 </div>
               ) : (
-                <p className="text-slate-400 italic">No specific birth coordinates submitted.</p>
+                <p className="text-slate-400 dark:text-slate-500 italic">No specific birth coordinates submitted.</p>
               )}
             </div>
 
             {/* Client Notes & Inquiries */}
             {dossierAppointment.user_note && (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-3.5 space-y-1">
-                <p className="text-[10px] uppercase font-bold text-slate-500">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 p-3.5 space-y-1 transition-colors">
+                <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
                   Client Specific Inquiries / Questions
                 </p>
-                <p className="text-slate-800 leading-relaxed italic bg-white p-2.5 rounded-xl border border-slate-200">
+                <p className="text-slate-800 dark:text-slate-100 leading-relaxed italic bg-white dark:bg-slate-800/90 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
                   “{dossierAppointment.user_note}”
                 </p>
               </div>
             )}
 
             {/* Complimentary Remedy Follow-up Pass Section */}
-            <div className="rounded-2xl border border-amber-300/80 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-500/15 p-4 space-y-3">
+            <div className="rounded-2xl border border-amber-300/80 dark:border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-500/15 dark:from-amber-950/60 dark:via-orange-950/30 dark:to-slate-900/90 p-4 space-y-3 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="size-4 text-amber-700" />
-                  <span className="font-bold text-slate-900 text-xs">
+                  <Sparkles className="size-4 text-amber-700 dark:text-amber-400" />
+                  <span className="font-bold text-slate-900 dark:text-amber-200 text-xs">
                     Remedy Clarification Pass (সৌজন্যমূলক ফলো-আপ উইন্ডো)
                   </span>
                 </div>
                 {dossierAppointment.follow_up_pass_enabled ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
                     Active · {dossierAppointment.follow_up_messages_used || 0}/{dossierAppointment.follow_up_max_messages || 3} Questions Used
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                     Not Active
                   </span>
                 )}
               </div>
 
               {dossierAppointment.follow_up_pass_enabled && dossierAppointment.follow_up_expires_at && (
-                <p className="text-[11px] text-amber-900 font-medium flex items-center justify-between">
+                <p className="text-[11px] text-amber-900 dark:text-amber-300 font-medium flex items-center justify-between">
                   <span>Validity: {dossierAppointment.follow_up_window_days || 7} Days</span>
                   <span>Expires: {new Date(dossierAppointment.follow_up_expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
                 </p>
@@ -2448,7 +2449,7 @@ function Schedule({
 
               {/* Follow-up Messages Thread */}
               {dossierAppointment.follow_up_thread && dossierAppointment.follow_up_thread.length > 0 ? (
-                <div className="space-y-2 rounded-xl bg-white p-3 border border-amber-200/80 max-h-56 overflow-y-auto">
+                <div className="space-y-2 rounded-xl bg-white dark:bg-slate-900/90 p-3 border border-amber-200/80 dark:border-amber-500/30 max-h-56 overflow-y-auto">
                   {dossierAppointment.follow_up_thread.map((msg: any) => {
                     const isAstro = msg.sender_role === "astrologer";
                     return (
@@ -2457,11 +2458,11 @@ function Schedule({
                         className={cn(
                           "rounded-xl p-2.5 text-xs max-w-[85%]",
                           isAstro
-                            ? "ml-auto bg-amber-50 border border-amber-200 text-amber-950"
-                            : "mr-auto bg-slate-100 text-slate-900"
+                            ? "ml-auto bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-500/40 text-amber-950 dark:text-amber-100"
+                            : "mr-auto bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                         )}
                       >
-                        <div className="flex items-center justify-between gap-2 text-[10px] font-bold text-slate-500 mb-1">
+                        <div className="flex items-center justify-between gap-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
                           <span>{msg.sender_name} ({isAstro ? "Panditji" : "Client"})</span>
                           <span>{new Date(msg.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                         </div>
@@ -2471,7 +2472,7 @@ function Schedule({
                   })}
                 </div>
               ) : (
-                <p className="text-[11px] text-slate-500 italic bg-white/60 p-2.5 rounded-xl border border-amber-200/60">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 italic bg-white/60 dark:bg-slate-900/60 p-2.5 rounded-xl border border-amber-200/60 dark:border-amber-500/30">
                   {dossierAppointment.follow_up_pass_enabled
                     ? "Seeker has not asked any remedy questions yet."
                     : "No remedy clarification pass has been issued for this seeker."}
@@ -2487,7 +2488,7 @@ function Schedule({
                       placeholder="Write guidance / answer to seeker..."
                       value={followUpReplyText}
                       onChange={(e) => setFollowUpReplyText(e.target.value)}
-                      className="flex-1 rounded-xl border border-amber-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      className="flex-1 rounded-xl border border-amber-300 dark:border-amber-500/50 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
                     />
                     <Button
                       size="sm"
@@ -2526,9 +2527,9 @@ function Schedule({
                       setPassNotes(dossierAppointment.follow_up_notes || "");
                       setIssuePassAppointment(dossierAppointment);
                     }}
-                    className="text-amber-800 border-amber-300 hover:bg-amber-100 text-xs font-semibold"
+                    className="text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-950/40 text-xs font-semibold"
                   >
-                    <Sparkles className="size-3.5 mr-1 text-amber-600" />
+                    <Sparkles className="size-3.5 mr-1 text-amber-600 dark:text-amber-400" />
                     {dossierAppointment.follow_up_pass_enabled ? "Adjust / Extend Pass" : "Issue Follow-up Pass"}
                   </Button>
                 </div>
@@ -2536,20 +2537,20 @@ function Schedule({
             </div>
 
             {/* 🔒 Private Astrological Dossier / Vault (গোপন জ্যোতিষী নোটস) */}
-            <div className="rounded-2xl border-2 border-amber-300/80 bg-gradient-to-br from-amber-50/70 via-orange-50/40 to-slate-50 p-4 space-y-3 shadow-sm">
+            <div className="rounded-2xl border-2 border-amber-300/80 dark:border-amber-500/40 bg-gradient-to-br from-amber-50/70 via-orange-50/40 to-slate-50 dark:from-amber-950/60 dark:via-slate-900 dark:to-slate-950 p-4 space-y-3 shadow-sm transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="size-7 rounded-lg bg-amber-500/20 text-amber-700 flex items-center justify-center font-bold">
-                    <Lock className="size-4 text-amber-700" />
+                  <div className="size-7 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold">
+                    <Lock className="size-4 text-amber-700 dark:text-amber-400" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                    <h4 className="font-bold text-slate-900 dark:text-amber-300 text-xs flex items-center gap-1.5">
                       <span>Private Astrological Vault (গোপন জ্যোতিষী নোটস)</span>
-                      <span className="text-[10px] font-semibold text-amber-700 bg-amber-100/90 border border-amber-300 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-900/60 border border-amber-300 dark:border-amber-600/60 px-2 py-0.5 rounded-full">
                         100% Confidential
                       </span>
                     </h4>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
                       Strictly invisible to seeker. Document psychological observations, sensitive doshas, or hidden astrological insights.
                     </p>
                   </div>
@@ -2563,12 +2564,12 @@ function Schedule({
                   placeholder="গোপন পর্যবেক্ষণ লিখে রাখুন: যেমন মানসিক অস্থিরতা, রাহু-চন্দ্রের গোচর প্রতিক্রিয়া, পারিবারিক সংবেদনশীল তথ্য বা পরবর্তী ভিজিটের জন্য গোপন প্রস্তুতি..."
                   value={privateNotesText}
                   onChange={(e) => setPrivateNotesText(e.target.value)}
-                  className="w-full rounded-xl border border-amber-200/90 bg-white p-3 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 leading-relaxed font-sans shadow-inner"
+                  className="w-full rounded-xl border border-amber-200/90 dark:border-amber-500/40 bg-white dark:bg-slate-900 p-3 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 leading-relaxed font-sans shadow-inner"
                 />
-                <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
+                <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 px-1">
                   <span>
                     {dossierAppointment.astrologer_private_notes_updated_at ? (
-                      <span className="text-emerald-700 font-medium">
+                      <span className="text-emerald-700 dark:text-emerald-400 font-medium">
                         Last saved: {new Date(dossierAppointment.astrologer_private_notes_updated_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
                       </span>
                     ) : (

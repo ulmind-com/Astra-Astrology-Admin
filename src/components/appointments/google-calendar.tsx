@@ -243,7 +243,7 @@ export function GoogleCalendarSuite({
   };
 
   return (
-    <div className="rounded-3xl border border-slate-200/90 bg-white shadow-[0_16px_40px_rgba(20,25,45,0.06)] overflow-hidden">
+    <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0c1220] shadow-[0_16px_40px_rgba(20,25,45,0.06)] dark:shadow-2xl overflow-hidden">
       {/* 1. Live 15-Minute Countdown Ticker HUD Banner */}
       {upcomingUrgentBooking && (
         <div className="relative overflow-hidden bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 px-5 py-3 text-white shadow-inner flex flex-wrap items-center justify-between gap-3">
@@ -275,7 +275,7 @@ export function GoogleCalendarSuite({
       )}
 
       {/* 2. Top Google Calendar Control Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-[#10182b] transition-colors">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#0284C7] to-[#0369A1] text-white shadow-[0_4px_12px_rgba(3,105,161,0.25)]">
             <CalendarIcon className="size-5 stroke-[2.2]" />
@@ -283,14 +283,14 @@ export function GoogleCalendarSuite({
 
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-display text-lg font-bold text-slate-900 tracking-tight">
+              <h2 className="font-display text-lg font-bold text-slate-900 dark:text-white tracking-tight">
                 {periodTitle}
               </h2>
-              <span className="hidden sm:inline-block rounded-full bg-sky-100 px-2.5 py-0.5 text-[10px] font-bold text-sky-800">
+              <span className="hidden sm:inline-block rounded-full bg-sky-100 dark:bg-sky-950/80 px-2.5 py-0.5 text-[10px] font-bold text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800/80">
                 IST (GMT+05:30)
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               Google Calendar visual view of your open availability & confirmed client consultations.
             </p>
           </div>
@@ -299,19 +299,19 @@ export function GoogleCalendarSuite({
         {/* View Switchers & Navigation Controls */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Navigation group */}
-          <div className="inline-flex items-center rounded-2xl border border-slate-200 bg-white p-1 shadow-2xs">
+          <div className="inline-flex items-center rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/90 p-1 shadow-2xs">
             <button
               type="button"
               onClick={jumpToday}
-              className="rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer"
+              className="rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/70 transition-all cursor-pointer"
             >
               Today
             </button>
-            <div className="h-4 w-px bg-slate-200 mx-1" />
+            <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
             <button
               type="button"
               onClick={prevPeriod}
-              className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
+              className="p-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-xl transition-all cursor-pointer"
               title="Previous"
             >
               <ChevronLeft className="size-4" />
@@ -319,7 +319,7 @@ export function GoogleCalendarSuite({
             <button
               type="button"
               onClick={nextPeriod}
-              className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
+              className="p-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-xl transition-all cursor-pointer"
               title="Next"
             >
               <ChevronRight className="size-4" />
@@ -327,7 +327,7 @@ export function GoogleCalendarSuite({
           </div>
 
           {/* View selector buttons */}
-          <div className="inline-flex items-center rounded-2xl border border-slate-200 bg-slate-100/80 p-1 shadow-2xs text-xs font-bold">
+          <div className="inline-flex items-center rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-100/80 dark:bg-slate-800/90 p-1 shadow-2xs text-xs font-bold">
             {(["week", "month", "day", "agenda"] as CalendarViewType[]).map((v) => (
               <button
                 key={v}
@@ -336,8 +336,8 @@ export function GoogleCalendarSuite({
                 className={cn(
                   "rounded-xl px-3 py-1.5 capitalize transition-all cursor-pointer",
                   view === v
-                    ? "bg-white text-slate-900 shadow-xs ring-1 ring-slate-900/5 font-extrabold"
-                    : "text-slate-600 hover:text-slate-900",
+                    ? "bg-white dark:bg-amber-500 text-slate-900 dark:text-slate-950 shadow-xs ring-1 ring-slate-900/5 font-extrabold"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200",
                 )}
               >
                 {v}
@@ -407,19 +407,19 @@ export function GoogleCalendarSuite({
         description={`Set open booking hours for ${quickSlotModal.date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}.`}
       >
         <div className="space-y-5 pt-2">
-          <div className="rounded-2xl border border-sky-200/70 bg-sky-50/50 p-4 space-y-2 text-xs text-sky-950">
-            <div className="flex items-center gap-2 font-bold text-sky-900">
-              <Sparkles className="size-4 text-sky-600" />
+          <div className="rounded-2xl border border-sky-200/80 dark:border-sky-800/80 bg-sky-50/70 dark:bg-sky-950/60 p-4 space-y-2 text-xs text-sky-950 dark:text-sky-200 transition-colors">
+            <div className="flex items-center gap-2 font-bold text-sky-900 dark:text-sky-300">
+              <Sparkles className="size-4 text-sky-600 dark:text-sky-400" />
               <span>Fast Calendar Slot Activation</span>
             </div>
-            <p className="text-slate-600 leading-relaxed">
+            <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
               Opening this window permits clients to reserve 15, 30, or 60-minute consultations with you during this timeframe.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Start Time (IST)</label>
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Start Time (IST)</label>
               <select
                 value={quickSlotModal.startHour}
                 onChange={(e) =>
@@ -429,7 +429,7 @@ export function GoogleCalendarSuite({
                     endHour: Math.max(prev.endHour, Number(e.target.value) + 1),
                   }))
                 }
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100"
               >
                 {HOURS.map((h) => {
                   const d = new Date();
@@ -444,13 +444,13 @@ export function GoogleCalendarSuite({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">End Time (IST)</label>
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-200">End Time (IST)</label>
               <select
                 value={quickSlotModal.endHour}
                 onChange={(e) =>
                   setQuickSlotModal((prev) => ({ ...prev, endHour: Number(e.target.value) }))
                 }
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100"
               >
                 {HOURS.filter((h) => h > quickSlotModal.startHour).map((h) => {
                   const d = new Date();
@@ -466,7 +466,7 @@ export function GoogleCalendarSuite({
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
             <Button
               variant="outline"
               size="sm"
@@ -526,8 +526,8 @@ function WeekCalendarView({
   return (
     <div className="flex flex-col flex-1 select-none">
       {/* Week Header Row */}
-      <div className="grid grid-cols-[64px_repeat(7,1fr)] border-b border-slate-200 bg-white sticky top-0 z-20 shadow-xs">
-        <div className="p-3 text-center border-r border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-end justify-center pb-2">
+      <div className="grid grid-cols-[64px_repeat(7,1fr)] border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#10182b] sticky top-0 z-20 shadow-xs transition-colors">
+        <div className="p-3 text-center border-r border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-end justify-center pb-2">
           Time
         </div>
 
@@ -540,14 +540,16 @@ function WeekCalendarView({
             <div
               key={d.toISOString()}
               className={cn(
-                "p-2.5 text-center border-r border-slate-100 transition-colors",
-                isToday ? "bg-amber-50/50" : "bg-white",
+                "p-2.5 text-center border-r border-slate-100 dark:border-slate-800 transition-colors",
+                isToday
+                  ? "bg-amber-50/70 dark:bg-amber-950/40"
+                  : "bg-white dark:bg-[#10182b]",
               )}
             >
               <p
                 className={cn(
                   "text-[10px] font-extrabold uppercase tracking-wider",
-                  isToday ? "text-amber-600" : "text-slate-400",
+                  isToday ? "text-amber-600 dark:text-amber-400" : "text-slate-400 dark:text-slate-400",
                 )}
               >
                 {dayName}
@@ -557,8 +559,8 @@ function WeekCalendarView({
                   className={cn(
                     "inline-flex size-8 items-center justify-center rounded-full font-display text-sm font-black transition-all",
                     isToday
-                      ? "bg-amber-500 text-white shadow-[0_4px_10px_rgba(245,158,11,0.4)]"
-                      : "text-slate-800",
+                      ? "bg-amber-500 text-slate-950 shadow-[0_4px_12px_rgba(245,158,11,0.4)]"
+                      : "text-slate-800 dark:text-slate-100",
                   )}
                 >
                   {dayNum}
@@ -572,10 +574,10 @@ function WeekCalendarView({
       {/* Week Scrollable Time Grid */}
       <div
         ref={scrollContainerRef}
-        className="relative overflow-y-auto max-h-[640px] grid grid-cols-[64px_repeat(7,1fr)] bg-slate-50/20"
+        className="relative overflow-y-auto max-h-[640px] grid grid-cols-[64px_repeat(7,1fr)] bg-white dark:bg-[#0a0f1d] transition-colors"
       >
         {/* Time labels column */}
-        <div className="border-r border-slate-100 bg-white text-right pr-2 select-none">
+        <div className="border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-[#0d1424] text-right pr-2 select-none transition-colors">
           {HOURS.map((h) => {
             const timeDate = new Date();
             timeDate.setHours(h, 0, 0, 0);
@@ -583,7 +585,7 @@ function WeekCalendarView({
               <div
                 key={h}
                 style={{ height: `${HOUR_HEIGHT}px` }}
-                className="relative -top-2 text-[10px] font-bold text-slate-400"
+                className="relative -top-2 text-[10px] font-bold text-slate-400 dark:text-slate-400"
               >
                 {formatTime(timeDate)}
               </div>
@@ -622,8 +624,10 @@ function WeekCalendarView({
             <div
               key={dateKey}
               className={cn(
-                "relative border-r border-slate-100 transition-colors group",
-                isToday ? "bg-amber-50/20" : "hover:bg-slate-50/40",
+                "relative border-r border-slate-100 dark:border-slate-800 transition-colors group",
+                isToday
+                  ? "bg-amber-50/25 dark:bg-amber-950/20"
+                  : "bg-white dark:bg-[#0a0f1d] hover:bg-slate-50/60 dark:hover:bg-slate-900/50",
               )}
               style={{ height: `${HOURS.length * HOUR_HEIGHT}px` }}
             >
@@ -633,7 +637,7 @@ function WeekCalendarView({
                   key={h}
                   onClick={() => onSlotClick(colDate, h)}
                   style={{ height: `${HOUR_HEIGHT}px` }}
-                  className="border-b border-slate-100/90 cursor-pointer hover:bg-sky-50/30 transition-colors relative"
+                  className="border-b border-slate-100 dark:border-slate-800/70 cursor-pointer hover:bg-sky-50/40 dark:hover:bg-sky-950/40 transition-colors relative"
                   title={`Click to open availability at ${h}:00 on ${dateKey}`}
                 />
               ))}
@@ -651,10 +655,10 @@ function WeekCalendarView({
                   <div
                     key={w.id}
                     style={{ top: `${top}px`, height: `${height}px` }}
-                    className="absolute inset-x-1 rounded-xl bg-gradient-to-b from-sky-500/10 to-indigo-500/10 border border-sky-400/30 p-1.5 pointer-events-none z-5 overflow-hidden"
+                    className="absolute inset-x-1 rounded-xl bg-gradient-to-b from-sky-500/10 to-indigo-500/10 dark:from-sky-950/60 dark:to-indigo-950/60 border border-sky-400/40 dark:border-sky-500/50 p-1.5 pointer-events-none z-5 overflow-hidden shadow-xs"
                   >
-                    <span className="inline-flex items-center gap-1 rounded-md bg-sky-100/80 px-1.5 py-0.2 text-[9px] font-bold text-sky-800">
-                      <Sparkles className="size-2.5 text-sky-600" />
+                    <span className="inline-flex items-center gap-1 rounded-md bg-sky-100/90 dark:bg-sky-900/90 px-1.5 py-0.5 text-[9px] font-bold text-sky-800 dark:text-sky-200 border border-sky-300/40 dark:border-sky-500/40">
+                      <Sparkles className="size-2.5 text-sky-600 dark:text-sky-400" />
                       <span>Open: {formatTime(s)} – {formatTime(e)}</span>
                     </span>
                   </div>
@@ -686,17 +690,17 @@ function WeekCalendarView({
                     className={cn(
                       "absolute inset-x-1.5 rounded-xl p-2 cursor-pointer z-10 transition-all shadow-xs overflow-hidden flex flex-col justify-between border",
                       isCancelled
-                        ? "bg-rose-50 text-rose-800 border-rose-300 opacity-70"
+                        ? "bg-rose-50 dark:bg-rose-950/80 text-rose-800 dark:text-rose-200 border-rose-300 dark:border-rose-700/60 opacity-75"
                         : isNoShow
-                        ? "bg-amber-50 text-amber-950 border-amber-400 hover:shadow-md"
+                        ? "bg-amber-50 dark:bg-amber-950/80 text-amber-950 dark:text-amber-100 border-amber-400 dark:border-amber-600/60 hover:shadow-md"
                         : isCompleted
-                        ? "bg-emerald-50 text-emerald-900 border-emerald-300 hover:shadow-md"
-                        : "bg-gradient-to-tr from-sky-600 to-indigo-600 text-white border-sky-400 hover:shadow-lg hover:scale-[1.01]",
+                        ? "bg-emerald-50 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-100 border-emerald-300 dark:border-emerald-600/60 hover:shadow-md"
+                        : "bg-gradient-to-tr from-sky-600 to-indigo-600 text-white border-sky-400 dark:border-sky-400/80 shadow-md hover:shadow-xl hover:scale-[1.01]",
                     )}
                   >
                     <div>
                       <div className="flex items-center justify-between gap-1 leading-tight">
-                        <span className="font-bold text-[11px] truncate">
+                        <span className="font-extrabold text-[11px] truncate text-white drop-shadow-2xs">
                           {b.peer?.name || "Client"}
                         </span>
                         {pillar && (
@@ -708,13 +712,13 @@ function WeekCalendarView({
 
                       <p
                         className={cn(
-                          "text-[9px] font-medium truncate mt-0.5",
+                          "text-[9px] font-semibold truncate mt-0.5",
                           isCancelled
-                            ? "text-rose-600"
+                            ? "text-rose-600 dark:text-rose-300"
                             : isNoShow
-                            ? "text-amber-800"
+                            ? "text-amber-800 dark:text-amber-200"
                             : isCompleted
-                            ? "text-emerald-700"
+                            ? "text-emerald-700 dark:text-emerald-200"
                             : "text-sky-100",
                         )}
                       >
@@ -798,7 +802,7 @@ function MonthCalendarView({
   return (
     <div className="flex flex-col flex-1">
       {/* Weekday Names Header */}
-      <div className="grid grid-cols-7 border-b border-slate-200 bg-white text-center text-[10px] font-bold uppercase tracking-wider text-slate-400 py-2.5">
+      <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#10182b] text-center text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 py-2.5 transition-colors">
         <span>Mon</span>
         <span>Tue</span>
         <span>Wed</span>
@@ -809,7 +813,7 @@ function MonthCalendarView({
       </div>
 
       {/* Days Grid */}
-      <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-100 gap-px">
+      <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800/80 bg-slate-200 dark:bg-slate-800/80 gap-px">
         {days.map(({ date, isCurrentMonth }) => {
           const key = formatDateKey(date);
           const isToday = key === todayKey;
@@ -822,23 +826,23 @@ function MonthCalendarView({
               key={key}
               onClick={() => onSelectDate(date)}
               className={cn(
-                "min-h-[110px] p-2 bg-white flex flex-col justify-between cursor-pointer transition-colors hover:bg-sky-50/20 group",
-                !isCurrentMonth && "bg-slate-50/60 text-slate-400",
-                isToday && "ring-2 ring-inset ring-amber-400",
+                "min-h-[110px] p-2 bg-white dark:bg-[#0c1220] flex flex-col justify-between cursor-pointer transition-colors hover:bg-sky-50/30 dark:hover:bg-slate-800/60 group",
+                !isCurrentMonth && "bg-slate-50/70 text-slate-400 dark:bg-[#090d18] dark:text-slate-600",
+                isToday && "ring-2 ring-inset ring-amber-400 dark:ring-amber-500",
               )}
             >
               <div className="flex items-center justify-between">
                 <span
                   className={cn(
                     "inline-flex size-6 items-center justify-center rounded-full text-xs font-bold",
-                    isToday ? "bg-amber-500 text-white font-black" : "text-slate-700",
+                    isToday ? "bg-amber-500 text-slate-950 font-black shadow-xs" : "text-slate-700 dark:text-slate-200",
                   )}
                 >
                   {date.getDate()}
                 </span>
 
                 {dayWindows.length > 0 && (
-                  <span className="size-2 rounded-full bg-sky-500" title="Open Window active" />
+                  <span className="size-2 rounded-full bg-sky-500 shadow-xs" title="Open Window active" />
                 )}
               </div>
 
@@ -854,10 +858,10 @@ function MonthCalendarView({
                     className={cn(
                       "rounded-md px-1.5 py-0.5 text-[9px] font-bold truncate flex items-center justify-between gap-1",
                       b.status === "booked"
-                        ? "bg-sky-100 text-sky-900 border border-sky-300"
+                        ? "bg-sky-100 text-sky-900 border border-sky-300 dark:bg-sky-950/90 dark:text-sky-200 dark:border-sky-700"
                         : b.status === "completed"
-                        ? "bg-emerald-100 text-emerald-900"
-                        : "bg-slate-100 text-slate-500 line-through",
+                        ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700"
+                        : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 line-through",
                     )}
                   >
                     <span className="truncate">{b.peer?.name || "Client"}</span>
@@ -868,13 +872,13 @@ function MonthCalendarView({
                 ))}
 
                 {dayBookings.length > 3 && (
-                  <p className="text-[9px] font-bold text-slate-400 pl-1">
+                  <p className="text-[9px] font-bold text-slate-400 dark:text-slate-400 pl-1">
                     +{dayBookings.length - 3} more
                   </p>
                 )}
               </div>
 
-              <div className="text-[9px] text-slate-400 group-hover:text-sky-600 transition-colors pt-1">
+              <div className="text-[9px] text-slate-400 dark:text-slate-400 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors pt-1">
                 {dayWindows.length > 0 ? `${dayWindows.length} open window(s)` : ""}
               </div>
             </div>
@@ -918,11 +922,11 @@ function DayCalendarView({
   const dayWindows = windows.filter((w) => formatDateKey(new Date(w.starts_at)) === dateKey);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-white dark:bg-[#0c1220] transition-colors">
       {/* Day Overview Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
         <div>
-          <h3 className="font-display text-lg font-bold text-slate-900">
+          <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">
             {date.toLocaleDateString("en-US", {
               weekday: "long",
               month: "long",
@@ -930,7 +934,7 @@ function DayCalendarView({
               year: "numeric",
             })}
           </h3>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {dayBookings.length} booking(s) scheduled · {dayWindows.length} open window(s) active
           </p>
         </div>
@@ -966,19 +970,19 @@ function DayCalendarView({
               className={cn(
                 "rounded-2xl border p-4 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4",
                 slotBookings.length > 0
-                  ? "bg-white border-sky-300 shadow-sm"
+                  ? "bg-white dark:bg-slate-900/90 border-sky-300 dark:border-sky-500/60 shadow-xs"
                   : isWindowActive
-                  ? "bg-sky-50/40 border-sky-200"
-                  : "bg-slate-50/30 border-slate-200/70 hover:bg-slate-50",
+                  ? "bg-sky-50/50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800/80"
+                  : "bg-slate-50/40 dark:bg-slate-900/40 border-slate-200/70 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/50",
               )}
             >
               <div className="flex items-center gap-3">
-                <span className="font-display text-sm font-bold text-slate-700 min-w-[70px]">
+                <span className="font-display text-sm font-bold text-slate-700 dark:text-slate-300 min-w-[70px]">
                   {formatTime(hourStart)}
                 </span>
 
                 {isWindowActive && (
-                  <span className="rounded-full bg-sky-100 text-sky-800 px-2.5 py-0.5 text-[10px] font-bold">
+                  <span className="rounded-full bg-sky-100 dark:bg-sky-900/80 text-sky-800 dark:text-sky-200 border border-sky-300/40 dark:border-sky-700 px-2.5 py-0.5 text-[10px] font-bold">
                     Open Window
                   </span>
                 )}
@@ -990,10 +994,10 @@ function DayCalendarView({
                     <div
                       key={b.id}
                       onClick={() => onOpenSession(b)}
-                      className="rounded-xl border border-slate-200 p-3 bg-white hover:border-sky-400 cursor-pointer transition-all shadow-2xs space-y-2"
+                      className="rounded-xl border border-slate-200 dark:border-slate-700/80 p-3 bg-white dark:bg-slate-800/90 hover:border-sky-400 dark:hover:border-sky-400 cursor-pointer transition-all shadow-2xs space-y-2"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-slate-900">{b.peer?.name || "Client"}</span>
+                        <span className="font-bold text-xs text-slate-900 dark:text-white">{b.peer?.name || "Client"}</span>
                         {b.is_no_show ? (
                           <Badge tone="gold">Client No-Show</Badge>
                         ) : (
@@ -1003,18 +1007,18 @@ function DayCalendarView({
                         )}
                       </div>
 
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         {formatTime(new Date(b.starts_at))} – {formatTime(new Date(b.ends_at))} ({b.minutes} min)
                       </p>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700 text-xs">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             onOpenPrescription(b);
                           }}
-                          className="text-amber-700 font-bold hover:underline"
+                          className="text-amber-700 dark:text-amber-400 font-bold hover:underline"
                         >
                           📜 Prescription
                         </button>
@@ -1024,7 +1028,7 @@ function DayCalendarView({
                           target="_blank"
                           rel="noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="text-sky-600 font-bold hover:underline"
+                          className="text-sky-600 dark:text-sky-400 font-bold hover:underline"
                         >
                           📅 Add to GCal
                         </a>
@@ -1036,7 +1040,7 @@ function DayCalendarView({
                 <button
                   type="button"
                   onClick={() => onSlotClick(h)}
-                  className="text-xs font-semibold text-slate-400 hover:text-sky-600 transition-colors"
+                  className="text-xs font-semibold text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
                 >
                   + Click to open slot at this hour
                 </button>
@@ -1075,15 +1079,15 @@ function AgendaCalendarView({
 
   if (!sorted.length) {
     return (
-      <div className="p-12 text-center text-slate-400">
-        <Clock className="size-10 mx-auto text-slate-300 mb-2" />
-        <p className="text-sm font-bold text-slate-700">No scheduled appointments on record</p>
+      <div className="p-12 text-center text-slate-400 dark:text-slate-500">
+        <Clock className="size-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+        <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No scheduled appointments on record</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-6 space-y-4 bg-white dark:bg-[#0c1220] transition-colors">
       {sorted.map((b) => {
         const s = new Date(b.starts_at);
         const e = new Date(b.ends_at);
@@ -1093,13 +1097,13 @@ function AgendaCalendarView({
           <div
             key={b.id}
             onClick={() => onOpenSession(b)}
-            className="rounded-2xl border border-slate-200 bg-white p-4.5 hover:border-slate-300 transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs"
+            className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-4.5 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs"
           >
             <div className="flex items-start gap-3.5">
               <Avatar name={b.peer?.name || "Client"} src={b.peer?.avatar_url ?? undefined} size="md" />
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-sm text-slate-900">{b.peer?.name || "Client"}</h4>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">{b.peer?.name || "Client"}</h4>
                   {b.is_no_show ? (
                     <Badge tone="gold">Client No-Show</Badge>
                   ) : (
@@ -1108,11 +1112,11 @@ function AgendaCalendarView({
                     </Badge>
                   )}
                 </div>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                   📅 {s.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {formatTime(s)} – {formatTime(e)} ({b.minutes} mins)
                 </p>
                 {pillar && (
-                  <p className="text-xs text-amber-700 font-semibold mt-1">
+                  <p className="text-xs text-amber-700 dark:text-amber-400 font-semibold mt-1">
                     {pillar.icon} {pillar.label}
                   </p>
                 )}
@@ -1125,7 +1129,7 @@ function AgendaCalendarView({
                 target="_blank"
                 rel="noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
               >
                 📅 Add to GCal
               </a>
