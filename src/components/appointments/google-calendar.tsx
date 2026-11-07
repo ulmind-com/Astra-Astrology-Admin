@@ -17,6 +17,7 @@ import {
   PhoneCall,
   Plus,
   Sparkles,
+  Trash2,
   TrendingUp,
   User,
   Video,
@@ -34,12 +35,13 @@ export type CalendarViewType = "week" | "month" | "day" | "agenda";
 
 export interface GoogleCalendarProps {
   bookings: Appointment[];
-  windows: Array<{ id: string; day: string; starts_at: string; ends_at: string }>;
+  windows: Array<{ id: string; day: string; starts_at: string; ends_at: string; is_tatkal?: boolean; custom_title?: string | null }>;
   onOpenSession: (appointment: Appointment) => void;
   onOpenPrescription: (appointment: Appointment) => void;
   onCancelAppointment: (appointmentId: string) => void;
   onCompleteAppointment: (appointmentId: string) => void;
   onAddWindow: (fromIso: string, toIso: string) => Promise<void>;
+  onRemoveWindow?: (id: string) => Promise<void> | void;
   isAstrologer?: boolean;
 }
 
@@ -72,10 +74,35 @@ export function GoogleCalendarSuite({
   onCancelAppointment,
   onCompleteAppointment,
   onAddWindow,
+  onRemoveWindow,
   isAstrologer = true,
 }: GoogleCalendarProps) {
   const [currentDate, setCurrentDate] = React.useState<Date>(() => new Date());
   const [view, setView] = React.useState<CalendarViewType>("week");
+
+  // Delete window state
+  const [deleteTargetWindow, setDeleteTargetWindow] = React.useState<{
+    id: string;
+    starts_at: string;
+    ends_at: string;
+    day: string;
+  } | null>(null);
+  const [isDeletingWindow, setIsDeletingWindow] = React.useState(false);
+  const [manageSlotsModalOpen, setManageSlotsModalOpen] = React.useState(false);
+
+  const handleDeleteWindow = async () => {
+    if (!deleteTargetWindow || !onRemoveWindow) return;
+    setIsDeletingWindow(true);
+    try {
+      await onRemoveWindow(deleteTargetWindow.id);
+      toast.success("Availability window removed successfully!");
+      setDeleteTargetWindow(null);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to remove availability window.");
+    } finally {
+      setIsDeletingWindow(false);
+    }
+  };
 
   // Quick slot opening modal state
   const [quickSlotModal, setQuickSlotModal] = React.useState<{
@@ -344,6 +371,19 @@ export function GoogleCalendarSuite({
               </button>
             ))}
           </div>
+
+          {/* Quick Active Slots Manager Button */}
+          {onRemoveWindow && (
+            <button
+              type="button"
+              onClick={() => setManageSlotsModalOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-2xl border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-800 hover:bg-sky-100 transition-all cursor-pointer shadow-2xs"
+              title="Manage and delete active consultation slots"
+            >
+              <Clock className="size-3.5 text-sky-600" />
+              <span>Active Slots ({windows.length})</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -357,6 +397,7 @@ export function GoogleCalendarSuite({
           onSlotClick={handleSlotClick}
           onOpenSession={onOpenSession}
           getGoogleCalendarUrl={getGoogleCalendarUrl}
+          onDeleteWindow={(w) => setDeleteTargetWindow(w)}
         />
       )}
 
@@ -385,6 +426,7 @@ export function GoogleCalendarSuite({
           onCancelAppointment={onCancelAppointment}
           onCompleteAppointment={onCompleteAppointment}
           getGoogleCalendarUrl={getGoogleCalendarUrl}
+          onDeleteWindow={(w) => setDeleteTargetWindow(w)}
         />
       )}
 
@@ -466,6 +508,49 @@ export function GoogleCalendarSuite({
             </div>
           </div>
 
+          {/* Already open slots on this selected date */}
+          {(() => {
+            const dateKey = formatDateKey(quickSlotModal.date);
+            const dayWins = windows.filter((w) => formatDateKey(new Date(w.starts_at)) === dateKey);
+            if (dayWins.length === 0) return null;
+            return (
+              <div className="space-y-2 rounded-2xl border border-sky-200/80 bg-sky-50/60 dark:border-sky-800/60 dark:bg-sky-950/40 p-3.5">
+                <div className="text-[11px] font-bold text-sky-950 dark:text-sky-200 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="size-3 text-sky-600 dark:text-sky-400" />
+                    <span>Already Open Slots on this Day:</span>
+                  </span>
+                  <span className="text-sky-700 dark:text-sky-300 font-semibold">{dayWins.length} slot(s) active</span>
+                </div>
+                <div className="space-y-1.5 max-h-36 overflow-y-auto pr-0.5">
+                  {dayWins.map((w) => (
+                    <div
+                      key={w.id}
+                      className="flex items-center justify-between bg-white dark:bg-slate-900 px-3 py-2 rounded-xl border border-sky-100 dark:border-slate-800 text-xs shadow-2xs"
+                    >
+                      <span className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">
+                        {formatTime(new Date(w.starts_at))} – {formatTime(new Date(w.ends_at))}
+                      </span>
+                      {onRemoveWindow && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuickSlotModal((p) => ({ ...p, isOpen: false }));
+                            setDeleteTargetWindow(w);
+                          }}
+                          className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors px-2 py-1 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                        >
+                          <Trash2 className="size-3" />
+                          <span>Delete Slot</span>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
           <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
             <Button
               variant="outline"
@@ -485,6 +570,128 @@ export function GoogleCalendarSuite({
           </div>
         </div>
       </Modal>
+
+      {/* 5. Delete Slot Confirmation Modal (স্লট মুছে ফেলার ডায়ালগ) */}
+      {deleteTargetWindow && (
+        <Modal
+          open={Boolean(deleteTargetWindow)}
+          onClose={() => setDeleteTargetWindow(null)}
+          title="Delete Availability Slot (স্লট বন্ধ / মুছে ফেলুন)"
+          description="Are you sure you want to delete this open slot? Once removed, clients will no longer be able to book appointments during this time."
+          footer={
+            <div className="flex items-center justify-end gap-3 w-full">
+              <Button variant="secondary" onClick={() => setDeleteTargetWindow(null)}>
+                Keep Slot
+              </Button>
+              <Button
+                disabled={isDeletingWindow}
+                onClick={handleDeleteWindow}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold"
+              >
+                <Trash2 className="size-3.5 mr-1" />
+                {isDeletingWindow ? "Deleting..." : "Delete Slot"}
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-3 py-2 text-xs">
+            <div className="rounded-xl border border-rose-200 bg-rose-50/70 p-3.5 space-y-1.5">
+              <div className="flex items-center gap-2 text-rose-900 font-bold">
+                <Clock className="size-4 text-rose-600" />
+                <span>
+                  {new Date(deleteTargetWindow.starts_at).toLocaleDateString("en-IN", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+              <p className="text-slate-800 font-semibold text-xs pl-6">
+                Time: {formatTime(new Date(deleteTargetWindow.starts_at))} – {formatTime(new Date(deleteTargetWindow.ends_at))}
+              </p>
+            </div>
+            <p className="text-[11px] text-slate-500 italic">
+              Note: If a client has already confirmed a booking inside these hours, the slot cannot be deleted until that appointment is rescheduled or cancelled.
+            </p>
+          </div>
+        </Modal>
+      )}
+
+      {/* 6. Manage All Active Slots Modal (সব স্লট তালিকা ও নিয়ন্ত্রণ) */}
+      {manageSlotsModalOpen && (
+        <Modal
+          open={manageSlotsModalOpen}
+          onClose={() => setManageSlotsModalOpen(false)}
+          title={`Manage Active Slots (${windows.length} Open Windows)`}
+          description="View and delete any of your open consultation hours. Removing a slot immediately frees your calendar and updates the website."
+          footer={
+            <div className="flex items-center justify-end w-full">
+              <Button variant="secondary" onClick={() => setManageSlotsModalOpen(false)}>
+                Close
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-3 py-2 max-h-[60vh] overflow-y-auto pr-1">
+            {windows.length === 0 ? (
+              <div className="text-center py-8 text-slate-400 space-y-2">
+                <Clock className="size-8 mx-auto text-slate-300" />
+                <p className="font-bold text-xs">No active slots opened</p>
+                <p className="text-[11px]">Click on any calendar day or time to open availability.</p>
+              </div>
+            ) : (
+              windows.map((w) => {
+                const s = new Date(w.starts_at);
+                const e = new Date(w.ends_at);
+                const isPast = e.getTime() < Date.now();
+                return (
+                  <div
+                    key={w.id}
+                    className={cn(
+                      "flex items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all",
+                      isPast
+                        ? "bg-slate-50 border-slate-200 opacity-60"
+                        : "bg-white border-slate-200 hover:border-sky-300 shadow-2xs"
+                    )}
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-xs text-slate-900">
+                          {s.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+                        </span>
+                        {isPast && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-slate-200 text-slate-600">
+                            Past
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-sky-800 font-semibold tabular-nums">
+                        {formatTime(s)} – {formatTime(e)}
+                      </p>
+                    </div>
+
+                    {onRemoveWindow && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setManageSlotsModalOpen(false);
+                          setDeleteTargetWindow(w);
+                        }}
+                        className="text-rose-600 border-rose-200 hover:bg-rose-50 text-xs font-bold shrink-0"
+                      >
+                        <Trash2 className="size-3.5 mr-1" />
+                        Delete
+                      </Button>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -500,6 +707,7 @@ function WeekCalendarView({
   onSlotClick,
   onOpenSession,
   getGoogleCalendarUrl,
+  onDeleteWindow,
 }: {
   weekDays: Date[];
   bookings: Appointment[];
@@ -508,6 +716,7 @@ function WeekCalendarView({
   onSlotClick: (date: Date, hour: number) => void;
   onOpenSession: (appointment: Appointment) => void;
   getGoogleCalendarUrl: (a: Appointment) => string;
+  onDeleteWindow?: (w: { id: string; starts_at: string; ends_at: string; day: string }) => void;
 }) {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -642,25 +851,40 @@ function WeekCalendarView({
                 />
               ))}
 
-              {/* Availability Windows (Translucent Background Blocks) */}
+              {/* Availability Windows (Interactive Background Blocks) */}
               {dayWindows.map((w) => {
                 const s = new Date(w.starts_at);
                 const e = new Date(w.ends_at);
                 const startMins = Math.max(0, (s.getHours() - 6) * 60 + s.getMinutes());
                 const endMins = Math.min(HOURS.length * 60, (e.getHours() - 6) * 60 + e.getMinutes());
                 const top = (startMins / 60) * HOUR_HEIGHT;
-                const height = Math.max(24, ((endMins - startMins) / 60) * HOUR_HEIGHT);
+                const height = Math.max(26, ((endMins - startMins) / 60) * HOUR_HEIGHT);
 
                 return (
                   <div
                     key={w.id}
                     style={{ top: `${top}px`, height: `${height}px` }}
-                    className="absolute inset-x-1 rounded-xl bg-gradient-to-b from-sky-500/10 to-indigo-500/10 dark:from-sky-950/60 dark:to-indigo-950/60 border border-sky-400/40 dark:border-sky-500/50 p-1.5 pointer-events-none z-5 overflow-hidden shadow-xs"
+                    className="absolute inset-x-1 rounded-xl bg-gradient-to-b from-sky-500/15 to-indigo-500/15 dark:from-sky-950/60 dark:to-indigo-950/60 border border-sky-400/40 dark:border-sky-500/50 p-1.5 z-10 overflow-hidden hover:border-sky-500 dark:hover:border-sky-400 hover:bg-sky-500/20 dark:hover:bg-sky-900/40 transition-all group/win shadow-xs"
                   >
-                    <span className="inline-flex items-center gap-1 rounded-md bg-sky-100/90 dark:bg-sky-900/90 px-1.5 py-0.5 text-[9px] font-bold text-sky-800 dark:text-sky-200 border border-sky-300/40 dark:border-sky-500/40">
-                      <Sparkles className="size-2.5 text-sky-600 dark:text-sky-400" />
-                      <span>Open: {formatTime(s)} – {formatTime(e)}</span>
-                    </span>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-sky-100/90 dark:bg-sky-900/90 px-1.5 py-0.5 text-[9px] font-bold text-sky-900 dark:text-sky-200 border border-sky-300/40 dark:border-sky-500/40 shadow-2xs">
+                        <Sparkles className="size-2.5 text-sky-600 dark:text-sky-400 shrink-0" />
+                        <span className="truncate">Open: {formatTime(s)} – {formatTime(e)}</span>
+                      </span>
+                      {onDeleteWindow && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteWindow(w);
+                          }}
+                          className="size-5 rounded-md bg-white/95 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/60 text-slate-400 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center justify-center transition-colors cursor-pointer shadow-2xs shrink-0"
+                          title="Delete this open availability slot"
+                        >
+                          <Trash2 className="size-3" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -688,7 +912,7 @@ function WeekCalendarView({
                     }}
                     style={{ top: `${top}px`, height: `${height}px` }}
                     className={cn(
-                      "absolute inset-x-1.5 rounded-xl p-2 cursor-pointer z-10 transition-all shadow-xs overflow-hidden flex flex-col justify-between border",
+                      "absolute inset-x-1.5 rounded-xl p-2 cursor-pointer z-20 transition-all shadow-xs overflow-hidden flex flex-col justify-between border",
                       isCancelled
                         ? "bg-rose-50 dark:bg-rose-950/80 text-rose-800 dark:text-rose-200 border-rose-300 dark:border-rose-700/60 opacity-75"
                         : isNoShow
@@ -903,6 +1127,7 @@ function DayCalendarView({
   onCancelAppointment,
   onCompleteAppointment,
   getGoogleCalendarUrl,
+  onDeleteWindow,
 }: {
   date: Date;
   bookings: Appointment[];
@@ -914,6 +1139,7 @@ function DayCalendarView({
   onCancelAppointment: (appointmentId: string) => void;
   onCompleteAppointment: (appointmentId: string) => void;
   getGoogleCalendarUrl: (a: Appointment) => string;
+  onDeleteWindow?: (w: { id: string; starts_at: string; ends_at: string; day: string }) => void;
 }) {
   const dateKey = formatDateKey(date);
   const isToday = dateKey === formatDateKey(now);
@@ -944,6 +1170,55 @@ function DayCalendarView({
           <span>Open New Hours on this Day</span>
         </Button>
       </div>
+
+      {/* Active Open Slots on this Day */}
+      {dayWindows.length > 0 && (
+        <div className="rounded-2xl border border-sky-200/80 bg-gradient-to-br from-sky-50/70 via-indigo-50/30 to-slate-50 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-sky-950 flex items-center gap-1.5">
+              <Sparkles className="size-3.5 text-sky-600" />
+              <span>Active Open Consultation Hours (সক্রিয় খোলা স্লট)</span>
+            </span>
+            <span className="text-[11px] font-bold text-sky-700 bg-sky-100 px-2.5 py-0.5 rounded-full">
+              {dayWindows.length} Active Window{dayWindows.length > 1 ? "s" : ""}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+            {dayWindows.map((w) => {
+              const s = new Date(w.starts_at);
+              const e = new Date(w.ends_at);
+              return (
+                <div
+                  key={w.id}
+                  className="flex items-center justify-between gap-2 rounded-xl border border-sky-200 bg-white p-3 shadow-2xs hover:border-sky-300 transition-all"
+                >
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-bold text-slate-800 tabular-nums">
+                      {formatTime(s)} – {formatTime(e)}
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      Duration: {Math.round((e.getTime() - s.getTime()) / 60000)} mins
+                    </p>
+                  </div>
+                  {onDeleteWindow && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onDeleteWindow(w)}
+                      className="text-rose-600 border-rose-200 hover:bg-rose-50 text-xs font-bold shrink-0"
+                      title="Delete this open slot"
+                    >
+                      <Trash2 className="size-3.5 mr-1" />
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Hourly View */}
       <div className="space-y-4">
