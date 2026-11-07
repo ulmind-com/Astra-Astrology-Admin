@@ -1670,8 +1670,8 @@ function Schedule({
               complete.mutate(id);
             }
           }}
-          onAddWindow={async (fromIso, toIso) => {
-            await appointmentApi.addWindow(fromIso, toIso);
+          onAddWindow={async (fromIso, toIso, extra) => {
+            await appointmentApi.addWindow(fromIso, toIso, extra);
             void queryClient.invalidateQueries({ queryKey: WINDOWS_KEY });
             void queryClient.invalidateQueries({ queryKey: CARD_KEY });
           }}

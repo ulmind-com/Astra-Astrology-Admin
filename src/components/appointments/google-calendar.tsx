@@ -41,7 +41,11 @@ export interface GoogleCalendarProps {
   onOpenPrescription: (appointment: Appointment) => void;
   onCancelAppointment: (appointmentId: string) => void;
   onCompleteAppointment: (appointmentId: string) => void;
-  onAddWindow: (fromIso: string, toIso: string) => Promise<void>;
+  onAddWindow: (
+    fromIso: string,
+    toIso: string,
+    extra?: { day?: string; timezone?: string; is_tatkal?: boolean },
+  ) => Promise<void>;
   onRemoveWindow?: (id: string) => Promise<void> | void;
   isAstrologer?: boolean;
 }
@@ -234,7 +238,10 @@ export function GoogleCalendarSuite({
       const to = new Date(quickSlotModal.date);
       to.setHours(quickSlotModal.endHour, quickSlotModal.endMinute, 0, 0);
 
-      await onAddWindow(from.toISOString(), to.toISOString());
+      await onAddWindow(from.toISOString(), to.toISOString(), {
+        day: formatDateKey(quickSlotModal.date),
+        timezone: typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "Asia/Kolkata",
+      });
       toast.success(
         `Availability window opened from ${formatTime(from)} to ${formatTime(to)} on ${quickSlotModal.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}!`,
       );

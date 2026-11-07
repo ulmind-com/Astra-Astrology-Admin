@@ -467,6 +467,8 @@ export const appointmentApi = {
     starts_at: string,
     ends_at: string,
     extra?: {
+      day?: string;
+      timezone?: string;
       is_tatkal?: boolean;
       tatkal_multiplier?: number;
       tatkal_fixed_paise?: number | null;
@@ -477,6 +479,7 @@ export const appointmentApi = {
     api.post<AvailabilityWindow>(endpoints.appointments.myWindows, {
       starts_at,
       ends_at,
+      timezone: extra?.timezone ?? (typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "Asia/Kolkata"),
       ...(extra || {}),
     }),
 
