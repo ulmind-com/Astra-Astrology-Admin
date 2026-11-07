@@ -56,6 +56,7 @@ export const endpoints = {
     extend: (id: string) => `/calls/${id}/extend`,
     heartbeat: (id: string) => `/calls/${id}/heartbeat`,
     copilot: (id: string) => `/calls/${id}/copilot`,
+    copilotBirthDetails: (id: string) => `/calls/${id}/copilot/birth-details`,
   },
 
   milan: {

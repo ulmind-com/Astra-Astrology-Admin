@@ -60,7 +60,7 @@ import type {
   WhiteboardData,
   WhiteboardStroke,
 } from "@/types";
-import type { CoPilotSummary } from "@/types/copilot";
+import type { CoPilotBirthDetailsInput, CoPilotSummary } from "@/types/copilot";
 import type { MilanRoom, MilanRoomSession } from "@/types/milan";
 
 // ------------------------------------------------------------------- auth
@@ -343,6 +343,9 @@ export const callApi = {
    *  astrologer may read it, and only while the session is live. Omitting
    *  the language lets the backend answer in the astrologer's own. */
   copilot: (id: string) => api.get<CoPilotSummary>(endpoints.calls.copilot(id)),
+
+  updateCopilotBirthDetails: (id: string, payload: CoPilotBirthDetailsInput) =>
+    api.post<CoPilotSummary>(endpoints.calls.copilotBirthDetails(id), payload),
 
   extend: (id: string, extra_minutes: number) =>
     api.post<Call>(endpoints.calls.extend(id), { extra_minutes }),
