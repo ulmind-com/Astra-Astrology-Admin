@@ -441,6 +441,8 @@ export type Appointment = Omit<S["AppointmentOut"], "peer"> & {
   tatkal_premium_coins?: number;
   is_private?: boolean;
   invite_code?: string | null;
+  astrologer_private_notes?: string | null;
+  astrologer_private_notes_updated_at?: string | null;
   peer?: S["AppointmentPeer"] | null;
   held_coins?: number;
   held_status?: string;

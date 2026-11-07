@@ -27,6 +27,7 @@ import {
   PhoneCall,
   Plus,
   RefreshCw,
+  Save,
   Copy,
   Lock,
   Unlock,
@@ -1277,8 +1278,12 @@ function Schedule({
   const [preflightData, setPreflightData] = React.useState<Record<string, any> | null>(null);
   const [isLoadingPreflight, setIsLoadingPreflight] = React.useState(false);
 
+  const [privateNotesText, setPrivateNotesText] = React.useState<string>("");
+  const [savingPrivateNotes, setSavingPrivateNotes] = React.useState<boolean>(false);
+
   React.useEffect(() => {
     if (dossierAppointment) {
+      setPrivateNotesText(dossierAppointment.astrologer_private_notes || "");
       if (dossierAppointment.preflight_dossier) {
         setPreflightData(dossierAppointment.preflight_dossier);
       } else {
@@ -1293,8 +1298,27 @@ function Schedule({
       }
     } else {
       setPreflightData(null);
+      setPrivateNotesText("");
     }
   }, [dossierAppointment]);
+
+  const handleSavePrivateNotes = async () => {
+    if (!dossierAppointment) return;
+    setSavingPrivateNotes(true);
+    try {
+      const updated = await appointmentApi.updatePrivateNotes(
+        dossierAppointment.id,
+        privateNotesText
+      );
+      setDossierAppointment(updated);
+      toast.success("Confidential vault notes saved securely!");
+      void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to save private vault notes.");
+    } finally {
+      setSavingPrivateNotes(false);
+    }
+  };
 
   const [prescriptionAppointment, setPrescriptionAppointment] = React.useState<Appointment | null>(null);
   const [prescriptionForm, setPrescriptionForm] = React.useState<{
@@ -2508,6 +2532,63 @@ function Schedule({
                     {dossierAppointment.follow_up_pass_enabled ? "Adjust / Extend Pass" : "Issue Follow-up Pass"}
                   </Button>
                 </div>
+              </div>
+            </div>
+
+            {/* 🔒 Private Astrological Dossier / Vault (গোপন জ্যোতিষী নোটস) */}
+            <div className="rounded-2xl border-2 border-amber-300/80 bg-gradient-to-br from-amber-50/70 via-orange-50/40 to-slate-50 p-4 space-y-3 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="size-7 rounded-lg bg-amber-500/20 text-amber-700 flex items-center justify-center font-bold">
+                    <Lock className="size-4 text-amber-700" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                      <span>Private Astrological Vault (গোপন জ্যোতিষী নোটস)</span>
+                      <span className="text-[10px] font-semibold text-amber-700 bg-amber-100/90 border border-amber-300 px-2 py-0.5 rounded-full">
+                        100% Confidential
+                      </span>
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      Strictly invisible to seeker. Document psychological observations, sensitive doshas, or hidden astrological insights.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <textarea
+                  rows={4}
+                  maxLength={5000}
+                  placeholder="গোপন পর্যবেক্ষণ লিখে রাখুন: যেমন মানসিক অস্থিরতা, রাহু-চন্দ্রের গোচর প্রতিক্রিয়া, পারিবারিক সংবেদনশীল তথ্য বা পরবর্তী ভিজিটের জন্য গোপন প্রস্তুতি..."
+                  value={privateNotesText}
+                  onChange={(e) => setPrivateNotesText(e.target.value)}
+                  className="w-full rounded-xl border border-amber-200/90 bg-white p-3 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 leading-relaxed font-sans shadow-inner"
+                />
+                <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
+                  <span>
+                    {dossierAppointment.astrologer_private_notes_updated_at ? (
+                      <span className="text-emerald-700 font-medium">
+                        Last saved: {new Date(dossierAppointment.astrologer_private_notes_updated_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
+                      </span>
+                    ) : (
+                      <span>No private notes saved yet</span>
+                    )}
+                  </span>
+                  <span>{privateNotesText.length} / 5000 chars</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <Button
+                  size="sm"
+                  disabled={savingPrivateNotes || privateNotesText === (dossierAppointment.astrologer_private_notes || "")}
+                  onClick={handleSavePrivateNotes}
+                  className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm"
+                >
+                  <Save className="size-3.5 mr-1" />
+                  {savingPrivateNotes ? "Saving to Vault..." : "Save Private Notes"}
+                </Button>
               </div>
             </div>
           </div>

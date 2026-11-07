@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Flag, Phone, PhoneOff, Sparkles, Video } from "lucide-react";
+import { Clock, Flag, Lock, Phone, PhoneOff, Save, Sparkles, Video } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -47,6 +47,41 @@ export default function AstrologerCallPage() {
   const [offeringExtension, setOfferingExtension] = React.useState(false);
 
   const [whiteboardOpen, setWhiteboardOpen] = React.useState(false);
+
+  const [vaultOpen, setVaultOpen] = React.useState(false);
+  const [vaultNotes, setVaultNotes] = React.useState("");
+  const [loadingVault, setLoadingVault] = React.useState(false);
+  const [savingVault, setSavingVault] = React.useState(false);
+
+  React.useEffect(() => {
+    if (vaultOpen && call?.appointment_id) {
+      setLoadingVault(true);
+      appointmentApi
+        .schedule(false)
+        .then((items) => {
+          const appt = items.find((a) => a.id === call.appointment_id);
+          if (appt) {
+            setVaultNotes(appt.astrologer_private_notes || "");
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoadingVault(false));
+    }
+  }, [vaultOpen, call?.appointment_id]);
+
+  const handleSaveVaultNotes = async () => {
+    if (!call?.appointment_id) return;
+    setSavingVault(true);
+    try {
+      await appointmentApi.updatePrivateNotes(call.appointment_id, vaultNotes);
+      toast.success("Confidential vault notes saved!");
+      setVaultOpen(false);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to save vault notes.");
+    } finally {
+      setSavingVault(false);
+    }
+  };
 
   React.useEffect(() => {
     if (call && !isCallLive(call.status)) {
@@ -148,6 +183,15 @@ export default function AstrologerCallPage() {
                     Offer Extension
                   </Button>
                 )}
+                <Button
+                  size="sm"
+                  onClick={() => setVaultOpen(true)}
+                  className="bg-amber-950/70 hover:bg-amber-900 text-amber-200 border border-amber-500/40 text-xs font-bold shadow-sm"
+                  title="Open Confidential Astrologer Dossier Vault"
+                >
+                  <Lock className="size-3.5 mr-1 text-amber-300" />
+                  Private Vault
+                </Button>
               </>
             )}
             <Button
@@ -340,6 +384,52 @@ export default function AstrologerCallPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* 🔒 Private Astrological Vault Modal */}
+      {vaultOpen && (
+        <Modal
+          open={vaultOpen}
+          onClose={() => setVaultOpen(false)}
+          title="🔒 Private Astrological Vault (গোপন জ্যোতিষী নোটস)"
+          description="Confidential observations strictly hidden from the seeker. Jot down notes in real-time during this consultation."
+          footer={
+            <div className="flex items-center justify-end gap-3 w-full">
+              <Button variant="secondary" onClick={() => setVaultOpen(false)}>
+                Close
+              </Button>
+              <Button
+                disabled={savingVault || loadingVault}
+                onClick={handleSaveVaultNotes}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
+              >
+                <Save className="size-3.5 mr-1" />
+                {savingVault ? "Saving..." : "Save Vault Notes"}
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-3 py-2 text-xs">
+            {loadingVault ? (
+              <p className="text-slate-500 italic">Decrypting vault notes...</p>
+            ) : (
+              <>
+                <textarea
+                  rows={6}
+                  maxLength={5000}
+                  placeholder="গোপন পর্যবেক্ষণ লিখে রাখুন: ক্লায়েন্টের মানসিক অবস্থা, গোপন দোষ, পারিবারিক সংবেদনশীল তথ্য..."
+                  value={vaultNotes}
+                  onChange={(e) => setVaultNotes(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-900 focus:border-amber-500 focus:outline-none leading-relaxed"
+                />
+                <div className="flex justify-between text-[11px] text-slate-400">
+                  <span className="text-emerald-700 font-medium">100% Client-Invisible</span>
+                  <span>{vaultNotes.length} / 5000 chars</span>
+                </div>
+              </>
+            )}
           </div>
         </Modal>
       )}

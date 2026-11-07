@@ -563,6 +563,9 @@ export const appointmentApi = {
   sendFollowUpMessage: (id: string, text: string) =>
     api.post<Appointment>(`/appointments/${id}/follow-up/message`, { text }),
 
+  updatePrivateNotes: (id: string, notes: string) =>
+    api.patch<Appointment>(`/appointments/${id}/private-notes`, { notes }),
+
   openTatkalWindow: (body: {
     starts_at: string;
     minutes?: number;
