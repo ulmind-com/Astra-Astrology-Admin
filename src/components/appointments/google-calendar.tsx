@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertTriangle,
   Calendar as CalendarIcon,
   CheckCircle2,
   ChevronLeft,
@@ -17,6 +18,7 @@ import {
   MessageSquare,
   PhoneCall,
   Plus,
+  ShieldAlert,
   Sparkles,
   Trash2,
   TrendingUp,
@@ -30,6 +32,15 @@ import { toast } from "sonner";
 
 import { Avatar, Badge, Button, Modal } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import {
+  checkRahuKaalCollision,
+  getHourPanchangBadge,
+  getPanchangKaalTimes,
+  getSlotMuhurat,
+  formatDecimalHoursIST,
+  type HourPanchangBadge,
+  type PanchangKaalTimes,
+} from "@/lib/muhurat-helper";
 import { APPOINTMENT_STATUS_LABELS, type Appointment } from "@/types";
 
 export type CalendarViewType = "week" | "month" | "day" | "agenda";
@@ -84,6 +95,8 @@ export function GoogleCalendarSuite({
 }: GoogleCalendarProps) {
   const [currentDate, setCurrentDate] = React.useState<Date>(() => new Date());
   const [view, setView] = React.useState<CalendarViewType>("week");
+  const [panchangGuideOpen, setPanchangGuideOpen] = React.useState(false);
+  const currentDayKaalTimes = React.useMemo(() => getPanchangKaalTimes(currentDate), [currentDate]);
 
   // Delete window state
   const [deleteTargetWindow, setDeleteTargetWindow] = React.useState<{
@@ -395,6 +408,50 @@ export function GoogleCalendarSuite({
         </div>
       </div>
 
+      {/* 2.5 Panchang & Rahu Kaal Shield Real-time HUD Strip */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-2.5 bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-emerald-500/10 border-b border-slate-100 text-xs font-semibold select-none">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 text-slate-800 mr-1">
+            <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-extrabold uppercase text-[10px] tracking-wider text-slate-700">বৈদিক পঞ্চাঙ্গ ও রাহুকাল শিল্ড:</span>
+          </div>
+
+          {/* Today's Rahu Kaal Alert */}
+          <div className="flex items-center gap-1.5 rounded-xl bg-rose-100/90 border border-rose-300/80 px-2.5 py-1 text-rose-900 text-[11px] font-extrabold shadow-2xs">
+            <ShieldAlert className="size-3.5 text-rose-600 shrink-0" />
+            <span>রাহুকাল (Rahu Kaal): {currentDayKaalTimes.rahuKaal.formatted}</span>
+          </div>
+
+          {/* Today's Abhijit Muhurat */}
+          <div className="flex items-center gap-1.5 rounded-xl bg-emerald-100/90 border border-emerald-300/80 px-2.5 py-1 text-emerald-950 text-[11px] font-extrabold shadow-2xs">
+            <Sparkles className="size-3.5 text-emerald-600 shrink-0" />
+            <span>অভিজিৎ মুহূর্ত (Abhijit): {currentDayKaalTimes.abhijit.formatted}</span>
+          </div>
+
+          {/* Yamaghanta & Gulika indicators */}
+          <div className="hidden lg:flex items-center gap-1.5 rounded-xl bg-amber-100/90 border border-amber-300/80 px-2.5 py-1 text-amber-950 text-[11px] font-extrabold shadow-2xs">
+            <AlertTriangle className="size-3.5 text-amber-600 shrink-0" />
+            <span>যমঘণ্ট: {currentDayKaalTimes.yamaghanta.formatted}</span>
+          </div>
+          <div className="hidden xl:flex items-center gap-1.5 rounded-xl bg-amber-50 border border-amber-200 px-2.5 py-1 text-amber-900 text-[11px] font-bold shadow-2xs">
+            <Clock className="size-3.5 text-amber-600 shrink-0" />
+            <span>গুলিকা: {currentDayKaalTimes.gulika.formatted}</span>
+          </div>
+        </div>
+
+        {/* Legend / Guide trigger */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPanchangGuideOpen(true)}
+            className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-sky-700 hover:text-sky-900 hover:bg-sky-50 transition-all cursor-pointer shadow-2xs"
+          >
+            <Compass className="size-3.5 text-sky-600" />
+            <span>পঞ্চাঙ্গ নির্দেশিকা (Panchang Legend)</span>
+          </button>
+        </div>
+      </div>
+
       {/* 3. CALENDAR BODY BY VIEW */}
       {view === "week" && (
         <WeekCalendarView
@@ -517,6 +574,82 @@ export function GoogleCalendarSuite({
               </select>
             </div>
           </div>
+
+          {/* Real-time Panchang & Rahu Kaal Shield Warning / Blessing */}
+          {(() => {
+            const collision = checkRahuKaalCollision(
+              quickSlotModal.date,
+              quickSlotModal.startHour,
+              0,
+              quickSlotModal.endHour,
+              0,
+            );
+
+            return (
+              <div className="space-y-2.5">
+                {/* 1. Rahu Kaal Alert (Red) */}
+                {collision.hasRahuKaalCollision && (
+                  <div className="rounded-2xl border-2 border-rose-400 bg-gradient-to-r from-rose-50 via-rose-100/70 to-rose-50 p-4 space-y-2 shadow-xs animate-in fade-in-50 duration-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-black text-rose-900 text-xs sm:text-sm">
+                        <ShieldAlert className="size-4.5 text-rose-600 shrink-0" />
+                        <span>⚠️ বৈদিক সতর্কতা: রাহুকাল (Rahu Kaal Alert)</span>
+                      </div>
+                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-rose-200 text-rose-950">
+                        Inauspicious Window
+                      </span>
+                    </div>
+
+                    <p className="text-xs font-bold text-rose-900 leading-relaxed">
+                      Today {collision.rahuKaalLabel} is Rahu Kaal. Do you still wish to open this slot?
+                    </p>
+
+                    <p className="text-[11px] text-rose-800/90 leading-normal">
+                      বৈদিক জ্যোতিষ শাস্ত্রে রাহুকালকে নতুন কাজের জন্য অশুভ বলে গণ্য করা হয়। তবে রাহুর মহাদশা, কালসর্প দোষ বা তান্ত্রিক/আধ্যাত্মিক প্রতিকারের পরামর্শের জন্য অনেক প্রবীণ জ্যোতিষী এই সময় উন্মুক্ত রাখেন।
+                    </p>
+                  </div>
+                )}
+
+                {/* 2. Yamaghanta / Gulika Alert (Amber) */}
+                {!collision.hasRahuKaalCollision && collision.hasYamaghantaCollision && (
+                  <div className="rounded-2xl border border-amber-300 bg-amber-50/90 p-3.5 space-y-1.5 shadow-xs">
+                    <div className="flex items-center gap-2 font-bold text-amber-900 text-xs">
+                      <AlertTriangle className="size-4 text-amber-600 shrink-0" />
+                      <span>যমঘণ্ট কাল সতর্কতা ({collision.yamaghantaLabel})</span>
+                    </div>
+                    <p className="text-xs text-amber-800 leading-normal">
+                      Today {collision.yamaghantaLabel} is Yamaghanta Kaal. Do you wish to proceed?
+                    </p>
+                  </div>
+                )}
+
+                {!collision.hasRahuKaalCollision && !collision.hasYamaghantaCollision && collision.hasGulikaCollision && (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-3.5 space-y-1.5 shadow-xs">
+                    <div className="flex items-center gap-2 font-bold text-amber-900 text-xs">
+                      <Clock className="size-4 text-amber-600 shrink-0" />
+                      <span>গুলিকা কাল সতর্কবার্তা ({collision.gulikaLabel})</span>
+                    </div>
+                    <p className="text-xs text-amber-800 leading-normal">
+                      Today {collision.gulikaLabel} is Gulika Kaal.
+                    </p>
+                  </div>
+                )}
+
+                {/* 3. Abhijit Muhurat Blessing (Gold/Green) */}
+                {collision.hasAbhijitIntersection && (
+                  <div className="rounded-2xl border border-emerald-300 bg-emerald-50/90 p-3.5 space-y-1 text-emerald-950 shadow-xs">
+                    <div className="flex items-center gap-2 font-black text-emerald-900 text-xs">
+                      <Sparkles className="size-4 text-emerald-600 shrink-0" />
+                      <span>✨ পরম শুভ অভিজিৎ মুহূর্ত (Abhijit: {collision.abhijitLabel})</span>
+                    </div>
+                    <p className="text-[11px] text-emerald-800 font-medium">
+                      এই নির্বাচিত সময়টি পরম শুভ অভিজিৎ মুহূর্ত অন্তর্ভুক্ত করেছে—যা জাতকের যেকোনো সমস্যার সমাধানে সর্বাধিক ফলদায়ক!
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Already open slots on this selected date */}
           {(() => {
@@ -702,6 +835,103 @@ export function GoogleCalendarSuite({
           </div>
         </Modal>
       )}
+
+      {/* 7. Vedic Panchang & Rahu Kaal Guide Modal */}
+      {panchangGuideOpen && (
+        <Modal
+          open={panchangGuideOpen}
+          onClose={() => setPanchangGuideOpen(false)}
+          title="বৈদিক পঞ্চাঙ্গ ও রাহুকাল শিল্ড গাইড (Panchang Shield Guide)"
+          description={`Selected Date: ${currentDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })} (IST)`}
+          footer={
+            <div className="flex items-center justify-end w-full">
+              <Button variant="secondary" onClick={() => setPanchangGuideOpen(false)}>
+                Got it
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-4 py-2 text-xs">
+            {/* Kaal Cards Overview */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-3.5 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-rose-900">
+                  <ShieldAlert className="size-4 text-rose-600" />
+                  <span>রাহুকাল (Rahu Kaal)</span>
+                </div>
+                <p className="text-base font-extrabold text-rose-950 tabular-nums">
+                  {currentDayKaalTimes.rahuKaal.formatted}
+                </p>
+                <p className="text-[11px] text-rose-700/90 leading-tight">
+                  অশুভ সময়। নতুন শুভ সূচনা বর্জনীয়। তবে রাহুর দোষ ও তান্ত্রিক প্রতিকারের জন্য অনুকূল।
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3.5 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-emerald-950">
+                  <Sparkles className="size-4 text-emerald-600" />
+                  <span>অভিজিৎ মুহূর্ত (Abhijit)</span>
+                </div>
+                <p className="text-base font-extrabold text-emerald-950 tabular-nums">
+                  {currentDayKaalTimes.abhijit.formatted}
+                </p>
+                <p className="text-[11px] text-emerald-700/90 leading-tight">
+                  সর্বাধিক শুভ বিজয় মুহূর্ত। সকল কার্য সিদ্ধিদায়ক ও দোষ প্রশমনকারী।
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-3.5 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-amber-950">
+                  <AlertTriangle className="size-4 text-amber-600" />
+                  <span>যমঘণ্ট কাল (Yamaghanta)</span>
+                </div>
+                <p className="text-base font-extrabold text-amber-950 tabular-nums">
+                  {currentDayKaalTimes.yamaghanta.formatted}
+                </p>
+                <p className="text-[11px] text-amber-700/90 leading-tight">
+                  সতর্কতামূলক সময়। গুরুত্বপূর্ণ সিদ্ধান্ত গ্রহণে সংযম কাম্য।
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-amber-200/70 bg-amber-50/50 p-3.5 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                  <Clock className="size-4 text-amber-600" />
+                  <span>গুলিকা কাল (Gulika Kaal)</span>
+                </div>
+                <p className="text-base font-extrabold text-amber-950 tabular-nums">
+                  {currentDayKaalTimes.gulika.formatted}
+                </p>
+                <p className="text-[11px] text-amber-700/90 leading-tight">
+                  শনির পুত্র গুলিকার সময়। আধ্যাত্মিক সাধনা ও ধ্যানের জন্য উপযুক্ত।
+                </p>
+              </div>
+            </div>
+
+            {/* Tag Color Reference */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+              <h4 className="font-bold text-slate-800 text-xs">ক্যালেন্ডার পঞ্চাঙ্গ কালার কোড (Visual Legend):</h4>
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div className="flex items-center gap-2">
+                  <span className="size-3 rounded-full bg-emerald-500 shadow-xs" />
+                  <span className="font-semibold text-slate-700">Gold/Green: অভিজিৎ ও অমৃত কাল</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="size-3 rounded-full bg-teal-500 shadow-xs" />
+                  <span className="font-semibold text-slate-700">Teal: শুভ ও লাভ যোগ (কল্যাণকর)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="size-3 rounded-full bg-rose-500 shadow-xs" />
+                  <span className="font-semibold text-slate-700">Red: রাহুকাল (সতর্কতা ও প্রতিকার)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="size-3 rounded-full bg-amber-500 shadow-xs" />
+                  <span className="font-semibold text-slate-700">Amber: যমঘণ্ট ও গুলিকা কাল</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -846,16 +1076,71 @@ function WeekCalendarView({
               )}
               style={{ height: `${HOURS.length * HOUR_HEIGHT}px` }}
             >
-              {/* Hour horizontal grid lines & click handler */}
-              {HOURS.map((h) => (
-                <div
-                  key={h}
-                  onClick={() => onSlotClick(colDate, h)}
-                  style={{ height: `${HOUR_HEIGHT}px` }}
-                  className="border-b border-slate-100/90 cursor-pointer hover:bg-sky-50/30 transition-colors relative"
-                  title={`Click to open availability at ${h}:00 on ${dateKey}`}
-                />
-              ))}
+              {/* Hour horizontal grid lines & click handler with Panchang & Rahu Kaal Shield */}
+              {HOURS.map((h) => {
+                const pBadge = getHourPanchangBadge(colDate, h);
+                return (
+                  <div
+                    key={h}
+                    onClick={() => onSlotClick(colDate, h)}
+                    style={{ height: `${HOUR_HEIGHT}px` }}
+                    className={cn(
+                      "border-b border-slate-100/90 cursor-pointer transition-colors relative group/cell",
+                      pBadge.type === "rahu_kaal"
+                        ? "bg-rose-50/20 hover:bg-rose-100/35 border-l-2 border-l-rose-500"
+                        : pBadge.type === "yamaghanta" || pBadge.type === "gulika"
+                        ? "bg-amber-50/20 hover:bg-amber-100/30 border-l-2 border-l-amber-400"
+                        : pBadge.type === "abhijit"
+                        ? "bg-emerald-50/30 hover:bg-emerald-100/40 border-l-2 border-l-emerald-500"
+                        : pBadge.type === "amrit"
+                        ? "bg-amber-50/30 hover:bg-amber-100/40 border-l-2 border-l-amber-500"
+                        : "hover:bg-sky-50/30",
+                    )}
+                    title={`[${pBadge.badgeBn}] Click to open availability at ${h}:00 on ${dateKey}`}
+                  >
+                    {/* Floating mini badge for auspicious / inauspicious hours */}
+                    {pBadge.type === "rahu_kaal" && (
+                      <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-rose-100/95 border border-rose-300 px-1 py-0.2 text-[8.5px] font-black text-rose-900 shadow-2xs pointer-events-none">
+                        <ShieldAlert className="size-2.5 text-rose-600" />
+                        <span>রাহুকাল</span>
+                      </span>
+                    )}
+
+                    {pBadge.type === "yamaghanta" && (
+                      <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-amber-100/90 border border-amber-300 px-1 py-0.2 text-[8.5px] font-bold text-amber-900 shadow-2xs pointer-events-none">
+                        <AlertTriangle className="size-2.5 text-amber-600" />
+                        <span>যমঘণ্ট</span>
+                      </span>
+                    )}
+
+                    {pBadge.type === "gulika" && (
+                      <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-amber-50/90 border border-amber-200 px-1 py-0.2 text-[8.5px] font-bold text-amber-800 shadow-2xs pointer-events-none">
+                        <span>গুলিকা</span>
+                      </span>
+                    )}
+
+                    {pBadge.type === "abhijit" && (
+                      <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-emerald-100/95 border border-emerald-300 px-1.5 py-0.2 text-[8.5px] font-black text-emerald-950 shadow-2xs pointer-events-none">
+                        <Sparkles className="size-2.5 text-emerald-600" />
+                        <span>অভিজিৎ</span>
+                      </span>
+                    )}
+
+                    {pBadge.type === "amrit" && (
+                      <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-amber-100/95 border border-amber-300 px-1.5 py-0.2 text-[8.5px] font-black text-amber-950 shadow-2xs pointer-events-none">
+                        <Sparkles className="size-2.5 text-amber-600" />
+                        <span>অমৃত</span>
+                      </span>
+                    )}
+
+                    {pBadge.type === "shubh" && (
+                      <span className="absolute top-1 right-1.5 hidden group-hover/cell:flex items-center gap-0.5 rounded-md bg-teal-100/90 border border-teal-200 px-1 py-0.2 text-[8.5px] font-extrabold text-teal-800 shadow-2xs pointer-events-none">
+                        <span>🌿 {pBadge.shortTagBn}</span>
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
 
               {/* Availability Windows (Interactive Background Blocks) */}
               {dayWindows.map((w) => {
@@ -1234,6 +1519,8 @@ function DayCalendarView({
           const hourEnd = new Date(date);
           hourEnd.setHours(h + 1, 0, 0, 0);
 
+          const pBadge = getHourPanchangBadge(date, h);
+
           const slotBookings = dayBookings.filter((b) => {
             const s = new Date(b.starts_at);
             return s.getHours() === h;
@@ -1254,10 +1541,14 @@ function DayCalendarView({
                   ? "bg-white border-sky-300 shadow-sm"
                   : isWindowActive
                   ? "bg-sky-50/40 border-sky-200"
+                  : pBadge.type === "rahu_kaal"
+                  ? "bg-rose-50/20 border-rose-200/80 hover:bg-rose-50/40"
+                  : pBadge.type === "abhijit" || pBadge.type === "amrit"
+                  ? "bg-emerald-50/20 border-emerald-200/80 hover:bg-emerald-50/40"
                   : "bg-slate-50/30 border-slate-200/70 hover:bg-slate-50",
               )}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2.5">
                 <span className="font-display text-sm font-bold text-slate-700 min-w-[70px]">
                   {formatTime(hourStart)}
                 </span>
@@ -1265,6 +1556,48 @@ function DayCalendarView({
                 {isWindowActive && (
                   <span className="rounded-full bg-sky-100 text-sky-800 px-2.5 py-0.5 text-[10px] font-bold">
                     Open Window
+                  </span>
+                )}
+
+                {/* Panchang & Rahu Kaal Badge for this hour */}
+                {pBadge.type === "rahu_kaal" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 border border-rose-300 text-rose-900 px-2.5 py-0.5 text-[11px] font-black shadow-2xs">
+                    <ShieldAlert className="size-3 text-rose-600" />
+                    <span>{pBadge.badgeBn}</span>
+                  </span>
+                )}
+
+                {pBadge.type === "yamaghanta" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 px-2.5 py-0.5 text-[11px] font-extrabold shadow-2xs">
+                    <AlertTriangle className="size-3 text-amber-600" />
+                    <span>{pBadge.badgeBn}</span>
+                  </span>
+                )}
+
+                {pBadge.type === "gulika" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900 px-2.5 py-0.5 text-[11px] font-bold shadow-2xs">
+                    <Clock className="size-3 text-amber-600" />
+                    <span>{pBadge.badgeBn}</span>
+                  </span>
+                )}
+
+                {pBadge.type === "abhijit" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-950 px-2.5 py-0.5 text-[11px] font-black shadow-2xs">
+                    <Sparkles className="size-3 text-emerald-600" />
+                    <span>{pBadge.badgeBn}</span>
+                  </span>
+                )}
+
+                {pBadge.type === "amrit" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 text-amber-950 px-2.5 py-0.5 text-[11px] font-black shadow-2xs">
+                    <Sparkles className="size-3 text-amber-600" />
+                    <span>{pBadge.badgeBn}</span>
+                  </span>
+                )}
+
+                {pBadge.type === "shubh" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-teal-100 border border-teal-200 text-teal-900 px-2.5 py-0.5 text-[11px] font-bold shadow-2xs">
+                    <span>🌿 {pBadge.badgeBn}</span>
                   </span>
                 )}
               </div>

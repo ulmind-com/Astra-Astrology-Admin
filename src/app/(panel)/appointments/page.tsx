@@ -52,6 +52,7 @@ import { Alert, Avatar, Badge, Button, EmptyState, LoadingBlock, Modal } from "@
 import { GoogleCalendarSuite } from "@/components/appointments/google-calendar";
 import { appointmentApi, astrologerApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
+import { checkRahuKaalCollision } from "@/lib/muhurat-helper";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import {
@@ -1162,6 +1163,50 @@ function OpenHours() {
             />
           </div>
         </div>
+
+        {(() => {
+          if (!from || !to) return null;
+          const fromDate = new Date(from);
+          const toDate = new Date(to);
+          if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return null;
+          const check = checkRahuKaalCollision(
+            fromDate,
+            fromDate.getHours(),
+            fromDate.getMinutes(),
+            toDate.getHours(),
+            toDate.getMinutes(),
+          );
+          if (check.hasRahuKaalCollision) {
+            return (
+              <div className="rounded-xl border-2 border-rose-300 bg-rose-50/90 p-3.5 space-y-1.5 text-rose-950 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 font-black text-rose-900 text-xs">
+                  <ShieldAlert className="size-4 text-rose-600 animate-pulse shrink-0" />
+                  <span>বৈদিক সতর্কতা: রাহুকাল (Rahu Kaal Alert)</span>
+                </div>
+                <p className="text-xs font-bold text-rose-800">
+                  Today {check.rahuKaalLabel} is Rahu Kaal. Do you still wish to open this slot?
+                </p>
+                <p className="text-[11px] text-rose-700/90 leading-relaxed">
+                  শাস্ত্র মতে রাহুকাল চলাকালীন কোনো শুভ কর্ম বা গুরুত্বপূর্ণ পরামর্শ শুরু করা শুভ নয়। তবে আপনি চাইলে সতর্কতার সাথে স্লটটি খুলতে পারেন।
+                </p>
+              </div>
+            );
+          }
+          if (check.hasAbhijitIntersection) {
+            return (
+              <div className="rounded-xl border border-emerald-300 bg-emerald-50/90 p-3 space-y-1 text-emerald-950 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 font-black text-emerald-900 text-xs">
+                  <Sparkles className="size-4 text-emerald-600 shrink-0" />
+                  <span>শুভ মুহূর্ত: অভিজিৎ মুহূর্ত (Abhijit Muhurat)</span>
+                </div>
+                <p className="text-xs font-medium text-emerald-800">
+                  এই স্লটটি সর্বকার্য সিদ্ধিদায়ক অভিজিৎ মুহূর্তের ({check.abhijitLabel}) আশীর্বাদপ্রাপ্ত।
+                </p>
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         <button
           type="button"
