@@ -1266,6 +1266,7 @@ function Schedule({
   const [displayMode, setDisplayMode] = React.useState<"calendar" | "list" | "blacklist">(initialDisplayMode);
   const [tab, setTab] = React.useState<ScheduleTab>("upcoming");
   const [cancelTargetId, setCancelTargetId] = React.useState<string | null>(null);
+  const [completeTargetAppointment, setCompleteTargetAppointment] = React.useState<Appointment | null>(null);
   const [enteringChamberId, setEnteringChamberId] = React.useState<string | null>(null);
 
   const handleEnterChamber = async (appointmentId: string) => {
@@ -1411,6 +1412,7 @@ function Schedule({
     mutationFn: (id: string) => appointmentApi.complete(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+      setCompleteTargetAppointment(null);
       toast.success("Appointment completed and balance coins captured!");
     },
     onError: (e: ApiError) => toast.error(e.message),
@@ -1655,7 +1657,19 @@ function Schedule({
           onOpenSession={(a) => setDossierAppointment(a)}
           onOpenPrescription={(a) => openPrescriptionModal(a)}
           onCancelAppointment={(id) => setCancelTargetId(id)}
-          onCompleteAppointment={(id) => complete.mutate(id)}
+          onCompleteAppointment={(id) => {
+            const target = allBookings.find((b) => b.id === id);
+            if (target) {
+              const startsMs = new Date(target.starts_at).getTime();
+              if (Date.now() < startsMs) {
+                toast.error("Cannot complete a session before it starts.");
+                return;
+              }
+              setCompleteTargetAppointment(target);
+            } else {
+              complete.mutate(id);
+            }
+          }}
           onAddWindow={async (fromIso, toIso) => {
             await appointmentApi.addWindow(fromIso, toIso);
             void queryClient.invalidateQueries({ queryKey: WINDOWS_KEY });
@@ -1976,12 +1990,12 @@ function Schedule({
                       </button>
                     )}
 
-                    {/* Complete Session Action (Capture Escrow) - Only eligible after session start time */}
+                    {/* Complete Session Action (Capture Escrow) - Only active after session start time */}
                     {a.status === "booked" && now >= startsMs && (
                       <button
                         type="button"
                         disabled={complete.isPending}
-                        onClick={() => complete.mutate(a.id)}
+                        onClick={() => setCompleteTargetAppointment(a)}
                         className="rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
                       >
                         <CheckCircle2 className="size-3.5 text-emerald-600" />
@@ -2749,6 +2763,67 @@ function Schedule({
             Frequent cancellations may impact your astrologer profile rating and ranking in the Astra directory.
           </Alert>
         </div>
+      </Modal>
+
+      {/* Confirmation Modal for Session Completion & Escrow Capture */}
+      <Modal
+        open={Boolean(completeTargetAppointment)}
+        onClose={() => setCompleteTargetAppointment(null)}
+        title="Conclude Consultation & Capture Escrow"
+        description="Are you sure you want to conclude this consultation and capture escrow?"
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button
+              variant="secondary"
+              onClick={() => setCompleteTargetAppointment(null)}
+              disabled={complete.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+              loading={complete.isPending}
+              onClick={() => {
+                if (completeTargetAppointment) {
+                  complete.mutate(completeTargetAppointment.id);
+                }
+              }}
+            >
+              <CheckCircle2 className="size-4 mr-1.5" />
+              Yes, Conclude & Capture Escrow
+            </Button>
+          </div>
+        }
+      >
+        {completeTargetAppointment && (
+          <div className="space-y-4 py-2">
+            <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/50 p-4 space-y-2.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-emerald-950">Client / Seeker:</span>
+                <span className="font-bold text-slate-900">{completeTargetAppointment.peer?.name || "Client"}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-emerald-950">Scheduled Timing:</span>
+                <span className="text-slate-700">
+                  {new Date(completeTargetAppointment.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
+                  {new Date(completeTargetAppointment.ends_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </div>
+              {Boolean(completeTargetAppointment.held_coins && completeTargetAppointment.held_coins > 0) && (
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-emerald-200/60">
+                  <span className="font-semibold text-emerald-950">Escrow Balance to Capture:</span>
+                  <span className="font-extrabold text-emerald-800">
+                    🪙 {(completeTargetAppointment.held_coins ?? 0).toLocaleString()} coins
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <Alert tone="info">
+              Concluding this session will capture the held escrow deposit into your astrologer earnings, mark the consultation as completed, and generate the consecrated Divya Paramarsha consultation certificate.
+            </Alert>
+          </div>
+        )}
       </Modal>
 
       {/* Courtesy Reschedule Modal (Option B) */}
