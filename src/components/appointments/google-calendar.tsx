@@ -221,6 +221,73 @@ export function GoogleCalendarSuite({
     }
   };
 
+  // Auspicious Vedic Transit Dynamic Surge Integration
+  const currentDateStr = React.useMemo(() => {
+    const y = currentDate.getFullYear();
+    const m = String(currentDate.getMonth() + 1).padStart(2, "0");
+    const d = String(currentDate.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, [currentDate]);
+
+  const { data: auspiciousTransit } = useQuery({
+    queryKey: ["auspicious_transit", currentDateStr],
+    queryFn: () => appointmentApi.getAuspiciousTransit(currentDateStr),
+  });
+
+  const [surgeModalOpen, setSurgeModalOpen] = React.useState(false);
+  const [surgeMultiplier, setSurgeMultiplier] = React.useState<number>(1.5);
+  const [surgeTitle, setSurgeTitle] = React.useState<string>("");
+  const [surgeAutoOpenWindow, setSurgeAutoOpenWindow] = React.useState<boolean>(true);
+
+  React.useEffect(() => {
+    if (auspiciousTransit) {
+      if (auspiciousTransit.demand_multiplier_hint) {
+        setSurgeMultiplier(auspiciousTransit.demand_multiplier_hint);
+      }
+      if (auspiciousTransit.badge_label) {
+        setSurgeTitle(`${auspiciousTransit.badge_label} স্পেশাল`);
+      }
+    }
+  }, [auspiciousTransit]);
+
+  const activateSurgeMutation = useMutation({
+    mutationFn: (vars: { multiplier: number; customTitle?: string; openWindow?: boolean }) =>
+      appointmentApi.activateTransitSurge({
+        day: currentDateStr,
+        multiplier: vars.multiplier,
+        custom_title: vars.customTitle,
+        open_surge_window: vars.openWindow ?? true,
+      }),
+    onSuccess: (data) => {
+      toast.success(
+        data.message || `Auspicious Day Tatkal Surge (${data.multiplier}x) activated!`
+      );
+      setSurgeModalOpen(false);
+      void queryClient.invalidateQueries({ queryKey: ["auspicious_transit", currentDateStr] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "windows"] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "schedule"] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "card"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to activate Tatkal Surge.");
+    },
+  });
+
+  const deactivateSurgeMutation = useMutation({
+    mutationFn: () => appointmentApi.deactivateTransitSurge({ day: currentDateStr }),
+    onSuccess: (data) => {
+      toast.success(data.message || "Auspicious Day Tatkal Surge deactivated.");
+      setSurgeModalOpen(false);
+      void queryClient.invalidateQueries({ queryKey: ["auspicious_transit", currentDateStr] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "windows"] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "schedule"] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "card"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to deactivate Tatkal Surge.");
+    },
+  });
+
   // Check if quick slot modal collides with any Google Calendar busy intervals
   const collidingBusyIntervals = React.useMemo(() => {
     if (!googleSync?.connected || !googleSync?.busy_intervals) return [];
@@ -610,8 +677,27 @@ export function GoogleCalendarSuite({
           </div>
         </div>
 
-        {/* Legend / Guide trigger */}
+        {/* Legend & Tatkal Surge triggers */}
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSurgeModalOpen(true)}
+            className={cn(
+              "flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer shadow-2xs",
+              auspiciousTransit?.is_tatkal_surge_active
+                ? "bg-amber-500 text-white hover:bg-amber-600 border border-amber-600 shadow-amber-500/20"
+                : "bg-white border border-amber-300 text-amber-900 hover:bg-amber-50"
+            )}
+            title="Auspicious Day Tatkal Dynamic Surge Pricing"
+          >
+            <Zap className={cn("size-3.5", auspiciousTransit?.is_tatkal_surge_active ? "fill-white text-white" : "fill-amber-600 text-amber-600")} />
+            <span>
+              {auspiciousTransit?.is_tatkal_surge_active
+                ? `তৎকাল সক্রিয় (${auspiciousTransit.active_tatkal_multiplier || 1.5}x)`
+                : "তৎকাল ডায়নামিক সার্জ (Tatkal Surge)"}
+            </span>
+          </button>
+
           <button
             type="button"
             onClick={() => setPanchangGuideOpen(true)}
@@ -622,6 +708,128 @@ export function GoogleCalendarSuite({
           </button>
         </div>
       </div>
+
+      {/* 2.6 Auspicious Day Vedic Transit Surge Ribbon */}
+      {auspiciousTransit && (
+        <div
+          className={cn(
+            "flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-2.5 border-b text-xs transition-all select-none",
+            auspiciousTransit.is_auspicious_transit_day
+              ? "bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border-amber-300/80"
+              : "bg-slate-50/70 border-slate-100"
+          )}
+        >
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            {auspiciousTransit.is_auspicious_transit_day ? (
+              <>
+                <div className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 px-2.5 py-1 text-white shadow-xs">
+                  <Flame className="size-3.5 text-yellow-200 animate-pulse shrink-0" />
+                  <span className="font-black text-[11px] tracking-wide uppercase">
+                    {auspiciousTransit.badge_label || "শুভ তিথি ট্রানজিট"}
+                  </span>
+                </div>
+
+                <span className="font-extrabold text-amber-950 text-xs">
+                  {auspiciousTransit.primary_event}
+                </span>
+
+                <span className="rounded-full bg-amber-200/90 border border-amber-400 px-2.5 py-0.5 text-[10px] font-black text-amber-950 shadow-2xs">
+                  🔥 {auspiciousTransit.remedial_demand_surge || "১০x প্রতিকার চাহিদা"}
+                </span>
+
+                {/* Recommended Remedies Pills */}
+                {auspiciousTransit.recommended_remedies?.slice(0, 3).map((remedy, idx) => (
+                  <span
+                    key={idx}
+                    className="hidden lg:inline-flex items-center gap-1 rounded-full bg-white/90 border border-amber-300 px-2.5 py-0.5 text-[10px] font-bold text-amber-900 shadow-2xs"
+                  >
+                    ✨ {remedy}
+                  </span>
+                ))}
+              </>
+            ) : (
+              <div className="flex items-center gap-2 text-slate-600 text-[11px]">
+                <Clock className="size-3.5 text-slate-400" />
+                <span className="font-bold">
+                  তারিখ: {currentDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                </span>
+                <span className="text-slate-400">·</span>
+                <span>সাধারণ তিথি — যে কোনো সময় ১-ক্লিকে তৎকাল ডায়নামিক সার্জ চালু করতে পারেন</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {auspiciousTransit.is_tatkal_surge_active ? (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-100 border border-emerald-300 px-2.5 py-1 text-[11px] font-extrabold text-emerald-950 shadow-2xs">
+                  <Zap className="size-3 text-emerald-600 fill-emerald-600" />
+                  <span>
+                    তৎকাল সার্জ সক্রিয় ({auspiciousTransit.active_tatkal_multiplier || 1.5}x) · {auspiciousTransit.active_tatkal_windows_count}টি স্লট লাইভ
+                  </span>
+                </span>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={deactivateSurgeMutation.isPending}
+                  onClick={() => deactivateSurgeMutation.mutate()}
+                  className="h-7 text-[11px] font-bold text-rose-700 border-rose-300 hover:bg-rose-50 hover:text-rose-900 transition-all cursor-pointer shadow-2xs"
+                >
+                  {deactivateSurgeMutation.isPending ? "বাতিল হচ্ছে..." : "স্বাভাবিক ফি-তে ফিরুন"}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <Button
+                  size="sm"
+                  disabled={activateSurgeMutation.isPending}
+                  onClick={() =>
+                    activateSurgeMutation.mutate({
+                      multiplier: 1.5,
+                      customTitle: `${auspiciousTransit.badge_label || "শুভ তিথি"} তৎকাল (1.5x)`,
+                    })
+                  }
+                  className="h-7 bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-extrabold text-[11px] shadow-xs cursor-pointer"
+                >
+                  <Zap className="size-3 mr-1 fill-white" />
+                  <span>
+                    {activateSurgeMutation.isPending
+                      ? "চালু হচ্ছে..."
+                      : "১-ক্লিকে তৎকাল সার্জ (১.৫x)"}
+                  </span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={activateSurgeMutation.isPending}
+                  onClick={() =>
+                    activateSurgeMutation.mutate({
+                      multiplier: 2.0,
+                      customTitle: `${auspiciousTransit.badge_label || "মহাযোগ"} VIP তৎকাল (2.0x)`,
+                    })
+                  }
+                  className="h-7 border-amber-400 bg-amber-50 hover:bg-amber-100 text-amber-950 font-extrabold text-[11px] shadow-2xs cursor-pointer"
+                  title="মহাযোগ বা বিশেষ অমাবস্যা/গ্রহণে ২x তৎকাল ফি"
+                >
+                  <span>২.০x সার্জ</span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSurgeModalOpen(true)}
+                  className="h-7 text-amber-900 hover:bg-amber-100/60 text-[11px] font-bold cursor-pointer"
+                  title="কাস্টমাইজ করুন"
+                >
+                  <span>কাস্টম...</span>
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 3. CALENDAR BODY BY VIEW */}
       {view === "week" && (
@@ -1127,6 +1335,162 @@ export function GoogleCalendarSuite({
                   <span className="font-semibold text-slate-700">Amber: যমঘণ্ট ও গুলিকা কাল</span>
                 </div>
               </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* 8. Auspicious Day Tatkal Dynamic Surge Modal */}
+      {surgeModalOpen && (
+        <Modal
+          open={surgeModalOpen}
+          onClose={() => setSurgeModalOpen(false)}
+          title="শুভ তিথিতে তৎকাল ডায়নামিক সার্জ (Vedic Transit Surge Pricing)"
+          description={`তারিখ: ${currentDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })} (IST)`}
+          footer={
+            <div className="flex items-center justify-between w-full">
+              {auspiciousTransit?.is_tatkal_surge_active ? (
+                <Button
+                  variant="outline"
+                  disabled={deactivateSurgeMutation.isPending}
+                  onClick={() => deactivateSurgeMutation.mutate()}
+                  className="text-rose-600 border-rose-300 hover:bg-rose-50 font-bold"
+                >
+                  {deactivateSurgeMutation.isPending ? "বাতিল হচ্ছে..." : "সার্জ বন্ধ করুন (স্বাভাবিক ফি)"}
+                </Button>
+              ) : (
+                <span className="text-[11px] text-slate-500 font-medium">
+                  স্বয়ংক্রিয়ভাবে উইন্ডোর ফি আপডেট হবে
+                </span>
+              )}
+              <div className="flex items-center gap-2">
+                <Button variant="secondary" onClick={() => setSurgeModalOpen(false)}>
+                  বন্ধ করুন
+                </Button>
+                <Button
+                  disabled={activateSurgeMutation.isPending}
+                  onClick={() =>
+                    activateSurgeMutation.mutate({
+                      multiplier: surgeMultiplier,
+                      customTitle: surgeTitle || undefined,
+                      openWindow: surgeAutoOpenWindow,
+                    })
+                  }
+                  className="bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-extrabold shadow-sm"
+                >
+                  <Zap className="size-4 mr-1.5 fill-white" />
+                  <span>
+                    {activateSurgeMutation.isPending
+                      ? "প্রয়োগ হচ্ছে..."
+                      : `সার্জ সক্রিয় করুন (${surgeMultiplier}x)`}
+                  </span>
+                </Button>
+              </div>
+            </div>
+          }
+        >
+          <div className="space-y-4 py-2 text-xs">
+            {/* Transit Intelligence Banner */}
+            {auspiciousTransit?.is_auspicious_transit_day ? (
+              <div className="rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 p-4 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 text-white px-2.5 py-0.5 text-xs font-black uppercase shadow-xs">
+                    <Flame className="size-3.5 fill-yellow-200 text-yellow-200" />
+                    <span>{auspiciousTransit.badge_label || "শুভ তিথি"}</span>
+                  </span>
+                  <span className="rounded-full bg-amber-200 border border-amber-400 px-2 py-0.5 text-[10px] font-black text-amber-950">
+                    🔥 {auspiciousTransit.remedial_demand_surge || "১০x চাহিদা"}
+                  </span>
+                </div>
+                <p className="text-sm font-extrabold text-amber-950">
+                  {auspiciousTransit.primary_event}
+                </p>
+                {auspiciousTransit.recommended_remedies && auspiciousTransit.recommended_remedies.length > 0 && (
+                  <div className="space-y-1 pt-1">
+                    <span className="text-[11px] font-bold text-amber-900 block">
+                      প্রস্তাবিত বিশেষ বৈদিক প্রতিকার:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {auspiciousTransit.recommended_remedies.map((remedy, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-full bg-white/90 border border-amber-300 px-2.5 py-0.5 text-[10px] font-bold text-amber-900"
+                        >
+                          ✨ {remedy}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 space-y-1">
+                <p className="text-xs font-bold text-slate-800">
+                  সাধারণ ক্যালেন্ডার দিন (Standard Transit Day)
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  বিশেষ তিথি না হলেও আপনি অতিরিক্ত কাজের চাপ বা জরুরি তৎকালের জন্য এই দিনে ডায়নামিক প্রিমিয়াম নির্ধারণ করতে পারেন।
+                </p>
+              </div>
+            )}
+
+            {/* Multiplier Selector */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-800 block">
+                তৎকাল প্রিমিয়াম মাল্টিপ্লায়ার (Surge Multiplier):
+              </label>
+              <div className="grid grid-cols-5 gap-2">
+                {[1.25, 1.5, 1.75, 2.0, 2.5].map((mult) => (
+                  <button
+                    key={mult}
+                    type="button"
+                    onClick={() => setSurgeMultiplier(mult)}
+                    className={cn(
+                      "flex flex-col items-center justify-center p-2.5 rounded-xl border font-bold transition-all cursor-pointer",
+                      surgeMultiplier === mult
+                        ? "bg-amber-600 border-amber-700 text-white shadow-sm ring-2 ring-amber-500/30 scale-[1.02]"
+                        : "bg-white border-slate-200 text-slate-800 hover:bg-amber-50 hover:border-amber-300"
+                    )}
+                  >
+                    <span className="text-sm font-black">{mult}x</span>
+                    <span className="text-[9px] uppercase font-bold opacity-80">
+                      {mult === 1.5 ? "জনপ্রিয়" : mult === 2.0 ? "মহাযোগ" : mult >= 2.0 ? "ভিআইপি" : "স্ট্যান্ডার্ড"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Title */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-800 block">
+                কাস্টম স্লট শিরোনাম / ব্যানার (ঐচ্ছিক):
+              </label>
+              <input
+                type="text"
+                value={surgeTitle}
+                onChange={(e) => setSurgeTitle(e.target.value)}
+                placeholder="যেমন: অমাবস্যা কালাসর্প শান্তি তৎকাল"
+                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+
+            {/* Auto Open Window Toggle */}
+            <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold text-slate-800">
+                  স্লট না থাকলে প্রাইম আওয়ার খুলুন (১০:০০ - ২২:০০ IST)
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  এই দিনে কোনো উইন্ডো খোলা না থাকলে স্বয়ংক্রিয়ভাবে সারাদিনের জন্য স্লট তৈরি হবে।
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={surgeAutoOpenWindow}
+                onChange={(e) => setSurgeAutoOpenWindow(e.target.checked)}
+                className="size-4 accent-amber-600 rounded cursor-pointer"
+              />
             </div>
           </div>
         </Modal>
@@ -1679,7 +2043,15 @@ function DayCalendarView({
 }: {
   date: Date;
   bookings: Appointment[];
-  windows: Array<{ id: string; day: string; starts_at: string; ends_at: string }>;
+  windows: Array<{
+    id: string;
+    day: string;
+    starts_at: string;
+    ends_at: string;
+    is_tatkal?: boolean;
+    tatkal_multiplier?: number;
+    custom_title?: string | null;
+  }>;
   now: Date;
   onSlotClick: (hour: number) => void;
   onOpenSession: (appointment: Appointment) => void;
@@ -1742,15 +2114,33 @@ function DayCalendarView({
               return (
                 <div
                   key={w.id}
-                  className="flex items-center justify-between gap-2 rounded-xl border border-sky-200 bg-white p-3 shadow-2xs hover:border-sky-300 transition-all"
+                  className={cn(
+                    "flex items-center justify-between gap-2 rounded-xl border p-3 shadow-2xs transition-all",
+                    w.is_tatkal
+                      ? "border-amber-300 bg-gradient-to-r from-amber-50/90 via-yellow-50/50 to-white ring-1 ring-amber-400/30 hover:border-amber-400"
+                      : "border-sky-200 bg-white hover:border-sky-300"
+                  )}
                 >
                   <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-slate-800 tabular-nums">
-                      {formatTime(s)} – {formatTime(e)}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-bold text-slate-800 tabular-nums">
+                        {formatTime(s)} – {formatTime(e)}
+                      </p>
+                      {w.is_tatkal && (
+                        <span className="flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-600 to-yellow-600 px-2 py-0.5 text-[9px] font-black text-white shadow-2xs">
+                          <Zap className="size-2.5 fill-white text-white" />
+                          <span>{w.tatkal_multiplier ? `${w.tatkal_multiplier}x Tatkal` : "VIP Tatkal"}</span>
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[10px] text-slate-400">
                       Duration: {Math.round((e.getTime() - s.getTime()) / 60000)} mins
                     </p>
+                    {w.custom_title && (
+                      <p className="text-[10px] font-bold text-amber-800 truncate max-w-[180px]">
+                        {w.custom_title}
+                      </p>
+                    )}
                   </div>
                   {onDeleteWindow && (
                     <Button
@@ -2041,7 +2431,15 @@ function AgendaCalendarView({
   busyIntervals = [],
 }: {
   bookings: Appointment[];
-  windows?: Array<{ id: string; day: string; starts_at: string; ends_at: string; is_tatkal?: boolean; custom_title?: string | null }>;
+  windows?: Array<{
+    id: string;
+    day: string;
+    starts_at: string;
+    ends_at: string;
+    is_tatkal?: boolean;
+    tatkal_multiplier?: number;
+    custom_title?: string | null;
+  }>;
   onOpenSession: (appointment: Appointment) => void;
   onOpenPrescription: (appointment: Appointment) => void;
   onOpenCertificate?: (appointment: Appointment) => void;
@@ -2224,7 +2622,12 @@ function AgendaCalendarView({
               return (
                 <div
                   key={w.id}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-sky-200 bg-sky-50/40 p-3.5 shadow-2xs hover:border-sky-300 transition-all"
+                  className={cn(
+                    "flex items-center justify-between gap-3 rounded-2xl border p-3.5 shadow-2xs transition-all",
+                    w.is_tatkal
+                      ? "border-amber-300 bg-gradient-to-r from-amber-50/70 via-yellow-50/40 to-white ring-1 ring-amber-400/20 hover:border-amber-400"
+                      : "border-sky-200 bg-sky-50/40 hover:border-sky-300"
+                  )}
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5">
@@ -2232,8 +2635,9 @@ function AgendaCalendarView({
                         {formatTime(ws)} – {formatTime(we)}
                       </span>
                       {w.is_tatkal && (
-                        <span className="rounded-full bg-amber-100 text-amber-800 px-1.5 py-0.2 text-[9px] font-extrabold">
-                          VIP Tatkal
+                        <span className="flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-600 to-yellow-600 px-2 py-0.5 text-[9px] font-black text-white shadow-2xs">
+                          <Zap className="size-2.5 fill-white text-white" />
+                          <span>{w.tatkal_multiplier ? `${w.tatkal_multiplier}x Tatkal` : "VIP Tatkal"}</span>
                         </span>
                       )}
                     </div>
@@ -2241,7 +2645,7 @@ function AgendaCalendarView({
                       📅 {ws.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {durationMins}m
                     </p>
                     {w.custom_title && (
-                      <p className="text-[10px] text-indigo-700 font-bold truncate max-w-[160px]">
+                      <p className="text-[10px] text-amber-800 font-bold truncate max-w-[160px]">
                         {w.custom_title}
                       </p>
                     )}

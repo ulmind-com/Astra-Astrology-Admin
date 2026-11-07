@@ -10,6 +10,8 @@ import type {
   AvailabilityWindow,
   AppointmentCard,
   Appointment,
+  AuspiciousTransitInfo,
+  AuspiciousTransitSurgeResult,
   BlacklistedClient,
   PrivateInviteLink,
   AddressInput,
@@ -661,6 +663,23 @@ export const appointmentApi = {
 
   verifyCertificate: (appointmentId: string) =>
     api.get<any>(`/appointments/prescription/${appointmentId}/verify`, { auth: false }),
+
+  getAuspiciousTransit: (on?: string) =>
+    api.get<AuspiciousTransitInfo>(
+      `/appointments/auspicious-transit${on ? `?on=${encodeURIComponent(on)}` : ""}`
+    ),
+
+  activateTransitSurge: (body: {
+    day: string;
+    multiplier?: number;
+    custom_title?: string | null;
+    open_surge_window?: boolean;
+    from_time?: string;
+    to_time?: string;
+  }) => api.post<AuspiciousTransitSurgeResult>("/appointments/me/auspicious-transit-surge", body),
+
+  deactivateTransitSurge: (body: { day: string }) =>
+    api.post<AuspiciousTransitSurgeResult>("/appointments/me/auspicious-transit-surge/deactivate", body),
 };
 
 // ----------------------------------------------------------------- reviews

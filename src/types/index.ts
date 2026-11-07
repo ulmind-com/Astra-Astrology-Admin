@@ -481,6 +481,38 @@ export type AvailabilityWindow = S["WindowOut"] & {
 };
 export type AppointmentDayView = S["DayView"];
 
+export interface AuspiciousEventItem {
+  type: string;
+  title: string;
+  description: string;
+  demand_multiplier: number;
+  remedy_focus: string;
+}
+
+export interface AuspiciousTransitInfo {
+  date: string;
+  is_auspicious_transit_day: boolean;
+  primary_event?: string | null;
+  demand_multiplier_hint: number;
+  remedial_demand_surge?: string | null;
+  recommended_remedies: string[];
+  auspicious_events: AuspiciousEventItem[];
+  is_tatkal_surge_active: boolean;
+  active_tatkal_multiplier?: number | null;
+  active_tatkal_windows_count: number;
+  badge_label?: string | null;
+}
+
+export interface AuspiciousTransitSurgeResult {
+  day: string;
+  is_auspicious: boolean;
+  multiplier: number;
+  transit_info: AuspiciousTransitInfo;
+  windows_updated: number;
+  windows_created: number;
+  message: string;
+}
+
 export interface PrivateInviteLink {
   id: string;
   astrologer_id: string;
