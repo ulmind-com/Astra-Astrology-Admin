@@ -52,6 +52,7 @@ import * as React from "react";
 import { toast } from "sonner";
 
 import { Alert, Avatar, Badge, Button, EmptyState, LoadingBlock, Modal } from "@/components/ui";
+import { DivyaParamarshaModal } from "@/components/appointments/divya-paramarsha-modal";
 import { GoogleCalendarSuite } from "@/components/appointments/google-calendar";
 import { appointmentApi, astrologerApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
@@ -1453,12 +1454,14 @@ function Schedule({
   };
 
   const [prescriptionAppointment, setPrescriptionAppointment] = React.useState<Appointment | null>(null);
+  const [certificateAppointment, setCertificateAppointment] = React.useState<Appointment | null>(null);
   const [prescriptionForm, setPrescriptionForm] = React.useState<{
     gemstone: string;
     rudraksha: string;
     mantra: string;
     mantra_count: number;
     daan_remedy: string;
+    sankalpa: string;
     astrologer_notes: string;
   }>({
     gemstone: "",
@@ -1466,6 +1469,7 @@ function Schedule({
     mantra: "",
     mantra_count: 108,
     daan_remedy: "",
+    sankalpa: "",
     astrologer_notes: "",
   });
 
@@ -1477,6 +1481,7 @@ function Schedule({
       mantra: a.prescription?.mantra || "",
       mantra_count: a.prescription?.mantra_count || 108,
       daan_remedy: a.prescription?.daan_remedy || "",
+      sankalpa: a.prescription?.sankalpa || "",
       astrologer_notes: a.prescription?.astrologer_notes || "",
     });
   };
@@ -1489,12 +1494,14 @@ function Schedule({
         mantra: prescriptionForm.mantra.trim() || null,
         mantra_count: Number(prescriptionForm.mantra_count) || null,
         daan_remedy: prescriptionForm.daan_remedy.trim() || null,
+        sankalpa: prescriptionForm.sankalpa.trim() || null,
         astrologer_notes: prescriptionForm.astrologer_notes.trim() || null,
       }),
-    onSuccess: () => {
+    onSuccess: (updated) => {
       void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
       setPrescriptionAppointment(null);
-      toast.success("Vedic prescription issued and synced to client in real-time!");
+      if (updated) setCertificateAppointment(updated);
+      toast.success("Vedic prescription issued & Divya Certificate generated!");
     },
     onError: (e: ApiError) => toast.error(e.message || "Failed to update prescription."),
   });
@@ -2084,6 +2091,17 @@ function Schedule({
                     >
                       <Edit3 className="size-3.5 text-amber-600" />
                       <span>{hasPrescription ? "Edit Prescription" : "Write Prescription"}</span>
+                    </button>
+
+                    {/* Divya Paramarsha Certificate */}
+                    <button
+                      type="button"
+                      onClick={() => setCertificateAppointment(a)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-amber-400/80 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/20 px-3 py-1.5 text-xs font-bold text-amber-950 hover:bg-amber-500/25 transition-all cursor-pointer shadow-2xs"
+                      title="View & Download Divya Paramarsha PDF Certificate"
+                    >
+                      <Sparkles className="size-3.5 text-amber-600" />
+                      <span>👑 সনদ (Certificate)</span>
                     </button>
 
                     {/* Enter Chamber (Live) */}
@@ -2957,18 +2975,34 @@ function Schedule({
         title="Write / Issue Vedic Prescription"
         description="Prescribe consecrated gemstones, authentic rudraksha, sacred mantras, and remedial daan. This instantly updates on the client's screen in real time."
         footer={
-          <div className="flex items-center justify-end gap-3 w-full">
-            <Button variant="secondary" onClick={() => setPrescriptionAppointment(null)}>
-              Cancel
-            </Button>
+          <div className="flex flex-wrap items-center justify-between gap-3 w-full">
             <Button
-              loading={updatePrescriptionMutation.isPending}
-              onClick={() => updatePrescriptionMutation.mutate()}
-              className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
+              type="button"
+              variant="outline"
+              onClick={() => {
+                if (prescriptionAppointment) {
+                  setCertificateAppointment(prescriptionAppointment);
+                }
+              }}
+              className="border-amber-500/40 text-amber-800 bg-amber-500/10 hover:bg-amber-500/20 font-bold text-xs"
             >
-              <Check className="size-3.5 mr-1" />
-              Save & Issue Prescription
+              <Sparkles className="size-3.5 mr-1 text-amber-600" />
+              <span>👑 Preview Certificate (সার্টিফিকেট প্রিভিউ)</span>
             </Button>
+
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" onClick={() => setPrescriptionAppointment(null)}>
+                Cancel
+              </Button>
+              <Button
+                loading={updatePrescriptionMutation.isPending}
+                onClick={() => updatePrescriptionMutation.mutate()}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
+              >
+                <Check className="size-3.5 mr-1" />
+                Save & Issue Certificate
+              </Button>
+            </div>
           </div>
         }
       >
@@ -3042,6 +3076,20 @@ function Schedule({
           </div>
 
           <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+              <span>🧘</span>
+              <span>Vedic Sankalpa & Affirmation (বৈদিক সংকল্প ও ব্রত)</span>
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. May my consciousness align with divine abundance and remove all karmic obstacles"
+              value={prescriptionForm.sankalpa}
+              onChange={(e) => setPrescriptionForm((p) => ({ ...p, sankalpa: e.target.value }))}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
             <label className="block text-[11px] font-bold text-slate-800 mb-1">
               Astrologer Guidance & Custom Directives (বিশেষ পরামর্শ)
             </label>
@@ -3055,6 +3103,15 @@ function Schedule({
           </div>
         </div>
       </Modal>
+
+      {/* Royal Divya Paramarsha Certificate Viewer & PDF Generator Modal */}
+      {certificateAppointment && (
+        <DivyaParamarshaModal
+          appointment={certificateAppointment}
+          onClose={() => setCertificateAppointment(null)}
+          onEditPrescription={(a) => openPrescriptionModal(a)}
+        />
+      )}
 
       {/* Confirmation Modal for Session Cancellation */}
       <Modal

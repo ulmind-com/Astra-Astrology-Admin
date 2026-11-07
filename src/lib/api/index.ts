@@ -502,6 +502,7 @@ export const appointmentApi = {
       mantra?: string | null;
       mantra_count?: number | null;
       daan_remedy?: string | null;
+      sankalpa?: string | null;
       astrologer_notes?: string | null;
     },
   ) => api.patch<Appointment>(`/appointments/${id}/prescription`, body),
@@ -510,7 +511,33 @@ export const appointmentApi = {
     api.get<Record<string, any>>(`/appointments/${id}/preflight${refresh ? "?refresh=true" : ""}`),
 
   getCertificate: (id: string) =>
-    api.get<Record<string, any>>(`/appointments/${id}/certificate`),
+    api.get<{
+      certificate_id: string;
+      issued_at: string;
+      astrologer: { name: string; title: string; avatar_url?: string };
+      client: { name: string; email?: string };
+      consultation_pillar: string;
+      session_duration_minutes: number;
+      sacred_prescription: {
+        consecrated_gemstone: string;
+        sacred_rudraksha: string;
+        vedic_mantra: string;
+        japa_count: number;
+        daan_charity_ritual: string;
+        sankalpa?: string;
+        astrologer_guidance: string;
+      };
+      vedic_shlokas?: Array<{ sanskrit: string; transliteration?: string; meaning: string }>;
+      verification_url: string;
+      qr_code_url?: string;
+      digital_seal: {
+        verification_hash: string;
+        seal_title: string;
+        seal_motto: string;
+        status: string;
+        signature?: string;
+      };
+    }>(`/appointments/${id}/certificate`),
 
   getCertificateHtmlUrl: (id: string) =>
     `${process.env.NEXT_PUBLIC_API_URL || "https://api.divinlink.com"}/api/v1/appointments/${id}/certificate/html`,
@@ -628,6 +655,9 @@ export const appointmentApi = {
       busy_count: number;
       busy_intervals: Array<{ starts_at: string; ends_at: string; title: string; source: string; is_external: boolean }>;
     }>("/appointments/google-calendar/status"),
+
+  verifyCertificate: (appointmentId: string) =>
+    api.get<any>(`/appointments/prescription/${appointmentId}/verify`, { auth: false }),
 };
 
 // ----------------------------------------------------------------- reviews

@@ -380,6 +380,7 @@ export type VedicPrescription = {
   mantra?: string | null;
   mantra_count?: number | null;
   daan_remedy?: string | null;
+  sankalpa?: string | null;
   astrologer_notes?: string | null;
   updated_at?: string | null;
 };

@@ -53,6 +53,7 @@ export interface GoogleCalendarProps {
   windows: Array<{ id: string; day: string; starts_at: string; ends_at: string; is_tatkal?: boolean; custom_title?: string | null }>;
   onOpenSession: (appointment: Appointment) => void;
   onOpenPrescription: (appointment: Appointment) => void;
+  onOpenCertificate?: (appointment: Appointment) => void;
   onCancelAppointment: (appointmentId: string) => void;
   onCompleteAppointment: (appointmentId: string) => void;
   onAddWindow: (
@@ -113,6 +114,7 @@ export function GoogleCalendarSuite({
   windows,
   onOpenSession,
   onOpenPrescription,
+  onOpenCertificate,
   onCancelAppointment,
   onCompleteAppointment,
   onAddWindow,
@@ -659,6 +661,7 @@ export function GoogleCalendarSuite({
           onSlotClick={(h) => handleSlotClick(currentDate, h)}
           onOpenSession={onOpenSession}
           onOpenPrescription={onOpenPrescription}
+          onOpenCertificate={onOpenCertificate}
           onCancelAppointment={onCancelAppointment}
           onCompleteAppointment={onCompleteAppointment}
           getGoogleCalendarUrl={getGoogleCalendarUrl}
@@ -673,6 +676,7 @@ export function GoogleCalendarSuite({
           windows={windows}
           onOpenSession={onOpenSession}
           onOpenPrescription={onOpenPrescription}
+          onOpenCertificate={onOpenCertificate}
           onCancelAppointment={onCancelAppointment}
           onCompleteAppointment={onCompleteAppointment}
           onDeleteWindow={(w) => setDeleteTargetWindow(w)}
@@ -1666,6 +1670,7 @@ function DayCalendarView({
   onSlotClick,
   onOpenSession,
   onOpenPrescription,
+  onOpenCertificate,
   onCancelAppointment,
   onCompleteAppointment,
   getGoogleCalendarUrl,
@@ -1679,6 +1684,7 @@ function DayCalendarView({
   onSlotClick: (hour: number) => void;
   onOpenSession: (appointment: Appointment) => void;
   onOpenPrescription: (appointment: Appointment) => void;
+  onOpenCertificate?: (appointment: Appointment) => void;
   onCancelAppointment: (appointmentId: string) => void;
   onCompleteAppointment: (appointmentId: string) => void;
   getGoogleCalendarUrl: (a: Appointment) => string;
@@ -1945,6 +1951,19 @@ function DayCalendarView({
                             📜 Prescription
                           </button>
 
+                          {onOpenCertificate && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenCertificate(b);
+                              }}
+                              className="text-purple-700 font-bold hover:underline cursor-pointer"
+                            >
+                              👑 Certificate
+                            </button>
+                          )}
+
                           <a
                             href={getGoogleCalendarUrl(b)}
                             target="_blank"
@@ -2014,6 +2033,7 @@ function AgendaCalendarView({
   windows = [],
   onOpenSession,
   onOpenPrescription,
+  onOpenCertificate,
   onCancelAppointment,
   onCompleteAppointment,
   onDeleteWindow,
@@ -2024,6 +2044,7 @@ function AgendaCalendarView({
   windows?: Array<{ id: string; day: string; starts_at: string; ends_at: string; is_tatkal?: boolean; custom_title?: string | null }>;
   onOpenSession: (appointment: Appointment) => void;
   onOpenPrescription: (appointment: Appointment) => void;
+  onOpenCertificate?: (appointment: Appointment) => void;
   onCancelAppointment: (appointmentId: string) => void;
   onCompleteAppointment: (appointmentId: string) => void;
   onDeleteWindow?: (w: { id: string; starts_at: string; ends_at: string; day: string }) => void;
@@ -2124,6 +2145,20 @@ function AgendaCalendarView({
                     >
                       📜 Prescription
                     </Button>
+
+                    {onOpenCertificate && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-purple-200 text-purple-800 hover:bg-purple-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenCertificate(b);
+                        }}
+                      >
+                        👑 Certificate
+                      </Button>
+                    )}
 
                     {/* Complete Session Action Button */}
                     {canComplete && (
