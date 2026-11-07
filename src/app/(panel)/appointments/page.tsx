@@ -1643,6 +1643,11 @@ function Schedule({
             void queryClient.invalidateQueries({ queryKey: WINDOWS_KEY });
             void queryClient.invalidateQueries({ queryKey: CARD_KEY });
           }}
+          onRemoveWindow={async (id) => {
+            await appointmentApi.removeWindow(id);
+            void queryClient.invalidateQueries({ queryKey: WINDOWS_KEY });
+            void queryClient.invalidateQueries({ queryKey: CARD_KEY });
+          }}
         />
       )}
 
