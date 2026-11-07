@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   AlertTriangle,
+  BookOpen,
   Calendar,
   Check,
   Clock,
@@ -10,13 +11,16 @@ import {
   Copy,
   Flame,
   Gem,
+  History,
   Info,
   Loader2,
   MapPin,
+  MessageSquare,
   Moon,
   RefreshCw,
   ShieldAlert,
   Sparkles,
+  Star,
   Sun,
   X,
   Zap,
@@ -57,7 +61,7 @@ export function PreFlightDossierModal({
 }: PreFlightDossierModalProps) {
   const [dossier, setDossier] = React.useState<Record<string, any> | null>(initialDossier || null);
   const [loading, setLoading] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState<"diagnosis" | "chart" | "afflictions">("diagnosis");
+  const [activeTab, setActiveTab] = React.useState<"diagnosis" | "chart" | "afflictions" | "karmic">("diagnosis");
   const [copiedQuestion, setCopiedQuestion] = React.useState(false);
 
   const fetchDossier = React.useCallback(
@@ -102,6 +106,7 @@ export function PreFlightDossierModal({
   const coreDistress = diagnosis.core_distress_bn || diagnosis.core_distress_en || "";
   const cheatSheet = diagnosis.one_glance_cheat_sheet || dossier?.ai_executive_summary || [];
   const remedy = diagnosis.remedial_blueprint || {};
+  const vault = dossier?.karmic_vault || null;
   const isBirthReady = dossier?.is_birth_details_available ?? true;
   const chartModeLabel = dossier?.chart_mode_bn || (isBirthReady ? "জন্ম কুণ্ডলী (Natal)" : "প্রশ্ন কুণ্ডলী (Horary)");
   const pillarKey = dossier?.focus_topic_key || appointment?.consultation_pillar || "career_wealth";
@@ -139,6 +144,15 @@ export function PreFlightDossierModal({
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200/80 px-2 py-0.5 text-[10px] font-black text-amber-700">
                   {dossier?.cosmic_synergy_score || 88}% Synergy
                 </span>
+                {vault?.is_repeat_client ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 border border-purple-300 px-2.5 py-0.5 text-[10px] font-black text-purple-900 shadow-2xs">
+                    👑 {vault.relationship_badge_bn}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                    🌱 নবাগত (১ম আগমন)
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-500 truncate mt-0.5">
                 Seeker: <span className="font-bold text-slate-700">{dossier?.client_name || appointment?.peer?.name || "Client"}</span> · Topic:{" "}
@@ -205,6 +219,22 @@ export function PreFlightDossierModal({
             <ShieldAlert className="size-3.5 text-rose-500" />
             <span>পীড়িত গ্রহ সতর্কতা ({afflicted.length})</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab("karmic")}
+            className={cn(
+              "px-3.5 py-2 border-b-2 transition-all cursor-pointer flex items-center gap-1.5",
+              activeTab === "karmic"
+                ? "border-purple-600 text-purple-700 font-black bg-purple-50/60 rounded-t-xl"
+                : "border-transparent text-slate-500 hover:text-slate-800",
+            )}
+          >
+            <History className="size-3.5 text-purple-600" />
+            <span>কর্মা ও পূর্ব ইতিহাস Vault ({vault?.past_sessions_count || 0})</span>
+            {vault?.is_repeat_client && (
+              <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+            )}
+          </button>
         </div>
 
         {/* Scrollable Content Body */}
@@ -220,6 +250,31 @@ export function PreFlightDossierModal({
               {/* TAB 1: 1-GLANCE DIAGNOSIS */}
               {activeTab === "diagnosis" && (
                 <div className="space-y-4 animate-in fade-in duration-150">
+                  {/* Repeat Client Karmic Vault Alert */}
+                  {vault?.is_repeat_client && (
+                    <div className="rounded-2xl border border-purple-300 bg-purple-50/70 p-3.5 flex items-center justify-between flex-wrap gap-2 text-purple-950 shadow-2xs">
+                      <div className="flex items-center gap-2">
+                        <span className="size-7 rounded-xl bg-purple-600 text-white font-black text-xs flex items-center justify-center">
+                          👑
+                        </span>
+                        <div>
+                          <p className="font-bold text-xs text-purple-950">
+                            {vault.relationship_badge_bn} — {vault.past_sessions_count}টি পূর্ববর্তী সেশনের রেকর্ড রয়েছে
+                          </p>
+                          <p className="text-[11px] text-purple-800">
+                            {vault.last_consultation_date_bn ? `সর্বশেষ সেশন: ${vault.last_consultation_date_bn}` : ""} · পূর্বের প্রেসক্রিপশন ও ফলাফল দেখতে &apos;কর্মা ও পূর্ব ইতিহাস&apos; ট্যাবে যান।
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab("karmic")}
+                        className="rounded-lg bg-purple-600 text-white font-bold text-[10px] px-2.5 py-1 hover:bg-purple-700 transition-colors cursor-pointer"
+                      >
+                        টাইমলাইন দেখুন →
+                      </button>
+                    </div>
+                  )}
+
                   {/* Golden Opening Ice-Breaker Question */}
                   {iceBreaker && (
                     <div className="rounded-2xl border-2 border-amber-300 bg-linear-to-br from-amber-50 via-amber-50/70 to-orange-50/40 p-4 space-y-2 text-amber-950 shadow-xs">
@@ -464,6 +519,220 @@ export function PreFlightDossierModal({
                       })}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* TAB 4: KARMIC CONSULTATION HISTORY VAULT */}
+              {activeTab === "karmic" && (
+                <div className="space-y-4 animate-in fade-in duration-150">
+                  {/* Karmic Tier Summary Banner */}
+                  <div className="rounded-2xl border-2 border-purple-200 bg-linear-to-r from-purple-50/80 via-amber-50/50 to-purple-50/80 p-4 space-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="flex size-7 items-center justify-center rounded-xl bg-purple-600 text-white font-bold text-xs shadow-xs">
+                          {vault?.session_sequence_number || 1}
+                        </span>
+                        <div>
+                          <h4 className="font-display font-black text-sm text-purple-950">
+                            {vault?.relationship_badge_bn || "নবাগত জাতক/জাতিকা (১ম আগমন)"}
+                          </h4>
+                          <p className="text-[11px] text-purple-800">
+                            {vault?.is_repeat_client
+                              ? `এই জ্যোতিষীর সাথে মোট ${vault?.session_sequence_number || 1}টি সেশনের আত্মিক সংযোগ`
+                              : "এই ক্লায়েন্টের সাথে এটি আপনার প্রথম বৈদিক পরামর্শ"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {vault?.is_repeat_client ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-300 px-3 py-1 text-[11px] font-black text-emerald-900 shadow-2xs">
+                            <Check className="size-3 text-emerald-600" />
+                            <span>Repeat Client ({vault?.past_sessions_count} past visits)</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-300 px-3 py-1 text-[11px] font-bold text-slate-700">
+                            <span>First-Time Seeker</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-purple-200/60 text-center">
+                      <div className="p-2 rounded-xl bg-white/80 border border-purple-100">
+                        <p className="text-[10px] text-slate-500 font-bold uppercase">সেশন ক্রম</p>
+                        <p className="text-xs font-black text-purple-900">
+                          {vault?.session_sequence_number ? `${vault.session_sequence_number}ম সেশন` : "১ম সেশন"}
+                        </p>
+                      </div>
+                      <div className="p-2 rounded-xl bg-white/80 border border-purple-100">
+                        <p className="text-[10px] text-slate-500 font-bold uppercase">পূর্ববর্তী সেশন</p>
+                        <p className="text-xs font-black text-purple-900">
+                          {vault?.past_sessions_count ? `${vault.past_sessions_count}টি সম্পন্ন` : "কোনোটি নেই"}
+                        </p>
+                      </div>
+                      <div className="p-2 rounded-xl bg-white/80 border border-purple-100">
+                        <p className="text-[10px] text-slate-500 font-bold uppercase">প্রথম আগমন</p>
+                        <p className="text-xs font-black text-purple-900">
+                          {vault?.first_consultation_date_bn || "আজই প্রথম"}
+                        </p>
+                      </div>
+                      <div className="p-2 rounded-xl bg-white/80 border border-purple-100">
+                        <p className="text-[10px] text-slate-500 font-bold uppercase">সর্বশেষ পরামর্শ</p>
+                        <p className="text-xs font-black text-purple-900">
+                          {vault?.last_consultation_date_bn || "আজকের সেশন"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Repeat Rapport Ice-Breaker Card */}
+                  {vault?.repeat_rapport_ice_breaker_bn && (
+                    <div className="rounded-2xl border-2 border-amber-300 bg-linear-to-r from-amber-50 to-orange-50/50 p-4 space-y-2 text-amber-950 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-[10px] font-black uppercase text-amber-800">
+                          <Sparkles className="size-3.5 text-amber-600" />
+                          <span>পুনরাগমন কুশল বিনিময় ও আত্মিক সংযোগ (Repeat Seeker Rapport Ice-Breaker)</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(vault.repeat_rapport_ice_breaker_bn);
+                            toast.success("Rapport ice-breaker copied!");
+                          }}
+                          className="flex items-center gap-1 rounded-md bg-white/90 px-2 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200 hover:bg-white shadow-2xs cursor-pointer"
+                        >
+                          <Copy className="size-3" />
+                          <span>কপি</span>
+                        </button>
+                      </div>
+                      <p className="text-xs font-black text-amber-950 italic pl-2.5 border-l-2 border-amber-500 leading-relaxed">
+                        &ldquo;{vault.repeat_rapport_ice_breaker_bn}&rdquo;
+                      </p>
+                      <p className="text-[10px] text-amber-800/80">
+                        💡 ক্লায়েন্টের আগের প্রেসক্রাইব করা রত্ন বা পূর্ববর্তী সেশনের ফলাফলের সূত্র ধরে কথা শুরু করলে ক্লায়েন্ট অত্যন্ত সম্মানিত বোধ করবেন।
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Chronological Timeline Feed */}
+                  <div className="space-y-3">
+                    <h5 className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                      <History className="size-3.5 text-purple-600" />
+                      <span>ক্লায়েন্ট কর্মা ও পরামর্শ টাইমলাইন (Karmic Consultation Timeline)</span>
+                    </h5>
+
+                    {vault?.timeline && vault.timeline.length > 0 ? (
+                      <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-purple-200">
+                        {vault.timeline.map((item: any, idx: number) => (
+                          <div
+                            key={item.appointment_id || idx}
+                            className="relative rounded-2xl border border-slate-200/90 bg-white p-4 shadow-2xs space-y-2.5 hover:border-purple-300 transition-all"
+                          >
+                            {/* Dot on timeline */}
+                            <div className="absolute -left-6 top-4 size-3 rounded-full border-2 border-white bg-purple-600 shadow-xs" />
+
+                            <div className="flex items-center justify-between flex-wrap gap-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-black text-xs text-slate-900">
+                                  📅 {item.date_bn}
+                                </span>
+                                <span className="text-[10px] text-slate-400">({item.date_en})</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="rounded-full bg-purple-100 text-purple-800 font-bold px-2 py-0.5 text-[10px]">
+                                  {item.pillar_bn}
+                                </span>
+                                <span className="rounded-full bg-slate-100 text-slate-700 font-bold px-2 py-0.5 text-[10px]">
+                                  {item.duration_minutes} মিনিট
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Client note/topic */}
+                            {item.client_query && (
+                              <p className="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                <b>আলোচনার প্রেক্ষাপট:</b> {item.client_query}
+                              </p>
+                            )}
+
+                            {/* Prescribed Remedies */}
+                            {item.has_prescription && (
+                              <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-200/70 space-y-1.5">
+                                <p className="text-[10px] font-black uppercase text-amber-900 flex items-center gap-1">
+                                  <Sparkles className="size-3 text-amber-600" />
+                                  <span>প্রদত্ত প্রতিকার ও প্রেসক্রিপশন (Remedies Prescribed):</span>
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                                  {item.prescribed_remedies?.gemstone && (
+                                    <div className="flex items-center gap-1 text-slate-800">
+                                      <Gem className="size-3 text-amber-600 shrink-0" />
+                                      <span><b>রত্ন:</b> {item.prescribed_remedies.gemstone}</span>
+                                    </div>
+                                  )}
+                                  {item.prescribed_remedies?.rudraksha && (
+                                    <div className="flex items-center gap-1 text-slate-800">
+                                      <Flame className="size-3 text-amber-600 shrink-0" />
+                                      <span><b>রুদ্রাক্ষ:</b> {item.prescribed_remedies.rudraksha}</span>
+                                    </div>
+                                  )}
+                                  {item.prescribed_remedies?.mantra && (
+                                    <div className="flex items-center gap-1 text-slate-800 sm:col-span-2 font-serif">
+                                      <BookOpen className="size-3 text-amber-600 shrink-0" />
+                                      <span><b>মন্ত্র:</b> {item.prescribed_remedies.mantra} ({item.prescribed_remedies.mantra_count || 108} বার)</span>
+                                    </div>
+                                  )}
+                                </div>
+                                {item.prescribed_remedies?.guidance && (
+                                  <p className="text-[10px] text-amber-900 italic pt-1 border-t border-amber-200/60">
+                                    &ldquo;{item.prescribed_remedies.guidance}&rdquo;
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Client Outcome / Review / Follow-up */}
+                            {(item.review || item.follow_up) && (
+                              <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-1">
+                                <p className="text-[10px] font-black uppercase text-emerald-900 flex items-center gap-1">
+                                  <Check className="size-3 text-emerald-600" />
+                                  <span>সেশন পরবর্তী ফলশ্রুতি ও ক্লায়েন্ট ফিডব্যাক (Outcome & Feedback):</span>
+                                </p>
+                                {item.review?.text && (
+                                  <p className="text-[11px] text-emerald-950 font-medium">
+                                    ⭐ <b>রিভিউ ({item.review.stars}★):</b> &ldquo;{item.review.text}&rdquo;
+                                  </p>
+                                )}
+                                {item.follow_up?.latest_update && (
+                                  <p className="text-[11px] text-emerald-900">
+                                    💬 <b>ফলো-আপ আপডেট:</b> {item.follow_up.latest_update}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Milestone Summary Footer */}
+                            <p className="text-[10px] text-purple-800/80 font-serif italic pt-1 border-t border-slate-100">
+                              📜 {item.karmic_summary_bn}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center space-y-2">
+                        <div className="size-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mx-auto">
+                          <History className="size-5" />
+                        </div>
+                        <h6 className="font-bold text-xs text-slate-800">
+                          প্রথম বৈদিক আগমন (First Consultation on Record)
+                        </h6>
+                        <p className="text-[11px] text-slate-500 max-w-md mx-auto">
+                          এই ক্লায়েন্টের এটিই আপনার সাথে প্রথম পরামর্শ সেশন। আজকের সেশনটি সম্পন্ন হওয়ার পর ক্লায়েন্টের সমস্ত প্রেসক্রিপশন ও আলোচনা স্বয়ংক্রিয়ভাবে এই কর্মা ভল্টে যুক্ত হবে।
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

@@ -22,6 +22,7 @@ import {
   Flame,
   Gem,
   HelpCircle,
+  History,
   IndianRupee,
   Info,
   MessageSquare,
@@ -2527,6 +2528,62 @@ function Schedule({
 
               {preflightData ? (
                 <div className="space-y-3.5 text-xs">
+                  {/* Karmic Repeat Client Banner */}
+                  {preflightData.karmic_vault && (
+                    <div className="rounded-2xl border-2 border-purple-200 bg-linear-to-r from-purple-50 via-amber-50/40 to-purple-50 p-3.5 space-y-2">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-6 items-center justify-center rounded-lg bg-purple-600 text-white font-bold text-xs">
+                            {preflightData.karmic_vault.session_sequence_number || 1}
+                          </span>
+                          <div>
+                            <p className="font-bold text-xs text-purple-950">
+                              {preflightData.karmic_vault.relationship_badge_bn}
+                            </p>
+                            <p className="text-[10px] text-purple-800">
+                              {preflightData.karmic_vault.is_repeat_client
+                                ? `এই জ্যোতিষীর সাথে মোট ${preflightData.karmic_vault.session_sequence_number}ম সেশন · পূর্ববর্তী ${preflightData.karmic_vault.past_sessions_count}টি সেশনের রেকর্ড`
+                                : "প্রথম আগমন — এই ক্লায়েন্টের সাথে আপনার প্রথম বৈদিক সংযোগ"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Karmic Timeline in Drawer */}
+                      {Boolean(preflightData.karmic_vault.timeline?.length) && (
+                        <div className="pt-2 border-t border-purple-200/60 space-y-2">
+                          <p className="text-[10px] font-black uppercase text-purple-900 flex items-center gap-1">
+                            <History className="size-3 text-purple-600" />
+                            <span>পূর্ববর্তী পরামর্শ ও প্রেসক্রিপশন টাইমলাইন ({preflightData.karmic_vault.timeline.length}):</span>
+                          </p>
+                          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                            {preflightData.karmic_vault.timeline.map((item: any, idx: number) => (
+                              <div
+                                key={item.appointment_id || idx}
+                                className="p-2.5 rounded-xl bg-white border border-purple-100 space-y-1 shadow-2xs"
+                              >
+                                <div className="flex items-center justify-between text-[11px]">
+                                  <span className="font-bold text-slate-900">📅 {item.date_bn}</span>
+                                  <span className="font-semibold text-purple-800 bg-purple-50 px-2 py-0.5 rounded-full text-[10px]">
+                                    {item.pillar_bn} ({item.duration_minutes}m)
+                                  </span>
+                                </div>
+                                <p className="text-[10px] text-slate-700 italic">
+                                  📜 {item.karmic_summary_bn}
+                                </p>
+                                {item.prescribed_remedies?.gemstone && (
+                                  <p className="text-[10px] text-emerald-800 font-medium">
+                                    💎 <b>রত্ন:</b> {item.prescribed_remedies.gemstone}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* 1. Golden Opening Ice-Breaker Question */}
                   {preflightData.executive_cosmic_diagnosis?.opening_ice_breaker_bn && (
                     <div className="rounded-2xl border-2 border-amber-300 bg-linear-to-r from-amber-50 to-orange-50/50 p-3.5 space-y-1.5 text-amber-950 shadow-2xs">

@@ -510,6 +510,9 @@ export const appointmentApi = {
   getPreflight: (id: string, refresh?: boolean) =>
     api.get<Record<string, any>>(`/appointments/${id}/preflight${refresh ? "?refresh=true" : ""}`),
 
+  getKarmicVault: (id: string) =>
+    api.get<Record<string, any>>(`/appointments/${id}/karmic-vault`),
+
   getCertificate: (id: string) =>
     api.get<{
       certificate_id: string;
