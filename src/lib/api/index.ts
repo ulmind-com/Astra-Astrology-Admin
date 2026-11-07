@@ -506,8 +506,8 @@ export const appointmentApi = {
     },
   ) => api.patch<Appointment>(`/appointments/${id}/prescription`, body),
 
-  getPreflight: (id: string) =>
-    api.get<Record<string, any>>(`/appointments/${id}/preflight`),
+  getPreflight: (id: string, refresh?: boolean) =>
+    api.get<Record<string, any>>(`/appointments/${id}/preflight${refresh ? "?refresh=true" : ""}`),
 
   getCertificate: (id: string) =>
     api.get<Record<string, any>>(`/appointments/${id}/certificate`),

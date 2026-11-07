@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { AstroCoPilot } from "@/components/call/astro-copilot";
 import { CallRoom } from "@/components/call/call-room";
 import { CosmicWhiteboard } from "@/components/call/cosmic-whiteboard";
+import { PreFlightDossierModal } from "@/components/appointments/preflight-dossier-modal";
 import { Alert, Avatar, Button, LoadingBlock, Modal } from "@/components/ui";
 import { useCall, useCallActions, useCallHeartbeat, useCallTimer } from "@/hooks/use-call";
 import { appointmentApi, whiteboardApi } from "@/lib/api";
@@ -47,6 +48,7 @@ export default function AstrologerCallPage() {
   const [offeringExtension, setOfferingExtension] = React.useState(false);
 
   const [whiteboardOpen, setWhiteboardOpen] = React.useState(false);
+  const [preflightOpen, setPreflightOpen] = React.useState(false);
 
   // Theme State (Supports Ultra Pro Light & Dark)
   const [theme, setTheme] = React.useState<"light" | "dark">(() => {
@@ -208,6 +210,24 @@ export default function AstrologerCallPage() {
               <Sparkles className="size-3.5 mr-1 text-amber-400" />
               Cosmic Whiteboard
             </Button>
+
+            {call.appointment_id && (
+              <Button
+                size="sm"
+                onClick={() => setPreflightOpen(true)}
+                className={cn(
+                  "text-xs font-bold transition-all shadow-sm",
+                  isDark
+                    ? "bg-linear-to-r from-amber-600 to-indigo-600 hover:from-amber-500 hover:to-indigo-500 text-white border border-amber-400/40"
+                    : "bg-linear-to-r from-amber-500 to-indigo-600 hover:from-amber-600 hover:to-indigo-700 text-white shadow-xs font-bold",
+                )}
+                title="AI Pre-Flight Cosmic Dossier (1-Glance Kundli Briefing)"
+              >
+                <Sparkles className="size-3.5 mr-1" />
+                AI কুণ্ডলী ডসিয়ার
+              </Button>
+            )}
+
             {call.appointment_id && (
               <>
                 {call.extension_offer?.status === "pending" ? (
@@ -480,6 +500,15 @@ export default function AstrologerCallPage() {
             )}
           </div>
         </Modal>
+      )}
+
+      {preflightOpen && call.appointment_id && (
+        <PreFlightDossierModal
+          open={preflightOpen}
+          onClose={() => setPreflightOpen(false)}
+          appointmentId={call.appointment_id}
+          isLiveChamber
+        />
       )}
     </div>
   );

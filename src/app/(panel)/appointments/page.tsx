@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
+  AlertTriangle,
   Calendar,
   CalendarCheck,
   CalendarDays,
@@ -36,6 +37,8 @@ import {
   ShieldAlert,
   ShieldCheck,
   Sparkles,
+  Sun,
+  Moon,
   Trash2,
   TrendingUp,
   User,
@@ -2399,42 +2402,250 @@ function Schedule({
             </div>
 
             {/* AI Astrological Pre-Flight Intelligence Dossier */}
-            <div className="rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/70 via-indigo-50/30 to-purple-50/40 p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] font-bold text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="size-3.5 text-indigo-600" />
-                  <span>🔮 AI Astrological Pre-Flight Intelligence (T-15m)</span>
-                </p>
-                {isLoadingPreflight && (
-                  <span className="text-[10px] text-indigo-500 animate-pulse">Synthesizing Kundli...</span>
-                )}
+            <div className="rounded-3xl border border-indigo-200/90 bg-linear-to-br from-indigo-50/60 via-purple-50/30 to-amber-50/40 p-4 sm:p-5 space-y-4 shadow-xs">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="flex size-7 items-center justify-center rounded-xl bg-linear-to-tr from-amber-500 to-indigo-600 text-white shadow-xs">
+                    <Sparkles className="size-4" />
+                  </span>
+                  <div>
+                    <h4 className="font-display font-black text-xs sm:text-sm text-indigo-950 uppercase tracking-wider">
+                      🔮 AI Pre-Flight Cosmic Dossier
+                    </h4>
+                    <p className="text-[10px] text-indigo-700/80 font-medium">
+                      {preflightData?.chart_mode_bn || (preflightData?.is_birth_details_available ? "জন্ম কুণ্ডলী ভিত্তিক বিশ্লেষণ" : "প্রশ্ন কুণ্ডলী ভিত্তিক বিশ্লেষণ")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!dossierAppointment) return;
+                      setIsLoadingPreflight(true);
+                      appointmentApi
+                        .getPreflight(dossierAppointment.id, true)
+                        .then((res) => {
+                          setPreflightData(res.data);
+                          toast.success("Pre-flight dossier refreshed!");
+                        })
+                        .catch(() => {})
+                        .finally(() => setIsLoadingPreflight(false));
+                    }}
+                    disabled={isLoadingPreflight}
+                    className="flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-white/90 px-2.5 py-1 text-[11px] font-bold text-indigo-700 hover:bg-white transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                  >
+                    <RefreshCw className={cn("size-3", isLoadingPreflight && "animate-spin text-amber-600")} />
+                    <span>{isLoadingPreflight ? "Re-calculating..." : "Refresh"}</span>
+                  </button>
+                </div>
               </div>
 
               {preflightData ? (
-                <div className="space-y-2.5 text-[11px]">
-                  {/* Planetary Gochars */}
-                  <div className="rounded-xl bg-white/90 p-2.5 border border-indigo-100 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-indigo-700 block">Planetary Gochar Transits</span>
-                    <ul className="list-disc list-inside space-y-0.5 text-slate-700 text-[11px]">
-                      <li>{preflightData.planetary_transits?.saturn_gochar || "Saturn in active transit restructuring"}</li>
-                      <li>{preflightData.planetary_transits?.jupiter_gochar || "Jupiter in auspicious trine aspect"}</li>
-                      <li>{preflightData.planetary_transits?.rahu_ketu_axis || "Karmic nodal alignment on pivotal axis"}</li>
-                    </ul>
-                  </div>
+                <div className="space-y-3.5 text-xs">
+                  {/* 1. Golden Opening Ice-Breaker Question */}
+                  {preflightData.executive_cosmic_diagnosis?.opening_ice_breaker_bn && (
+                    <div className="rounded-2xl border-2 border-amber-300 bg-linear-to-r from-amber-50 to-orange-50/50 p-3.5 space-y-1.5 text-amber-950 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-[10px] font-black uppercase text-amber-800">
+                          <Sparkles className="size-3.5 text-amber-600" />
+                          <span>কল শুরুর ওপেনিং প্রশ্ন (Astrologer&apos;s 10-Second Ice-Breaker)</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              preflightData.executive_cosmic_diagnosis.opening_ice_breaker_bn
+                            );
+                            toast.success("Opening question copied!");
+                          }}
+                          className="flex items-center gap-1 rounded-md bg-white/90 px-2 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200 hover:bg-white shadow-2xs cursor-pointer"
+                        >
+                          <Copy className="size-3" />
+                          <span>কপি</span>
+                        </button>
+                      </div>
+                      <p className="text-xs font-black text-amber-950 italic pl-2.5 border-l-2 border-amber-500 leading-relaxed">
+                        &ldquo;{preflightData.executive_cosmic_diagnosis.opening_ice_breaker_bn}&rdquo;
+                      </p>
+                    </div>
+                  )}
 
-                  {/* AI Strategic Directives */}
-                  <div className="rounded-xl bg-white/90 p-2.5 border border-indigo-100 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-indigo-700 block">Consultation Guidance Synthesis</span>
-                    <ul className="list-disc list-inside space-y-1 text-slate-700 text-[11px]">
-                      {(preflightData.ai_executive_summary || []).map((summary: string, idx: number) => (
-                        <li key={idx} className="leading-relaxed">{summary}</li>
-                      ))}
-                    </ul>
-                  </div>
+                  {/* 2. Core Suffering Diagnostic (কী সমস্যায় ভুগছে) */}
+                  {preflightData.executive_cosmic_diagnosis?.core_distress_bn && (
+                    <div className="rounded-2xl border border-rose-200 bg-rose-50/50 p-3 space-y-1">
+                      <span className="text-[10px] font-black uppercase text-rose-800 flex items-center gap-1">
+                        <AlertTriangle className="size-3 text-rose-600" />
+                        <span>মূল সমস্যা ও মানসিক পীড়া (Client Suffering Diagnosis)</span>
+                      </span>
+                      <p className="text-xs font-bold text-rose-950 leading-relaxed">
+                        {preflightData.executive_cosmic_diagnosis.core_distress_bn}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 3. Core Identity 3-Card Grid: Lagna, Moon Sign, Nakshatra */}
+                  {preflightData.core_identity && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="rounded-2xl border border-amber-200 bg-white/90 p-3 space-y-0.5 shadow-2xs">
+                        <span className="text-[10px] font-black uppercase text-amber-800 flex items-center gap-1">
+                          <Sun className="size-3 text-amber-600" />
+                          <span>লগ্ন (Ascendant)</span>
+                        </span>
+                        <p className="text-sm font-black text-slate-900">
+                          {preflightData.core_identity.lagna_bn || preflightData.core_identity.lagna}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-medium">
+                          লগ্নাধিপতি: <b>{preflightData.core_identity.lagna_lord_bn || preflightData.core_identity.lagna_lord}</b>
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-indigo-200 bg-white/90 p-3 space-y-0.5 shadow-2xs">
+                        <span className="text-[10px] font-black uppercase text-indigo-800 flex items-center gap-1">
+                          <Moon className="size-3 text-indigo-600" />
+                          <span>চন্দ্র রাশি (Moon Sign)</span>
+                        </span>
+                        <p className="text-sm font-black text-slate-900">
+                          {preflightData.core_identity.chandra_rashi_bn || preflightData.core_identity.chandra_rashi}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-medium">
+                          রাশিপতি: <b>{preflightData.core_identity.chandra_lord_bn || preflightData.core_identity.chandra_lord}</b>
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-purple-200 bg-white/90 p-3 space-y-0.5 shadow-2xs">
+                        <span className="text-[10px] font-black uppercase text-purple-800 flex items-center gap-1">
+                          <Sparkles className="size-3 text-purple-600" />
+                          <span>নক্ষত্র (Nakshatra)</span>
+                        </span>
+                        <p className="text-sm font-black text-slate-900">
+                          {preflightData.core_identity.nakshatra_bn || preflightData.core_identity.nakshatra}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-medium">
+                          নক্ষত্রপতি: <b>{preflightData.core_identity.nakshatra_lord_bn || preflightData.core_identity.nakshatra_lord}</b>
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 4. Running Vimshottari Dasha */}
+                  {preflightData.current_vimshottari_dasha && (
+                    <div className="rounded-2xl border border-sky-200 bg-sky-50/60 p-3 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase text-sky-800 flex items-center gap-1">
+                          <Clock className="size-3 text-sky-600" />
+                          <span>চলতি বিংশোত্তরী দশা</span>
+                        </span>
+                        {preflightData.current_vimshottari_dasha.end_date && (
+                          <span className="text-[10px] font-bold text-sky-700 bg-white/80 px-2 py-0.5 rounded-full border border-sky-200">
+                            মেয়াদ: {preflightData.current_vimshottari_dasha.end_date}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-black text-sky-950">
+                        {preflightData.current_vimshottari_dasha.mahadasha_lord_bn} মহাদশা · {preflightData.current_vimshottari_dasha.antardasha_lord_bn} অন্তর্দশা
+                      </p>
+                      <p className="text-[11px] text-sky-900 leading-relaxed">
+                        {preflightData.current_vimshottari_dasha.verdict_bn}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 5. Afflicted Planets Shield (পীড়িত গ্রহ) */}
+                  {Boolean(preflightData.afflicted_planets?.length) && (
+                    <div className="rounded-2xl border border-rose-200 bg-white/95 p-3 space-y-2 shadow-2xs">
+                      <span className="text-[10px] font-black uppercase text-rose-800 flex items-center gap-1.5">
+                        <ShieldAlert className="size-3.5 text-rose-600" />
+                        <span>পীড়িত গ্রহ সতর্কতা ({preflightData.afflicted_planets.length}টি গ্রহ চিহ্নিত)</span>
+                      </span>
+                      <div className="space-y-1.5">
+                        {preflightData.afflicted_planets.map((a: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className="rounded-xl border border-rose-100 bg-rose-50/50 p-2 flex items-center justify-between flex-wrap gap-1.5 text-[11px]"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-slate-900">
+                                {a.planet_bn || a.planet} ({a.sign_bn || a.sign})
+                              </span>
+                              <span className="text-[10px] text-slate-500 font-bold bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                                {a.house}ম ভাব
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {(a.reasons || []).map((r: string, rIdx: number) => (
+                                <span
+                                  key={rIdx}
+                                  className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700"
+                                >
+                                  {r}
+                                </span>
+                              ))}
+                            </div>
+                            <p className="text-[10px] text-rose-900/90 w-full pl-0.5 leading-relaxed">
+                              ⚠️ {a.symptom_bn}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 6. Consultation Pillar House Analysis */}
+                  {Boolean(preflightData.pillar_house_analysis?.houses_details?.length) && (
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] font-black uppercase text-slate-400 block tracking-wider">
+                        পিলার ভাব বিশ্লেষণ ({preflightData.focus_topic || "কনসালটেশন"})
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {preflightData.pillar_house_analysis.houses_details.map((h: any) => (
+                          <div
+                            key={h.house_num}
+                            className="rounded-xl border border-slate-200 bg-white/90 p-2.5 space-y-1 shadow-2xs"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-black text-[11px] text-slate-900">{h.title_bn}</span>
+                              <span className="text-[10px] font-bold text-slate-500">
+                                {h.sign_bn} (পতি: {h.lord_bn})
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-600 leading-relaxed">
+                              {h.summary_bn}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 7. Prescriptive Blueprint */}
+                  {preflightData.executive_cosmic_diagnosis?.remedial_blueprint && (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-3 space-y-1.5">
+                      <span className="text-[10px] font-black uppercase text-emerald-900 flex items-center gap-1">
+                        <Gem className="size-3 text-emerald-600" />
+                        <span>প্রস্তাবিত বৈদিক প্রতিকার ব্লুপ্রিন্ট (Prescription Blueprint)</span>
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                        <div className="rounded-xl bg-white/90 p-2 border border-emerald-100">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase block">রত্ন</span>
+                          <span className="font-bold text-emerald-950">
+                            {preflightData.executive_cosmic_diagnosis.remedial_blueprint.gemstone}
+                          </span>
+                        </div>
+                        <div className="rounded-xl bg-white/90 p-2 border border-emerald-100">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase block">রুদ্রাক্ষ</span>
+                          <span className="font-bold text-emerald-950">
+                            {preflightData.executive_cosmic_diagnosis.remedial_blueprint.rudraksha}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="rounded-xl bg-white/80 p-3 text-slate-500 italic text-[11px]">
-                  AI Astrological pre-flight briefing is generating automatically based on client birth chart...
+                <div className="rounded-2xl bg-white/80 p-4 text-center text-slate-500 italic text-[11px]">
+                  AI Pre-flight cosmic briefing is synthesizing automatically based on client birth chart...
                 </div>
               )}
             </div>
