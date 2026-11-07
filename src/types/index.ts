@@ -73,7 +73,7 @@ export type BankDetails = S["BankDetails"];
 export type GalleryImage = S["GalleryImage"];
 export type GalleryUploadResult = S["GalleryUploadResult"];
 export type Skill = S["Skill"];
-export type ConsultationMode = S["ConsultationMode"];
+export type ConsultationMode = "chat" | "call" | "video" | "appointment";
 
 /** `Paginated[AstrologerPublic]`, which openapi-typescript names awkwardly. */
 export type PaginatedAstrologers = S["Paginated_AstrologerPublic_"];
@@ -104,6 +104,7 @@ export const MODE_LABELS: Record<ConsultationMode, string> = {
   chat: "Chat",
   call: "Call",
   video: "Video",
+  appointment: "Appointment",
 };
 
 export const MODES = Object.keys(MODE_LABELS) as ConsultationMode[];
@@ -362,6 +363,55 @@ export type AdminEarningRow = S["AdminEarningRow"] & {
   user_image_url?: string | null;
 };
 export type AdminEarningsSummary = S["AdminEarningsSummary"];
+
+export interface AstrologerEarningsBalance {
+  total_earned_paise: number;
+  total_settled_paise: number;
+  total_pending_paise: number;
+  withdrawable_balance_paise: number;
+  min_payout_amount_paise: number;
+  bank_name?: string | null;
+  account_holder_name?: string | null;
+  account_number_last4?: string | null;
+  ifsc?: string | null;
+  upi_id?: string | null;
+  pan_card?: string | null;
+  has_bank_details: boolean;
+}
+
+export interface AstrologerPayoutRecord {
+  id: string;
+  astrologer_id: string;
+  astrologer_name?: string | null;
+  amount_paise: number;
+  tds_percent: number;
+  tds_paise: number;
+  net_payable_paise: number;
+  payout_method: "bank_transfer" | "upi";
+  bank_name?: string | null;
+  account_holder_name?: string | null;
+  account_number_last4?: string | null;
+  account_number_masked?: string | null;
+  ifsc?: string | null;
+  upi_id?: string | null;
+  status: "pending" | "approved" | "settled" | "rejected";
+  utr_number?: string | null;
+  admin_notes?: string | null;
+  rejection_reason?: string | null;
+  requested_at: string;
+  approved_at?: string | null;
+  settled_at?: string | null;
+  rejected_at?: string | null;
+}
+
+export interface BankDetailsUpdate {
+  account_holder_name?: string | null;
+  account_number?: string | null;
+  ifsc?: string | null;
+  bank_name?: string | null;
+  upi_id?: string | null;
+  pan_card?: string | null;
+}
 
 /** Earnings are money, so they are paise — never coins. */
 export function formatEarning(paise: number): string {

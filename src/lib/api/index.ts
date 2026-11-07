@@ -21,6 +21,9 @@ import type {
   AdminTransaction,
   AdminWallet,
   AstrologerAdminUpdate,
+  AstrologerEarningsBalance,
+  AstrologerPayoutRecord,
+  BankDetailsUpdate,
   AstrologerCreate,
   AstrologerCreated,
   AstrologerProfile,
@@ -440,8 +443,39 @@ export const chatApi = {
 export const earningsApi = {
   summary: () => api.get<EarningsSummary>(endpoints.astrologers.myEarnings),
 
-  recent: (limit = 50) =>
-    api.get<EarningRow[]>(endpoints.astrologers.myEarningsRecent, { query: { limit } }),
+  balance: () => api.get<AstrologerEarningsBalance>("/astrologers/me/earnings/balance"),
+
+  recent: (limit = 50, skip = 0, mode?: string) =>
+    api.get<EarningRow[]>(endpoints.astrologers.myEarningsRecent, {
+      query: { limit, skip, mode: mode || undefined },
+    }),
+
+  requestPayout: (body: {
+    amount_paise: number;
+    payout_method: string;
+    bank_name?: string;
+    account_holder_name?: string;
+    account_number?: string;
+    ifsc?: string;
+    upi_id?: string;
+  }) => api.post<AstrologerPayoutRecord>("/astrologers/me/earnings/payout-request", body),
+
+  myPayouts: (limit = 50) =>
+    api.get<AstrologerPayoutRecord[]>("/astrologers/me/earnings/payouts", { query: { limit } }),
+
+  updateBankDetails: (body: BankDetailsUpdate) =>
+    api.patch<{ saved: boolean }>("/astrologers/me/earnings/bank-details", body),
+
+  adminPayouts: (status?: string, limit = 100) =>
+    api.get<AstrologerPayoutRecord[]>("/admin/earnings/payouts", {
+      query: { status: status || undefined, limit },
+    }),
+
+  adminSettlePayout: (id: string, body: { utr_number: string; admin_notes?: string }) =>
+    api.post<AstrologerPayoutRecord>(`/admin/earnings/payouts/${id}/settle`, body),
+
+  adminRejectPayout: (id: string, body: { rejection_reason: string }) =>
+    api.post<AstrologerPayoutRecord>(`/admin/earnings/payouts/${id}/reject`, body),
 };
 
 // ------------------------------------------------------------ appointments

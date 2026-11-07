@@ -108,7 +108,9 @@ const RATE_KEYS = {
 } as const;
 
 export function coinsPerMinute(rates: ResolvedRates, mode: ConsultationMode): number {
-  return rates[RATE_KEYS[mode]] ?? 0;
+  if (mode === "appointment") return 0;
+  const key = RATE_KEYS[mode as keyof typeof RATE_KEYS];
+  return key ? rates[key] ?? 0 : 0;
 }
 
 export function debounce<A extends unknown[]>(fn: (...args: A) => void, ms = 300) {
