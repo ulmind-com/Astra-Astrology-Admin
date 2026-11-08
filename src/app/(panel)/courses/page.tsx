@@ -6,14 +6,17 @@ import {
   Clock,
   Edit2,
   GraduationCap,
+  Image as ImageIcon,
   Layers,
   Loader2,
   Plus,
   RefreshCw,
   Search,
   Trash2,
+  UploadCloud,
   Users,
   Video,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -36,7 +39,7 @@ import {
   Switch,
   Textarea,
 } from "@/components/ui";
-import { courseAdminApi } from "@/lib/api";
+import { courseAdminApi, shopAdminApi } from "@/lib/api";
 import type { CourseAdminInput, CourseAdminItem } from "@/types";
 
 const CATEGORIES = [
@@ -91,6 +94,33 @@ export default function CoursesAdminPage() {
     tags: [],
   });
   const [learningPointsText, setLearningPointsText] = React.useState("");
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file (JPG, PNG, WebP).");
+      return;
+    }
+    const toastId = toast.loading("Compressing & uploading thumbnail image...");
+    try {
+      setIsUploadingThumbnail(true);
+      const res = await shopAdminApi.uploadImage(file);
+      if (res && res.url) {
+        setFormData((prev) => ({ ...prev, thumbnail_url: res.url }));
+        toast.success("Thumbnail uploaded successfully!", { id: toastId });
+      } else {
+        toast.error("Could not obtain image URL.", { id: toastId });
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to upload thumbnail.", { id: toastId });
+    } finally {
+      setIsUploadingThumbnail(false);
+      if (e.target) e.target.value = "";
+    }
+  };
 
   const { data: courses = [], isLoading, isFetching, refetch } = useQuery({
     queryKey: ["admin-courses"],
@@ -565,13 +595,90 @@ export default function CoursesAdminPage() {
             </Field>
           </div>
 
-          <Field label="Thumbnail Image URL *" hint="Cloudinary or public image link">
-            <Input
-              value={formData.thumbnail_url}
-              onChange={(e) => setFormData((prev) => ({ ...prev, thumbnail_url: e.target.value }))}
-              placeholder="https://res.cloudinary.com/.../thumbnail.jpg"
+          {/* Direct Thumbnail Image Upload */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-foreground">
+                Thumbnail Image (16:9) *
+              </label>
+              {formData.thumbnail_url && (
+                <button
+                  type="button"
+                  onClick={() => setFormData((prev) => ({ ...prev, thumbnail_url: "" }))}
+                  className="text-[11px] text-danger hover:underline flex items-center gap-1"
+                >
+                  <X className="h-3 w-3" /> Remove Image
+                </button>
+              )}
+            </div>
+
+            {formData.thumbnail_url ? (
+              <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-black group max-h-56">
+                <Image
+                  src={formData.thumbnail_url}
+                  alt="Thumbnail Preview"
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <Button
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                    className="bg-black/70 text-white border-white/30 text-xs"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingThumbnail}
+                  >
+                    Change Thumbnail
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div
+                onClick={() => !isUploadingThumbnail && fileInputRef.current?.click()}
+                className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+                  isUploadingThumbnail
+                    ? "border-amber-500 bg-amber-500/5 cursor-wait"
+                    : "border-border hover:border-amber-500/60 hover:bg-muted/30"
+                }`}
+              >
+                {isUploadingThumbnail ? (
+                  <div className="flex flex-col items-center gap-2 text-amber-600">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <p className="text-xs font-semibold">Uploading & compressing thumbnail to WebP...</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground text-center">
+                    <div className="p-3 rounded-full bg-amber-500/10 text-amber-600">
+                      <UploadCloud className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Click to upload course thumbnail</p>
+                      <p className="text-[11px] text-muted-foreground">Upload from device (JPG, PNG, WebP) - compressed automatically</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleThumbnailUpload}
             />
-          </Field>
+
+            <div className="pt-1">
+              <Input
+                value={formData.thumbnail_url}
+                onChange={(e) => setFormData((prev) => ({ ...prev, thumbnail_url: e.target.value }))}
+                placeholder="Or paste external image URL directly (https://...)"
+                className="text-xs"
+              />
+            </div>
+          </div>
 
           <Field label="Detailed Description (Markdown) *">
             <Textarea

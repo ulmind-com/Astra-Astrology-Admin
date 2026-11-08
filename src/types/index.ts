@@ -952,4 +952,5 @@ export interface BunnyVideoPlaceholder {
   library_id: string;
   title: string;
   upload_url?: string | null;
+  access_key?: string | null;
 }

@@ -1071,6 +1071,9 @@ export const courseAdminApi = {
   listCourses: (params?: { limit?: number; skip?: number }) =>
     api.get<CourseAdminItem[]>(endpoints.admin.courses.list, { query: params }),
 
+  getCourse: (id: string) =>
+    api.get<any>(endpoints.admin.courses.detail(id)),
+
   createCourse: (body: CourseAdminInput) =>
     api.post<{ id: string; slug: string; message: string }>(endpoints.admin.courses.create, body),
 
