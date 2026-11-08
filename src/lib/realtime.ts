@@ -76,7 +76,9 @@ export type LiveMessage =
   | { type: "chat_read"; data: Record<string, string> }
   | { type: "chat_ended"; data: { session_id: string; reason?: string | null } }
   | { type: "whiteboard_event"; data: Record<string, any> }
-  | { type: "whiteboard_live"; data: Record<string, any> };
+  | { type: "whiteboard_sync"; data: Record<string, any> }
+  | { type: "whiteboard_live"; data: Record<string, any> }
+  | { type: "whiteboard_chart_reloaded"; data: Record<string, any> };
 
 /**
  * Whether this astrologer is actually at their desk.

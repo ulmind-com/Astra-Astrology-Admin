@@ -49,7 +49,9 @@ type ChatListener = (event: ChatEvent) => void;
 
 export type WhiteboardEvent =
   | { type: "whiteboard_event"; data: Record<string, any> }
-  | { type: "whiteboard_live"; data: Record<string, any> };
+  | { type: "whiteboard_sync"; data: Record<string, any> }
+  | { type: "whiteboard_live"; data: Record<string, any> }
+  | { type: "whiteboard_chart_reloaded"; data: Record<string, any> };
 
 type WhiteboardListener = (event: WhiteboardEvent) => void;
 
@@ -302,7 +304,9 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           break;
 
         case "whiteboard_event":
+        case "whiteboard_sync":
         case "whiteboard_live":
+        case "whiteboard_chart_reloaded":
           whiteboardListeners.current.forEach((listener) => listener(message as WhiteboardEvent));
           break;
 
