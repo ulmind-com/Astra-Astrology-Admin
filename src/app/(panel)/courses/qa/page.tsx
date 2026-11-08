@@ -112,6 +112,7 @@ export default function GurukulQAPage() {
     isLoading,
     refetch,
     isFetching,
+    error,
   } = useQuery({
     queryKey: [
       "admin-course-questions",
@@ -366,7 +367,16 @@ export default function GurukulQAPage() {
       </Card>
 
       {/* Inquiry Feed */}
-      {isLoading ? (
+      {error ? (
+        <Card className="border-red-500/30 bg-red-500/5">
+          <CardBody className="p-4 flex items-center justify-between text-xs text-red-600 dark:text-red-400">
+            <span>প্রশ্ন লোড করতে সমস্যা হয়েছে: {(error as any)?.message || "সার্ভার এরর"}</span>
+            <Button size="sm" variant="outline" onClick={() => refetch()} className="gap-1 text-xs">
+              <RefreshCw className="h-3 w-3" /> পুনরায় চেষ্টা করুন
+            </Button>
+          </CardBody>
+        </Card>
+      ) : isLoading ? (
         <LoadingBlock label="লোড হচ্ছে গুরুকুল জিজ্ঞাসা..." />
       ) : questions.length === 0 ? (
         <EmptyState
