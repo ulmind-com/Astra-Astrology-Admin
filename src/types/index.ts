@@ -195,6 +195,8 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentOrderStatus, string> = {
 export type PlatformSettings = S["PlatformSettingsOut"] & {
   daily_horoscope_coins?: number;
   daily_horoscope_enabled?: boolean;
+  annual_horoscope_coins?: number;
+  annual_horoscope_enabled?: boolean;
   kundli_coins?: number;
   kundli_enabled?: boolean;
   kundli_matching_coins?: number;
@@ -229,6 +231,8 @@ export interface FeaturePricingItem {
 export interface FeaturePricingUpdate {
   daily_horoscope_coins?: number;
   daily_horoscope_enabled?: boolean;
+  annual_horoscope_coins?: number;
+  annual_horoscope_enabled?: boolean;
   kundli_coins?: number;
   kundli_enabled?: boolean;
   kundli_matching_coins?: number;
