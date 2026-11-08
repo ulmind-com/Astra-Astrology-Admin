@@ -377,7 +377,7 @@ export function CosmicWhiteboard({
       (event) => {
         if (!isOpen) return;
 
-        if (event.type === "whiteboard_event") {
+        if (event.type === "whiteboard_event" || event.type === "whiteboard_sync") {
           const payload = event.data;
           if (payload.call_id && payload.call_id !== callId) return;
 
@@ -474,7 +474,7 @@ export function CosmicWhiteboard({
         ctx.font = "28px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(s.stamp_icon || "🕉️", s.points[0].x, s.points[0].y);
+        ctx.fillText(s.stamp_icon || (s as any).stamp || s.symbol || "🕉️", s.points[0].x, s.points[0].y);
         ctx.restore();
         continue;
       }
