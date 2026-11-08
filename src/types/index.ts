@@ -764,6 +764,8 @@ export interface ShopProduct {
   is_active: boolean;
   is_featured: boolean;
   is_energized: boolean;
+  is_deleted?: boolean;
+  deleted_at?: string | null;
   average_rating: number;
   review_count: number;
   created_at: string;

@@ -50,6 +50,7 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = React.useState("");
   const [selectedStockStatus, setSelectedStockStatus] = React.useState("");
   const [selectedActive, setSelectedActive] = React.useState<string>("");
+  const [viewArchived, setViewArchived] = React.useState(false);
   const [page, setPage] = React.useState(1);
   const pageSize = 15;
 
@@ -88,6 +89,7 @@ export default function ProductsPage() {
       selectedCategory,
       selectedStockStatus,
       selectedActive,
+      viewArchived,
     ],
     queryFn: async () => {
       const res = await shopAdminApi.listProducts({
@@ -95,11 +97,29 @@ export default function ProductsPage() {
         category_id: selectedCategory || undefined,
         stock_status: selectedStockStatus || undefined,
         is_active: selectedActive === "" ? undefined : selectedActive === "true",
+        archived_only: viewArchived ? true : undefined,
+        include_deleted: viewArchived ? true : false,
         page,
         limit: pageSize,
         sort_by: "-created_at",
       });
       return res;
+    },
+  });
+
+  // Restore soft-deleted product mutation
+  const restoreMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await shopAdminApi.restoreProduct(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shop_products"] });
+      queryClient.invalidateQueries({ queryKey: ["shop_inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["shop_categories"] });
+      toast.success("Product successfully restored to active store!");
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to restore product.");
     },
   });
 
@@ -191,7 +211,50 @@ export default function ProductsPage() {
 
       {/* Filter and Search Bar */}
       <Card className="rounded-2xl border-slate-200/80 shadow-sm">
-        <CardBody className="p-4">
+        <CardBody className="p-4 space-y-3">
+          {/* Active vs Archived View Switcher */}
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setViewArchived(false);
+                  setPage(1);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  !viewArchived
+                    ? "bg-amber-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                Active Catalog
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setViewArchived(true);
+                  setPage(1);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  viewArchived
+                    ? "bg-slate-800 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                <span>Archived & Soft-Deleted</span>
+                {viewArchived && (
+                  <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
+                )}
+              </button>
+            </div>
+
+            {viewArchived && (
+              <span className="text-xs text-amber-700 font-semibold bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
+                Viewing archived products preserved for past orders
+              </span>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             {/* Search Input */}
             <div className="relative">
@@ -454,43 +517,65 @@ export default function ProductsPage() {
                         </div>
                       </td>
 
-                      {/* Status Toggle */}
+                      {/* Status Toggle / Archived Badge */}
                       <td className="px-4 py-3.5 text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <Switch
-                            checked={p.is_active}
-                            onChange={(val) =>
-                              toggleActiveMutation.mutate({ id: p.id, isActive: val })
-                            }
-                          />
-                          <span className="text-[10px] text-slate-400 font-semibold">
-                            {p.is_active ? "Active" : "Hidden"}
+                        {p.is_deleted ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded-full">
+                            Archived
                           </span>
-                        </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-1">
+                            <Switch
+                              checked={p.is_active}
+                              onChange={(val) =>
+                                toggleActiveMutation.mutate({ id: p.id, isActive: val })
+                              }
+                            />
+                            <span className="text-[10px] text-slate-400 font-semibold">
+                              {p.is_active ? "Active" : "Hidden"}
+                            </span>
+                          </div>
+                        )}
                       </td>
 
                       {/* Actions */}
                       <td className="px-4 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Link href={`/products/${p.id}/edit`}>
+                          {p.is_deleted ? (
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
-                              className="size-8 p-0 text-slate-600 hover:text-amber-600"
-                              title="Edit Product"
+                              onClick={() => restoreMutation.mutate(p.id)}
+                              disabled={restoreMutation.isPending}
+                              className="text-xs font-bold text-emerald-700 border-emerald-300 hover:bg-emerald-50 flex items-center gap-1.5 cursor-pointer"
+                              title="Restore Archived Product"
                             >
-                              <Edit2 className="size-4" />
+                              <RefreshCw className={`size-3.5 ${restoreMutation.isPending ? "animate-spin" : ""}`} />
+                              Restore
                             </Button>
-                          </Link>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setProductToDelete(p)}
-                            className="size-8 p-0 text-slate-400 hover:text-red-600"
-                            title="Delete Product"
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
+                          ) : (
+                            <>
+                              <Link href={`/products/${p.id}/edit`}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="size-8 p-0 text-slate-600 hover:text-amber-600"
+                                  title="Edit Product"
+                                >
+                                  <Edit2 className="size-4" />
+                                </Button>
+                              </Link>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setProductToDelete(p)}
+                                className="size-8 p-0 text-slate-400 hover:text-red-600"
+                                title="Delete / Archive Product"
+                              >
+                                <Trash2 className="size-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -522,13 +607,13 @@ export default function ProductsPage() {
         )}
       </Card>
 
-      {/* Delete Product Confirmation Modal */}
+      {/* Delete / Archive Product Confirmation Modal */}
       {productToDelete && (
         <ConfirmModal
           open={!!productToDelete}
           title={`Delete "${productToDelete.title}"?`}
-          description="Are you sure you want to permanently remove this remedy product? All associated gallery and featured images will be automatically destroyed from Cloudinary to preserve your storage."
-          confirmLabel="Delete & Purge Assets"
+          description="If this product has historical customer orders, it will be safely soft-deleted (archived) so past invoices and receipts stay 100% intact. If it has no orders, it will be hard-deleted and its images purged from Cloudinary."
+          confirmLabel="Archive / Delete"
           tone="danger"
           loading={deleteMutation.isPending}
           onConfirm={() => deleteMutation.mutate(productToDelete.id)}

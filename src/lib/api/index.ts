@@ -1011,6 +1011,8 @@ export const shopAdminApi = {
     stock_status?: string;
     is_active?: boolean;
     is_featured?: boolean;
+    include_deleted?: boolean;
+    archived_only?: boolean;
     page?: number;
     limit?: number;
     sort_by?: string;
