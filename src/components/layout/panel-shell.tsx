@@ -30,6 +30,7 @@ import {
   Boxes,
   Tags,
   GraduationCap,
+  MessageSquareQuote,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -81,6 +82,7 @@ const ADMIN_STORE_NAV: NavItem[] = [
 
 const ADMIN_GURUKUL_NAV: NavItem[] = [
   { href: "/courses", label: "Gurukul Courses", icon: GraduationCap },
+  { href: "/courses/qa", label: "Guru Jigyasa Q&A", icon: MessageSquareQuote },
 ];
 
 const ADMIN_TOOLS_NAV: NavItem[] = [

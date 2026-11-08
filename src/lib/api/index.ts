@@ -79,6 +79,9 @@ import type {
   CourseSectionAdmin,
   CourseLessonAdmin,
   BunnyVideoPlaceholder,
+  AdminCourseQuestion,
+  AdminCourseQuestionAnswer,
+  AdminCourseQuestionListResponse,
 } from "@/types";
 import type { CoPilotBirthDetailsInput, CoPilotSummary } from "@/types/copilot";
 import type { MilanRoom, MilanRoomSession } from "@/types/milan";
@@ -1115,4 +1118,29 @@ export const courseAdminApi = {
 
   createBunnyVideo: (title: string) =>
     api.post<BunnyVideoPlaceholder>(endpoints.admin.courses.createBunnyVideo, { title }),
+
+  getQuestions: (params?: {
+    course_id?: string;
+    lesson_id?: string;
+    status?: string;
+    search?: string;
+    limit?: number;
+    skip?: number;
+  }) =>
+    api.get<AdminCourseQuestionListResponse>(endpoints.admin.courses.questions, { query: params }),
+
+  answerQuestion: (questionId: string, body: { content: string; mark_resolved?: boolean }) =>
+    api.post<AdminCourseQuestionAnswer>(endpoints.admin.courses.answerQuestion(questionId), body),
+
+  updateQuestion: (
+    questionId: string,
+    body: { is_resolved?: boolean; is_pinned?: boolean; is_hidden?: boolean }
+  ) =>
+    api.patch<{ message: string }>(endpoints.admin.courses.updateQuestion(questionId), body),
+
+  deleteQuestion: (questionId: string) =>
+    api.delete<{ message: string }>(endpoints.admin.courses.deleteQuestion(questionId)),
+
+  deleteAnswer: (questionId: string, answerId: string) =>
+    api.delete<{ message: string }>(endpoints.admin.courses.deleteAnswer(questionId, answerId)),
 };

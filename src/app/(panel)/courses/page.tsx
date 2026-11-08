@@ -9,6 +9,7 @@ import {
   Image as ImageIcon,
   Layers,
   Loader2,
+  MessageSquareQuote,
   Plus,
   RefreshCw,
   Search,
@@ -250,6 +251,16 @@ export default function CoursesAdminPage() {
         description="Create and manage video masterclasses, curriculum modules, and Bunny Stream lessons."
         action={
           <div className="flex items-center gap-2">
+            <Link href="/courses/qa">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-amber-500/30 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
+              >
+                <MessageSquareQuote className="h-4 w-4" />
+                গুরুকুল জিজ্ঞাসা (Q&A)
+              </Button>
+            </Link>
             <Button
               variant="outline"
               size="sm"

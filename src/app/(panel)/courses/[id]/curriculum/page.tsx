@@ -13,6 +13,7 @@ import {
   Layers,
   Loader2,
   Lock,
+  MessageSquareQuote,
   Play,
   PlayCircle,
   Plus,
@@ -568,6 +569,15 @@ export default function CourseCurriculumAdminPage() {
                         </div>
 
                         <div className="flex items-center gap-2 self-end sm:self-center">
+                          <Link
+                            href={`/courses/qa?courseId=${courseId}&lessonId=${lesson.id}`}
+                            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-amber-600 hover:bg-amber-500/10 transition-colors"
+                            title="Inspect Student Q&A for this video"
+                          >
+                            <MessageSquareQuote className="h-3.5 w-3.5" />
+                            <span>Q&A</span>
+                          </Link>
+
                           <Button
                             size="sm"
                             variant="ghost"

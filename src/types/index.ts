@@ -954,3 +954,56 @@ export interface BunnyVideoPlaceholder {
   upload_url?: string | null;
   access_key?: string | null;
 }
+
+export interface AdminCourseQuestionAnswer {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_role: string;
+  user_avatar?: string | null;
+  is_official: boolean;
+  content: string;
+  created_at: string;
+}
+
+export interface AdminCourseQuestion {
+  id: string;
+  course_id: string;
+  course_title: string;
+  course_slug: string;
+  section_id: string;
+  section_title: string;
+  lesson_id: string;
+  lesson_title: string;
+  video_id?: string | null;
+  video_provider: string;
+
+  user_id: string;
+  user_name: string;
+  user_email?: string | null;
+  user_phone?: string | null;
+  user_avatar?: string | null;
+  student_enrolled_at?: string | null;
+  student_progress_percent: number;
+
+  timestamp_seconds: number;
+  timestamp_formatted: string;
+  title: string;
+  content: string;
+  upvote_count: number;
+  answer_count: number;
+  is_resolved: boolean;
+  has_official_answer: boolean;
+  is_pinned: boolean;
+  is_hidden: boolean;
+  answers: AdminCourseQuestionAnswer[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminCourseQuestionListResponse {
+  questions: AdminCourseQuestion[];
+  total: number;
+  unanswered_count: number;
+  resolved_count: number;
+}

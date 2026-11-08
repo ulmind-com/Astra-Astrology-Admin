@@ -165,6 +165,11 @@ export const endpoints = {
       lessons: (courseId: string) => `/admin/courses/${courseId}/lessons`,
       lesson: (courseId: string, lessonId: string) => `/admin/courses/${courseId}/lessons/${lessonId}`,
       createBunnyVideo: "/admin/courses/create-bunny-video",
+      questions: "/admin/courses/questions",
+      answerQuestion: (questionId: string) => `/admin/courses/questions/${questionId}/answers`,
+      updateQuestion: (questionId: string) => `/admin/courses/questions/${questionId}`,
+      deleteQuestion: (questionId: string) => `/admin/courses/questions/${questionId}`,
+      deleteAnswer: (questionId: string, answerId: string) => `/admin/courses/questions/${questionId}/answers/${answerId}`,
     },
   },
   cms: {
