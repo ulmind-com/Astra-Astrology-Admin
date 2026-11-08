@@ -842,3 +842,33 @@ export interface ShopBannerSettings {
   hero_banners: ShopHeroBannerItem[];
 }
 
+export interface CloudinaryOrphanCleanupReport {
+  scanned_count: number;
+  referenced_count: number;
+  orphaned_found_count: number;
+  purged_count: number;
+  failed_count: number;
+  dry_run: boolean;
+  purged_public_ids: string[];
+}
+
+export interface ShopProductRecommendation {
+  id: string;
+  title: string;
+  slug: string;
+  sku: string;
+  short_description: string;
+  sale_price: number;
+  mrp: number;
+  discount_percent: number;
+  featured_image: string;
+  category_slug: string;
+  category_type: string;
+  ruling_planet?: string | null;
+  deity?: string | null;
+  in_stock: boolean;
+  sacred_reason?: string | null;
+  store_url: string;
+}
+
+

@@ -146,11 +146,13 @@ export const endpoints = {
       uploadImage: "/admin/shop/upload-image",
       products: "/admin/shop/products",
       product: (id: string) => `/admin/shop/products/${id}`,
+      productRestore: (id: string) => `/admin/shop/products/${id}/restore`,
       productStock: (id: string) => `/admin/shop/products/${id}/stock`,
       inventory: "/admin/shop/inventory",
       categories: "/admin/shop/categories",
       category: (id: string) => `/admin/shop/categories/${id}`,
       banners: "/admin/shop/banners",
+      cleanupOrphanedImages: "/admin/shop/cleanup-orphaned-images",
     },
   },
   cms: {

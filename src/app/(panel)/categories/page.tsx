@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Save,
   Sparkles,
+  ShieldCheck,
   Tag,
   Trash2,
   UploadCloud,
@@ -276,6 +277,20 @@ export default function CategoriesAndBannersPage() {
       setIsUploadingBannerIndex(null);
     }
   };
+
+  const cleanupCloudinaryMutation = useMutation({
+    mutationFn: async () => {
+      return await shopAdminApi.cleanupOrphanedImages(false);
+    },
+    onSuccess: (data) => {
+      toast.success(
+        `Cloudinary Cleanup: Scanned ${data.scanned_count} assets, found ${data.orphaned_found_count} orphaned, successfully purged ${data.purged_count} unused images!`
+      );
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to run garbage collection.");
+    },
+  });
 
   return (
     <div className="space-y-6">
@@ -683,6 +698,39 @@ export default function CategoriesAndBannersPage() {
                 ))
               )}
             </CardBody>
+          </Card>
+
+          {/* Cloudinary Storage Quota Optimizer Card */}
+          <Card className="rounded-2xl border-slate-200/80 shadow-sm">
+            <CardHeader className="pb-3 border-b border-slate-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="size-4 text-emerald-600" />
+                  <CardTitle className="text-base font-bold text-slate-800">
+                    Cloudinary Quota & Asset Garbage Collector
+                  </CardTitle>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => cleanupCloudinaryMutation.mutate()}
+                  disabled={cleanupCloudinaryMutation.isPending}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1.5 text-xs font-bold border-emerald-300 text-emerald-800 hover:bg-emerald-50"
+                >
+                  {cleanupCloudinaryMutation.isPending ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="size-3.5" />
+                  )}
+                  Run Orphan Image Scan & Cleanup
+                </Button>
+              </div>
+              <CardDescription className="text-xs">
+                Scans Cloudinary for abandoned upload drafts and disconnected images older than 2 hours that are
+                not referenced in any product or category. Preserves your free account storage and bandwidth.
+              </CardDescription>
+            </CardHeader>
           </Card>
         </div>
       )}

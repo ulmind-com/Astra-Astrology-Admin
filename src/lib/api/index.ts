@@ -73,6 +73,7 @@ import type {
   StockUpdatePayload,
   ShopInventorySummary,
   ShopBannerSettings,
+  CloudinaryOrphanCleanupReport,
 } from "@/types";
 import type { CoPilotBirthDetailsInput, CoPilotSummary } from "@/types/copilot";
 import type { MilanRoom, MilanRoomSession } from "@/types/milan";
@@ -1027,8 +1028,21 @@ export const shopAdminApi = {
   updateProduct: (id: string, body: Partial<ShopProductInput>) =>
     api.put<ShopProduct>(endpoints.admin.shop.product(id), body),
 
-  deleteProduct: (id: string) =>
-    api.delete<{ deleted: boolean }>(endpoints.admin.shop.product(id)),
+  deleteProduct: (id: string, hardDelete: boolean = false) =>
+    api.delete<{ deleted: boolean; mode: string; message: string }>(
+      endpoints.admin.shop.product(id),
+      { query: { hard_delete: hardDelete } }
+    ),
+
+  restoreProduct: (id: string) =>
+    api.post<ShopProduct>(endpoints.admin.shop.productRestore(id)),
+
+  cleanupOrphanedImages: (dryRun: boolean = false) =>
+    api.post<CloudinaryOrphanCleanupReport>(
+      endpoints.admin.shop.cleanupOrphanedImages,
+      {},
+      { query: { dry_run: dryRun } }
+    ),
 
   updateStock: (id: string, body: StockUpdatePayload) =>
     api.patch<ShopProduct>(endpoints.admin.shop.productStock(id), body),
