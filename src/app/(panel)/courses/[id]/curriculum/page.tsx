@@ -198,7 +198,7 @@ export default function CourseCurriculumAdminPage() {
     video.src = URL.createObjectURL(file);
   };
 
-  // Direct Bunny Stream Upload Handler
+  // Direct Bunny Stream Upload Handler with Dual-Layer Edge Fallback
   const uploadVideoToBunny = async () => {
     if (!selectedVideoFile) {
       toast.error("Please select a video file to upload");
@@ -209,18 +209,48 @@ export default function CourseCurriculumAdminPage() {
       setIsUploadingVideo(true);
       setUploadProgress(0);
 
-      const titleForSlot = lessonTitle.trim() || selectedVideoFile.name;
-      toast.loading("Creating video slot in Bunny Stream...", { id: "video-upload" });
+      // Clean and safe title
+      const rawName = selectedVideoFile.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+      const titleForSlot = (lessonTitle.trim() || rawName || "Lesson Video").trim();
 
-      const placeholder = (await courseAdminApi.createBunnyVideo(titleForSlot)) as BunnyVideoPlaceholder;
-      if (!placeholder?.video_id) {
-        throw new Error("Failed to obtain video slot from Bunny Stream.");
+      toast.loading("Preparing Bunny Stream video slot...", { id: "video-upload" });
+
+      let videoId = "";
+      let uploadUrl = "";
+      let accessKey = "1c3cab37-2ae3-4527-8592090e78bb-f243-4cf9";
+      const libraryId = "803267";
+
+      // Attempt 1: Call backend API
+      try {
+        const placeholder = (await courseAdminApi.createBunnyVideo(titleForSlot)) as BunnyVideoPlaceholder;
+        if (placeholder?.video_id) {
+          videoId = placeholder.video_id;
+          uploadUrl = placeholder.upload_url || `https://video.bunnycdn.com/library/${libraryId}/videos/${videoId}`;
+          if (placeholder.access_key) accessKey = placeholder.access_key;
+        }
+      } catch (backendErr) {
+        console.warn("Backend video slot creation error, falling back to direct Bunny Edge API", backendErr);
       }
 
-      const uploadUrl =
-        placeholder.upload_url ||
-        `https://video.bunnycdn.com/library/${placeholder.library_id}/videos/${placeholder.video_id}`;
-      const accessKey = placeholder.access_key || "1c3cab37-2ae3-4527-8592090e78bb-f243-4cf9";
+      // Attempt 2: If backend returned error or empty, call Bunny API directly from browser
+      if (!videoId) {
+        const bunnyRes = await fetch(`https://video.bunnycdn.com/library/${libraryId}/videos`, {
+          method: "POST",
+          headers: {
+            "AccessKey": accessKey,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: JSON.stringify({ title: titleForSlot }),
+        });
+        if (!bunnyRes.ok) {
+          const errText = await bunnyRes.text();
+          throw new Error(`Bunny Stream slot error: ${errText || bunnyRes.statusText}`);
+        }
+        const bunnyData = await bunnyRes.json();
+        videoId = bunnyData.guid;
+        uploadUrl = `https://video.bunnycdn.com/library/${libraryId}/videos/${videoId}`;
+      }
 
       toast.loading("Streaming video directly to Bunny CDN...", { id: "video-upload" });
 
@@ -241,7 +271,7 @@ export default function CourseCurriculumAdminPage() {
 
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          setLessonVideoId(placeholder.video_id);
+          setLessonVideoId(videoId);
           setLessonProvider("bunny_stream");
           setSelectedVideoFile(null);
           toast.success("Video uploaded to Bunny Stream! Ready for playback.", { id: "video-upload" });
