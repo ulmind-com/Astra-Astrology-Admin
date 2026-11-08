@@ -874,3 +874,82 @@ export interface ShopProductRecommendation {
 }
 
 
+
+export interface CourseAdminItem {
+  id: string;
+  title: string;
+  slug: string;
+  subtitle: string;
+  category: string;
+  level: string;
+  language: string;
+  instructor_name: string;
+  instructor_title: string;
+  instructor_avatar?: string | null;
+  thumbnail_url: string;
+  price: number;
+  mrp: number;
+  discount_percent: number;
+  currency: string;
+  duration_hours: number;
+  total_lessons: number;
+  total_students: number;
+  average_rating: number;
+  rating_count: number;
+  is_featured: boolean;
+  certificate_enabled: boolean;
+}
+
+export interface CourseAdminInput {
+  title: string;
+  slug: string;
+  subtitle?: string;
+  description: string;
+  category?: string;
+  level?: string;
+  language?: string;
+  instructor_name?: string;
+  instructor_title?: string;
+  instructor_avatar?: string | null;
+  thumbnail_url: string;
+  promo_video_url?: string | null;
+  promo_video_provider?: string;
+  price: number;
+  mrp: number;
+  certificate_enabled?: boolean;
+  what_you_will_learn?: string[];
+  prerequisites?: string[];
+  tags?: string[];
+  is_published?: boolean;
+  is_featured?: boolean;
+}
+
+export interface CourseSectionAdmin {
+  id: string;
+  title: string;
+  order: number;
+  description?: string | null;
+  lessons?: CourseLessonAdmin[];
+}
+
+export interface CourseLessonAdmin {
+  id: string;
+  section_id: string;
+  title: string;
+  order: number;
+  duration_minutes: number;
+  video_provider: string;
+  video_id: string;
+  library_id?: string | null;
+  is_free_preview: boolean;
+  summary?: string | null;
+  notes_markdown?: string | null;
+  resources?: { title: string; url: string; type: string }[];
+}
+
+export interface BunnyVideoPlaceholder {
+  video_id: string;
+  library_id: string;
+  title: string;
+  upload_url?: string | null;
+}

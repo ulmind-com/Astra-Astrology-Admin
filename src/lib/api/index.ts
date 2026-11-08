@@ -74,6 +74,11 @@ import type {
   ShopInventorySummary,
   ShopBannerSettings,
   CloudinaryOrphanCleanupReport,
+  CourseAdminItem,
+  CourseAdminInput,
+  CourseSectionAdmin,
+  CourseLessonAdmin,
+  BunnyVideoPlaceholder,
 } from "@/types";
 import type { CoPilotBirthDetailsInput, CoPilotSummary } from "@/types/copilot";
 import type { MilanRoom, MilanRoomSession } from "@/types/milan";
@@ -1061,3 +1066,50 @@ export const shopAdminApi = {
 
 
 
+
+export const courseAdminApi = {
+  listCourses: (params?: { limit?: number; skip?: number }) =>
+    api.get<CourseAdminItem[]>(endpoints.admin.courses.list, { query: params }),
+
+  createCourse: (body: CourseAdminInput) =>
+    api.post<{ id: string; slug: string; message: string }>(endpoints.admin.courses.create, body),
+
+  updateCourse: (id: string, body: Partial<CourseAdminInput>) =>
+    api.put<{ id: string; message: string }>(endpoints.admin.courses.update(id), body),
+
+  deleteCourse: (id: string) =>
+    api.delete<{ message: string }>(endpoints.admin.courses.delete(id)),
+
+  createSection: (courseId: string, body: { title: string; order: number; description?: string }) =>
+    api.post<{ id: string; title: string; order: number }>(endpoints.admin.courses.sections(courseId), body),
+
+  updateSection: (courseId: string, sectionId: string, body: { title?: string; order?: number; description?: string }) =>
+    api.put<{ id: string; title: string; order: number }>(endpoints.admin.courses.section(courseId, sectionId), body),
+
+  deleteSection: (courseId: string, sectionId: string) =>
+    api.delete<{ message: string }>(endpoints.admin.courses.section(courseId, sectionId)),
+
+  createLesson: (courseId: string, body: {
+    section_id: string;
+    title: string;
+    order: number;
+    duration_minutes: number;
+    video_provider: string;
+    video_id: string;
+    library_id?: string;
+    is_free_preview?: boolean;
+    summary?: string;
+    notes_markdown?: string;
+    resources?: { title: string; url: string; type: string }[];
+  }) =>
+    api.post<{ id: string; title: string; order: number }>(endpoints.admin.courses.lessons(courseId), body),
+
+  updateLesson: (courseId: string, lessonId: string, body: Record<string, any>) =>
+    api.put<{ id: string; title: string; order: number }>(endpoints.admin.courses.lesson(courseId, lessonId), body),
+
+  deleteLesson: (courseId: string, lessonId: string) =>
+    api.delete<{ message: string }>(endpoints.admin.courses.lesson(courseId, lessonId)),
+
+  createBunnyVideo: (title: string) =>
+    api.post<BunnyVideoPlaceholder>(endpoints.admin.courses.createBunnyVideo, { title }),
+};

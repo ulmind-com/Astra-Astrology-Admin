@@ -154,6 +154,18 @@ export const endpoints = {
       banners: "/admin/shop/banners",
       cleanupOrphanedImages: "/admin/shop/cleanup-orphaned-images",
     },
+    courses: {
+      list: "/admin/courses",
+      create: "/admin/courses",
+      detail: (id: string) => `/admin/courses/${id}`,
+      update: (id: string) => `/admin/courses/${id}`,
+      delete: (id: string) => `/admin/courses/${id}`,
+      sections: (courseId: string) => `/admin/courses/${courseId}/sections`,
+      section: (courseId: string, sectionId: string) => `/admin/courses/${courseId}/sections/${sectionId}`,
+      lessons: (courseId: string) => `/admin/courses/${courseId}/lessons`,
+      lesson: (courseId: string, lessonId: string) => `/admin/courses/${courseId}/lessons/${lessonId}`,
+      createBunnyVideo: "/admin/courses/create-bunny-video",
+    },
   },
   cms: {
     homepage: "/cms/homepage",

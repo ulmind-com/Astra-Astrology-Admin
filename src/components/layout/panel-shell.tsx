@@ -29,6 +29,7 @@ import {
   ShoppingBag,
   Boxes,
   Tags,
+  GraduationCap,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -76,6 +77,10 @@ const ADMIN_STORE_NAV: NavItem[] = [
   { href: "/products", label: "Astro Products", icon: ShoppingBag },
   { href: "/inventory", label: "Inventory & Alerts", icon: Boxes },
   { href: "/categories", label: "Categories & Banners", icon: Tags },
+];
+
+const ADMIN_GURUKUL_NAV: NavItem[] = [
+  { href: "/courses", label: "Gurukul Courses", icon: GraduationCap },
 ];
 
 const ADMIN_TOOLS_NAV: NavItem[] = [
@@ -343,10 +348,13 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
               {/* Section 2: ASTRO STORE */}
               {renderNavGroup("ASTRO STORE", ADMIN_STORE_NAV, isMobile)}
 
-              {/* Section 3: FINANCIAL */}
+              {/* Section 3: GURUKUL LMS */}
+              {renderNavGroup("GURUKUL LMS", ADMIN_GURUKUL_NAV, isMobile)}
+
+              {/* Section 4: FINANCIAL */}
               {renderNavGroup("FINANCIAL", ADMIN_FINANCIAL_NAV, isMobile)}
 
-              {/* Section 4: TOOLS & SYSTEM */}
+              {/* Section 5: TOOLS & SYSTEM */}
               {renderNavGroup("TOOLS & SYSTEM", ADMIN_TOOLS_NAV, isMobile)}
             </>
           )}
