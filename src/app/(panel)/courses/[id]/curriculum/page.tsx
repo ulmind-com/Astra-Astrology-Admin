@@ -133,12 +133,24 @@ export default function CourseCurriculumAdminPage() {
   // Lesson mutations
   const saveLessonMutation = useMutation({
     mutationFn: async () => {
+      let finalVideoId = (lessonVideoId || "").trim();
+
+      // If user selected a video file and hasn't uploaded it yet, auto-upload now!
+      if (!finalVideoId && selectedVideoFile) {
+        finalVideoId = await uploadVideoToBunny(selectedVideoFile);
+      }
+
+      const safeDuration = Math.max(1, Math.round(Number(lessonDuration) || 1));
+      const safeTitle = (lessonTitle.trim() || selectedVideoFile?.name || "Video Lesson").trim();
+      const currentSection = course?.sections?.find((s) => s.id === targetSectionId);
+      const calculatedOrder = (currentSection?.lessons?.length || 0) + 1;
+
       if (editingLesson) {
         return courseAdminApi.updateLesson(courseId, editingLesson.id, {
-          title: lessonTitle,
-          duration_minutes: lessonDuration,
+          title: safeTitle,
+          duration_minutes: safeDuration,
           video_provider: lessonProvider,
-          video_id: lessonVideoId,
+          video_id: finalVideoId,
           is_free_preview: lessonIsFree,
           summary: lessonSummary,
           notes_markdown: lessonNotes,
@@ -146,11 +158,11 @@ export default function CourseCurriculumAdminPage() {
       }
       return courseAdminApi.createLesson(courseId, {
         section_id: targetSectionId,
-        title: lessonTitle,
-        order: (course?.sections?.find((s) => s.id === targetSectionId)?.lessons?.length || 0) + 1,
-        duration_minutes: lessonDuration,
+        title: safeTitle,
+        order: Math.max(1, calculatedOrder),
+        duration_minutes: safeDuration,
         video_provider: lessonProvider,
-        video_id: lessonVideoId,
+        video_id: finalVideoId,
         is_free_preview: lessonIsFree,
         summary: lessonSummary,
         notes_markdown: lessonNotes,
@@ -161,6 +173,8 @@ export default function CourseCurriculumAdminPage() {
       toast.success(editingLesson ? "Lesson updated" : "Lesson added to module");
       setLessonModalOpen(false);
       setEditingLesson(null);
+      setSelectedVideoFile(null);
+      setUploadProgress(0);
     },
     onError: (err: any) => toast.error(err?.message || "Failed to save lesson"),
   });
@@ -199,10 +213,11 @@ export default function CourseCurriculumAdminPage() {
   };
 
   // Direct Bunny Stream Upload Handler with Dual-Layer Edge Fallback
-  const uploadVideoToBunny = async () => {
-    if (!selectedVideoFile) {
+  const uploadVideoToBunny = async (fileToUpload?: File): Promise<string> => {
+    const file = fileToUpload || selectedVideoFile;
+    if (!file) {
       toast.error("Please select a video file to upload");
-      return;
+      throw new Error("No video file selected");
     }
 
     try {
@@ -210,7 +225,7 @@ export default function CourseCurriculumAdminPage() {
       setUploadProgress(0);
 
       // Clean and safe title
-      const rawName = selectedVideoFile.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+      const rawName = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
       const titleForSlot = (lessonTitle.trim() || rawName || "Lesson Video").trim();
 
       toast.loading("Preparing Bunny Stream video slot...", { id: "video-upload" });
@@ -254,44 +269,60 @@ export default function CourseCurriculumAdminPage() {
 
       toast.loading("Streaming video directly to Bunny CDN...", { id: "video-upload" });
 
-      const xhr = new XMLHttpRequest();
-      setActiveXhr(xhr);
-      xhr.open("PUT", uploadUrl, true);
-      xhr.setRequestHeader("AccessKey", accessKey);
-      xhr.setRequestHeader("Content-Type", "application/octet-stream");
+      return new Promise<string>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        setActiveXhr(xhr);
+        xhr.open("PUT", uploadUrl, true);
+        xhr.setRequestHeader("AccessKey", accessKey);
+        xhr.setRequestHeader("Content-Type", "application/octet-stream");
 
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.round((event.loaded / event.total) * 100);
-          setUploadProgress(percent);
-          setUploadedBytes(event.loaded);
-          setTotalBytes(event.total);
-        }
-      };
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            setUploadProgress(percent);
+            setUploadedBytes(event.loaded);
+            setTotalBytes(event.total);
+          }
+        };
 
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          setLessonVideoId(videoId);
-          setLessonProvider("bunny_stream");
-          setSelectedVideoFile(null);
-          toast.success("Video uploaded to Bunny Stream! Ready for playback.", { id: "video-upload" });
-        } else {
-          toast.error(`Bunny Stream upload failed with status ${xhr.status}`, { id: "video-upload" });
-        }
-        setIsUploadingVideo(false);
-        setActiveXhr(null);
-      };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            setLessonVideoId(videoId);
+            setLessonProvider("bunny_stream");
+            setSelectedVideoFile(null);
+            toast.success("Video uploaded to Bunny Stream! Ready for playback.", { id: "video-upload" });
+            setIsUploadingVideo(false);
+            setActiveXhr(null);
+            resolve(videoId);
+          } else {
+            const err = new Error(`Bunny Stream upload failed with status ${xhr.status}`);
+            toast.error(err.message, { id: "video-upload" });
+            setIsUploadingVideo(false);
+            setActiveXhr(null);
+            reject(err);
+          }
+        };
 
-      xhr.onerror = () => {
-        toast.error("Network error during video upload. Please check connection.", { id: "video-upload" });
-        setIsUploadingVideo(false);
-        setActiveXhr(null);
-      };
+        xhr.onerror = () => {
+          const err = new Error("Network error during video upload. Please check connection.");
+          toast.error(err.message, { id: "video-upload" });
+          setIsUploadingVideo(false);
+          setActiveXhr(null);
+          reject(err);
+        };
 
-      xhr.send(selectedVideoFile);
+        xhr.onabort = () => {
+          setIsUploadingVideo(false);
+          setActiveXhr(null);
+          reject(new Error("Video upload cancelled"));
+        };
+
+        xhr.send(file);
+      });
     } catch (err: any) {
       setIsUploadingVideo(false);
       toast.error(err?.message || "Failed to upload video to Bunny Stream.", { id: "video-upload" });
+      throw err;
     }
   };
 
@@ -834,11 +865,22 @@ export default function CourseCurriculumAdminPage() {
             </Button>
             <Button
               onClick={() => saveLessonMutation.mutate()}
-              disabled={saveLessonMutation.isPending || isUploadingVideo || !lessonTitle.trim() || !lessonVideoId.trim()}
-              className="bg-amber-600 hover:bg-amber-700 text-white"
+              disabled={
+                saveLessonMutation.isPending ||
+                isUploadingVideo ||
+                (!lessonTitle.trim() && !selectedVideoFile) ||
+                (!lessonVideoId.trim() && !selectedVideoFile)
+              }
+              className="bg-amber-600 hover:bg-amber-700 text-white min-w-[130px]"
             >
-              {saveLessonMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
-              Save Lesson
+              {saveLessonMutation.isPending || isUploadingVideo ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                  {isUploadingVideo ? "Uploading..." : "Saving..."}
+                </>
+              ) : (
+                "Save Lesson"
+              )}
             </Button>
           </div>
         </div>
