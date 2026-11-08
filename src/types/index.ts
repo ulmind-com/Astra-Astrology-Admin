@@ -697,3 +697,148 @@ export type FaceReading = S["FaceReadingOut"];
 export type FaceReadingSection = S["ReadingSectionOut"];
 export type FaceReadingAvailability = S["FaceReadingAvailability"];
 export type FaceRule = S["RuleOut"];
+
+// ------------------------------------------------------- astro store & shop
+export interface ShopProductCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  icon_url?: string | null;
+  banner_url?: string | null;
+  category_type: string;
+  parent_id?: string | null;
+  display_order: number;
+  is_active: boolean;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  product_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShopProductCategoryCreate {
+  name: string;
+  slug?: string;
+  description?: string;
+  icon_url?: string;
+  banner_url?: string;
+  category_type?: string;
+  parent_id?: string;
+  display_order?: number;
+  is_active?: boolean;
+  seo_title?: string;
+  seo_description?: string;
+}
+
+export interface ShopProduct {
+  id: string;
+  title: string;
+  slug: string;
+  sku: string;
+  short_description: string;
+  detailed_description: string;
+  category_id: string;
+  category_slug: string;
+  category_type: string;
+  ruling_planet?: string | null;
+  deity?: string | null;
+  benefits: string[];
+  life_pillars: string[];
+  recommended_for_rashis: string[];
+  beej_mantra?: string | null;
+  wear_instructions?: string | null;
+  mrp: number;
+  sale_price: number;
+  cost_price?: number | null;
+  discount_percent: number;
+  stock_quantity: number;
+  low_stock_threshold: number;
+  weight_grams: number;
+  in_stock: boolean;
+  is_low_stock: boolean;
+  images: string[];
+  featured_image: string;
+  video_url?: string | null;
+  certificate_image_url?: string | null;
+  is_active: boolean;
+  is_featured: boolean;
+  is_energized: boolean;
+  average_rating: number;
+  review_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShopProductInput {
+  title: string;
+  slug?: string;
+  sku?: string;
+  short_description: string;
+  detailed_description: string;
+  category_id: string;
+  category_type?: string;
+  ruling_planet?: string;
+  deity?: string;
+  benefits?: string[];
+  life_pillars?: string[];
+  recommended_for_rashis?: string[];
+  beej_mantra?: string;
+  wear_instructions?: string;
+  mrp: number;
+  sale_price: number;
+  cost_price?: number;
+  stock_quantity?: number;
+  low_stock_threshold?: number;
+  weight_grams?: number;
+  images?: string[];
+  featured_image: string;
+  video_url?: string;
+  certificate_image_url?: string;
+  is_active?: boolean;
+  is_featured?: boolean;
+  is_energized?: boolean;
+}
+
+export interface ShopProductListResponse {
+  items: ShopProduct[];
+  total: number;
+  page: number;
+  limit: number;
+  has_more: boolean;
+}
+
+export interface StockUpdatePayload {
+  quantity: number;
+  mode: "set" | "add" | "subtract";
+  reason?: string;
+}
+
+export interface ShopInventorySummary {
+  total_products: number;
+  out_of_stock_count: number;
+  low_stock_count: number;
+  healthy_stock_count: number;
+  total_stock_units: number;
+  total_inventory_valuation_mrp: number;
+  total_inventory_valuation_cost: number;
+}
+
+export interface ShopHeroBannerItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  cta_text: string;
+  cta_link: string;
+  badge_text?: string | null;
+  image_url: string;
+  is_active: boolean;
+}
+
+export interface ShopBannerSettings {
+  announcement_bar_text?: string | null;
+  announcement_bar_link?: string | null;
+  announcement_bar_active: boolean;
+  hero_banners: ShopHeroBannerItem[];
+}
+

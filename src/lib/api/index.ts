@@ -65,6 +65,14 @@ import type {
   WalletTransaction,
   WhiteboardData,
   WhiteboardStroke,
+  ShopProductCategory,
+  ShopProductCategoryCreate,
+  ShopProduct,
+  ShopProductInput,
+  ShopProductListResponse,
+  StockUpdatePayload,
+  ShopInventorySummary,
+  ShopBannerSettings,
 } from "@/types";
 import type { CoPilotBirthDetailsInput, CoPilotSummary } from "@/types/copilot";
 import type { MilanRoom, MilanRoomSession } from "@/types/milan";
@@ -967,5 +975,73 @@ export const passkeyApi = {
   verifyLogin: (body: { credential: any }) =>
     api.post<AuthResult>(endpoints.passkeys.loginVerify, body, { auth: false }),
 };
+
+export const shopAdminApi = {
+  uploadImage: async (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return apiFetch<{ url: string; public_id: string; format: string }>(
+      endpoints.admin.shop.uploadImage,
+      {
+        method: "POST",
+        body: fd,
+      }
+    );
+  },
+
+  listCategories: (includeInactive = true) =>
+    api.get<ShopProductCategory[]>(endpoints.admin.shop.categories, {
+      query: { include_inactive: includeInactive },
+    }),
+
+  createCategory: (body: ShopProductCategoryCreate) =>
+    api.post<ShopProductCategory>(endpoints.admin.shop.categories, body),
+
+  updateCategory: (id: string, body: Partial<ShopProductCategoryCreate>) =>
+    api.put<ShopProductCategory>(endpoints.admin.shop.category(id), body),
+
+  deleteCategory: (id: string) =>
+    api.delete<{ deleted: boolean }>(endpoints.admin.shop.category(id)),
+
+  listProducts: (params?: {
+    search?: string;
+    category_id?: string;
+    ruling_planet?: string;
+    stock_status?: string;
+    is_active?: boolean;
+    is_featured?: boolean;
+    page?: number;
+    limit?: number;
+    sort_by?: string;
+  }) =>
+    api.get<ShopProductListResponse>(endpoints.admin.shop.products, {
+      query: params,
+    }),
+
+  getProduct: (id: string) =>
+    api.get<ShopProduct>(endpoints.admin.shop.product(id)),
+
+  createProduct: (body: ShopProductInput) =>
+    api.post<ShopProduct>(endpoints.admin.shop.products, body),
+
+  updateProduct: (id: string, body: Partial<ShopProductInput>) =>
+    api.put<ShopProduct>(endpoints.admin.shop.product(id), body),
+
+  deleteProduct: (id: string) =>
+    api.delete<{ deleted: boolean }>(endpoints.admin.shop.product(id)),
+
+  updateStock: (id: string, body: StockUpdatePayload) =>
+    api.patch<ShopProduct>(endpoints.admin.shop.productStock(id), body),
+
+  getInventorySummary: () =>
+    api.get<ShopInventorySummary>(endpoints.admin.shop.inventory),
+
+  getBannerSettings: () =>
+    api.get<ShopBannerSettings>(endpoints.admin.shop.banners),
+
+  updateBannerSettings: (body: Partial<ShopBannerSettings>) =>
+    api.put<ShopBannerSettings>(endpoints.admin.shop.banners, body),
+};
+
 
 

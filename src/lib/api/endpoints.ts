@@ -142,6 +142,16 @@ export const endpoints = {
     cmsHomepage: "/admin/cms/homepage",
     cmsHomepageReset: "/admin/cms/homepage/reset",
     cmsUploadImage: "/admin/cms/upload-image",
+    shop: {
+      uploadImage: "/admin/shop/upload-image",
+      products: "/admin/shop/products",
+      product: (id: string) => `/admin/shop/products/${id}`,
+      productStock: (id: string) => `/admin/shop/products/${id}/stock`,
+      inventory: "/admin/shop/inventory",
+      categories: "/admin/shop/categories",
+      category: (id: string) => `/admin/shop/categories/${id}`,
+      banners: "/admin/shop/banners",
+    },
   },
   cms: {
     homepage: "/cms/homepage",

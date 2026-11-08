@@ -26,6 +26,9 @@ import {
   LayoutTemplate,
   Fingerprint,
   LifeBuoy,
+  ShoppingBag,
+  Boxes,
+  Tags,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -67,6 +70,12 @@ const ADMIN_FINANCIAL_NAV: NavItem[] = [
   { href: "/transactions", label: "Transactions", icon: Receipt },
   { href: "/payments", label: "Payments", icon: CreditCard },
   { href: "/earnings", label: "Earnings", icon: TrendingUp },
+];
+
+const ADMIN_STORE_NAV: NavItem[] = [
+  { href: "/products", label: "Astro Products", icon: ShoppingBag },
+  { href: "/inventory", label: "Inventory & Alerts", icon: Boxes },
+  { href: "/categories", label: "Categories & Banners", icon: Tags },
 ];
 
 const ADMIN_TOOLS_NAV: NavItem[] = [
@@ -331,10 +340,13 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
               {/* Section 1: MENU */}
               {renderNavGroup("MENU", ADMIN_MENU_NAV, isMobile)}
 
-              {/* Section 2: FINANCIAL */}
+              {/* Section 2: ASTRO STORE */}
+              {renderNavGroup("ASTRO STORE", ADMIN_STORE_NAV, isMobile)}
+
+              {/* Section 3: FINANCIAL */}
               {renderNavGroup("FINANCIAL", ADMIN_FINANCIAL_NAV, isMobile)}
 
-              {/* Section 3: TOOLS & SYSTEM */}
+              {/* Section 4: TOOLS & SYSTEM */}
               {renderNavGroup("TOOLS & SYSTEM", ADMIN_TOOLS_NAV, isMobile)}
             </>
           )}
