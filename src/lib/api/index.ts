@@ -1080,6 +1080,18 @@ export const courseAdminApi = {
   createCourse: (body: CourseAdminInput) =>
     api.post<{ id: string; slug: string; message: string }>(endpoints.admin.courses.create, body),
 
+  uploadThumbnail: async (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return apiFetch<{ url: string; public_id: string; format: string }>(
+      endpoints.admin.courses.uploadThumbnail,
+      {
+        method: "POST",
+        body: fd,
+      }
+    );
+  },
+
   updateCourse: (id: string, body: Partial<CourseAdminInput>) =>
     api.put<{ id: string; message: string }>(endpoints.admin.courses.update(id), body),
 

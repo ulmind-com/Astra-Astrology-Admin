@@ -61,6 +61,40 @@ const LEVELS = [
   { value: "acharya", label: "Acharya Master (আচার্য স্তর)" },
 ];
 
+function CourseCardThumbnail({
+  course,
+  onEdit,
+}: {
+  course: CourseAdminItem;
+  onEdit: () => void;
+}) {
+  const [imgError, setImgError] = React.useState(false);
+
+  if (course.thumbnail_url && !imgError) {
+    return (
+      <Image
+        src={course.thumbnail_url}
+        alt={course.title}
+        fill
+        className="object-cover"
+        unoptimized
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+
+  return (
+    <div
+      onClick={onEdit}
+      className="w-full h-full flex flex-col items-center justify-center bg-stone-900/90 text-muted-foreground cursor-pointer hover:bg-stone-800/80 transition-colors p-3 text-center"
+    >
+      <GraduationCap className="h-9 w-9 text-amber-500/60 mb-1" />
+      <span className="text-[11px] font-semibold text-amber-400">No Thumbnail</span>
+      <span className="text-[10px] text-stone-400">Click to upload thumbnail</span>
+    </div>
+  );
+}
+
 export default function CoursesAdminPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = React.useState("");
@@ -105,10 +139,10 @@ export default function CoursesAdminPage() {
       toast.error("Please upload an image file (JPG, PNG, WebP).");
       return;
     }
-    const toastId = toast.loading("Compressing & uploading thumbnail image...");
+    const toastId = toast.loading("Compressing & uploading 16:9 thumbnail to Cloudinary...");
     try {
       setIsUploadingThumbnail(true);
-      const res = await shopAdminApi.uploadImage(file);
+      const res = await courseAdminApi.uploadThumbnail(file);
       if (res && res.url) {
         setFormData((prev) => ({ ...prev, thumbnail_url: res.url }));
         toast.success("Thumbnail uploaded successfully!", { id: toastId });
@@ -133,6 +167,9 @@ export default function CoursesAdminPage() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      if (!formData.thumbnail_url?.trim()) {
+        throw new Error("Please upload or enter a course thumbnail image.");
+      }
       const payload: CourseAdminInput = {
         ...formData,
         what_you_will_learn: learningPointsText
@@ -200,7 +237,7 @@ export default function CoursesAdminPage() {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (c: CourseAdminItem) => {
+  const openEditModal = async (c: CourseAdminItem) => {
     setEditingCourse(c);
     setFormData({
       title: c.title,
@@ -213,7 +250,7 @@ export default function CoursesAdminPage() {
       instructor_name: c.instructor_name,
       instructor_title: c.instructor_title,
       instructor_avatar: c.instructor_avatar || "",
-      thumbnail_url: c.thumbnail_url,
+      thumbnail_url: c.thumbnail_url || "",
       promo_video_url: "",
       promo_video_provider: "youtube",
       price: c.price,
@@ -227,6 +264,26 @@ export default function CoursesAdminPage() {
     });
     setLearningPointsText("");
     setIsModalOpen(true);
+
+    try {
+      const fullDetail = await courseAdminApi.getCourse(c.id);
+      if (fullDetail) {
+        setFormData((prev) => ({
+          ...prev,
+          description: fullDetail.description || prev.description,
+          thumbnail_url: fullDetail.thumbnail_url || prev.thumbnail_url,
+          subtitle: fullDetail.subtitle || prev.subtitle,
+          what_you_will_learn: fullDetail.what_you_will_learn || [],
+          prerequisites: fullDetail.prerequisites || [],
+          tags: fullDetail.tags || [],
+        }));
+        if (fullDetail.what_you_will_learn?.length) {
+          setLearningPointsText(fullDetail.what_you_will_learn.join("\n"));
+        }
+      }
+    } catch (err) {
+      console.warn("Could not load full course detail for edit:", err);
+    }
   };
 
   const filteredCourses = React.useMemo(() => {
@@ -381,19 +438,7 @@ export default function CoursesAdminPage() {
             <Card key={c.id} className="overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow">
               <div>
                 <div className="relative h-44 w-full bg-stone-900">
-                  {c.thumbnail_url ? (
-                    <Image
-                      src={c.thumbnail_url}
-                      alt={c.title}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <GraduationCap className="h-12 w-12 text-stone-600" />
-                    </div>
-                  )}
+                  <CourseCardThumbnail course={c} onEdit={() => openEditModal(c)} />
 
                   <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
                     <Badge tone="brand">

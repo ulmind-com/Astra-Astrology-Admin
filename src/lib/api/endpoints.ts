@@ -157,6 +157,7 @@ export const endpoints = {
     courses: {
       list: "/admin/courses",
       create: "/admin/courses",
+      uploadThumbnail: "/admin/courses/upload-thumbnail",
       detail: (id: string) => `/admin/courses/${id}`,
       update: (id: string) => `/admin/courses/${id}`,
       delete: (id: string) => `/admin/courses/${id}`,
