@@ -304,7 +304,7 @@ export default function CoursesAdminPage() {
   return (
     <div className="space-y-6">
       <PanelHeader
-        title="Astra Gurukul Courses"
+        title="DivinLink Gurukul Courses"
         description="Create and manage video masterclasses, curriculum modules, and Bunny Stream lessons."
         action={
           <div className="flex items-center gap-2">
