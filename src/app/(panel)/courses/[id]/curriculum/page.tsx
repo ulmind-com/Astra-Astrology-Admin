@@ -799,10 +799,28 @@ export default function CourseCurriculumAdminPage() {
               {/* Video Player Preview if GUID is present */}
               {lessonVideoId && !isUploadingVideo && (
                 <div className="pt-2 border-t border-border">
-                  <p className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
-                    <Eye className="h-3.5 w-3.5 text-amber-600" />
-                    Uploaded Video Preview:
-                  </p>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                      <Eye className="h-3.5 w-3.5 text-amber-600" />
+                      Uploaded Video Preview:
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      type="button"
+                      onClick={() => {
+                        if (confirm("Are you sure you want to remove this video from this lesson? Saving the lesson will purge the file from Bunny.net to save storage.")) {
+                          setLessonVideoId("");
+                          setSelectedVideoFile(null);
+                          toast.info("Video detached. Click 'Save Lesson' to permanently remove and purge from Bunny.net.");
+                        }
+                      }}
+                      className="h-7 px-2.5 text-xs flex items-center gap-1"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Remove Video
+                    </Button>
+                  </div>
                   <div className="aspect-video w-full rounded-xl overflow-hidden bg-black max-h-48">
                     <iframe
                       src={`https://iframe.mediadelivery.net/embed/803267/${lessonVideoId}`}
@@ -878,8 +896,7 @@ export default function CourseCurriculumAdminPage() {
               disabled={
                 saveLessonMutation.isPending ||
                 isUploadingVideo ||
-                (!lessonTitle.trim() && !selectedVideoFile) ||
-                (!lessonVideoId.trim() && !selectedVideoFile)
+                !lessonTitle.trim()
               }
               className="bg-amber-600 hover:bg-amber-700 text-white min-w-[130px]"
             >
