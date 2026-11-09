@@ -561,10 +561,13 @@ export default function CoursesAdminPage() {
               />
             </Field>
 
-            <Field label="URL Slug *" hint="Unique URL identifier">
+            <Field label="URL Slug *" hint="Unique URL identifier (auto-generated from title)">
               <Input
                 value={formData.slug}
-                onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
+                onChange={(e) => {
+                  const clean = e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-");
+                  setFormData((prev) => ({ ...prev, slug: clean }));
+                }}
                 placeholder="vedic-astrology-masterclass"
               />
             </Field>
