@@ -307,7 +307,17 @@ export default function CoursesAdminPage() {
         title="DivinLink Gurukul Courses"
         description="Create and manage video masterclasses, curriculum modules, and Bunny Stream lessons."
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href="/courses/enrollments">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-emerald-500/30 text-emerald-600 hover:text-emerald-500 hover:bg-emerald-500/10"
+              >
+                <Users className="h-4 w-4" />
+                Orders & Enrollments
+              </Button>
+            </Link>
             <Link href="/courses/qa">
               <Button
                 variant="outline"

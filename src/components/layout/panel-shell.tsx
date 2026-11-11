@@ -82,6 +82,7 @@ const ADMIN_STORE_NAV: NavItem[] = [
 
 const ADMIN_GURUKUL_NAV: NavItem[] = [
   { href: "/courses", label: "Gurukul Courses", icon: GraduationCap },
+  { href: "/courses/enrollments", label: "Orders & Enrollments", icon: Users },
   { href: "/courses/qa", label: "Guru Jigyasa Q&A", icon: MessageSquareQuote },
 ];
 

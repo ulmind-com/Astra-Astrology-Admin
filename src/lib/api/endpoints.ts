@@ -167,6 +167,12 @@ export const endpoints = {
       lessons: (courseId: string) => `/admin/courses/${courseId}/lessons`,
       lesson: (courseId: string, lessonId: string) => `/admin/courses/${courseId}/lessons/${lessonId}`,
       createBunnyVideo: "/admin/courses/create-bunny-video",
+      orders: "/admin/courses/orders",
+      reconcileOrder: (orderId: string) => `/admin/courses/orders/${orderId}/reconcile`,
+      enrollments: "/admin/courses/enrollments",
+      courseEnrollments: (courseId: string) => `/admin/courses/${courseId}/enrollments`,
+      revokeEnrollment: (courseId: string, enrollmentId: string) =>
+        `/admin/courses/${courseId}/enrollments/${enrollmentId}`,
       questions: "/admin/courses/questions",
       answerQuestion: (questionId: string) => `/admin/courses/questions/${questionId}/answers`,
       updateQuestion: (questionId: string) => `/admin/courses/questions/${questionId}`,

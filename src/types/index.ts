@@ -1014,3 +1014,73 @@ export interface AdminCourseQuestionListResponse {
   unanswered_count: number;
   resolved_count: number;
 }
+
+export interface AdminCourseOrder {
+  id: string;
+  user_id: string;
+  student_name?: string | null;
+  student_email?: string | null;
+  student_phone?: string | null;
+  course_id: string;
+  course_title?: string | null;
+  course_slug?: string | null;
+  razorpay_order_id: string;
+  razorpay_payment_id?: string | null;
+  receipt: string;
+  amount_paise: number;
+  amount_inr: number;
+  currency: string;
+  status: "created" | "paid" | "failed" | "refunded" | string;
+  method?: string | null;
+  failure_reason?: string | null;
+  verified_via?: string | null;
+  paid_at?: string | null;
+  created_at: string;
+}
+
+export interface AdminCourseOrderListResponse {
+  items: AdminCourseOrder[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+  created_count: number;
+  paid_count: number;
+  failed_count: number;
+  refunded_count: number;
+}
+
+export interface AdminCourseEnrollment {
+  id: string;
+  user_id: string;
+  student_name?: string | null;
+  student_email?: string | null;
+  student_phone?: string | null;
+  course_id: string;
+  course_title?: string | null;
+  course_slug?: string | null;
+  payment_id?: string | null;
+  order_id?: string | null;
+  amount_paid: number;
+  currency: string;
+  progress_percent: number;
+  certificate_issued: boolean;
+  enrolled_at: string;
+  last_accessed_at: string;
+}
+
+export interface AdminCourseEnrollmentListResponse {
+  items: AdminCourseEnrollment[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+export interface AdminManualEnrollInput {
+  user_id?: string;
+  email?: string;
+  amount_paid?: number;
+  payment_id?: string;
+  note?: string;
+}

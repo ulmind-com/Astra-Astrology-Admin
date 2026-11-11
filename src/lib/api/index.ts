@@ -82,6 +82,11 @@ import type {
   AdminCourseQuestion,
   AdminCourseQuestionAnswer,
   AdminCourseQuestionListResponse,
+  AdminCourseOrder,
+  AdminCourseOrderListResponse,
+  AdminCourseEnrollment,
+  AdminCourseEnrollmentListResponse,
+  AdminManualEnrollInput,
 } from "@/types";
 import type { CoPilotBirthDetailsInput, CoPilotSummary } from "@/types/copilot";
 import type { MilanRoom, MilanRoomSession } from "@/types/milan";
@@ -1155,4 +1160,39 @@ export const courseAdminApi = {
 
   deleteAnswer: (questionId: string, answerId: string) =>
     api.delete<{ message: string }>(endpoints.admin.courses.deleteAnswer(questionId, answerId)),
+
+  listOrders: (params?: {
+    status?: string;
+    course_id?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) =>
+    api.get<AdminCourseOrderListResponse>(endpoints.admin.courses.orders, {
+      query: params,
+    }),
+
+  reconcileOrder: (orderId: string) =>
+    api.post<AdminCourseOrder>(endpoints.admin.courses.reconcileOrder(orderId)),
+
+  listEnrollments: (params?: {
+    course_id?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) =>
+    api.get<AdminCourseEnrollmentListResponse>(endpoints.admin.courses.enrollments, {
+      query: params,
+    }),
+
+  grantEnrollment: (courseId: string, body: AdminManualEnrollInput) =>
+    api.post<AdminCourseEnrollment>(
+      endpoints.admin.courses.courseEnrollments(courseId),
+      body
+    ),
+
+  revokeEnrollment: (courseId: string, enrollmentId: string) =>
+    api.delete<{ message: string }>(
+      endpoints.admin.courses.revokeEnrollment(courseId, enrollmentId)
+    ),
 };
