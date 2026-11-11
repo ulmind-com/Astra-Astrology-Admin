@@ -231,51 +231,55 @@ export default function CourseCurriculumAdminPage() {
 
       toast.loading("Preparing Bunny Stream video slot...", { id: "video-upload" });
 
-      let videoId = "";
-      let uploadUrl = "";
-      let accessKey = "1c3cab37-2ae3-4527-8592090e78bb-f243-4cf9";
-      const libraryId = "803267";
-
-      // Attempt 1: Call backend API
-      try {
-        const placeholder = (await courseAdminApi.createBunnyVideo(titleForSlot)) as BunnyVideoPlaceholder;
-        if (placeholder?.video_id) {
-          videoId = placeholder.video_id;
-          uploadUrl = placeholder.upload_url || `https://video.bunnycdn.com/library/${libraryId}/videos/${videoId}`;
-          if (placeholder.access_key) accessKey = placeholder.access_key;
-        }
-      } catch (backendErr) {
-        console.warn("Backend video slot creation error, falling back to direct Bunny Edge API", backendErr);
+      // The slot and the permission to fill it both come from our server. The
+      // browser never sees the Bunny API key: it gets a signature good for
+      // this one video, for an hour. (It used to be handed the key itself,
+      // which can delete every video in the library, in a bundle anyone can
+      // download.) See https://docs.bunny.net/stream/tus-resumable-uploads
+      const slot = await courseAdminApi.createBunnyVideo(titleForSlot);
+      if (!slot?.video_id || !slot.authorization_signature) {
+        throw new Error("Could not reserve a video slot. Please try again.");
       }
+      const videoId = slot.video_id;
 
-      // Attempt 2: If backend returned error or empty, call Bunny API directly from browser
-      if (!videoId) {
-        const bunnyRes = await fetch(`https://video.bunnycdn.com/library/${libraryId}/videos`, {
-          method: "POST",
-          headers: {
-            "AccessKey": accessKey,
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-          },
-          body: JSON.stringify({ title: titleForSlot }),
-        });
-        if (!bunnyRes.ok) {
-          const errText = await bunnyRes.text();
-          throw new Error(`Bunny Stream slot error: ${errText || bunnyRes.statusText}`);
-        }
-        const bunnyData = await bunnyRes.json();
-        videoId = bunnyData.guid;
-        uploadUrl = `https://video.bunnycdn.com/library/${libraryId}/videos/${videoId}`;
+      const toBase64 = (value: string) =>
+        btoa(String.fromCharCode(...new TextEncoder().encode(value)));
+
+      // tus step 1: creation. Bunny answers 201 with the upload's location.
+      const created = await fetch(slot.tus_endpoint, {
+        method: "POST",
+        headers: {
+          "Tus-Resumable": "1.0.0",
+          "Upload-Length": String(file.size),
+          "Upload-Metadata": `filetype ${toBase64(file.type || "video/mp4")},title ${toBase64(titleForSlot)}`,
+          AuthorizationSignature: slot.authorization_signature,
+          AuthorizationExpire: String(slot.authorization_expire),
+          LibraryId: String(slot.library_id),
+          VideoId: videoId,
+        },
+      });
+      if (!created.ok) {
+        throw new Error(
+          created.status === 401
+            ? "The upload permission expired. Please try again."
+            : `Bunny Stream slot error (${created.status}).`,
+        );
       }
+      const location = created.headers.get("location") || created.headers.get("Location");
+      if (!location) throw new Error("Bunny Stream did not return an upload location.");
+      const uploadUrl = new URL(location, slot.tus_endpoint).toString();
 
       toast.loading("Streaming video directly to Bunny CDN...", { id: "video-upload" });
 
+      // tus step 2: the file itself, as one PATCH. XHR rather than fetch so
+      // the progress bar and the cancel button keep working.
       return new Promise<string>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         setActiveXhr(xhr);
-        xhr.open("PUT", uploadUrl, true);
-        xhr.setRequestHeader("AccessKey", accessKey);
-        xhr.setRequestHeader("Content-Type", "application/octet-stream");
+        xhr.open("PATCH", uploadUrl, true);
+        xhr.setRequestHeader("Tus-Resumable", "1.0.0");
+        xhr.setRequestHeader("Upload-Offset", "0");
+        xhr.setRequestHeader("Content-Type", "application/offset+octet-stream");
 
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {

@@ -947,12 +947,19 @@ export interface CourseLessonAdmin {
   resources?: { title: string; url: string; type: string }[];
 }
 
+/**
+ * A video slot on Bunny, and permission to upload into it.
+ *
+ * Deliberately carries no API key. The browser gets a signature that opens
+ * this one video and expires; the key stays on our server.
+ */
 export interface BunnyVideoPlaceholder {
   video_id: string;
   library_id: string;
   title: string;
-  upload_url?: string | null;
-  access_key?: string | null;
+  tus_endpoint: string;
+  authorization_signature: string;
+  authorization_expire: number;
 }
 
 export interface AdminCourseQuestionAnswer {

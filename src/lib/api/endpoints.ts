@@ -14,6 +14,7 @@ export const endpoints = {
     forgotPassword: "/auth/password/forgot",
     resetPassword: "/auth/password/reset",
     changePassword: "/auth/password/change",
+    refresh: "/auth/refresh",
   },
 
   users: {

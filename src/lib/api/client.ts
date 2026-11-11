@@ -4,13 +4,16 @@
  * It unwraps the `{ success, message, data }` envelope, throws a real `ApiError`
  * so React Query and forms can react to it, and attaches the bearer token.
  *
- * There is no token refresh: the backend does not expose a refresh endpoint yet,
- * so a 401 ends the session rather than silently retrying.
+ * A 401 is handled once, in `send` below: the refresh token is exchanged for
+ * a new pair and the request is retried. Only if that fails does the session
+ * end — an astrologer mid-consultation must not be signed out just because
+ * their access token reached the end of its day.
  */
 
+import { endpoints } from "@/lib/api/endpoints";
 import { apiBase } from "@/lib/env";
 import { session } from "@/lib/session";
-import type { ApiEnvelope, ApiErrorBody, ValidationDetail } from "@/types";
+import type { ApiEnvelope, ApiErrorBody, TokenPair, ValidationDetail } from "@/types";
 
 /**
  * Pydantic prefixes a custom validator's message with "Value error, ". Useful
@@ -31,6 +34,8 @@ const CREDENTIAL_CODES = new Set([
   "password_not_set",
   "invalid_id_token",
   "user_not_found",
+  // "You are not signed in" on a locked lesson, which is not a dead session.
+  "sign_in_required",
 ]);
 
 function endsSession(status: number, code: string | undefined): boolean {
@@ -102,13 +107,53 @@ export function onAuthExpired(fn: () => void): () => void {
   return () => onUnauthorized.delete(fn);
 }
 
-export async function apiFetch<T>(path: string, options: Options = {}): Promise<T> {
+/**
+ * Exchanges the refresh token for a new pair.
+ *
+ * Single-flight: a panel screen fires several requests at once, and if each
+ * refreshed on its own the later ones would be rotating a token the earlier
+ * ones had already replaced, and all but one would be signed out.
+ */
+let refreshInFlight: Promise<boolean> | null = null;
+
+async function refreshSession(): Promise<boolean> {
+  const token = session.refreshToken;
+  if (!token) return false;
+
+  refreshInFlight ??= (async () => {
+    try {
+      const response = await fetch(buildUrl(endpoints.auth.refresh), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: token }),
+      });
+      if (!response.ok) return false;
+      const payload = (await response.json()) as ApiEnvelope<TokenPair>;
+      if (!payload?.data?.access_token) return false;
+      session.save(payload.data);
+      return true;
+    } catch {
+      // Offline. Not a dead session — leave it alone and let the original
+      // request surface the network error.
+      return false;
+    } finally {
+      setTimeout(() => {
+        refreshInFlight = null;
+      }, 0);
+    }
+  })();
+
+  return refreshInFlight;
+}
+
+type Sent = { response: Response; payload: unknown };
+
+async function send(path: string, options: Options): Promise<Sent> {
   const { method = "GET", body, query, auth = true, ...rest } = options;
 
   const headers = new Headers(rest.headers);
   const isFormData = body instanceof FormData;
   if (body !== undefined && !isFormData) headers.set("Content-Type", "application/json");
-
   if (auth) {
     const token = session.accessToken;
     if (token) headers.set("Authorization", `Bearer ${token}`);
@@ -130,32 +175,63 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
     );
   }
 
-  if (response.status === 204) return undefined as T;
+  if (response.status === 204) return { response, payload: null };
 
   let payload: unknown = null;
   try {
     payload = await response.json();
   } catch {
-    /* a proxy error page, say — handled below */
+    /* a proxy error page, say — handled by the caller */
+  }
+  return { response, payload };
+}
+
+/** One request, with a single retry after refreshing an expired token. */
+async function sendWithRefresh(path: string, options: Options): Promise<Sent> {
+  const sent = await send(path, options);
+  const { response } = sent;
+  const auth = options.auth ?? true;
+
+  if (response.ok || response.status !== 401 || !auth) return sent;
+
+  const code = (sent.payload as ApiErrorBody | null)?.error_code;
+  if (code && CREDENTIAL_CODES.has(code)) return sent;
+  if (!session.refreshToken) return sent;
+
+  const refreshed = await refreshSession();
+  if (refreshed) return send(path, options);
+
+  // The refresh token is gone too, so this session is over. Clear it and try
+  // once more as a visitor: the catalogue and other open pages must still
+  // render rather than showing an error to someone who simply came back
+  // after a month. A page that genuinely needs an account answers 401 again,
+  // which is what it would have done anyway.
+  session.clear();
+  onUnauthorized.forEach((fn) => fn());
+  return send(path, { ...options, auth: false });
+}
+
+function raise(sent: Sent, auth: boolean): never {
+  const error = sent.payload as ApiErrorBody | null;
+
+  if (auth && endsSession(sent.response.status, error?.error_code)) {
+    session.clear();
+    onUnauthorized.forEach((fn) => fn());
   }
 
-  if (!response.ok) {
-    const error = payload as ApiErrorBody | null;
+  throw new ApiError(
+    error?.message ?? `Request failed (${sent.response.status})`,
+    sent.response.status,
+    error?.error_code,
+    error?.details,
+  );
+}
 
-    if (auth && endsSession(response.status, error?.error_code)) {
-      session.clear();
-      onUnauthorized.forEach((fn) => fn());
-    }
-
-    throw new ApiError(
-      error?.message ?? `Request failed (${response.status})`,
-      response.status,
-      error?.error_code,
-      error?.details,
-    );
-  }
-
-  return (payload as ApiEnvelope<T>)?.data as T;
+export async function apiFetch<T>(path: string, options: Options = {}): Promise<T> {
+  const sent = await sendWithRefresh(path, options);
+  if (!sent.response.ok) raise(sent, options.auth ?? true);
+  if (sent.response.status === 204) return undefined as T;
+  return (sent.payload as ApiEnvelope<T>)?.data as T;
 }
 
 /** Same request, but keeps the `message` the API sent alongside the data. */
@@ -163,44 +239,9 @@ export async function apiFetchEnvelope<T>(
   path: string,
   options: Options = {},
 ): Promise<ApiEnvelope<T>> {
-  const { method = "GET", body, query, auth = true, ...rest } = options;
-  const headers = new Headers(rest.headers);
-  const isFormData = body instanceof FormData;
-  if (body !== undefined && !isFormData) headers.set("Content-Type", "application/json");
-  if (auth) {
-    const token = session.accessToken;
-    if (token) headers.set("Authorization", `Bearer ${token}`);
-  }
-
-  let response: Response;
-  try {
-    response = await fetch(buildUrl(path, query), {
-      ...rest,
-      method,
-      headers,
-      body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
-    });
-  } catch {
-    throw new ApiError("Could not reach the server.", 0, "network_error");
-  }
-
-  const payload = (await response.json().catch(() => null)) as ApiEnvelope<T> | ApiErrorBody | null;
-
-  if (!response.ok) {
-    const error = payload as ApiErrorBody | null;
-    if (auth && endsSession(response.status, error?.error_code)) {
-      session.clear();
-      onUnauthorized.forEach((fn) => fn());
-    }
-    throw new ApiError(
-      error?.message ?? `Request failed (${response.status})`,
-      response.status,
-      error?.error_code,
-      error?.details,
-    );
-  }
-
-  return payload as ApiEnvelope<T>;
+  const sent = await sendWithRefresh(path, options);
+  if (!sent.response.ok) raise(sent, options.auth ?? true);
+  return sent.payload as ApiEnvelope<T>;
 }
 
 export const api = {
