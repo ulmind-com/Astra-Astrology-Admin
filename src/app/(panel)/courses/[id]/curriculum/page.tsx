@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  AlertTriangle,
   ArrowLeft,
   CheckCircle2,
   Clock,
@@ -688,6 +689,19 @@ export default function CourseCurriculumAdminPage() {
               </Select>
             </Field>
           </div>
+
+          {/* YouTube Unlisted Piracy Risk Warning */}
+          {lessonProvider === "youtube_unlisted" && (
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs flex items-start gap-2.5">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
+              <div>
+                <p className="font-bold">Security Advisory: YouTube Unlisted Link</p>
+                <p className="text-[11px] opacity-90 mt-0.5">
+                  YouTube Unlisted videos do not have token expiration or domain locking. Anyone with the URL can watch or share outside the platform. For paid masterclasses, Bunny Stream is strongly recommended.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Direct Video Upload Section */}
           {lessonProvider === "bunny_stream" && (

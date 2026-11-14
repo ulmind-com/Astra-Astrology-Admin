@@ -118,6 +118,7 @@ export default function CourseEnrollmentsAdminPage() {
   const [grantUserId, setGrantUserId] = React.useState("");
   const [grantPaymentId, setGrantPaymentId] = React.useState("");
   const [grantAmountPaid, setGrantAmountPaid] = React.useState("");
+  const [grantAccessDays, setGrantAccessDays] = React.useState("");
   const [grantNote, setGrantNote] = React.useState("");
 
   // Revoke Confirmation State
@@ -226,11 +227,16 @@ export default function CourseEnrollmentsAdminPage() {
       if (Number.isNaN(parsedAmount) || parsedAmount < 0) {
         throw new Error("Amount paid must be 0 or greater.");
       }
+      const parsedDays = grantAccessDays.trim() ? Number(grantAccessDays) : undefined;
+      if (parsedDays !== undefined && (Number.isNaN(parsedDays) || parsedDays <= 0)) {
+        throw new Error("Access validity days must be at least 1.");
+      }
       return courseAdminApi.grantEnrollment(grantCourseId, {
         email: grantEmail.trim() || undefined,
         user_id: grantUserId.trim() || undefined,
         payment_id: grantPaymentId.trim() || undefined,
         amount_paid: parsedAmount,
+        access_duration_days: parsedDays,
         note: grantNote.trim() || undefined,
       });
     },
@@ -243,6 +249,7 @@ export default function CourseEnrollmentsAdminPage() {
       setGrantUserId("");
       setGrantPaymentId("");
       setGrantAmountPaid("");
+      setGrantAccessDays("");
       setGrantNote("");
       void queryClient.invalidateQueries({ queryKey: ["admin-course-enrollments"] });
       void queryClient.invalidateQueries({ queryKey: ["admin-course-orders"] });
@@ -281,6 +288,7 @@ export default function CourseEnrollmentsAdminPage() {
     setGrantUserId(order.user_id);
     setGrantPaymentId(order.razorpay_payment_id || "");
     setGrantAmountPaid(String(order.amount_inr || 0));
+    setGrantAccessDays("");
     setGrantNote(`Recovered from Razorpay order ${order.razorpay_order_id}`);
     setGrantOpen(true);
   };
@@ -785,8 +793,27 @@ export default function CourseEnrollmentsAdminPage() {
                           </td>
 
                           <td className="py-3.5 px-4 align-top whitespace-nowrap text-muted-foreground">
-                            <div>{formatDateTime(item.enrolled_at)}</div>
-                            <div className="text-[10px] mt-0.5">
+                            <div>Enrolled: {formatDateTime(item.enrolled_at)}</div>
+                            {item.expires_at ? (
+                              item.is_expired ? (
+                                <div className="mt-1">
+                                  <Badge tone="red" className="text-[10px] font-bold">
+                                    Expired: {formatDateTime(item.expires_at)}
+                                  </Badge>
+                                </div>
+                              ) : (
+                                <div className="text-[10px] text-amber-600 font-medium mt-0.5">
+                                  Expires: {formatDateTime(item.expires_at)}
+                                </div>
+                              )
+                            ) : (
+                              <div className="mt-1">
+                                <Badge tone="neutral" className="text-[10px]">
+                                  Lifetime Access
+                                </Badge>
+                              </div>
+                            )}
+                            <div className="text-[10px] text-muted-foreground/70 mt-0.5">
                               Last seen: {formatDateTime(item.last_accessed_at)}
                             </div>
                           </td>
@@ -907,6 +934,19 @@ export default function CourseEnrollmentsAdminPage() {
               />
             </Field>
           </div>
+
+          <Field
+            label="Access Validity (Days)"
+            hint="Number of days the student has access. Leave blank for course default / lifetime access."
+          >
+            <Input
+              type="number"
+              min={1}
+              value={grantAccessDays}
+              onChange={(e) => setGrantAccessDays(e.target.value)}
+              placeholder="e.g. 30, 90, 365 (blank = course default or lifetime)"
+            />
+          </Field>
 
           <Field label="Admin Note (Audit Trail)">
             <Input

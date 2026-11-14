@@ -898,6 +898,7 @@ export interface CourseAdminItem {
   rating_count: number;
   is_featured: boolean;
   certificate_enabled: boolean;
+  access_duration_days?: number | null;
 }
 
 export interface CourseAdminInput {
@@ -916,6 +917,8 @@ export interface CourseAdminInput {
   promo_video_provider?: string;
   price: number;
   mrp: number;
+  is_free?: boolean;
+  access_duration_days?: number | null;
   certificate_enabled?: boolean;
   what_you_will_learn?: string[];
   prerequisites?: string[];
@@ -1066,6 +1069,8 @@ export interface AdminCourseEnrollment {
   progress_percent: number;
   certificate_issued: boolean;
   enrolled_at: string;
+  expires_at?: string | null;
+  is_expired?: boolean;
   last_accessed_at: string;
 }
 
@@ -1083,4 +1088,6 @@ export interface AdminManualEnrollInput {
   amount_paid?: number;
   payment_id?: string;
   note?: string;
+  access_duration_days?: number;
+  expires_at?: string;
 }

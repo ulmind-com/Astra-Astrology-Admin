@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  AlertTriangle,
   BookOpen,
   Clock,
   Edit2,
@@ -121,6 +122,8 @@ export default function CoursesAdminPage() {
     promo_video_provider: "youtube",
     price: 999,
     mrp: 2999,
+    is_free: false,
+    access_duration_days: null,
     certificate_enabled: true,
     is_published: true,
     is_featured: false,
@@ -170,8 +173,24 @@ export default function CoursesAdminPage() {
       if (!formData.thumbnail_url?.trim()) {
         throw new Error("Please upload or enter a course thumbnail image.");
       }
+      if (formData.is_free) {
+        const confirmed = window.confirm(
+          "⚠️ Are you sure you want to save this course as 100% FREE (₹0)? Any registered student will be able to enroll immediately without payment."
+        );
+        if (!confirmed) {
+          throw new Error("Free course creation cancelled by admin.");
+        }
+      } else if (!formData.price || formData.price <= 0) {
+        throw new Error(
+          "Selling price for a paid course must be at least ₹1. Or toggle to Free Course mode."
+        );
+      }
+
       const payload: CourseAdminInput = {
         ...formData,
+        price: formData.is_free ? 0 : formData.price,
+        is_free: Boolean(formData.is_free),
+        access_duration_days: formData.access_duration_days || null,
         what_you_will_learn: learningPointsText
           .split("\n")
           .map((s) => s.trim())
@@ -226,6 +245,8 @@ export default function CoursesAdminPage() {
       promo_video_provider: "youtube",
       price: 1499,
       mrp: 4999,
+      is_free: false,
+      access_duration_days: null,
       certificate_enabled: true,
       is_published: true,
       is_featured: false,
@@ -255,6 +276,8 @@ export default function CoursesAdminPage() {
       promo_video_provider: "youtube",
       price: c.price,
       mrp: c.mrp,
+      is_free: c.price <= 0,
+      access_duration_days: c.access_duration_days || null,
       certificate_enabled: c.certificate_enabled,
       is_published: true,
       is_featured: c.is_featured,
@@ -630,21 +653,115 @@ export default function CoursesAdminPage() {
             </Field>
           </div>
 
+          {/* Pricing & Free Intent Controls */}
+          <div className="space-y-3 p-4 rounded-xl border border-border bg-muted/20">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className="text-xs font-bold text-foreground">Course Pricing Mode *</label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
+                  <input
+                    type="radio"
+                    name="pricing_mode"
+                    checked={!formData.is_free}
+                    onChange={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        is_free: false,
+                        price: prev.price > 0 ? prev.price : 999,
+                      }))
+                    }
+                    className="accent-amber-600 h-3.5 w-3.5"
+                  />
+                  <span>Paid Course</span>
+                </label>
+                <label className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
+                  <input
+                    type="radio"
+                    name="pricing_mode"
+                    checked={Boolean(formData.is_free)}
+                    onChange={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        is_free: true,
+                        price: 0,
+                      }))
+                    }
+                    className="accent-amber-600 h-3.5 w-3.5"
+                  />
+                  <span>Free Course (₹0)</span>
+                </label>
+              </div>
+            </div>
+
+            {formData.is_free ? (
+              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs flex items-start gap-2.5">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
+                <div>
+                  <p className="font-bold">100% Free Course Notice</p>
+                  <p className="text-[11px] opacity-90 mt-0.5">
+                    This course will be published without checkout. Any registered student can enroll
+                    instantly for ₹0.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <Field label="Selling Price (₹ INR) *" hint="Student pays this amount (min ₹1)">
+                  <Input
+                    type="number"
+                    min={1}
+                    value={formData.price}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, price: parseFloat(e.target.value) || 0 }))
+                    }
+                  />
+                </Field>
+
+                <Field label="Original MRP (₹ INR)" hint="Crossed-out original fee">
+                  <Input
+                    type="number"
+                    value={formData.mrp}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, mrp: parseFloat(e.target.value) || 0 }))
+                    }
+                  />
+                </Field>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Selling Price (₹ INR) *" hint="What student pays">
+            <Field
+              label="Access Validity (Days)"
+              hint="Leave blank or 0 for Lifetime Access"
+            >
               <Input
                 type="number"
-                value={formData.price}
-                onChange={(e) => setFormData((prev) => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                placeholder="e.g. 365 (blank = lifetime)"
+                value={formData.access_duration_days || ""}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setFormData((prev) => ({
+                    ...prev,
+                    access_duration_days: !isNaN(val) && val > 0 ? val : null,
+                  }));
+                }}
               />
             </Field>
 
-            <Field label="Original MRP (₹ INR)" hint="Crossed-out original fee">
-              <Input
-                type="number"
-                value={formData.mrp}
-                onChange={(e) => setFormData((prev) => ({ ...prev, mrp: parseFloat(e.target.value) || 0 }))}
-              />
+            <Field label="Certificate on Completion">
+              <Select
+                value={formData.certificate_enabled ? "true" : "false"}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    certificate_enabled: e.target.value === "true",
+                  }))
+                }
+              >
+                <option value="true">Yes — Issue Verifiable Certificate</option>
+                <option value="false">No Certificate</option>
+              </Select>
             </Field>
           </div>
 
