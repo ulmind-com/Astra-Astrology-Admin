@@ -174,6 +174,7 @@ export const endpoints = {
       revokeEnrollment: (courseId: string, enrollmentId: string) =>
         `/admin/courses/${courseId}/enrollments/${enrollmentId}`,
       questions: "/admin/courses/questions",
+      videoPreview: (videoId: string) => `/admin/courses/preview-token/${videoId}`,
       answerQuestion: (questionId: string) => `/admin/courses/questions/${questionId}/answers`,
       updateQuestion: (questionId: string) => `/admin/courses/questions/${questionId}`,
       deleteQuestion: (questionId: string) => `/admin/courses/questions/${questionId}`,

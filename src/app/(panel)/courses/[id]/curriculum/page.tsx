@@ -99,6 +99,25 @@ export default function CourseCurriculumAdminPage() {
     enabled: Boolean(courseId),
   });
 
+  // Fetch signed preview URL for Bunny Stream videos to prevent 403 Forbidden
+  const { data: previewData } = useQuery({
+    queryKey: ["admin-video-preview", lessonVideoId, lessonProvider],
+    queryFn: async () => {
+      if (!lessonVideoId || lessonProvider !== "bunny_stream") return null;
+      return courseAdminApi.getVideoPreview(lessonVideoId);
+    },
+    enabled: Boolean(lessonVideoId && lessonProvider === "bunny_stream" && !isUploadingVideo),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const previewEmbedUrl = React.useMemo(() => {
+    if (!lessonVideoId) return "";
+    if (lessonProvider === "youtube_unlisted") {
+      return `https://www.youtube-nocookie.com/embed/${lessonVideoId}?rel=0`;
+    }
+    return previewData?.embed_url || "";
+  }, [lessonVideoId, lessonProvider, previewData]);
+
   // Section mutations
   const saveSectionMutation = useMutation({
     mutationFn: async () => {
@@ -839,14 +858,20 @@ export default function CourseCurriculumAdminPage() {
                       Remove Video
                     </Button>
                   </div>
-                  <div className="aspect-video w-full rounded-xl overflow-hidden bg-black max-h-48">
-                    <iframe
-                      src={`https://iframe.mediadelivery.net/embed/803267/${lessonVideoId}`}
-                      loading="lazy"
-                      className="h-full w-full border-0"
-                      allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
-                      allowFullScreen
-                    />
+                  <div className="aspect-video w-full rounded-xl overflow-hidden bg-black max-h-48 flex items-center justify-center">
+                    {previewEmbedUrl ? (
+                      <iframe
+                        src={previewEmbedUrl}
+                        loading="lazy"
+                        className="h-full w-full border-0"
+                        allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 text-muted-foreground p-4 text-center">
+                        <LoadingBlock label="Preparing authenticated video stream..." />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

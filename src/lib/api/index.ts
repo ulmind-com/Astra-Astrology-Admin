@@ -1146,6 +1146,12 @@ export const courseAdminApi = {
   }) =>
     api.get<AdminCourseQuestionListResponse>(endpoints.admin.courses.questions, { query: params }),
 
+  getVideoPreview: (videoId: string, libraryId?: string) =>
+    api.get<{ video_id: string; embed_url: string }>(
+      endpoints.admin.courses.videoPreview(videoId),
+      { query: { library_id: libraryId } }
+    ),
+
   answerQuestion: (questionId: string, body: { content: string; mark_resolved?: boolean }) =>
     api.post<AdminCourseQuestionAnswer>(endpoints.admin.courses.answerQuestion(questionId), body),
 
