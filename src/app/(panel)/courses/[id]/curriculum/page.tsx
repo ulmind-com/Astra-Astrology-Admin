@@ -833,6 +833,7 @@ export default function CourseCurriculumAdminPage() {
                         className="h-full w-full border-0"
                         allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
                         allowFullScreen
+                        referrerPolicy="origin"
                       />
                     ) : (
                       <div className="flex flex-col items-center gap-1 text-muted-foreground p-4 text-center">
