@@ -1016,6 +1016,7 @@ export interface AdminCourseQuestionListResponse {
   total: number;
   unanswered_count: number;
   resolved_count: number;
+  hidden_count?: number;
 }
 
 export interface AdminCourseOrder {

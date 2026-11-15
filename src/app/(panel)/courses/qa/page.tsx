@@ -12,6 +12,8 @@ import {
   MessageSquare,
   MessageSquareQuote,
   Phone,
+  Eye,
+  EyeOff,
   Pin,
   PlayCircle,
   RefreshCw,
@@ -54,7 +56,7 @@ export default function GurukulQAPage() {
 
   const [selectedCourseId, setSelectedCourseId] = React.useState(initialCourseId);
   const [selectedLessonId, setSelectedLessonId] = React.useState(initialLessonId);
-  const [statusFilter, setStatusFilter] = React.useState<"all" | "unanswered" | "answered" | "resolved">("all");
+  const [statusFilter, setStatusFilter] = React.useState<"all" | "unanswered" | "answered" | "resolved" | "hidden">("all");
   const [searchQuery, setSearchQuery] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
 
@@ -136,6 +138,7 @@ export default function GurukulQAPage() {
   const totalCount = qaData?.total || 0;
   const unansweredCount = qaData?.unanswered_count || 0;
   const resolvedCount = qaData?.resolved_count || 0;
+  const hiddenCount = qaData?.hidden_count || 0;
 
   // Mutations
   const replyMutation = useMutation({
@@ -160,14 +163,17 @@ export default function GurukulQAPage() {
       questionId,
       isResolved,
       isPinned,
+      isHidden,
     }: {
       questionId: string;
       isResolved?: boolean;
       isPinned?: boolean;
+      isHidden?: boolean;
     }) => {
       return courseAdminApi.updateQuestion(questionId, {
         is_resolved: isResolved,
         is_pinned: isPinned,
+        is_hidden: isHidden,
       });
     },
     onSuccess: () => {
@@ -362,6 +368,19 @@ export default function GurukulQAPage() {
             >
               মীমাংসিত ({resolvedCount})
             </Button>
+            <Button
+              size="sm"
+              variant={statusFilter === "hidden" ? "primary" : "outline"}
+              onClick={() => setStatusFilter("hidden")}
+              className="text-xs py-1 h-7 gap-1"
+            >
+              <span>লুকানো / স্প্যাম</span>
+              {hiddenCount > 0 && (
+                <span className="rounded-full bg-danger/20 px-1.5 py-0.2 text-[10px] font-bold text-danger">
+                  {hiddenCount}
+                </span>
+              )}
+            </Button>
           </div>
         </CardBody>
       </Card>
@@ -424,10 +443,30 @@ export default function GurukulQAPage() {
                         ✓ সমাধান হয়েছে
                       </span>
                     )}
+
+                    {q.is_hidden && (
+                      <span className="rounded-full bg-danger/10 text-danger px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 border border-danger/20">
+                        <EyeOff className="h-3 w-3" /> লুকানো / স্প্যাম
+                      </span>
+                    )}
                   </div>
 
-                  {/* Actions: Pin & Delete */}
+                  {/* Actions: Pin, Hide & Delete */}
                   <div className="flex items-center gap-1 text-xs">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        updateStatusMutation.mutate({
+                          questionId: q.id,
+                          isHidden: !q.is_hidden,
+                        })
+                      }
+                      className={`p-1.5 h-8 w-8 ${q.is_hidden ? "text-danger bg-danger/10" : "text-muted-foreground hover:text-foreground"}`}
+                      title={q.is_hidden ? "প্রশ্ন পুনরায় প্রকাশ করুন (Unhide)" : "প্রশ্ন লুকিয়ে রাখুন (Hide/Spam)"}
+                    >
+                      {q.is_hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </Button>
                     <Button
                       size="sm"
                       variant="ghost"
