@@ -28,6 +28,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
+import * as tus from "tus-js-client";
 
 import { PanelHeader } from "@/components/layout/panel-shell";
 import {
@@ -82,7 +83,7 @@ export default function CourseCurriculumAdminPage() {
   const [uploadProgress, setUploadProgress] = React.useState(0);
   const [uploadedBytes, setUploadedBytes] = React.useState(0);
   const [totalBytes, setTotalBytes] = React.useState(0);
-  const [activeXhr, setActiveXhr] = React.useState<XMLHttpRequest | null>(null);
+  const [activeUpload, setActiveUpload] = React.useState<tus.Upload | null>(null);
   const videoFileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   // Deletion confirm
@@ -244,6 +245,8 @@ export default function CourseCurriculumAdminPage() {
     try {
       setIsUploadingVideo(true);
       setUploadProgress(0);
+      setUploadedBytes(0);
+      setTotalBytes(file.size);
 
       // Clean and safe title
       const rawName = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
@@ -253,108 +256,72 @@ export default function CourseCurriculumAdminPage() {
 
       // The slot and the permission to fill it both come from our server. The
       // browser never sees the Bunny API key: it gets a signature good for
-      // this one video, for an hour. (It used to be handed the key itself,
-      // which can delete every video in the library, in a bundle anyone can
-      // download.) See https://docs.bunny.net/stream/tus-resumable-uploads
+      // this one video, for an hour.
+      // See https://docs.bunny.net/stream/tus-resumable-uploads
       const slot = await courseAdminApi.createBunnyVideo(titleForSlot);
       if (!slot?.video_id || !slot.authorization_signature) {
         throw new Error("Could not reserve a video slot. Please try again.");
       }
       const videoId = slot.video_id;
 
-      const toBase64 = (value: string) =>
-        btoa(String.fromCharCode(...new TextEncoder().encode(value)));
-
-      // tus step 1: creation. Bunny answers 201 with the upload's location.
-      const created = await fetch(slot.tus_endpoint, {
-        method: "POST",
-        headers: {
-          "Tus-Resumable": "1.0.0",
-          "Upload-Length": String(file.size),
-          "Upload-Metadata": `filetype ${toBase64(file.type || "video/mp4")},title ${toBase64(titleForSlot)}`,
-          AuthorizationSignature: slot.authorization_signature,
-          AuthorizationExpire: String(slot.authorization_expire),
-          LibraryId: String(slot.library_id),
-          VideoId: videoId,
-        },
-      });
-      if (!created.ok) {
-        throw new Error(
-          created.status === 401
-            ? "The upload permission expired. Please try again."
-            : `Bunny Stream slot error (${created.status}).`,
-        );
-      }
-      const location = created.headers.get("location") || created.headers.get("Location");
-      if (!location) throw new Error("Bunny Stream did not return an upload location.");
-      const uploadUrl = new URL(location, slot.tus_endpoint).toString();
-
       toast.loading("Streaming video directly to Bunny CDN...", { id: "video-upload" });
 
-      // tus step 2: the file itself, as one PATCH. XHR rather than fetch so
-      // the progress bar and the cancel button keep working.
+      // tus upload with tus-js-client: handles authorization headers on creation & PATCH chunks,
+      // network pause/retry, and accurate byte progress.
       return new Promise<string>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        setActiveXhr(xhr);
-        xhr.open("PATCH", uploadUrl, true);
-        xhr.setRequestHeader("Tus-Resumable", "1.0.0");
-        xhr.setRequestHeader("Upload-Offset", "0");
-        xhr.setRequestHeader("Content-Type", "application/offset+octet-stream");
-
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const percent = Math.round((event.loaded / event.total) * 100);
+        const upload = new tus.Upload(file, {
+          endpoint: slot.tus_endpoint || "https://video.bunnycdn.com/tusupload",
+          retryDelays: [0, 3000, 5000, 10000, 20000],
+          headers: {
+            AuthorizationSignature: slot.authorization_signature,
+            AuthorizationExpire: String(slot.authorization_expire),
+            VideoId: videoId,
+            LibraryId: String(slot.library_id),
+          },
+          metadata: {
+            filetype: file.type || "video/mp4",
+            title: titleForSlot,
+          },
+          onError: (error) => {
+            console.error("Bunny Stream upload error:", error);
+            setIsUploadingVideo(false);
+            setActiveUpload(null);
+            const msg = error.message || "Failed to upload video to Bunny Stream.";
+            toast.error(msg, { id: "video-upload" });
+            reject(error);
+          },
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const percent = Math.round((bytesUploaded / bytesTotal) * 100);
             setUploadProgress(percent);
-            setUploadedBytes(event.loaded);
-            setTotalBytes(event.total);
-          }
-        };
-
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
+            setUploadedBytes(bytesUploaded);
+            setTotalBytes(bytesTotal);
+          },
+          onSuccess: () => {
             setLessonVideoId(videoId);
             setLessonProvider("bunny_stream");
             setSelectedVideoFile(null);
             toast.success("Video uploaded to Bunny Stream! Ready for playback.", { id: "video-upload" });
             setIsUploadingVideo(false);
-            setActiveXhr(null);
+            setActiveUpload(null);
             resolve(videoId);
-          } else {
-            const err = new Error(`Bunny Stream upload failed with status ${xhr.status}`);
-            toast.error(err.message, { id: "video-upload" });
-            setIsUploadingVideo(false);
-            setActiveXhr(null);
-            reject(err);
-          }
-        };
+          },
+        });
 
-        xhr.onerror = () => {
-          const err = new Error("Network error during video upload. Please check connection.");
-          toast.error(err.message, { id: "video-upload" });
-          setIsUploadingVideo(false);
-          setActiveXhr(null);
-          reject(err);
-        };
-
-        xhr.onabort = () => {
-          setIsUploadingVideo(false);
-          setActiveXhr(null);
-          reject(new Error("Video upload cancelled"));
-        };
-
-        xhr.send(file);
+        setActiveUpload(upload);
+        upload.start();
       });
     } catch (err: any) {
       setIsUploadingVideo(false);
+      setActiveUpload(null);
       toast.error(err?.message || "Failed to upload video to Bunny Stream.", { id: "video-upload" });
       throw err;
     }
   };
 
   const cancelVideoUpload = () => {
-    if (activeXhr) {
-      activeXhr.abort();
-      setActiveXhr(null);
+    if (activeUpload) {
+      activeUpload.abort();
+      setActiveUpload(null);
       setIsUploadingVideo(false);
       setUploadProgress(0);
       toast.message("Video upload cancelled.");
