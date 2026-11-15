@@ -8,6 +8,7 @@ import {
   Clock,
   Copy,
   CreditCard,
+  Eye,
   Plus,
   RefreshCw,
   Search,
@@ -18,6 +19,7 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -100,9 +102,12 @@ function buildPageMeta(total: number, page: number, limit: number, pages: number
 
 export default function CourseEnrollmentsAdminPage() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const initialCourseId = searchParams.get("course_id") || "";
+  const initialTab = (searchParams.get("tab") as TabMode) || "orders";
 
-  const [tab, setTab] = React.useState<TabMode>("orders");
-  const [courseFilter, setCourseFilter] = React.useState("");
+  const [tab, setTab] = React.useState<TabMode>(initialTab);
+  const [courseFilter, setCourseFilter] = React.useState(initialCourseId);
   const [orderStatusFilter, setOrderStatusFilter] = React.useState<string>("");
   const [searchInput, setSearchInput] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
@@ -819,15 +824,25 @@ export default function CourseEnrollmentsAdminPage() {
                           </td>
 
                           <td className="py-3.5 px-4 align-top text-right whitespace-nowrap">
-                            <Button
-                              size="sm"
-                              variant="danger"
-                              onClick={() => setRevokeTarget(item)}
-                              className="h-7 px-2.5 text-[11px] gap-1"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                              Revoke
-                            </Button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Link
+                                href={`/courses/${item.course_id}/learners`}
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+                                title="View Course Learners & Progress Breakdown"
+                              >
+                                <Eye className="h-3 w-3" />
+                                Progress
+                              </Link>
+                              <Button
+                                size="sm"
+                                variant="danger"
+                                onClick={() => setRevokeTarget(item)}
+                                className="h-7 px-2.5 text-[11px] gap-1"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                                Revoke
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}

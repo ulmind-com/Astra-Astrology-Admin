@@ -1060,6 +1060,7 @@ export interface AdminCourseEnrollment {
   student_name?: string | null;
   student_email?: string | null;
   student_phone?: string | null;
+  student_avatar?: string | null;
   course_id: string;
   course_title?: string | null;
   course_slug?: string | null;
@@ -1068,11 +1069,87 @@ export interface AdminCourseEnrollment {
   amount_paid: number;
   currency: string;
   progress_percent: number;
+  completed_lessons_count?: number;
+  total_lessons_count?: number;
   certificate_issued: boolean;
+  certificate_id?: string | null;
+  certificate_url?: string | null;
+  certificate_issued_at?: string | null;
   enrolled_at: string;
   expires_at?: string | null;
   is_expired?: boolean;
   last_accessed_at: string;
+}
+
+export interface AdminCourseLearnerProgressLesson {
+  lesson_id: string;
+  title: string;
+  order: number;
+  duration_minutes: number;
+  is_completed: boolean;
+  completed_at?: string | null;
+  watched_seconds: number;
+  credited_seconds: number;
+  last_watched_at?: string | null;
+}
+
+export interface AdminCourseLearnerProgressSection {
+  section_id: string;
+  title: string;
+  order: number;
+  lessons: AdminCourseLearnerProgressLesson[];
+}
+
+export interface AdminCourseLearnerDetail {
+  enrollment_id: string;
+  user_id: string;
+  student_name?: string | null;
+  student_email?: string | null;
+  student_phone?: string | null;
+  student_avatar?: string | null;
+  course_id: string;
+  course_title: string;
+  course_slug?: string | null;
+  enrolled_at: string;
+  expires_at?: string | null;
+  is_expired: boolean;
+  payment_id?: string | null;
+  order_id?: string | null;
+  amount_paid: number;
+  currency: string;
+  progress_percent: number;
+  completed_lessons_count: number;
+  total_lessons_count: number;
+  total_watched_seconds: number;
+  certificate_issued: boolean;
+  certificate_id?: string | null;
+  certificate_url?: string | null;
+  certificate_issued_at?: string | null;
+  last_accessed_at: string;
+  sections: AdminCourseLearnerProgressSection[];
+}
+
+export interface AdminCourseLearnersSummaryStats {
+  total_enrolled: number;
+  completed_count: number;
+  in_progress_count: number;
+  not_started_count: number;
+  average_progress_percent: number;
+  total_revenue: number;
+  total_lessons_in_course: number;
+}
+
+export interface AdminCourseLearnersResponse {
+  course_id: string;
+  course_title: string;
+  course_slug: string;
+  price: number;
+  stats: AdminCourseLearnersSummaryStats;
+  items: AdminCourseEnrollment[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
 }
 
 export interface AdminCourseEnrollmentListResponse {

@@ -504,10 +504,14 @@ export default function CoursesAdminPage() {
 
                   <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border/50">
                     <span className="font-medium text-stone-700 dark:text-stone-300">{c.instructor_name}</span>
-                    <span className="flex items-center gap-1 font-bold text-foreground">
+                    <Link
+                      href={`/courses/${c.id}/learners`}
+                      className="flex items-center gap-1 font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                      title="Click to view enrolled learners & completion progress"
+                    >
                       <Users className="h-3.5 w-3.5 text-blue-500" />
                       {c.total_students} Students
-                    </span>
+                    </Link>
                   </div>
 
                   <div className="flex items-baseline justify-between pt-1">
@@ -528,14 +532,26 @@ export default function CoursesAdminPage() {
                 </CardBody>
               </div>
 
-              <div className="p-3 bg-muted/40 border-t border-border flex items-center justify-between gap-2">
-                <Link
-                  href={`/courses/${c.id}/curriculum`}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-800 dark:text-amber-400 px-2.5 py-1.5 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-950/40 transition-colors"
-                >
-                  <Layers className="h-3.5 w-3.5" />
-                  Manage Curriculum ({c.total_lessons})
-                </Link>
+              <div className="p-3 bg-muted/40 border-t border-border flex items-center justify-between gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Link
+                    href={`/courses/${c.id}/curriculum`}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 hover:text-amber-800 dark:text-amber-400 px-2 py-1 rounded-md hover:bg-amber-100 dark:hover:bg-amber-950/40 transition-colors"
+                    title="Curriculum & Video Lessons"
+                  >
+                    <Layers className="h-3 w-3" />
+                    Curriculum ({c.total_lessons})
+                  </Link>
+
+                  <Link
+                    href={`/courses/${c.id}/learners`}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:text-blue-800 dark:text-blue-400 px-2 py-1 rounded-md hover:bg-blue-100 dark:hover:bg-blue-950/40 transition-colors"
+                    title="Enrolled Learners & Progress Breakdown"
+                  >
+                    <Users className="h-3 w-3" />
+                    Learners ({c.total_students})
+                  </Link>
+                </div>
 
                 <div className="flex items-center gap-1">
                   <Button

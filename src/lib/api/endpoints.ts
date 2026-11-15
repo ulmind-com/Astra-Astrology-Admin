@@ -171,6 +171,9 @@ export const endpoints = {
       reconcileOrder: (orderId: string) => `/admin/courses/orders/${orderId}/reconcile`,
       enrollments: "/admin/courses/enrollments",
       courseEnrollments: (courseId: string) => `/admin/courses/${courseId}/enrollments`,
+      courseLearners: (courseId: string) => `/admin/courses/${courseId}/learners`,
+      courseLearnerProgress: (courseId: string, userId: string) =>
+        `/admin/courses/${courseId}/learners/${userId}/progress`,
       revokeEnrollment: (courseId: string, enrollmentId: string) =>
         `/admin/courses/${courseId}/enrollments/${enrollmentId}`,
       questions: "/admin/courses/questions",

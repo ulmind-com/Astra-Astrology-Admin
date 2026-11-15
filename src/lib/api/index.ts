@@ -86,6 +86,8 @@ import type {
   AdminCourseOrderListResponse,
   AdminCourseEnrollment,
   AdminCourseEnrollmentListResponse,
+  AdminCourseLearnerDetail,
+  AdminCourseLearnersResponse,
   AdminManualEnrollInput,
 } from "@/types";
 import type { CoPilotBirthDetailsInput, CoPilotSummary } from "@/types/copilot";
@@ -1200,5 +1202,25 @@ export const courseAdminApi = {
   revokeEnrollment: (courseId: string, enrollmentId: string) =>
     api.delete<{ message: string }>(
       endpoints.admin.courses.revokeEnrollment(courseId, enrollmentId)
+    ),
+
+  getCourseLearners: (
+    courseId: string,
+    params?: {
+      search?: string;
+      progress_status?: string;
+      sort_by?: string;
+      page?: number;
+      limit?: number;
+    }
+  ) =>
+    api.get<AdminCourseLearnersResponse>(
+      endpoints.admin.courses.courseLearners(courseId),
+      { query: params }
+    ),
+
+  getLearnerProgress: (courseId: string, userId: string) =>
+    api.get<AdminCourseLearnerDetail>(
+      endpoints.admin.courses.courseLearnerProgress(courseId, userId)
     ),
 };
