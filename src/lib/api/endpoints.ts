@@ -143,6 +143,8 @@ export const endpoints = {
     cmsHomepage: "/admin/cms/homepage",
     cmsHomepageReset: "/admin/cms/homepage/reset",
     cmsUploadImage: "/admin/cms/upload-image",
+    shopBanners: "/admin/shop/banners",
+    shopUploadImage: "/admin/shop/upload-image",
     shop: {
       uploadImage: "/admin/shop/upload-image",
       products: "/admin/shop/products",

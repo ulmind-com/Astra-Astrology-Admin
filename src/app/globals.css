@@ -521,11 +521,60 @@ html.dark .bg-\[\#CBD2E1\] { background-color: var(--d-raised-2) !important; }
 
 /* --- slate backgrounds (light greys) --------------------------------- */
 html.dark .bg-slate-50,
+html.dark .bg-slate-50\/10,
+html.dark .bg-slate-50\/20,
+html.dark .bg-slate-50\/30,
 html.dark .bg-slate-50\/40,
 html.dark .bg-slate-50\/50,
 html.dark .bg-slate-50\/60,
 html.dark .bg-slate-50\/70,
 html.dark .bg-slate-50\/80 { background-color: rgba(27, 35, 56, 0.7) !important; }
+
+/* --- tinted light pastels in dark mode (prevent muddy opaque wash) ---- */
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/20,
+html.dark .bg-amber-50\/30,
+html.dark .bg-amber-50\/40,
+html.dark .bg-amber-50\/50,
+html.dark .bg-amber-50\/60,
+html.dark .bg-amber-50\/70,
+html.dark .bg-amber-50\/80 { background-color: rgba(120, 53, 15, 0.25) !important; }
+
+html.dark .bg-sky-50,
+html.dark .bg-sky-50\/20,
+html.dark .bg-sky-50\/30,
+html.dark .bg-sky-50\/40,
+html.dark .bg-sky-50\/50,
+html.dark .bg-sky-50\/60,
+html.dark .bg-sky-50\/70,
+html.dark .bg-sky-50\/80 { background-color: rgba(12, 74, 110, 0.25) !important; }
+
+html.dark .bg-indigo-50,
+html.dark .bg-indigo-50\/20,
+html.dark .bg-indigo-50\/30,
+html.dark .bg-indigo-50\/40,
+html.dark .bg-indigo-50\/50,
+html.dark .bg-indigo-50\/60,
+html.dark .bg-indigo-50\/70,
+html.dark .bg-indigo-50\/80 { background-color: rgba(49, 46, 129, 0.25) !important; }
+
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-50\/20,
+html.dark .bg-emerald-50\/30,
+html.dark .bg-emerald-50\/40,
+html.dark .bg-emerald-50\/50,
+html.dark .bg-emerald-50\/60,
+html.dark .bg-emerald-50\/70,
+html.dark .bg-emerald-50\/80 { background-color: rgba(6, 78, 59, 0.25) !important; }
+
+html.dark .bg-rose-50,
+html.dark .bg-rose-50\/20,
+html.dark .bg-rose-50\/30,
+html.dark .bg-rose-50\/40,
+html.dark .bg-rose-50\/50,
+html.dark .bg-rose-50\/60,
+html.dark .bg-rose-50\/70,
+html.dark .bg-rose-50\/80 { background-color: rgba(136, 19, 55, 0.25) !important; }
 
 html.dark .bg-slate-100,
 html.dark .bg-slate-100\/70,
