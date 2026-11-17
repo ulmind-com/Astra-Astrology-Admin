@@ -14,6 +14,7 @@ export const endpoints = {
     forgotPassword: "/auth/password/forgot",
     resetPassword: "/auth/password/reset",
     changePassword: "/auth/password/change",
+    refresh: "/auth/refresh",
   },
 
   users: {
@@ -56,6 +57,7 @@ export const endpoints = {
     extend: (id: string) => `/calls/${id}/extend`,
     heartbeat: (id: string) => `/calls/${id}/heartbeat`,
     copilot: (id: string) => `/calls/${id}/copilot`,
+    copilotBirthDetails: (id: string) => `/calls/${id}/copilot/birth-details`,
   },
 
   milan: {
@@ -143,6 +145,46 @@ export const endpoints = {
     cmsUploadImage: "/admin/cms/upload-image",
     shopBanners: "/admin/shop/banners",
     shopUploadImage: "/admin/shop/upload-image",
+    shop: {
+      uploadImage: "/admin/shop/upload-image",
+      products: "/admin/shop/products",
+      product: (id: string) => `/admin/shop/products/${id}`,
+      productRestore: (id: string) => `/admin/shop/products/${id}/restore`,
+      productStock: (id: string) => `/admin/shop/products/${id}/stock`,
+      inventory: "/admin/shop/inventory",
+      categories: "/admin/shop/categories",
+      category: (id: string) => `/admin/shop/categories/${id}`,
+      banners: "/admin/shop/banners",
+      cleanupOrphanedImages: "/admin/shop/cleanup-orphaned-images",
+    },
+    courses: {
+      list: "/admin/courses",
+      create: "/admin/courses",
+      uploadThumbnail: "/admin/courses/upload-thumbnail",
+      detail: (id: string) => `/admin/courses/${id}`,
+      update: (id: string) => `/admin/courses/${id}`,
+      delete: (id: string) => `/admin/courses/${id}`,
+      sections: (courseId: string) => `/admin/courses/${courseId}/sections`,
+      section: (courseId: string, sectionId: string) => `/admin/courses/${courseId}/sections/${sectionId}`,
+      lessons: (courseId: string) => `/admin/courses/${courseId}/lessons`,
+      lesson: (courseId: string, lessonId: string) => `/admin/courses/${courseId}/lessons/${lessonId}`,
+      createBunnyVideo: "/admin/courses/create-bunny-video",
+      orders: "/admin/courses/orders",
+      reconcileOrder: (orderId: string) => `/admin/courses/orders/${orderId}/reconcile`,
+      enrollments: "/admin/courses/enrollments",
+      courseEnrollments: (courseId: string) => `/admin/courses/${courseId}/enrollments`,
+      courseLearners: (courseId: string) => `/admin/courses/${courseId}/learners`,
+      courseLearnerProgress: (courseId: string, userId: string) =>
+        `/admin/courses/${courseId}/learners/${userId}/progress`,
+      revokeEnrollment: (courseId: string, enrollmentId: string) =>
+        `/admin/courses/${courseId}/enrollments/${enrollmentId}`,
+      questions: "/admin/courses/questions",
+      videoPreview: (videoId: string) => `/admin/courses/preview-token/${videoId}`,
+      answerQuestion: (questionId: string) => `/admin/courses/questions/${questionId}/answers`,
+      updateQuestion: (questionId: string) => `/admin/courses/questions/${questionId}`,
+      deleteQuestion: (questionId: string) => `/admin/courses/questions/${questionId}`,
+      deleteAnswer: (questionId: string, answerId: string) => `/admin/courses/questions/${questionId}/answers/${answerId}`,
+    },
   },
   cms: {
     homepage: "/cms/homepage",

@@ -25,6 +25,11 @@ export type ApiErrorBody = {
 
 export type PageMeta = S["PageMeta"];
 
+export interface PaginatedResult<T> {
+  items: T[];
+  meta: PageMeta;
+}
+
 // -------------------------------------------------------------------- auth
 export type AuthResult = S["AuthResult"];
 export type TokenPair = S["TokenPair"];
@@ -73,7 +78,7 @@ export type BankDetails = S["BankDetails"];
 export type GalleryImage = S["GalleryImage"];
 export type GalleryUploadResult = S["GalleryUploadResult"];
 export type Skill = S["Skill"];
-export type ConsultationMode = S["ConsultationMode"];
+export type ConsultationMode = "chat" | "call" | "video" | "appointment";
 
 /** `Paginated[AstrologerPublic]`, which openapi-typescript names awkwardly. */
 export type PaginatedAstrologers = S["Paginated_AstrologerPublic_"];
@@ -104,6 +109,7 @@ export const MODE_LABELS: Record<ConsultationMode, string> = {
   chat: "Chat",
   call: "Call",
   video: "Video",
+  appointment: "Appointment",
 };
 
 export const MODES = Object.keys(MODE_LABELS) as ConsultationMode[];
@@ -189,6 +195,8 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentOrderStatus, string> = {
 export type PlatformSettings = S["PlatformSettingsOut"] & {
   daily_horoscope_coins?: number;
   daily_horoscope_enabled?: boolean;
+  annual_horoscope_coins?: number;
+  annual_horoscope_enabled?: boolean;
   kundli_coins?: number;
   kundli_enabled?: boolean;
   kundli_matching_coins?: number;
@@ -223,6 +231,8 @@ export interface FeaturePricingItem {
 export interface FeaturePricingUpdate {
   daily_horoscope_coins?: number;
   daily_horoscope_enabled?: boolean;
+  annual_horoscope_coins?: number;
+  annual_horoscope_enabled?: boolean;
   kundli_coins?: number;
   kundli_enabled?: boolean;
   kundli_matching_coins?: number;
@@ -363,6 +373,55 @@ export type AdminEarningRow = S["AdminEarningRow"] & {
 };
 export type AdminEarningsSummary = S["AdminEarningsSummary"];
 
+export interface AstrologerEarningsBalance {
+  total_earned_paise: number;
+  total_settled_paise: number;
+  total_pending_paise: number;
+  withdrawable_balance_paise: number;
+  min_payout_amount_paise: number;
+  bank_name?: string | null;
+  account_holder_name?: string | null;
+  account_number_last4?: string | null;
+  ifsc?: string | null;
+  upi_id?: string | null;
+  pan_card?: string | null;
+  has_bank_details: boolean;
+}
+
+export interface AstrologerPayoutRecord {
+  id: string;
+  astrologer_id: string;
+  astrologer_name?: string | null;
+  amount_paise: number;
+  tds_percent: number;
+  tds_paise: number;
+  net_payable_paise: number;
+  payout_method: "bank_transfer" | "upi";
+  bank_name?: string | null;
+  account_holder_name?: string | null;
+  account_number_last4?: string | null;
+  account_number_masked?: string | null;
+  ifsc?: string | null;
+  upi_id?: string | null;
+  status: "pending" | "approved" | "settled" | "rejected";
+  utr_number?: string | null;
+  admin_notes?: string | null;
+  rejection_reason?: string | null;
+  requested_at: string;
+  approved_at?: string | null;
+  settled_at?: string | null;
+  rejected_at?: string | null;
+}
+
+export interface BankDetailsUpdate {
+  account_holder_name?: string | null;
+  account_number?: string | null;
+  ifsc?: string | null;
+  bank_name?: string | null;
+  upi_id?: string | null;
+  pan_card?: string | null;
+}
+
 /** Earnings are money, so they are paise — never coins. */
 export function formatEarning(paise: number): string {
   return new Intl.NumberFormat("en-IN", {
@@ -380,6 +439,7 @@ export type VedicPrescription = {
   mantra?: string | null;
   mantra_count?: number | null;
   daan_remedy?: string | null;
+  sankalpa?: string | null;
   astrologer_notes?: string | null;
   updated_at?: string | null;
 };
@@ -479,6 +539,38 @@ export type AvailabilityWindow = S["WindowOut"] & {
   is_private?: boolean;
 };
 export type AppointmentDayView = S["DayView"];
+
+export interface AuspiciousEventItem {
+  type: string;
+  title: string;
+  description: string;
+  demand_multiplier: number;
+  remedy_focus: string;
+}
+
+export interface AuspiciousTransitInfo {
+  date: string;
+  is_auspicious_transit_day: boolean;
+  primary_event?: string | null;
+  demand_multiplier_hint: number;
+  remedial_demand_surge?: string | null;
+  recommended_remedies: string[];
+  auspicious_events: AuspiciousEventItem[];
+  is_tatkal_surge_active: boolean;
+  active_tatkal_multiplier?: number | null;
+  active_tatkal_windows_count: number;
+  badge_label?: string | null;
+}
+
+export interface AuspiciousTransitSurgeResult {
+  day: string;
+  is_auspicious: boolean;
+  multiplier: number;
+  transit_info: AuspiciousTransitInfo;
+  windows_updated: number;
+  windows_created: number;
+  message: string;
+}
 
 export interface PrivateInviteLink {
   id: string;
@@ -605,3 +697,475 @@ export type FaceReading = S["FaceReadingOut"];
 export type FaceReadingSection = S["ReadingSectionOut"];
 export type FaceReadingAvailability = S["FaceReadingAvailability"];
 export type FaceRule = S["RuleOut"];
+
+// ------------------------------------------------------- astro store & shop
+export interface ShopProductCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  icon_url?: string | null;
+  banner_url?: string | null;
+  category_type: string;
+  parent_id?: string | null;
+  display_order: number;
+  is_active: boolean;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  product_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShopProductCategoryCreate {
+  name: string;
+  slug?: string;
+  description?: string;
+  icon_url?: string;
+  banner_url?: string;
+  category_type?: string;
+  parent_id?: string;
+  display_order?: number;
+  is_active?: boolean;
+  seo_title?: string;
+  seo_description?: string;
+}
+
+export interface ShopProduct {
+  id: string;
+  title: string;
+  slug: string;
+  sku: string;
+  short_description: string;
+  detailed_description: string;
+  category_id: string;
+  category_slug: string;
+  category_type: string;
+  ruling_planet?: string | null;
+  deity?: string | null;
+  benefits: string[];
+  life_pillars: string[];
+  recommended_for_rashis: string[];
+  beej_mantra?: string | null;
+  wear_instructions?: string | null;
+  mrp: number;
+  sale_price: number;
+  cost_price?: number | null;
+  discount_percent: number;
+  stock_quantity: number;
+  low_stock_threshold: number;
+  weight_grams: number;
+  in_stock: boolean;
+  is_low_stock: boolean;
+  images: string[];
+  featured_image: string;
+  video_url?: string | null;
+  certificate_image_url?: string | null;
+  is_active: boolean;
+  is_featured: boolean;
+  is_energized: boolean;
+  is_deleted?: boolean;
+  deleted_at?: string | null;
+  average_rating: number;
+  review_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShopProductInput {
+  title: string;
+  slug?: string;
+  sku?: string;
+  short_description: string;
+  detailed_description: string;
+  category_id: string;
+  category_type?: string;
+  ruling_planet?: string;
+  deity?: string;
+  benefits?: string[];
+  life_pillars?: string[];
+  recommended_for_rashis?: string[];
+  beej_mantra?: string;
+  wear_instructions?: string;
+  mrp: number;
+  sale_price: number;
+  cost_price?: number;
+  stock_quantity?: number;
+  low_stock_threshold?: number;
+  weight_grams?: number;
+  images?: string[];
+  featured_image: string;
+  video_url?: string;
+  certificate_image_url?: string;
+  is_active?: boolean;
+  is_featured?: boolean;
+  is_energized?: boolean;
+}
+
+export interface ShopProductListResponse {
+  items: ShopProduct[];
+  total: number;
+  page: number;
+  limit: number;
+  has_more: boolean;
+}
+
+export interface StockUpdatePayload {
+  quantity: number;
+  mode: "set" | "add" | "subtract";
+  reason?: string;
+}
+
+export interface ShopInventorySummary {
+  total_products: number;
+  out_of_stock_count: number;
+  low_stock_count: number;
+  healthy_stock_count: number;
+  total_stock_units: number;
+  total_inventory_valuation_mrp: number;
+  total_inventory_valuation_cost: number;
+}
+
+export interface ShopHeroBannerItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  cta_text: string;
+  cta_link: string;
+  badge_text?: string | null;
+  image_url: string;
+  is_active: boolean;
+}
+
+export interface ShopBannerSettings {
+  announcement_bar_text?: string | null;
+  announcement_bar_link?: string | null;
+  announcement_bar_active: boolean;
+  hero_banners: ShopHeroBannerItem[];
+}
+
+export interface CloudinaryOrphanCleanupReport {
+  scanned_count: number;
+  referenced_count: number;
+  orphaned_found_count: number;
+  purged_count: number;
+  failed_count: number;
+  dry_run: boolean;
+  purged_public_ids: string[];
+}
+
+export interface ShopProductRecommendation {
+  id: string;
+  title: string;
+  slug: string;
+  sku: string;
+  short_description: string;
+  sale_price: number;
+  mrp: number;
+  discount_percent: number;
+  featured_image: string;
+  category_slug: string;
+  category_type: string;
+  ruling_planet?: string | null;
+  deity?: string | null;
+  in_stock: boolean;
+  sacred_reason?: string | null;
+  store_url: string;
+}
+
+
+
+export interface CourseAdminItem {
+  id: string;
+  title: string;
+  slug: string;
+  subtitle: string;
+  category: string;
+  level: string;
+  language: string;
+  instructor_name: string;
+  instructor_title: string;
+  instructor_avatar?: string | null;
+  thumbnail_url: string;
+  price: number;
+  mrp: number;
+  discount_percent: number;
+  currency: string;
+  duration_hours: number;
+  total_lessons: number;
+  total_students: number;
+  average_rating: number;
+  rating_count: number;
+  is_featured: boolean;
+  certificate_enabled: boolean;
+  access_duration_days?: number | null;
+}
+
+export interface CourseAdminInput {
+  title: string;
+  slug: string;
+  subtitle?: string;
+  description: string;
+  category?: string;
+  level?: string;
+  language?: string;
+  instructor_name?: string;
+  instructor_title?: string;
+  instructor_avatar?: string | null;
+  thumbnail_url: string;
+  promo_video_url?: string | null;
+  promo_video_provider?: string;
+  price: number;
+  mrp: number;
+  is_free?: boolean;
+  access_duration_days?: number | null;
+  certificate_enabled?: boolean;
+  what_you_will_learn?: string[];
+  prerequisites?: string[];
+  tags?: string[];
+  is_published?: boolean;
+  is_featured?: boolean;
+}
+
+export interface CourseSectionAdmin {
+  id: string;
+  title: string;
+  order: number;
+  description?: string | null;
+  lessons?: CourseLessonAdmin[];
+}
+
+export interface CourseLessonAdmin {
+  id: string;
+  section_id: string;
+  title: string;
+  order: number;
+  duration_minutes: number;
+  video_provider: string;
+  video_id: string;
+  library_id?: string | null;
+  is_free_preview: boolean;
+  summary?: string | null;
+  notes_markdown?: string | null;
+  resources?: { title: string; url: string; type: string }[];
+}
+
+/**
+ * A video slot on Bunny, and permission to upload into it.
+ *
+ * Deliberately carries no API key. The browser gets a signature that opens
+ * this one video and expires; the key stays on our server.
+ */
+export interface BunnyVideoPlaceholder {
+  video_id: string;
+  library_id: string;
+  title: string;
+  tus_endpoint: string;
+  authorization_signature: string;
+  authorization_expire: number;
+}
+
+export interface AdminCourseQuestionAnswer {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_role: string;
+  user_avatar?: string | null;
+  is_official: boolean;
+  content: string;
+  created_at: string;
+}
+
+export interface AdminCourseQuestion {
+  id: string;
+  course_id: string;
+  course_title: string;
+  course_slug: string;
+  section_id: string;
+  section_title: string;
+  lesson_id: string;
+  lesson_title: string;
+  video_id?: string | null;
+  video_provider: string;
+
+  user_id: string;
+  user_name: string;
+  user_email?: string | null;
+  user_phone?: string | null;
+  user_avatar?: string | null;
+  student_enrolled_at?: string | null;
+  student_progress_percent: number;
+
+  timestamp_seconds: number;
+  timestamp_formatted: string;
+  title: string;
+  content: string;
+  upvote_count: number;
+  answer_count: number;
+  is_resolved: boolean;
+  has_official_answer: boolean;
+  is_pinned: boolean;
+  is_hidden: boolean;
+  answers: AdminCourseQuestionAnswer[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminCourseQuestionListResponse {
+  questions: AdminCourseQuestion[];
+  total: number;
+  unanswered_count: number;
+  resolved_count: number;
+  hidden_count?: number;
+}
+
+export interface AdminCourseOrder {
+  id: string;
+  user_id: string;
+  student_name?: string | null;
+  student_email?: string | null;
+  student_phone?: string | null;
+  course_id: string;
+  course_title?: string | null;
+  course_slug?: string | null;
+  razorpay_order_id: string;
+  razorpay_payment_id?: string | null;
+  receipt: string;
+  amount_paise: number;
+  amount_inr: number;
+  currency: string;
+  status: "created" | "paid" | "failed" | "refunded" | string;
+  method?: string | null;
+  failure_reason?: string | null;
+  verified_via?: string | null;
+  paid_at?: string | null;
+  created_at: string;
+}
+
+export interface AdminCourseOrderListResponse {
+  items: AdminCourseOrder[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+  created_count: number;
+  paid_count: number;
+  failed_count: number;
+  refunded_count: number;
+}
+
+export interface AdminCourseEnrollment {
+  id: string;
+  user_id: string;
+  student_name?: string | null;
+  student_email?: string | null;
+  student_phone?: string | null;
+  student_avatar?: string | null;
+  course_id: string;
+  course_title?: string | null;
+  course_slug?: string | null;
+  payment_id?: string | null;
+  order_id?: string | null;
+  amount_paid: number;
+  currency: string;
+  progress_percent: number;
+  completed_lessons_count?: number;
+  total_lessons_count?: number;
+  certificate_issued: boolean;
+  certificate_id?: string | null;
+  certificate_url?: string | null;
+  certificate_issued_at?: string | null;
+  enrolled_at: string;
+  expires_at?: string | null;
+  is_expired?: boolean;
+  last_accessed_at: string;
+}
+
+export interface AdminCourseLearnerProgressLesson {
+  lesson_id: string;
+  title: string;
+  order: number;
+  duration_minutes: number;
+  is_completed: boolean;
+  completed_at?: string | null;
+  watched_seconds: number;
+  credited_seconds: number;
+  last_watched_at?: string | null;
+}
+
+export interface AdminCourseLearnerProgressSection {
+  section_id: string;
+  title: string;
+  order: number;
+  lessons: AdminCourseLearnerProgressLesson[];
+}
+
+export interface AdminCourseLearnerDetail {
+  enrollment_id: string;
+  user_id: string;
+  student_name?: string | null;
+  student_email?: string | null;
+  student_phone?: string | null;
+  student_avatar?: string | null;
+  course_id: string;
+  course_title: string;
+  course_slug?: string | null;
+  enrolled_at: string;
+  expires_at?: string | null;
+  is_expired: boolean;
+  payment_id?: string | null;
+  order_id?: string | null;
+  amount_paid: number;
+  currency: string;
+  progress_percent: number;
+  completed_lessons_count: number;
+  total_lessons_count: number;
+  total_watched_seconds: number;
+  certificate_issued: boolean;
+  certificate_id?: string | null;
+  certificate_url?: string | null;
+  certificate_issued_at?: string | null;
+  last_accessed_at: string;
+  sections: AdminCourseLearnerProgressSection[];
+}
+
+export interface AdminCourseLearnersSummaryStats {
+  total_enrolled: number;
+  completed_count: number;
+  in_progress_count: number;
+  not_started_count: number;
+  average_progress_percent: number;
+  total_revenue: number;
+  total_lessons_in_course: number;
+}
+
+export interface AdminCourseLearnersResponse {
+  course_id: string;
+  course_title: string;
+  course_slug: string;
+  price: number;
+  stats: AdminCourseLearnersSummaryStats;
+  items: AdminCourseEnrollment[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+export interface AdminCourseEnrollmentListResponse {
+  items: AdminCourseEnrollment[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+export interface AdminManualEnrollInput {
+  user_id?: string;
+  email?: string;
+  amount_paid?: number;
+  payment_id?: string;
+  note?: string;
+  access_duration_days?: number;
+  expires_at?: string;
+}

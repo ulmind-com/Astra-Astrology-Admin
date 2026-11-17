@@ -184,7 +184,7 @@ export default function ShopCMSPage() {
   const { data: serverData, isLoading, refetch } = useQuery<ShopBannerSettingsData>({
     queryKey: ["admin_shop_banners"],
     queryFn: async () => {
-      const res = await shopAdminApi.getBanners();
+      const res = await shopAdminApi.getBannerSettings() as unknown as ShopBannerSettingsData;
       return res;
     },
     enabled: ready,
@@ -207,7 +207,7 @@ export default function ShopCMSPage() {
 
   const saveMutation = useMutation({
     mutationFn: async (payload: Partial<ShopBannerSettingsData>) => {
-      return await shopAdminApi.updateBanners(payload);
+      return await shopAdminApi.updateBannerSettings(payload as any);
     },
     onSuccess: (updated) => {
       queryClient.setQueryData(["admin_shop_banners"], updated);

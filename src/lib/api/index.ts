@@ -10,6 +10,8 @@ import type {
   AvailabilityWindow,
   AppointmentCard,
   Appointment,
+  AuspiciousTransitInfo,
+  AuspiciousTransitSurgeResult,
   BlacklistedClient,
   PrivateInviteLink,
   AddressInput,
@@ -19,6 +21,9 @@ import type {
   AdminTransaction,
   AdminWallet,
   AstrologerAdminUpdate,
+  AstrologerEarningsBalance,
+  AstrologerPayoutRecord,
+  BankDetailsUpdate,
   AstrologerCreate,
   AstrologerCreated,
   AstrologerProfile,
@@ -41,6 +46,7 @@ import type {
   OtpSentResult,
   PageMeta,
   PaginatedAstrologers,
+  PaginatedResult,
   PaymentOrder,
   PaymentOrderStatus,
   PlatformSettings,
@@ -59,8 +65,32 @@ import type {
   WalletTransaction,
   WhiteboardData,
   WhiteboardStroke,
+  ShopProductCategory,
+  ShopProductCategoryCreate,
+  ShopProduct,
+  ShopProductInput,
+  ShopProductListResponse,
+  StockUpdatePayload,
+  ShopInventorySummary,
+  ShopBannerSettings,
+  CloudinaryOrphanCleanupReport,
+  CourseAdminItem,
+  CourseAdminInput,
+  CourseSectionAdmin,
+  CourseLessonAdmin,
+  BunnyVideoPlaceholder,
+  AdminCourseQuestion,
+  AdminCourseQuestionAnswer,
+  AdminCourseQuestionListResponse,
+  AdminCourseOrder,
+  AdminCourseOrderListResponse,
+  AdminCourseEnrollment,
+  AdminCourseEnrollmentListResponse,
+  AdminCourseLearnerDetail,
+  AdminCourseLearnersResponse,
+  AdminManualEnrollInput,
 } from "@/types";
-import type { CoPilotSummary } from "@/types/copilot";
+import type { CoPilotBirthDetailsInput, CoPilotSummary } from "@/types/copilot";
 import type { MilanRoom, MilanRoomSession } from "@/types/milan";
 
 // ------------------------------------------------------------------- auth
@@ -344,6 +374,9 @@ export const callApi = {
    *  the language lets the backend answer in the astrologer's own. */
   copilot: (id: string) => api.get<CoPilotSummary>(endpoints.calls.copilot(id)),
 
+  updateCopilotBirthDetails: (id: string, payload: CoPilotBirthDetailsInput) =>
+    api.post<CoPilotSummary>(endpoints.calls.copilotBirthDetails(id), payload),
+
   extend: (id: string, extra_minutes: number) =>
     api.post<Call>(endpoints.calls.extend(id), { extra_minutes }),
 
@@ -435,8 +468,71 @@ export const chatApi = {
 export const earningsApi = {
   summary: () => api.get<EarningsSummary>(endpoints.astrologers.myEarnings),
 
-  recent: (limit = 50) =>
-    api.get<EarningRow[]>(endpoints.astrologers.myEarningsRecent, { query: { limit } }),
+  balance: () => api.get<AstrologerEarningsBalance>("/astrologers/me/earnings/balance"),
+
+  recent: (limit = 50, skip = 0, mode?: string, search?: string) =>
+    api.get<EarningRow[]>(endpoints.astrologers.myEarningsRecent, {
+      query: { limit, skip, mode: mode || undefined, search: search || undefined },
+    }),
+
+  paginated: (params: {
+    page?: number;
+    limit?: number;
+    mode?: string;
+    search?: string;
+    window?: string;
+  }) =>
+    api.get<PaginatedResult<EarningRow>>("/astrologers/me/earnings/paginated", {
+      query: {
+        page: params.page ?? 1,
+        limit: params.limit ?? 10,
+        mode: params.mode || undefined,
+        search: params.search || undefined,
+        window: params.window || undefined,
+      },
+    }),
+
+  requestPayout: (body: {
+    amount_paise: number;
+    payout_method: string;
+    bank_name?: string;
+    account_holder_name?: string;
+    account_number?: string;
+    ifsc?: string;
+    upi_id?: string;
+  }) => api.post<AstrologerPayoutRecord>("/astrologers/me/earnings/payout-request", body),
+
+  myPayouts: (limit = 50) =>
+    api.get<AstrologerPayoutRecord[]>("/astrologers/me/earnings/payouts", { query: { limit } }),
+
+  updateBankDetails: (body: BankDetailsUpdate) =>
+    api.patch<{ saved: boolean }>("/astrologers/me/earnings/bank-details", body),
+
+  adminPayouts: (status?: string, limit = 100) =>
+    api.get<AstrologerPayoutRecord[]>("/admin/earnings/payouts", {
+      query: { status: status || undefined, limit },
+    }),
+
+  adminSettlePayout: (id: string, body: { utr_number: string; admin_notes?: string }) =>
+    api.post<AstrologerPayoutRecord>(`/admin/earnings/payouts/${id}/settle`, body),
+
+  adminRejectPayout: (id: string, body: { rejection_reason: string }) =>
+    api.post<AstrologerPayoutRecord>(`/admin/earnings/payouts/${id}/reject`, body),
+
+  adminPaginated: (params: {
+    page?: number;
+    limit?: number;
+    mode?: string;
+    search?: string;
+  }) =>
+    api.get<PaginatedResult<AdminEarningRow>>("/admin/earnings/paginated", {
+      query: {
+        page: params.page ?? 1,
+        limit: params.limit ?? 20,
+        mode: params.mode || undefined,
+        search: params.search || undefined,
+      },
+    }),
 };
 
 // ------------------------------------------------------------ appointments
@@ -464,6 +560,8 @@ export const appointmentApi = {
     starts_at: string,
     ends_at: string,
     extra?: {
+      day?: string;
+      timezone?: string;
       is_tatkal?: boolean;
       tatkal_multiplier?: number;
       tatkal_fixed_paise?: number | null;
@@ -474,6 +572,7 @@ export const appointmentApi = {
     api.post<AvailabilityWindow>(endpoints.appointments.myWindows, {
       starts_at,
       ends_at,
+      timezone: extra?.timezone ?? (typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "Asia/Kolkata"),
       ...(extra || {}),
     }),
 
@@ -496,15 +595,45 @@ export const appointmentApi = {
       mantra?: string | null;
       mantra_count?: number | null;
       daan_remedy?: string | null;
+      sankalpa?: string | null;
       astrologer_notes?: string | null;
     },
   ) => api.patch<Appointment>(`/appointments/${id}/prescription`, body),
 
-  getPreflight: (id: string) =>
-    api.get<Record<string, any>>(`/appointments/${id}/preflight`),
+  getPreflight: (id: string, refresh?: boolean) =>
+    api.get<Record<string, any>>(`/appointments/${id}/preflight${refresh ? "?refresh=true" : ""}`),
+
+  getKarmicVault: (id: string) =>
+    api.get<Record<string, any>>(`/appointments/${id}/karmic-vault`),
 
   getCertificate: (id: string) =>
-    api.get<Record<string, any>>(`/appointments/${id}/certificate`),
+    api.get<{
+      certificate_id: string;
+      issued_at: string;
+      astrologer: { name: string; title: string; avatar_url?: string };
+      client: { name: string; email?: string };
+      consultation_pillar: string;
+      session_duration_minutes: number;
+      sacred_prescription: {
+        consecrated_gemstone: string;
+        sacred_rudraksha: string;
+        vedic_mantra: string;
+        japa_count: number;
+        daan_charity_ritual: string;
+        sankalpa?: string;
+        astrologer_guidance: string;
+      };
+      vedic_shlokas?: Array<{ sanskrit: string; transliteration?: string; meaning: string }>;
+      verification_url: string;
+      qr_code_url?: string;
+      digital_seal: {
+        verification_hash: string;
+        seal_title: string;
+        seal_motto: string;
+        status: string;
+        signature?: string;
+      };
+    }>(`/appointments/${id}/certificate`),
 
   getCertificateHtmlUrl: (id: string) =>
     `${process.env.NEXT_PUBLIC_API_URL || "https://api.divinlink.com"}/api/v1/appointments/${id}/certificate/html`,
@@ -593,6 +722,55 @@ export const appointmentApi = {
 
   deletePrivateLink: (id: string) =>
     api.delete<{ message: string }>(`/appointments/me/private-links/${id}`),
+
+  getGoogleCalendarAuthUrl: (redirectUri?: string) =>
+    api.get<{ configured: boolean; auth_url: string; mode: string; message: string }>(
+      `/appointments/google-calendar/auth-url${redirectUri ? `?redirect_uri=${encodeURIComponent(redirectUri)}` : ""}`
+    ),
+
+  googleCalendarCallback: (code: string, redirectUri?: string) =>
+    api.post<{ connected: boolean; email: string; mode: string; message: string }>(
+      "/appointments/google-calendar/callback",
+      { code, redirect_uri: redirectUri }
+    ),
+
+  syncGoogleCalendar: () =>
+    api.post<{ connected: boolean; email: string; busy_count: number; message: string }>(
+      "/appointments/google-calendar/sync"
+    ),
+
+  disconnectGoogleCalendar: () =>
+    api.post<{ connected: boolean }>("/appointments/google-calendar/disconnect"),
+
+  getGoogleCalendarStatus: () =>
+    api.get<{
+      connected: boolean;
+      email: string | null;
+      sync_enabled: boolean;
+      last_synced_at: string | null;
+      busy_count: number;
+      busy_intervals: Array<{ starts_at: string; ends_at: string; title: string; source: string; is_external: boolean }>;
+    }>("/appointments/google-calendar/status"),
+
+  verifyCertificate: (appointmentId: string) =>
+    api.get<any>(`/appointments/prescription/${appointmentId}/verify`, { auth: false }),
+
+  getAuspiciousTransit: (on?: string) =>
+    api.get<AuspiciousTransitInfo>(
+      `/appointments/auspicious-transit${on ? `?on=${encodeURIComponent(on)}` : ""}`
+    ),
+
+  activateTransitSurge: (body: {
+    day: string;
+    multiplier?: number;
+    custom_title?: string | null;
+    open_surge_window?: boolean;
+    from_time?: string;
+    to_time?: string;
+  }) => api.post<AuspiciousTransitSurgeResult>("/appointments/me/auspicious-transit-surge", body),
+
+  deactivateTransitSurge: (body: { day: string }) =>
+    api.post<AuspiciousTransitSurgeResult>("/appointments/me/auspicious-transit-surge/deactivate", body),
 };
 
 // ----------------------------------------------------------------- reviews
@@ -827,19 +1005,6 @@ export interface ShopBannerSettingsData {
   reels: ShopStoreReelItem[];
 }
 
-export const shopAdminApi = {
-  getBanners: () => api.get<ShopBannerSettingsData>(endpoints.admin.shopBanners),
-  updateBanners: (body: Partial<ShopBannerSettingsData>) =>
-    api.put<ShopBannerSettingsData>(endpoints.admin.shopBanners, body),
-  uploadImage: async (file: File) => {
-    const fd = new FormData();
-    fd.append("file", file);
-    return apiFetch<{ url: string; public_id: string }>(endpoints.admin.shopUploadImage, {
-      method: "POST",
-      body: fd,
-    });
-  },
-};
 
 export interface PasskeyInfo {
   id: string;
@@ -862,4 +1027,235 @@ export const passkeyApi = {
     api.post<AuthResult>(endpoints.passkeys.loginVerify, body, { auth: false }),
 };
 
+export const shopAdminApi = {
+  uploadImage: async (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return apiFetch<{ url: string; public_id: string; format: string }>(
+      endpoints.admin.shop.uploadImage,
+      {
+        method: "POST",
+        body: fd,
+      }
+    );
+  },
 
+  listCategories: (includeInactive = true) =>
+    api.get<ShopProductCategory[]>(endpoints.admin.shop.categories, {
+      query: { include_inactive: includeInactive },
+    }),
+
+  createCategory: (body: ShopProductCategoryCreate) =>
+    api.post<ShopProductCategory>(endpoints.admin.shop.categories, body),
+
+  updateCategory: (id: string, body: Partial<ShopProductCategoryCreate>) =>
+    api.put<ShopProductCategory>(endpoints.admin.shop.category(id), body),
+
+  deleteCategory: (id: string) =>
+    api.delete<{ deleted: boolean }>(endpoints.admin.shop.category(id)),
+
+  listProducts: (params?: {
+    search?: string;
+    category_id?: string;
+    ruling_planet?: string;
+    stock_status?: string;
+    is_active?: boolean;
+    is_featured?: boolean;
+    include_deleted?: boolean;
+    archived_only?: boolean;
+    page?: number;
+    limit?: number;
+    sort_by?: string;
+  }) =>
+    api.get<ShopProductListResponse>(endpoints.admin.shop.products, {
+      query: params,
+    }),
+
+  getProduct: (id: string) =>
+    api.get<ShopProduct>(endpoints.admin.shop.product(id)),
+
+  createProduct: (body: ShopProductInput) =>
+    api.post<ShopProduct>(endpoints.admin.shop.products, body),
+
+  updateProduct: (id: string, body: Partial<ShopProductInput>) =>
+    api.put<ShopProduct>(endpoints.admin.shop.product(id), body),
+
+  deleteProduct: (id: string, hardDelete: boolean = false) =>
+    api.delete<{ deleted: boolean; mode: string; message: string }>(
+      endpoints.admin.shop.product(id),
+      { query: { hard_delete: hardDelete } }
+    ),
+
+  restoreProduct: (id: string) =>
+    api.post<ShopProduct>(endpoints.admin.shop.productRestore(id)),
+
+  cleanupOrphanedImages: (dryRun: boolean = false) =>
+    api.post<CloudinaryOrphanCleanupReport>(
+      endpoints.admin.shop.cleanupOrphanedImages,
+      {},
+      { query: { dry_run: dryRun } }
+    ),
+
+  updateStock: (id: string, body: StockUpdatePayload) =>
+    api.patch<ShopProduct>(endpoints.admin.shop.productStock(id), body),
+
+  getInventorySummary: () =>
+    api.get<ShopInventorySummary>(endpoints.admin.shop.inventory),
+
+  getBannerSettings: () =>
+    api.get<ShopBannerSettings>(endpoints.admin.shop.banners),
+
+  updateBannerSettings: (body: Partial<ShopBannerSettings>) =>
+    api.put<ShopBannerSettings>(endpoints.admin.shop.banners, body),
+};
+
+
+
+
+export const courseAdminApi = {
+  listCourses: (params?: { limit?: number; skip?: number }) =>
+    api.get<CourseAdminItem[]>(endpoints.admin.courses.list, { query: params }),
+
+  getCourse: (id: string) =>
+    api.get<any>(endpoints.admin.courses.detail(id)),
+
+  createCourse: (body: CourseAdminInput) =>
+    api.post<{ id: string; slug: string; message: string }>(endpoints.admin.courses.create, body),
+
+  uploadThumbnail: async (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return apiFetch<{ url: string; public_id: string; format: string }>(
+      endpoints.admin.courses.uploadThumbnail,
+      {
+        method: "POST",
+        body: fd,
+      }
+    );
+  },
+
+  updateCourse: (id: string, body: Partial<CourseAdminInput>) =>
+    api.put<{ id: string; message: string }>(endpoints.admin.courses.update(id), body),
+
+  deleteCourse: (id: string) =>
+    api.delete<{ message: string }>(endpoints.admin.courses.delete(id)),
+
+  createSection: (courseId: string, body: { title: string; order: number; description?: string }) =>
+    api.post<{ id: string; title: string; order: number }>(endpoints.admin.courses.sections(courseId), body),
+
+  updateSection: (courseId: string, sectionId: string, body: { title?: string; order?: number; description?: string }) =>
+    api.put<{ id: string; title: string; order: number }>(endpoints.admin.courses.section(courseId, sectionId), body),
+
+  deleteSection: (courseId: string, sectionId: string) =>
+    api.delete<{ message: string }>(endpoints.admin.courses.section(courseId, sectionId)),
+
+  createLesson: (courseId: string, body: {
+    section_id: string;
+    title: string;
+    order: number;
+    duration_minutes: number;
+    video_provider: string;
+    video_id: string;
+    library_id?: string;
+    is_free_preview?: boolean;
+    summary?: string;
+    notes_markdown?: string;
+    resources?: { title: string; url: string; type: string }[];
+  }) =>
+    api.post<{ id: string; title: string; order: number }>(endpoints.admin.courses.lessons(courseId), body),
+
+  updateLesson: (courseId: string, lessonId: string, body: Record<string, any>) =>
+    api.put<{ id: string; title: string; order: number }>(endpoints.admin.courses.lesson(courseId, lessonId), body),
+
+  deleteLesson: (courseId: string, lessonId: string) =>
+    api.delete<{ message: string }>(endpoints.admin.courses.lesson(courseId, lessonId)),
+
+  createBunnyVideo: (title: string) =>
+    api.post<BunnyVideoPlaceholder>(endpoints.admin.courses.createBunnyVideo, { title }),
+
+  getQuestions: (params?: {
+    course_id?: string;
+    lesson_id?: string;
+    status?: string;
+    search?: string;
+    limit?: number;
+    skip?: number;
+  }) =>
+    api.get<AdminCourseQuestionListResponse>(endpoints.admin.courses.questions, { query: params }),
+
+  getVideoPreview: (videoId: string, libraryId?: string) =>
+    api.get<{ video_id: string; embed_url: string }>(
+      endpoints.admin.courses.videoPreview(videoId),
+      { query: { library_id: libraryId } }
+    ),
+
+  answerQuestion: (questionId: string, body: { content: string; mark_resolved?: boolean }) =>
+    api.post<AdminCourseQuestionAnswer>(endpoints.admin.courses.answerQuestion(questionId), body),
+
+  updateQuestion: (
+    questionId: string,
+    body: { is_resolved?: boolean; is_pinned?: boolean; is_hidden?: boolean }
+  ) =>
+    api.patch<{ message: string }>(endpoints.admin.courses.updateQuestion(questionId), body),
+
+  deleteQuestion: (questionId: string) =>
+    api.delete<{ message: string }>(endpoints.admin.courses.deleteQuestion(questionId)),
+
+  deleteAnswer: (questionId: string, answerId: string) =>
+    api.delete<{ message: string }>(endpoints.admin.courses.deleteAnswer(questionId, answerId)),
+
+  listOrders: (params?: {
+    status?: string;
+    course_id?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) =>
+    api.get<AdminCourseOrderListResponse>(endpoints.admin.courses.orders, {
+      query: params,
+    }),
+
+  reconcileOrder: (orderId: string) =>
+    api.post<AdminCourseOrder>(endpoints.admin.courses.reconcileOrder(orderId)),
+
+  listEnrollments: (params?: {
+    course_id?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) =>
+    api.get<AdminCourseEnrollmentListResponse>(endpoints.admin.courses.enrollments, {
+      query: params,
+    }),
+
+  grantEnrollment: (courseId: string, body: AdminManualEnrollInput) =>
+    api.post<AdminCourseEnrollment>(
+      endpoints.admin.courses.courseEnrollments(courseId),
+      body
+    ),
+
+  revokeEnrollment: (courseId: string, enrollmentId: string) =>
+    api.delete<{ message: string }>(
+      endpoints.admin.courses.revokeEnrollment(courseId, enrollmentId)
+    ),
+
+  getCourseLearners: (
+    courseId: string,
+    params?: {
+      search?: string;
+      progress_status?: string;
+      sort_by?: string;
+      page?: number;
+      limit?: number;
+    }
+  ) =>
+    api.get<AdminCourseLearnersResponse>(
+      endpoints.admin.courses.courseLearners(courseId),
+      { query: params }
+    ),
+
+  getLearnerProgress: (courseId: string, userId: string) =>
+    api.get<AdminCourseLearnerDetail>(
+      endpoints.admin.courses.courseLearnerProgress(courseId, userId)
+    ),
+};

@@ -39,6 +39,27 @@ export type CoPilotRemedyFocus = {
   gemstone_day: string;
 };
 
+export type CoPilotPlanetPosition = {
+  name: string;
+  label: string;
+  sign: string;
+  sign_label: string;
+  house: number;
+  degree_formatted: string;
+  is_retrograde: boolean;
+};
+
+export type CoPilotBirthDetailsInput = {
+  date_of_birth: string;
+  time_of_birth?: string | null;
+  is_time_known: boolean;
+  place: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  timezone?: string | null;
+  timezone_offset?: number | null;
+};
+
 export type CoPilotSummary = {
   session_id: string;
   client_name: string;
@@ -50,8 +71,14 @@ export type CoPilotSummary = {
   /** False when no birth time was given, which moves the dasha by months. */
   is_birth_time_known: boolean;
   accuracy_note: string;
+  ascendant: string;
+  ascendant_degree: string;
+  birth_date_str: string;
+  birth_time_str: string;
+  birth_place_str: string;
   moon_sign: string;
   nakshatra: string;
+  planets: CoPilotPlanetPosition[];
   mahadasha: CoPilotDashaPeriod | null;
   antardasha: CoPilotDashaPeriod | null;
   sade_sati: CoPilotSadeSati | null;

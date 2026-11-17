@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
+  AlertTriangle,
   Calendar,
   CalendarCheck,
   CalendarDays,
@@ -21,6 +22,7 @@ import {
   Flame,
   Gem,
   HelpCircle,
+  History,
   IndianRupee,
   Info,
   MessageSquare,
@@ -32,9 +34,12 @@ import {
   Lock,
   Unlock,
   Link2,
+  Loader2,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
+  Sun,
+  Moon,
   Trash2,
   TrendingUp,
   User,
@@ -48,9 +53,11 @@ import * as React from "react";
 import { toast } from "sonner";
 
 import { Alert, Avatar, Badge, Button, EmptyState, LoadingBlock, Modal } from "@/components/ui";
+import { DivyaParamarshaModal } from "@/components/appointments/divya-paramarsha-modal";
 import { GoogleCalendarSuite } from "@/components/appointments/google-calendar";
 import { appointmentApi, astrologerApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
+import { checkRahuKaalCollision } from "@/lib/muhurat-helper";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import {
@@ -129,6 +136,36 @@ export default function AppointmentsPage() {
   const { user } = useAuth();
   const isAstrologer = user?.role === "astrologer";
   const [activeTab, setActiveTab] = React.useState<AppointmentPortalTab>("calendar");
+  const queryClient = useQueryClient();
+
+  // Listen for Google Calendar OAuth Callback
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (code) {
+      const redirectUri = `${window.location.origin}/appointments`;
+      appointmentApi
+        .googleCalendarCallback(code, redirectUri)
+        .then((res) => {
+          toast.success(
+            res.message || `Google Calendar connected (${res.email})! Bidirectional sync is active.`
+          );
+          const url = new URL(window.location.href);
+          url.searchParams.delete("code");
+          url.searchParams.delete("scope");
+          url.searchParams.delete("state");
+          url.searchParams.delete("google_sync");
+          window.history.replaceState({}, document.title, url.pathname);
+          void queryClient.invalidateQueries({ queryKey: ["google_calendar_status"] });
+          void queryClient.invalidateQueries({ queryKey: WINDOWS_KEY });
+          void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+        })
+        .catch((err: any) => {
+          toast.error(err?.message || "Failed to complete Google Calendar connection.");
+        });
+    }
+  }, [queryClient]);
 
   if (!isAstrologer) {
     return (
@@ -1012,6 +1049,10 @@ function OpenHours() {
     queryKey: WINDOWS_KEY,
     queryFn: () => appointmentApi.windows(),
   });
+  const { data: gcalStatus } = useQuery({
+    queryKey: ["google_calendar_status"],
+    queryFn: () => appointmentApi.getGoogleCalendarStatus(),
+  });
 
   // Default time picker state
   const [from, setFrom] = React.useState(() => {
@@ -1098,6 +1139,37 @@ function OpenHours() {
         </span>
       </div>
 
+      {/* Google Calendar 2-Way Sync Integration Notice */}
+      <div
+        className={cn(
+          "rounded-2xl border p-3.5 text-xs font-semibold flex items-center justify-between gap-3",
+          gcalStatus?.connected
+            ? "bg-purple-50/70 border-purple-200 text-purple-950"
+            : "bg-slate-50 border-slate-200 text-slate-700"
+        )}
+      >
+        <div className="flex items-center gap-2.5">
+          <CalendarCheck
+            className={cn(
+              "size-4 shrink-0",
+              gcalStatus?.connected ? "text-purple-600" : "text-slate-400"
+            )}
+          />
+          <span>
+            {gcalStatus?.connected
+              ? `দ্বিমুখী গুগল ক্যালেন্ডার সিঙ্ক সক্রিয় (${gcalStatus.email}): আপনার ব্যক্তিগত ইভেন্টের সময় আস্ট্রা স্বয়ংক্রিয়ভাবে স্লট সুরক্ষিত (ব্লক) রাখবে।`
+              : "দ্বিমুখী ক্যালেন্ডার সিঙ্ক: আপনার গুগল ক্যালেন্ডার সংযুক্ত করলে ব্যক্তিগত কাজের সময় আস্ট্রা স্লট বন্ধ রাখবে।"}
+          </span>
+        </div>
+        {gcalStatus?.connected ? (
+          <span className="rounded-full bg-purple-100 border border-purple-300 px-2.5 py-0.5 text-[11px] font-bold text-purple-900 shrink-0">
+            {gcalStatus.busy_count}টি ইভেন্ট সুরক্ষিত
+          </span>
+        ) : (
+          <span className="text-[11px] text-sky-600 font-bold shrink-0">ক্যালেন্ডার ট্যাবে যুক্ত করুন</span>
+        )}
+      </div>
+
       {/* Quick Time Presets */}
       <div className="space-y-2">
         <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
@@ -1161,6 +1233,50 @@ function OpenHours() {
             />
           </div>
         </div>
+
+        {(() => {
+          if (!from || !to) return null;
+          const fromDate = new Date(from);
+          const toDate = new Date(to);
+          if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return null;
+          const check = checkRahuKaalCollision(
+            fromDate,
+            fromDate.getHours(),
+            fromDate.getMinutes(),
+            toDate.getHours(),
+            toDate.getMinutes(),
+          );
+          if (check.hasRahuKaalCollision) {
+            return (
+              <div className="rounded-xl border-2 border-rose-300 bg-rose-50/90 p-3.5 space-y-1.5 text-rose-950 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 font-black text-rose-900 text-xs">
+                  <ShieldAlert className="size-4 text-rose-600 animate-pulse shrink-0" />
+                  <span>বৈদিক সতর্কতা: রাহুকাল (Rahu Kaal Alert)</span>
+                </div>
+                <p className="text-xs font-bold text-rose-800">
+                  Today {check.rahuKaalLabel} is Rahu Kaal. Do you still wish to open this slot?
+                </p>
+                <p className="text-[11px] text-rose-700/90 leading-relaxed">
+                  শাস্ত্র মতে রাহুকাল চলাকালীন কোনো শুভ কর্ম বা গুরুত্বপূর্ণ পরামর্শ শুরু করা শুভ নয়। তবে আপনি চাইলে সতর্কতার সাথে স্লটটি খুলতে পারেন।
+                </p>
+              </div>
+            );
+          }
+          if (check.hasAbhijitIntersection) {
+            return (
+              <div className="rounded-xl border border-emerald-300 bg-emerald-50/90 p-3 space-y-1 text-emerald-950 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 font-black text-emerald-900 text-xs">
+                  <Sparkles className="size-4 text-emerald-600 shrink-0" />
+                  <span>শুভ মুহূর্ত: অভিজিৎ মুহূর্ত (Abhijit Muhurat)</span>
+                </div>
+                <p className="text-xs font-medium text-emerald-800">
+                  এই স্লটটি সর্বকার্য সিদ্ধিদায়ক অভিজিৎ মুহূর্তের ({check.abhijitLabel}) আশীর্বাদপ্রাপ্ত।
+                </p>
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         <button
           type="button"
@@ -1265,7 +1381,25 @@ function Schedule({
   const [displayMode, setDisplayMode] = React.useState<"calendar" | "list" | "blacklist">(initialDisplayMode);
   const [tab, setTab] = React.useState<ScheduleTab>("upcoming");
   const [cancelTargetId, setCancelTargetId] = React.useState<string | null>(null);
-  const [enteringChamber, setEnteringChamber] = React.useState(false);
+  const [completeTargetAppointment, setCompleteTargetAppointment] = React.useState<Appointment | null>(null);
+  const [enteringChamberId, setEnteringChamberId] = React.useState<string | null>(null);
+
+  const handleEnterChamber = async (appointmentId: string) => {
+    setEnteringChamberId(appointmentId);
+    try {
+      const res = await appointmentApi.joinChamber(appointmentId);
+      const callId = (res as any)?.call_id || (res as any)?.data?.call_id;
+      if (callId) {
+        router.push(`/call/${callId}`);
+      } else {
+        toast.error("Could not obtain chamber credentials. Please try again.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to enter consultation chamber.");
+    } finally {
+      setEnteringChamberId(null);
+    }
+  };
 
   // Availability windows query for Google Calendar integration
   const { data: windows } = useQuery({
@@ -1321,12 +1455,14 @@ function Schedule({
   };
 
   const [prescriptionAppointment, setPrescriptionAppointment] = React.useState<Appointment | null>(null);
+  const [certificateAppointment, setCertificateAppointment] = React.useState<Appointment | null>(null);
   const [prescriptionForm, setPrescriptionForm] = React.useState<{
     gemstone: string;
     rudraksha: string;
     mantra: string;
     mantra_count: number;
     daan_remedy: string;
+    sankalpa: string;
     astrologer_notes: string;
   }>({
     gemstone: "",
@@ -1334,6 +1470,7 @@ function Schedule({
     mantra: "",
     mantra_count: 108,
     daan_remedy: "",
+    sankalpa: "",
     astrologer_notes: "",
   });
 
@@ -1345,6 +1482,7 @@ function Schedule({
       mantra: a.prescription?.mantra || "",
       mantra_count: a.prescription?.mantra_count || 108,
       daan_remedy: a.prescription?.daan_remedy || "",
+      sankalpa: a.prescription?.sankalpa || "",
       astrologer_notes: a.prescription?.astrologer_notes || "",
     });
   };
@@ -1357,12 +1495,14 @@ function Schedule({
         mantra: prescriptionForm.mantra.trim() || null,
         mantra_count: Number(prescriptionForm.mantra_count) || null,
         daan_remedy: prescriptionForm.daan_remedy.trim() || null,
+        sankalpa: prescriptionForm.sankalpa.trim() || null,
         astrologer_notes: prescriptionForm.astrologer_notes.trim() || null,
       }),
-    onSuccess: () => {
+    onSuccess: (updated) => {
       void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
       setPrescriptionAppointment(null);
-      toast.success("Vedic prescription issued and synced to client in real-time!");
+      if (updated) setCertificateAppointment(updated);
+      toast.success("Vedic prescription issued & Divya Certificate generated!");
     },
     onError: (e: ApiError) => toast.error(e.message || "Failed to update prescription."),
   });
@@ -1393,6 +1533,7 @@ function Schedule({
     mutationFn: (id: string) => appointmentApi.complete(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY });
+      setCompleteTargetAppointment(null);
       toast.success("Appointment completed and balance coins captured!");
     },
     onError: (e: ApiError) => toast.error(e.message),
@@ -1575,19 +1716,19 @@ function Schedule({
   return (
     <div className="space-y-6">
       {/* Top View Selector Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0c1220] shadow-xs transition-colors">
-        <div className="flex items-center gap-2.5 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-3xl border border-slate-200/90 bg-white shadow-xs">
+        <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={() => setDisplayMode("calendar")}
             className={cn(
               "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
               displayMode === "calendar"
-                ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md ring-2 ring-amber-400/20"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800 dark:hover:bg-slate-800"
+                ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
             )}
           >
-            <Calendar className="size-4 text-sky-500 dark:text-sky-400" />
+            <Calendar className="size-4 text-sky-400" />
             <span>Google Calendar Schedule</span>
           </button>
 
@@ -1597,11 +1738,11 @@ function Schedule({
             className={cn(
               "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
               displayMode === "list"
-                ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md ring-2 ring-amber-400/20"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800 dark:hover:bg-slate-800"
+                ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
             )}
           >
-            <FileText className="size-4 text-amber-500 dark:text-amber-400" />
+            <FileText className="size-4 text-amber-400" />
             <span>Bookings Ledger ({allBookings.length})</span>
           </button>
 
@@ -1611,8 +1752,8 @@ function Schedule({
             className={cn(
               "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
               displayMode === "blacklist"
-                ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md ring-2 ring-amber-400/20"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800 dark:hover:bg-slate-800"
+                ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
             )}
           >
             <ShieldAlert className="size-4 text-rose-500" />
@@ -1620,7 +1761,7 @@ function Schedule({
           </button>
         </div>
 
-        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium hidden sm:block">
+        <p className="text-xs text-slate-500 font-medium hidden sm:block">
           {displayMode === "calendar"
             ? "📅 Interactive Google Calendar view with live time indicator and 1-click slot activation."
             : displayMode === "blacklist"
@@ -1637,9 +1778,21 @@ function Schedule({
           onOpenSession={(a) => setDossierAppointment(a)}
           onOpenPrescription={(a) => openPrescriptionModal(a)}
           onCancelAppointment={(id) => setCancelTargetId(id)}
-          onCompleteAppointment={(id) => complete.mutate(id)}
-          onAddWindow={async (fromIso, toIso) => {
-            await appointmentApi.addWindow(fromIso, toIso);
+          onCompleteAppointment={(id) => {
+            const target = allBookings.find((b) => b.id === id);
+            if (target) {
+              const startsMs = new Date(target.starts_at).getTime();
+              if (Date.now() < startsMs) {
+                toast.error("Cannot complete a session before it starts.");
+                return;
+              }
+              setCompleteTargetAppointment(target);
+            } else {
+              complete.mutate(id);
+            }
+          }}
+          onAddWindow={async (fromIso, toIso, extra) => {
+            await appointmentApi.addWindow(fromIso, toIso, extra);
             void queryClient.invalidateQueries({ queryKey: WINDOWS_KEY });
             void queryClient.invalidateQueries({ queryKey: CARD_KEY });
           }}
@@ -1794,7 +1947,7 @@ function Schedule({
             const startsMs = new Date(a.starts_at).getTime();
             const endsMs = new Date(a.ends_at).getTime();
             const now = Date.now();
-            const isLiveWindow = a.status === "booked" && startsMs - now <= 15 * 60_000 && endsMs >= now;
+            const isLiveWindow = a.status === "booked" && now >= startsMs - 10 * 60_000 && now <= endsMs + 15 * 60_000;
             const pillar = a.consultation_pillar ? PILLAR_LABELS[a.consultation_pillar] : null;
             const hasPrescription = Boolean(
               a.prescription?.gemstone || a.prescription?.rudraksha || a.prescription?.mantra,
@@ -1941,23 +2094,40 @@ function Schedule({
                       <span>{hasPrescription ? "Edit Prescription" : "Write Prescription"}</span>
                     </button>
 
+                    {/* Divya Paramarsha Certificate */}
+                    <button
+                      type="button"
+                      onClick={() => setCertificateAppointment(a)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-amber-400/80 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/20 px-3 py-1.5 text-xs font-bold text-amber-950 hover:bg-amber-500/25 transition-all cursor-pointer shadow-2xs"
+                      title="View & Download Divya Paramarsha PDF Certificate"
+                    >
+                      <Sparkles className="size-3.5 text-amber-600" />
+                      <span>👑 সনদ (Certificate)</span>
+                    </button>
+
                     {/* Enter Chamber (Live) */}
                     {isLiveWindow && (
-                      <a
-                        href={`/calls`}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm animate-pulse"
+                      <button
+                        type="button"
+                        disabled={enteringChamberId === a.id}
+                        onClick={() => handleEnterChamber(a.id)}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm animate-pulse cursor-pointer disabled:opacity-50"
                       >
-                        <Video className="size-3.5" />
-                        <span>Enter Chamber</span>
-                      </a>
+                        {enteringChamberId === a.id ? (
+                          <Loader2 className="size-3.5 animate-spin" />
+                        ) : (
+                          <Video className="size-3.5" />
+                        )}
+                        <span>{enteringChamberId === a.id ? "Entering..." : "Enter Chamber"}</span>
+                      </button>
                     )}
 
-                    {/* Complete Session Action (Capture Escrow) */}
-                    {a.status === "booked" && (
+                    {/* Complete Session Action (Capture Escrow) - Only active after session start time */}
+                    {a.status === "booked" && now >= startsMs && (
                       <button
                         type="button"
                         disabled={complete.isPending}
-                        onClick={() => complete.mutate(a.id)}
+                        onClick={() => setCompleteTargetAppointment(a)}
                         className="rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
                       >
                         <CheckCircle2 className="size-3.5 text-emerald-600" />
@@ -2081,7 +2251,6 @@ function Schedule({
         onClose={() => setDossierAppointment(null)}
         title="Client Astrological Dossier & AI Pre-Flight"
         description="Comprehensive pre-consultation details, cosmic resonance index, and automated AI astrological briefing."
-        size="xl"
         footer={
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
             <div className="flex items-center gap-2 flex-wrap">
@@ -2091,7 +2260,7 @@ function Schedule({
                   onClick={() => {
                     window.open(appointmentApi.getCertificateHtmlUrl(dossierAppointment.id), "_blank");
                   }}
-                  className="border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 font-bold text-xs"
+                  className="border-amber-500/30 text-amber-600 hover:bg-amber-50 font-bold text-xs"
                 >
                   <FileText className="size-3.5 mr-1.5" />
                   View Divya Certificate
@@ -2106,29 +2275,20 @@ function Schedule({
                     const nowMs = Date.now();
                     const isLiveWindow = nowMs >= startMs - 10 * 60_000 && nowMs <= endMs + 15 * 60_000;
                     if (!isLiveWindow) return null;
+                    const isEntering = enteringChamberId === dossierAppointment.id;
                     return (
                       <Button
                         size="sm"
-                        disabled={enteringChamber}
-                        onClick={async () => {
-                          setEnteringChamber(true);
-                          try {
-                            const res = await appointmentApi.joinChamber(dossierAppointment.id);
-                            if (res?.call_id) {
-                              router.push(`/call/${res.call_id}`);
-                            } else {
-                              toast.error("Could not prepare chamber.");
-                            }
-                          } catch (err: any) {
-                            toast.error(err?.message || "Failed to enter chamber.");
-                          } finally {
-                            setEnteringChamber(false);
-                          }
-                        }}
+                        disabled={isEntering}
+                        onClick={() => handleEnterChamber(dossierAppointment.id)}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md"
                       >
-                        <Video className="size-3.5 mr-1" />
-                        {enteringChamber ? "Entering..." : "Enter Live Chamber"}
+                        {isEntering ? (
+                          <Loader2 className="size-3.5 mr-1 animate-spin" />
+                        ) : (
+                          <Video className="size-3.5 mr-1" />
+                        )}
+                        {isEntering ? "Entering..." : "Enter Live Chamber"}
                       </Button>
                     );
                   })()}
@@ -2146,9 +2306,9 @@ function Schedule({
                       });
                       setRescheduleAppointment(dossierAppointment);
                     }}
-                    className="border-amber-500/30 text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-xs font-bold"
+                    className="border-amber-500/30 text-amber-800 hover:bg-amber-50 text-xs font-bold"
                   >
-                    <CalendarDays className="size-3.5 mr-1 text-amber-600 dark:text-amber-400" />
+                    <CalendarDays className="size-3.5 mr-1 text-amber-600" />
                     {dossierAppointment.rescheduled_count && dossierAppointment.rescheduled_count >= 1
                       ? "Rescheduled (1/1 Used)"
                       : "Courtesy Reschedule (১-বার ফ্রি)"}
@@ -2169,9 +2329,9 @@ function Schedule({
                       setNoShowReason("");
                       setNoShowAppointment(dossierAppointment);
                     }}
-                    className="border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold"
+                    className="border-rose-300 text-rose-700 hover:bg-rose-50 text-xs font-bold"
                   >
-                    <AlertCircle className="size-3.5 mr-1 text-rose-600 dark:text-rose-400" />
+                    <AlertCircle className="size-3.5 mr-1 text-rose-600" />
                     Mark No-Show
                   </Button>
 
@@ -2185,13 +2345,13 @@ function Schedule({
                     className={cn(
                       "text-xs font-bold",
                       dossierAppointment.btr_fulfilled
-                        ? "border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/40"
+                        ? "border-emerald-300 text-emerald-800 bg-emerald-50/50"
                         : dossierAppointment.btr_requested
-                        ? "border-sky-300 dark:border-sky-700 text-sky-800 dark:text-sky-300 bg-sky-50/50 dark:bg-sky-950/40"
-                        : "border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
+                        ? "border-sky-300 text-sky-800 bg-sky-50/50"
+                        : "border-indigo-300 text-indigo-700 hover:bg-indigo-50"
                     )}
                   >
-                    <Clock className="size-3.5 mr-1 text-indigo-600 dark:text-indigo-400" />
+                    <Clock className="size-3.5 mr-1 text-indigo-600" />
                     {dossierAppointment.btr_fulfilled
                       ? "BTR Rectified ✓"
                       : dossierAppointment.btr_requested
@@ -2208,9 +2368,9 @@ function Schedule({
                       setRedFlagBlacklist(true);
                       setRedFlagAppointment(dossierAppointment);
                     }}
-                    className="border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold"
+                    className="border-rose-300 text-rose-700 hover:bg-rose-50 text-xs font-bold"
                   >
-                    <Flag className="size-3.5 mr-1 text-rose-600 dark:text-rose-400" />
+                    <Flag className="size-3.5 mr-1 text-rose-600" />
                     Red-Flag / Shield
                   </Button>
                 </>
@@ -2227,13 +2387,13 @@ function Schedule({
           <div className="space-y-4 py-2 text-xs">
             {/* Red-Flag Misconduct Notice if marked */}
             {dossierAppointment.abuse_flagged && (
-              <div className="rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50/80 dark:bg-rose-950/60 p-3.5 text-rose-950 dark:text-rose-200 text-xs flex items-center gap-2.5">
-                <ShieldAlert className="size-4 text-rose-600 dark:text-rose-400 shrink-0" />
+              <div className="rounded-2xl border border-rose-300 bg-rose-50/80 p-3.5 text-rose-950 text-xs flex items-center gap-2.5">
+                <ShieldAlert className="size-4 text-rose-600 shrink-0" />
                 <div>
-                  <span className="font-bold block text-rose-950 dark:text-rose-200">
+                  <span className="font-bold block text-rose-950">
                     Red-Flagged for Policy Misconduct ({dossierAppointment.abuse_reason})
                   </span>
-                  <span className="text-[11px] text-rose-800 dark:text-rose-300">
+                  <span className="text-[11px] text-rose-800">
                     Session was terminated due to code-of-conduct violation and logged with Trust & Safety. Escrow consultation fee was credited to your earnings.
                   </span>
                 </div>
@@ -2246,14 +2406,14 @@ function Schedule({
                 className={cn(
                   "rounded-2xl border p-3.5 text-xs flex items-center gap-2.5",
                   dossierAppointment.btr_fulfilled
-                    ? "border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-200"
-                    : "border-sky-300 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/60 text-sky-950 dark:text-sky-200"
+                    ? "border-emerald-300 bg-emerald-50 text-emerald-950"
+                    : "border-sky-300 bg-sky-50 text-sky-950"
                 )}
               >
                 <Clock
                   className={cn(
                     "size-4 shrink-0",
-                    dossierAppointment.btr_fulfilled ? "text-emerald-600 dark:text-emerald-400" : "text-sky-600 dark:text-sky-400"
+                    dossierAppointment.btr_fulfilled ? "text-emerald-600" : "text-sky-600"
                   )}
                 />
                 <div>
@@ -2273,11 +2433,11 @@ function Schedule({
 
             {/* Client No-Show Notice if marked */}
             {dossierAppointment.is_no_show && (
-              <div className="rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50/80 dark:bg-rose-950/60 p-3.5 text-rose-900 dark:text-rose-200 text-xs flex items-center gap-2.5">
-                <AlertCircle className="size-4 text-rose-600 dark:text-rose-400 shrink-0" />
+              <div className="rounded-2xl border border-rose-300 bg-rose-50/80 p-3.5 text-rose-900 text-xs flex items-center gap-2.5">
+                <AlertCircle className="size-4 text-rose-600 shrink-0" />
                 <div>
-                  <span className="font-bold block text-rose-950 dark:text-rose-100">Client No-Show / Missed Consultation</span>
-                  <span className="text-[11px] text-rose-700 dark:text-rose-300">
+                  <span className="font-bold block text-rose-950">Client No-Show / Missed Consultation</span>
+                  <span className="text-[11px] text-rose-700">
                     The astrologer waited for {dossierAppointment.no_show_wait_minutes || 15} minutes in the chamber.
                     The session was closed and the escrow fee was settled as compensation.
                   </span>
@@ -2287,11 +2447,11 @@ function Schedule({
 
             {/* Courtesy Reschedule Notice if applied */}
             {Boolean(dossierAppointment.rescheduled_count && dossierAppointment.rescheduled_count > 0) && (
-              <div className="rounded-2xl border border-amber-300 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-950/60 p-3 text-amber-950 dark:text-amber-200 text-xs flex items-center gap-2.5">
-                <CalendarDays className="size-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <div className="rounded-2xl border border-amber-300 bg-amber-50/70 p-3 text-amber-950 text-xs flex items-center gap-2.5">
+                <CalendarDays className="size-4 text-amber-600 shrink-0" />
                 <div>
                   <span className="font-bold block">Courtesy Reschedule Applied (1/1 Used)</span>
-                  <span className="text-[11px] text-amber-800 dark:text-amber-300">
+                  <span className="text-[11px] text-amber-800">
                     Moved to current slot by the astrologer without charging extra fees.
                     {dossierAppointment.reschedule_reason ? ` Note: "${dossierAppointment.reschedule_reason}"` : ""}
                   </span>
@@ -2300,7 +2460,7 @@ function Schedule({
             )}
 
             {/* Client Profile Header with Cosmic Synergy Score */}
-            <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 dark:bg-slate-900/90 p-3.5 border border-slate-200 dark:border-slate-800 transition-colors">
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3.5 border border-slate-200">
               <div className="flex items-center gap-3 min-w-0">
                 <Avatar
                   name={dossierAppointment.peer?.name || "Client"}
@@ -2308,17 +2468,17 @@ function Schedule({
                   size="md"
                 />
                 <div className="min-w-0 flex-1">
-                  <h4 className="font-display font-bold text-sm text-slate-900 dark:text-white truncate">
+                  <h4 className="font-display font-bold text-sm text-slate-900 truncate">
                     {dossierAppointment.peer?.name || "Client"}
                   </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] text-slate-500">
                     Appointment Session · {dossierAppointment.minutes} mins · {dayRelative(dossierAppointment.starts_at)}
                   </p>
                 </div>
               </div>
 
               <div className="text-right shrink-0">
-                <span className="inline-flex items-center gap-1 rounded-full bg-linear-to-r from-amber-500/10 to-orange-500/15 dark:from-amber-500/20 dark:to-orange-500/25 border border-amber-500/30 dark:border-amber-500/40 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:text-amber-300">
+                <span className="inline-flex items-center gap-1 rounded-full bg-linear-to-r from-amber-500/10 to-orange-500/15 border border-amber-500/30 px-2.5 py-1 text-[11px] font-bold text-amber-700">
                   <Sparkles className="size-3 text-amber-500" />
                   <span>{dossierAppointment.cosmic_synergy_score || 88}% Synergy</span>
                 </span>
@@ -2326,54 +2486,318 @@ function Schedule({
             </div>
 
             {/* AI Astrological Pre-Flight Intelligence Dossier */}
-            <div className="rounded-2xl border border-indigo-200/80 dark:border-indigo-500/30 bg-gradient-to-br from-indigo-50/70 via-indigo-50/30 to-purple-50/40 dark:from-indigo-950/60 dark:via-purple-950/40 dark:to-slate-900/90 p-4 space-y-3 transition-colors">
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] font-bold text-indigo-950 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="size-3.5 text-indigo-600 dark:text-indigo-400" />
-                  <span>🔮 AI Astrological Pre-Flight Intelligence (T-15m)</span>
-                </p>
-                {isLoadingPreflight && (
-                  <span className="text-[10px] text-indigo-500 dark:text-indigo-400 animate-pulse">Synthesizing Kundli...</span>
-                )}
+            <div className="rounded-3xl border border-indigo-200/90 bg-linear-to-br from-indigo-50/60 via-purple-50/30 to-amber-50/40 p-4 sm:p-5 space-y-4 shadow-xs">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="flex size-7 items-center justify-center rounded-xl bg-linear-to-tr from-amber-500 to-indigo-600 text-white shadow-xs">
+                    <Sparkles className="size-4" />
+                  </span>
+                  <div>
+                    <h4 className="font-display font-black text-xs sm:text-sm text-indigo-950 uppercase tracking-wider">
+                      🔮 AI Pre-Flight Cosmic Dossier
+                    </h4>
+                    <p className="text-[10px] text-indigo-700/80 font-medium">
+                      {preflightData?.chart_mode_bn || (preflightData?.is_birth_details_available ? "জন্ম কুণ্ডলী ভিত্তিক বিশ্লেষণ" : "প্রশ্ন কুণ্ডলী ভিত্তিক বিশ্লেষণ")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!dossierAppointment) return;
+                      setIsLoadingPreflight(true);
+                      appointmentApi
+                        .getPreflight(dossierAppointment.id, true)
+                        .then((res) => {
+                          setPreflightData(res.data);
+                          toast.success("Pre-flight dossier refreshed!");
+                        })
+                        .catch(() => {})
+                        .finally(() => setIsLoadingPreflight(false));
+                    }}
+                    disabled={isLoadingPreflight}
+                    className="flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-white/90 px-2.5 py-1 text-[11px] font-bold text-indigo-700 hover:bg-white transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                  >
+                    <RefreshCw className={cn("size-3", isLoadingPreflight && "animate-spin text-amber-600")} />
+                    <span>{isLoadingPreflight ? "Re-calculating..." : "Refresh"}</span>
+                  </button>
+                </div>
               </div>
 
               {preflightData ? (
-                <div className="space-y-2.5 text-[11px]">
-                  {/* Planetary Gochars */}
-                  <div className="rounded-xl bg-white/95 dark:bg-slate-900/90 p-2.5 border border-indigo-100 dark:border-indigo-500/30 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-indigo-700 dark:text-indigo-400 block">Planetary Gochar Transits</span>
-                    <ul className="list-disc list-inside space-y-0.5 text-slate-700 dark:text-slate-300 text-[11px]">
-                      <li>{preflightData.planetary_transits?.saturn_gochar || "Saturn in active transit restructuring"}</li>
-                      <li>{preflightData.planetary_transits?.jupiter_gochar || "Jupiter in auspicious trine aspect"}</li>
-                      <li>{preflightData.planetary_transits?.rahu_ketu_axis || "Karmic nodal alignment on pivotal axis"}</li>
-                    </ul>
-                  </div>
+                <div className="space-y-3.5 text-xs">
+                  {/* Karmic Repeat Client Banner */}
+                  {preflightData.karmic_vault && (
+                    <div className="rounded-2xl border-2 border-purple-200 bg-linear-to-r from-purple-50 via-amber-50/40 to-purple-50 p-3.5 space-y-2">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-6 items-center justify-center rounded-lg bg-purple-600 text-white font-bold text-xs">
+                            {preflightData.karmic_vault.session_sequence_number || 1}
+                          </span>
+                          <div>
+                            <p className="font-bold text-xs text-purple-950">
+                              {preflightData.karmic_vault.relationship_badge_bn}
+                            </p>
+                            <p className="text-[10px] text-purple-800">
+                              {preflightData.karmic_vault.is_repeat_client
+                                ? `এই জ্যোতিষীর সাথে মোট ${preflightData.karmic_vault.session_sequence_number}ম সেশন · পূর্ববর্তী ${preflightData.karmic_vault.past_sessions_count}টি সেশনের রেকর্ড`
+                                : "প্রথম আগমন — এই ক্লায়েন্টের সাথে আপনার প্রথম বৈদিক সংযোগ"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
 
-                  {/* AI Strategic Directives */}
-                  <div className="rounded-xl bg-white/95 dark:bg-slate-900/90 p-2.5 border border-indigo-100 dark:border-indigo-500/30 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-indigo-700 dark:text-indigo-400 block">Consultation Guidance Synthesis</span>
-                    <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
-                      {(preflightData.ai_executive_summary || []).map((summary: string, idx: number) => (
-                        <li key={idx} className="leading-relaxed">{summary}</li>
-                      ))}
-                    </ul>
-                  </div>
+                      {/* Karmic Timeline in Drawer */}
+                      {Boolean(preflightData.karmic_vault.timeline?.length) && (
+                        <div className="pt-2 border-t border-purple-200/60 space-y-2">
+                          <p className="text-[10px] font-black uppercase text-purple-900 flex items-center gap-1">
+                            <History className="size-3 text-purple-600" />
+                            <span>পূর্ববর্তী পরামর্শ ও প্রেসক্রিপশন টাইমলাইন ({preflightData.karmic_vault.timeline.length}):</span>
+                          </p>
+                          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                            {preflightData.karmic_vault.timeline.map((item: any, idx: number) => (
+                              <div
+                                key={item.appointment_id || idx}
+                                className="p-2.5 rounded-xl bg-white border border-purple-100 space-y-1 shadow-2xs"
+                              >
+                                <div className="flex items-center justify-between text-[11px]">
+                                  <span className="font-bold text-slate-900">📅 {item.date_bn}</span>
+                                  <span className="font-semibold text-purple-800 bg-purple-50 px-2 py-0.5 rounded-full text-[10px]">
+                                    {item.pillar_bn} ({item.duration_minutes}m)
+                                  </span>
+                                </div>
+                                <p className="text-[10px] text-slate-700 italic">
+                                  📜 {item.karmic_summary_bn}
+                                </p>
+                                {item.prescribed_remedies?.gemstone && (
+                                  <p className="text-[10px] text-emerald-800 font-medium">
+                                    💎 <b>রত্ন:</b> {item.prescribed_remedies.gemstone}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 1. Golden Opening Ice-Breaker Question */}
+                  {preflightData.executive_cosmic_diagnosis?.opening_ice_breaker_bn && (
+                    <div className="rounded-2xl border-2 border-amber-300 bg-linear-to-r from-amber-50 to-orange-50/50 p-3.5 space-y-1.5 text-amber-950 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-[10px] font-black uppercase text-amber-800">
+                          <Sparkles className="size-3.5 text-amber-600" />
+                          <span>কল শুরুর ওপেনিং প্রশ্ন (Astrologer&apos;s 10-Second Ice-Breaker)</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              preflightData.executive_cosmic_diagnosis.opening_ice_breaker_bn
+                            );
+                            toast.success("Opening question copied!");
+                          }}
+                          className="flex items-center gap-1 rounded-md bg-white/90 px-2 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200 hover:bg-white shadow-2xs cursor-pointer"
+                        >
+                          <Copy className="size-3" />
+                          <span>কপি</span>
+                        </button>
+                      </div>
+                      <p className="text-xs font-black text-amber-950 italic pl-2.5 border-l-2 border-amber-500 leading-relaxed">
+                        &ldquo;{preflightData.executive_cosmic_diagnosis.opening_ice_breaker_bn}&rdquo;
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 2. Core Suffering Diagnostic (কী সমস্যায় ভুগছে) */}
+                  {preflightData.executive_cosmic_diagnosis?.core_distress_bn && (
+                    <div className="rounded-2xl border border-rose-200 bg-rose-50/50 p-3 space-y-1">
+                      <span className="text-[10px] font-black uppercase text-rose-800 flex items-center gap-1">
+                        <AlertTriangle className="size-3 text-rose-600" />
+                        <span>মূল সমস্যা ও মানসিক পীড়া (Client Suffering Diagnosis)</span>
+                      </span>
+                      <p className="text-xs font-bold text-rose-950 leading-relaxed">
+                        {preflightData.executive_cosmic_diagnosis.core_distress_bn}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 3. Core Identity 3-Card Grid: Lagna, Moon Sign, Nakshatra */}
+                  {preflightData.core_identity && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="rounded-2xl border border-amber-200 bg-white/90 p-3 space-y-0.5 shadow-2xs">
+                        <span className="text-[10px] font-black uppercase text-amber-800 flex items-center gap-1">
+                          <Sun className="size-3 text-amber-600" />
+                          <span>লগ্ন (Ascendant)</span>
+                        </span>
+                        <p className="text-sm font-black text-slate-900">
+                          {preflightData.core_identity.lagna_bn || preflightData.core_identity.lagna}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-medium">
+                          লগ্নাধিপতি: <b>{preflightData.core_identity.lagna_lord_bn || preflightData.core_identity.lagna_lord}</b>
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-indigo-200 bg-white/90 p-3 space-y-0.5 shadow-2xs">
+                        <span className="text-[10px] font-black uppercase text-indigo-800 flex items-center gap-1">
+                          <Moon className="size-3 text-indigo-600" />
+                          <span>চন্দ্র রাশি (Moon Sign)</span>
+                        </span>
+                        <p className="text-sm font-black text-slate-900">
+                          {preflightData.core_identity.chandra_rashi_bn || preflightData.core_identity.chandra_rashi}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-medium">
+                          রাশিপতি: <b>{preflightData.core_identity.chandra_lord_bn || preflightData.core_identity.chandra_lord}</b>
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-purple-200 bg-white/90 p-3 space-y-0.5 shadow-2xs">
+                        <span className="text-[10px] font-black uppercase text-purple-800 flex items-center gap-1">
+                          <Sparkles className="size-3 text-purple-600" />
+                          <span>নক্ষত্র (Nakshatra)</span>
+                        </span>
+                        <p className="text-sm font-black text-slate-900">
+                          {preflightData.core_identity.nakshatra_bn || preflightData.core_identity.nakshatra}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-medium">
+                          নক্ষত্রপতি: <b>{preflightData.core_identity.nakshatra_lord_bn || preflightData.core_identity.nakshatra_lord}</b>
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 4. Running Vimshottari Dasha */}
+                  {preflightData.current_vimshottari_dasha && (
+                    <div className="rounded-2xl border border-sky-200 bg-sky-50/60 p-3 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase text-sky-800 flex items-center gap-1">
+                          <Clock className="size-3 text-sky-600" />
+                          <span>চলতি বিংশোত্তরী দশা</span>
+                        </span>
+                        {preflightData.current_vimshottari_dasha.end_date && (
+                          <span className="text-[10px] font-bold text-sky-700 bg-white/80 px-2 py-0.5 rounded-full border border-sky-200">
+                            মেয়াদ: {preflightData.current_vimshottari_dasha.end_date}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-black text-sky-950">
+                        {preflightData.current_vimshottari_dasha.mahadasha_lord_bn} মহাদশা · {preflightData.current_vimshottari_dasha.antardasha_lord_bn} অন্তর্দশা
+                      </p>
+                      <p className="text-[11px] text-sky-900 leading-relaxed">
+                        {preflightData.current_vimshottari_dasha.verdict_bn}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 5. Afflicted Planets Shield (পীড়িত গ্রহ) */}
+                  {Boolean(preflightData.afflicted_planets?.length) && (
+                    <div className="rounded-2xl border border-rose-200 bg-white/95 p-3 space-y-2 shadow-2xs">
+                      <span className="text-[10px] font-black uppercase text-rose-800 flex items-center gap-1.5">
+                        <ShieldAlert className="size-3.5 text-rose-600" />
+                        <span>পীড়িত গ্রহ সতর্কতা ({preflightData.afflicted_planets.length}টি গ্রহ চিহ্নিত)</span>
+                      </span>
+                      <div className="space-y-1.5">
+                        {preflightData.afflicted_planets.map((a: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className="rounded-xl border border-rose-100 bg-rose-50/50 p-2 flex items-center justify-between flex-wrap gap-1.5 text-[11px]"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-slate-900">
+                                {a.planet_bn || a.planet} ({a.sign_bn || a.sign})
+                              </span>
+                              <span className="text-[10px] text-slate-500 font-bold bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                                {a.house}ম ভাব
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {(a.reasons || []).map((r: string, rIdx: number) => (
+                                <span
+                                  key={rIdx}
+                                  className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700"
+                                >
+                                  {r}
+                                </span>
+                              ))}
+                            </div>
+                            <p className="text-[10px] text-rose-900/90 w-full pl-0.5 leading-relaxed">
+                              ⚠️ {a.symptom_bn}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 6. Consultation Pillar House Analysis */}
+                  {Boolean(preflightData.pillar_house_analysis?.houses_details?.length) && (
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] font-black uppercase text-slate-400 block tracking-wider">
+                        পিলার ভাব বিশ্লেষণ ({preflightData.focus_topic || "কনসালটেশন"})
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {preflightData.pillar_house_analysis.houses_details.map((h: any) => (
+                          <div
+                            key={h.house_num}
+                            className="rounded-xl border border-slate-200 bg-white/90 p-2.5 space-y-1 shadow-2xs"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-black text-[11px] text-slate-900">{h.title_bn}</span>
+                              <span className="text-[10px] font-bold text-slate-500">
+                                {h.sign_bn} (পতি: {h.lord_bn})
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-600 leading-relaxed">
+                              {h.summary_bn}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 7. Prescriptive Blueprint */}
+                  {preflightData.executive_cosmic_diagnosis?.remedial_blueprint && (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-3 space-y-1.5">
+                      <span className="text-[10px] font-black uppercase text-emerald-900 flex items-center gap-1">
+                        <Gem className="size-3 text-emerald-600" />
+                        <span>প্রস্তাবিত বৈদিক প্রতিকার ব্লুপ্রিন্ট (Prescription Blueprint)</span>
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                        <div className="rounded-xl bg-white/90 p-2 border border-emerald-100">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase block">রত্ন</span>
+                          <span className="font-bold text-emerald-950">
+                            {preflightData.executive_cosmic_diagnosis.remedial_blueprint.gemstone}
+                          </span>
+                        </div>
+                        <div className="rounded-xl bg-white/90 p-2 border border-emerald-100">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase block">রুদ্রাক্ষ</span>
+                          <span className="font-bold text-emerald-950">
+                            {preflightData.executive_cosmic_diagnosis.remedial_blueprint.rudraksha}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="rounded-xl bg-white/80 dark:bg-slate-900/80 p-3 text-slate-500 dark:text-slate-400 italic text-[11px]">
-                  AI Astrological pre-flight briefing is generating automatically based on client birth chart...
+                <div className="rounded-2xl bg-white/80 p-4 text-center text-slate-500 italic text-[11px]">
+                  AI Pre-flight cosmic briefing is synthesizing automatically based on client birth chart...
                 </div>
               )}
             </div>
 
             {/* Consultation Focus Pillar */}
             {dossierAppointment.consultation_pillar && (
-              <div className="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-950/40 p-3.5 space-y-1 transition-colors">
-                <p className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                  <Compass className="size-3.5 text-amber-600 dark:text-amber-400" />
+              <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-3.5 space-y-1">
+                <p className="text-[10px] uppercase font-bold text-amber-700 flex items-center gap-1.5">
+                  <Compass className="size-3.5 text-amber-600" />
                   <span>Primary Consultation Focus Pillar</span>
                 </p>
-                <p className="font-bold text-slate-900 dark:text-amber-100 text-sm">
+                <p className="font-bold text-slate-900 text-sm">
                   {PILLAR_LABELS[dossierAppointment.consultation_pillar]?.icon}{" "}
                   {PILLAR_LABELS[dossierAppointment.consultation_pillar]?.label || dossierAppointment.consultation_pillar}
                 </p>
@@ -2381,72 +2805,72 @@ function Schedule({
             )}
 
             {/* Birth Details Snapshot */}
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-3.5 space-y-2.5 transition-colors">
-              <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
-                <Calendar className="size-3.5 text-amber-600 dark:text-amber-400" />
+            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-2.5">
+              <p className="text-[11px] font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Calendar className="size-3.5 text-amber-600" />
                 <span>Birth Chart Coordinates</span>
               </p>
 
               {dossierAppointment.birth_details ? (
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="rounded-xl bg-slate-50 dark:bg-slate-800/80 p-2.5 border border-slate-100 dark:border-slate-700/60">
-                    <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-semibold">Date of Birth</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-100">
+                  <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">Date of Birth</span>
+                    <span className="font-bold text-slate-800">
                       {dossierAppointment.birth_details.date_of_birth || dossierAppointment.birth_details.dob || "Not specified"}
                     </span>
                   </div>
-                  <div className="rounded-xl bg-slate-50 dark:bg-slate-800/80 p-2.5 border border-slate-100 dark:border-slate-700/60">
-                    <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-semibold">Time of Birth</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-100">
+                  <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">Time of Birth</span>
+                    <span className="font-bold text-slate-800">
                       {dossierAppointment.birth_details.time_of_birth || dossierAppointment.birth_details.tob || "Not specified"}
                     </span>
                   </div>
-                  <div className="col-span-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 p-2.5 border border-slate-100 dark:border-slate-700/60">
-                    <span className="text-[10px] text-slate-400 dark:text-slate-400 block font-semibold">Place of Birth</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-100">
+                  <div className="col-span-2 rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">Place of Birth</span>
+                    <span className="font-bold text-slate-800">
                       {dossierAppointment.birth_details.place_of_birth || dossierAppointment.birth_details.pob || "Not specified"}
                     </span>
                   </div>
                 </div>
               ) : (
-                <p className="text-slate-400 dark:text-slate-500 italic">No specific birth coordinates submitted.</p>
+                <p className="text-slate-400 italic">No specific birth coordinates submitted.</p>
               )}
             </div>
 
             {/* Client Notes & Inquiries */}
             {dossierAppointment.user_note && (
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 p-3.5 space-y-1 transition-colors">
-                <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-3.5 space-y-1">
+                <p className="text-[10px] uppercase font-bold text-slate-500">
                   Client Specific Inquiries / Questions
                 </p>
-                <p className="text-slate-800 dark:text-slate-100 leading-relaxed italic bg-white dark:bg-slate-800/90 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <p className="text-slate-800 leading-relaxed italic bg-white p-2.5 rounded-xl border border-slate-200">
                   “{dossierAppointment.user_note}”
                 </p>
               </div>
             )}
 
             {/* Complimentary Remedy Follow-up Pass Section */}
-            <div className="rounded-2xl border border-amber-300/80 dark:border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-500/15 dark:from-amber-950/60 dark:via-orange-950/30 dark:to-slate-900/90 p-4 space-y-3 transition-colors">
+            <div className="rounded-2xl border border-amber-300/80 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-500/15 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="size-4 text-amber-700 dark:text-amber-400" />
-                  <span className="font-bold text-slate-900 dark:text-amber-200 text-xs">
+                  <Sparkles className="size-4 text-amber-700" />
+                  <span className="font-bold text-slate-900 text-xs">
                     Remedy Clarification Pass (সৌজন্যমূলক ফলো-আপ উইন্ডো)
                   </span>
                 </div>
                 {dossierAppointment.follow_up_pass_enabled ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
                     Active · {dossierAppointment.follow_up_messages_used || 0}/{dossierAppointment.follow_up_max_messages || 3} Questions Used
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
                     Not Active
                   </span>
                 )}
               </div>
 
               {dossierAppointment.follow_up_pass_enabled && dossierAppointment.follow_up_expires_at && (
-                <p className="text-[11px] text-amber-900 dark:text-amber-300 font-medium flex items-center justify-between">
+                <p className="text-[11px] text-amber-900 font-medium flex items-center justify-between">
                   <span>Validity: {dossierAppointment.follow_up_window_days || 7} Days</span>
                   <span>Expires: {new Date(dossierAppointment.follow_up_expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
                 </p>
@@ -2454,7 +2878,7 @@ function Schedule({
 
               {/* Follow-up Messages Thread */}
               {dossierAppointment.follow_up_thread && dossierAppointment.follow_up_thread.length > 0 ? (
-                <div className="space-y-2 rounded-xl bg-white dark:bg-slate-900/90 p-3 border border-amber-200/80 dark:border-amber-500/30 max-h-56 overflow-y-auto">
+                <div className="space-y-2 rounded-xl bg-white p-3 border border-amber-200/80 max-h-56 overflow-y-auto">
                   {dossierAppointment.follow_up_thread.map((msg: any) => {
                     const isAstro = msg.sender_role === "astrologer";
                     return (
@@ -2463,11 +2887,11 @@ function Schedule({
                         className={cn(
                           "rounded-xl p-2.5 text-xs max-w-[85%]",
                           isAstro
-                            ? "ml-auto bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-500/40 text-amber-950 dark:text-amber-100"
-                            : "mr-auto bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+                            ? "ml-auto bg-amber-50 border border-amber-200 text-amber-950"
+                            : "mr-auto bg-slate-100 text-slate-900"
                         )}
                       >
-                        <div className="flex items-center justify-between gap-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
+                        <div className="flex items-center justify-between gap-2 text-[10px] font-bold text-slate-500 mb-1">
                           <span>{msg.sender_name} ({isAstro ? "Panditji" : "Client"})</span>
                           <span>{new Date(msg.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                         </div>
@@ -2477,7 +2901,7 @@ function Schedule({
                   })}
                 </div>
               ) : (
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 italic bg-white/60 dark:bg-slate-900/60 p-2.5 rounded-xl border border-amber-200/60 dark:border-amber-500/30">
+                <p className="text-[11px] text-slate-500 italic bg-white/60 p-2.5 rounded-xl border border-amber-200/60">
                   {dossierAppointment.follow_up_pass_enabled
                     ? "Seeker has not asked any remedy questions yet."
                     : "No remedy clarification pass has been issued for this seeker."}
@@ -2493,7 +2917,7 @@ function Schedule({
                       placeholder="Write guidance / answer to seeker..."
                       value={followUpReplyText}
                       onChange={(e) => setFollowUpReplyText(e.target.value)}
-                      className="flex-1 rounded-xl border border-amber-300 dark:border-amber-500/50 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      className="flex-1 rounded-xl border border-amber-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
                     />
                     <Button
                       size="sm"
@@ -2532,9 +2956,9 @@ function Schedule({
                       setPassNotes(dossierAppointment.follow_up_notes || "");
                       setIssuePassAppointment(dossierAppointment);
                     }}
-                    className="text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-950/40 text-xs font-semibold"
+                    className="text-amber-800 border-amber-300 hover:bg-amber-100 text-xs font-semibold"
                   >
-                    <Sparkles className="size-3.5 mr-1 text-amber-600 dark:text-amber-400" />
+                    <Sparkles className="size-3.5 mr-1 text-amber-600" />
                     {dossierAppointment.follow_up_pass_enabled ? "Adjust / Extend Pass" : "Issue Follow-up Pass"}
                   </Button>
                 </div>
@@ -2542,20 +2966,20 @@ function Schedule({
             </div>
 
             {/* 🔒 Private Astrological Dossier / Vault (গোপন জ্যোতিষী নোটস) */}
-            <div className="rounded-2xl border-2 border-amber-300/80 dark:border-amber-500/40 bg-gradient-to-br from-amber-50/70 via-orange-50/40 to-slate-50 dark:from-amber-950/60 dark:via-slate-900 dark:to-slate-950 p-4 space-y-3 shadow-sm transition-colors">
+            <div className="rounded-2xl border-2 border-amber-300/80 bg-gradient-to-br from-amber-50/70 via-orange-50/40 to-slate-50 p-4 space-y-3 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="size-7 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold">
-                    <Lock className="size-4 text-amber-700 dark:text-amber-400" />
+                  <div className="size-7 rounded-lg bg-amber-500/20 text-amber-700 flex items-center justify-center font-bold">
+                    <Lock className="size-4 text-amber-700" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900 dark:text-amber-300 text-xs flex items-center gap-1.5">
+                    <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                       <span>Private Astrological Vault (গোপন জ্যোতিষী নোটস)</span>
-                      <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-900/60 border border-amber-300 dark:border-amber-600/60 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-semibold text-amber-700 bg-amber-100/90 border border-amber-300 px-2 py-0.5 rounded-full">
                         100% Confidential
                       </span>
                     </h4>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    <p className="text-[11px] text-slate-500">
                       Strictly invisible to seeker. Document psychological observations, sensitive doshas, or hidden astrological insights.
                     </p>
                   </div>
@@ -2569,12 +2993,12 @@ function Schedule({
                   placeholder="গোপন পর্যবেক্ষণ লিখে রাখুন: যেমন মানসিক অস্থিরতা, রাহু-চন্দ্রের গোচর প্রতিক্রিয়া, পারিবারিক সংবেদনশীল তথ্য বা পরবর্তী ভিজিটের জন্য গোপন প্রস্তুতি..."
                   value={privateNotesText}
                   onChange={(e) => setPrivateNotesText(e.target.value)}
-                  className="w-full rounded-xl border border-amber-200/90 dark:border-amber-500/40 bg-white dark:bg-slate-900 p-3 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 leading-relaxed font-sans shadow-inner"
+                  className="w-full rounded-xl border border-amber-200/90 bg-white p-3 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 leading-relaxed font-sans shadow-inner"
                 />
-                <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 px-1">
+                <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
                   <span>
                     {dossierAppointment.astrologer_private_notes_updated_at ? (
-                      <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                      <span className="text-emerald-700 font-medium">
                         Last saved: {new Date(dossierAppointment.astrologer_private_notes_updated_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
                       </span>
                     ) : (
@@ -2608,18 +3032,34 @@ function Schedule({
         title="Write / Issue Vedic Prescription"
         description="Prescribe consecrated gemstones, authentic rudraksha, sacred mantras, and remedial daan. This instantly updates on the client's screen in real time."
         footer={
-          <div className="flex items-center justify-end gap-3 w-full">
-            <Button variant="secondary" onClick={() => setPrescriptionAppointment(null)}>
-              Cancel
-            </Button>
+          <div className="flex flex-wrap items-center justify-between gap-3 w-full">
             <Button
-              loading={updatePrescriptionMutation.isPending}
-              onClick={() => updatePrescriptionMutation.mutate()}
-              className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
+              type="button"
+              variant="outline"
+              onClick={() => {
+                if (prescriptionAppointment) {
+                  setCertificateAppointment(prescriptionAppointment);
+                }
+              }}
+              className="border-amber-500/40 text-amber-800 bg-amber-500/10 hover:bg-amber-500/20 font-bold text-xs"
             >
-              <Check className="size-3.5 mr-1" />
-              Save & Issue Prescription
+              <Sparkles className="size-3.5 mr-1 text-amber-600" />
+              <span>👑 Preview Certificate (সার্টিফিকেট প্রিভিউ)</span>
             </Button>
+
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" onClick={() => setPrescriptionAppointment(null)}>
+                Cancel
+              </Button>
+              <Button
+                loading={updatePrescriptionMutation.isPending}
+                onClick={() => updatePrescriptionMutation.mutate()}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
+              >
+                <Check className="size-3.5 mr-1" />
+                Save & Issue Certificate
+              </Button>
+            </div>
           </div>
         }
       >
@@ -2693,6 +3133,20 @@ function Schedule({
           </div>
 
           <div>
+            <label className="block text-[11px] font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+              <span>🧘</span>
+              <span>Vedic Sankalpa & Affirmation (বৈদিক সংকল্প ও ব্রত)</span>
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. May my consciousness align with divine abundance and remove all karmic obstacles"
+              value={prescriptionForm.sankalpa}
+              onChange={(e) => setPrescriptionForm((p) => ({ ...p, sankalpa: e.target.value }))}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
             <label className="block text-[11px] font-bold text-slate-800 mb-1">
               Astrologer Guidance & Custom Directives (বিশেষ পরামর্শ)
             </label>
@@ -2706,6 +3160,15 @@ function Schedule({
           </div>
         </div>
       </Modal>
+
+      {/* Royal Divya Paramarsha Certificate Viewer & PDF Generator Modal */}
+      {certificateAppointment && (
+        <DivyaParamarshaModal
+          appointment={certificateAppointment}
+          onClose={() => setCertificateAppointment(null)}
+          onEditPrescription={(a) => openPrescriptionModal(a)}
+        />
+      )}
 
       {/* Confirmation Modal for Session Cancellation */}
       <Modal
@@ -2735,6 +3198,67 @@ function Schedule({
             Frequent cancellations may impact your astrologer profile rating and ranking in the Astra directory.
           </Alert>
         </div>
+      </Modal>
+
+      {/* Confirmation Modal for Session Completion & Escrow Capture */}
+      <Modal
+        open={Boolean(completeTargetAppointment)}
+        onClose={() => setCompleteTargetAppointment(null)}
+        title="Conclude Consultation & Capture Escrow"
+        description="Are you sure you want to conclude this consultation and capture escrow?"
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button
+              variant="secondary"
+              onClick={() => setCompleteTargetAppointment(null)}
+              disabled={complete.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+              loading={complete.isPending}
+              onClick={() => {
+                if (completeTargetAppointment) {
+                  complete.mutate(completeTargetAppointment.id);
+                }
+              }}
+            >
+              <CheckCircle2 className="size-4 mr-1.5" />
+              Yes, Conclude & Capture Escrow
+            </Button>
+          </div>
+        }
+      >
+        {completeTargetAppointment && (
+          <div className="space-y-4 py-2">
+            <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/50 p-4 space-y-2.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-emerald-950">Client / Seeker:</span>
+                <span className="font-bold text-slate-900">{completeTargetAppointment.peer?.name || "Client"}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-emerald-950">Scheduled Timing:</span>
+                <span className="text-slate-700">
+                  {new Date(completeTargetAppointment.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
+                  {new Date(completeTargetAppointment.ends_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </div>
+              {Boolean(completeTargetAppointment.held_coins && completeTargetAppointment.held_coins > 0) && (
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-emerald-200/60">
+                  <span className="font-semibold text-emerald-950">Escrow Balance to Capture:</span>
+                  <span className="font-extrabold text-emerald-800">
+                    🪙 {(completeTargetAppointment.held_coins ?? 0).toLocaleString()} coins
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <Alert tone="info">
+              Concluding this session will capture the held escrow deposit into your astrologer earnings, mark the consultation as completed, and generate the consecrated Divya Paramarsha consultation certificate.
+            </Alert>
+          </div>
+        )}
       </Modal>
 
       {/* Courtesy Reschedule Modal (Option B) */}

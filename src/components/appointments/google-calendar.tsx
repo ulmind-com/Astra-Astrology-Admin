@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  AlertTriangle,
   Calendar as CalendarIcon,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -16,6 +18,8 @@ import {
   MessageSquare,
   PhoneCall,
   Plus,
+  RefreshCw,
+  ShieldAlert,
   Sparkles,
   Trash2,
   TrendingUp,
@@ -25,10 +29,21 @@ import {
   Zap,
 } from "lucide-react";
 import * as React from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Avatar, Badge, Button, Modal } from "@/components/ui";
+import { appointmentApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import {
+  checkRahuKaalCollision,
+  getHourPanchangBadge,
+  getPanchangKaalTimes,
+  getSlotMuhurat,
+  formatDecimalHoursIST,
+  type HourPanchangBadge,
+  type PanchangKaalTimes,
+} from "@/lib/muhurat-helper";
 import { APPOINTMENT_STATUS_LABELS, type Appointment } from "@/types";
 
 export type CalendarViewType = "week" | "month" | "day" | "agenda";
@@ -38,9 +53,14 @@ export interface GoogleCalendarProps {
   windows: Array<{ id: string; day: string; starts_at: string; ends_at: string; is_tatkal?: boolean; custom_title?: string | null }>;
   onOpenSession: (appointment: Appointment) => void;
   onOpenPrescription: (appointment: Appointment) => void;
+  onOpenCertificate?: (appointment: Appointment) => void;
   onCancelAppointment: (appointmentId: string) => void;
   onCompleteAppointment: (appointmentId: string) => void;
-  onAddWindow: (fromIso: string, toIso: string) => Promise<void>;
+  onAddWindow: (
+    fromIso: string,
+    toIso: string,
+    extra?: { day?: string; timezone?: string; is_tatkal?: boolean },
+  ) => Promise<void>;
   onRemoveWindow?: (id: string) => Promise<void> | void;
   isAstrologer?: boolean;
 }
@@ -66,11 +86,35 @@ function formatDateKey(d: Date): string {
 const HOURS = Array.from({ length: 18 }, (_, i) => i + 6); // 6 AM to 11 PM (18 hours)
 const HOUR_HEIGHT = 64; // pixels per hour
 
+export function GoogleIcon({ className = "size-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+        fill="#EA4335"
+      />
+    </svg>
+  );
+}
+
 export function GoogleCalendarSuite({
   bookings,
   windows,
   onOpenSession,
   onOpenPrescription,
+  onOpenCertificate,
   onCancelAppointment,
   onCompleteAppointment,
   onAddWindow,
@@ -79,6 +123,8 @@ export function GoogleCalendarSuite({
 }: GoogleCalendarProps) {
   const [currentDate, setCurrentDate] = React.useState<Date>(() => new Date());
   const [view, setView] = React.useState<CalendarViewType>("week");
+  const [panchangGuideOpen, setPanchangGuideOpen] = React.useState(false);
+  const currentDayKaalTimes = React.useMemo(() => getPanchangKaalTimes(currentDate), [currentDate]);
 
   // Delete window state
   const [deleteTargetWindow, setDeleteTargetWindow] = React.useState<{
@@ -122,6 +168,140 @@ export function GoogleCalendarSuite({
   });
 
   const [isOpeningSlot, setIsOpeningSlot] = React.useState(false);
+
+  // Google Calendar 2-Way Sync integration
+  const queryClient = useQueryClient();
+  const { data: googleSync } = useQuery({
+    queryKey: ["google_calendar_status"],
+    queryFn: () => appointmentApi.getGoogleCalendarStatus(),
+  });
+
+  const [isConnectingGoogle, setIsConnectingGoogle] = React.useState(false);
+
+  const syncGoogleMutation = useMutation({
+    mutationFn: () => appointmentApi.syncGoogleCalendar(),
+    onSuccess: (data) => {
+      toast.success(
+        data.message || `Google Calendar synced! ${data.busy_count} external commitments shielded.`
+      );
+      void queryClient.invalidateQueries({ queryKey: ["google_calendar_status"] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "schedule"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to sync with Google Calendar.");
+    },
+  });
+
+  const disconnectGoogleMutation = useMutation({
+    mutationFn: () => appointmentApi.disconnectGoogleCalendar(),
+    onSuccess: () => {
+      toast.success("Google Calendar disconnected.");
+      void queryClient.invalidateQueries({ queryKey: ["google_calendar_status"] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "schedule"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to disconnect Google Calendar.");
+    },
+  });
+
+  const handleConnectGoogle = async () => {
+    setIsConnectingGoogle(true);
+    try {
+      const redirectUri = typeof window !== "undefined" ? `${window.location.origin}/appointments` : undefined;
+      const res = await appointmentApi.getGoogleCalendarAuthUrl(redirectUri);
+      if (res.auth_url) {
+        window.location.href = res.auth_url;
+      } else {
+        toast.error("Could not obtain Google authentication URL.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to initiate Google Calendar connection.");
+    } finally {
+      setIsConnectingGoogle(false);
+    }
+  };
+
+  // Auspicious Vedic Transit Dynamic Surge Integration
+  const currentDateStr = React.useMemo(() => {
+    const y = currentDate.getFullYear();
+    const m = String(currentDate.getMonth() + 1).padStart(2, "0");
+    const d = String(currentDate.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, [currentDate]);
+
+  const { data: auspiciousTransit } = useQuery({
+    queryKey: ["auspicious_transit", currentDateStr],
+    queryFn: () => appointmentApi.getAuspiciousTransit(currentDateStr),
+  });
+
+  const [surgeModalOpen, setSurgeModalOpen] = React.useState(false);
+  const [surgeMultiplier, setSurgeMultiplier] = React.useState<number>(1.5);
+  const [surgeTitle, setSurgeTitle] = React.useState<string>("");
+  const [surgeAutoOpenWindow, setSurgeAutoOpenWindow] = React.useState<boolean>(true);
+
+  React.useEffect(() => {
+    if (auspiciousTransit) {
+      if (auspiciousTransit.demand_multiplier_hint) {
+        setSurgeMultiplier(auspiciousTransit.demand_multiplier_hint);
+      }
+      if (auspiciousTransit.badge_label) {
+        setSurgeTitle(`${auspiciousTransit.badge_label} স্পেশাল`);
+      }
+    }
+  }, [auspiciousTransit]);
+
+  const activateSurgeMutation = useMutation({
+    mutationFn: (vars: { multiplier: number; customTitle?: string; openWindow?: boolean }) =>
+      appointmentApi.activateTransitSurge({
+        day: currentDateStr,
+        multiplier: vars.multiplier,
+        custom_title: vars.customTitle,
+        open_surge_window: vars.openWindow ?? true,
+      }),
+    onSuccess: (data) => {
+      toast.success(
+        data.message || `Auspicious Day Tatkal Surge (${data.multiplier}x) activated!`
+      );
+      setSurgeModalOpen(false);
+      void queryClient.invalidateQueries({ queryKey: ["auspicious_transit", currentDateStr] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "windows"] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "schedule"] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "card"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to activate Tatkal Surge.");
+    },
+  });
+
+  const deactivateSurgeMutation = useMutation({
+    mutationFn: () => appointmentApi.deactivateTransitSurge({ day: currentDateStr }),
+    onSuccess: (data) => {
+      toast.success(data.message || "Auspicious Day Tatkal Surge deactivated.");
+      setSurgeModalOpen(false);
+      void queryClient.invalidateQueries({ queryKey: ["auspicious_transit", currentDateStr] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "windows"] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "schedule"] });
+      void queryClient.invalidateQueries({ queryKey: ["appointments", "card"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to deactivate Tatkal Surge.");
+    },
+  });
+
+  // Check if quick slot modal collides with any Google Calendar busy intervals
+  const collidingBusyIntervals = React.useMemo(() => {
+    if (!googleSync?.connected || !googleSync?.busy_intervals) return [];
+    const from = new Date(quickSlotModal.date);
+    from.setHours(quickSlotModal.startHour, quickSlotModal.startMinute, 0, 0);
+    const to = new Date(quickSlotModal.date);
+    to.setHours(quickSlotModal.endHour, quickSlotModal.endMinute, 0, 0);
+
+    return googleSync.busy_intervals.filter((bi) => {
+      const s = new Date(bi.starts_at);
+      const e = new Date(bi.ends_at);
+      return s < to && e > from;
+    });
+  }, [googleSync, quickSlotModal]);
 
   // Live real-time tick for current time red line (updates every 30s)
   const [now, setNow] = React.useState<Date>(() => new Date());
@@ -233,7 +413,10 @@ export function GoogleCalendarSuite({
       const to = new Date(quickSlotModal.date);
       to.setHours(quickSlotModal.endHour, quickSlotModal.endMinute, 0, 0);
 
-      await onAddWindow(from.toISOString(), to.toISOString());
+      await onAddWindow(from.toISOString(), to.toISOString(), {
+        day: formatDateKey(quickSlotModal.date),
+        timezone: typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "Asia/Kolkata",
+      });
       toast.success(
         `Availability window opened from ${formatTime(from)} to ${formatTime(to)} on ${quickSlotModal.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}!`,
       );
@@ -270,7 +453,7 @@ export function GoogleCalendarSuite({
   };
 
   return (
-    <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0c1220] shadow-[0_16px_40px_rgba(20,25,45,0.06)] dark:shadow-2xl overflow-hidden">
+    <div className="rounded-3xl border border-slate-200/90 bg-white shadow-[0_16px_40px_rgba(20,25,45,0.06)] overflow-hidden">
       {/* 1. Live 15-Minute Countdown Ticker HUD Banner */}
       {upcomingUrgentBooking && (
         <div className="relative overflow-hidden bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 px-5 py-3 text-white shadow-inner flex flex-wrap items-center justify-between gap-3">
@@ -302,7 +485,7 @@ export function GoogleCalendarSuite({
       )}
 
       {/* 2. Top Google Calendar Control Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-[#10182b] transition-colors">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#0284C7] to-[#0369A1] text-white shadow-[0_4px_12px_rgba(3,105,161,0.25)]">
             <CalendarIcon className="size-5 stroke-[2.2]" />
@@ -310,14 +493,14 @@ export function GoogleCalendarSuite({
 
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-display text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+              <h2 className="font-display text-lg font-bold text-slate-900 tracking-tight">
                 {periodTitle}
               </h2>
-              <span className="hidden sm:inline-block rounded-full bg-sky-100 dark:bg-sky-950/80 px-2.5 py-0.5 text-[10px] font-bold text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800/80">
+              <span className="hidden sm:inline-block rounded-full bg-sky-100 px-2.5 py-0.5 text-[10px] font-bold text-sky-800">
                 IST (GMT+05:30)
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <p className="text-xs text-slate-500 font-medium">
               Google Calendar visual view of your open availability & confirmed client consultations.
             </p>
           </div>
@@ -326,19 +509,19 @@ export function GoogleCalendarSuite({
         {/* View Switchers & Navigation Controls */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Navigation group */}
-          <div className="inline-flex items-center rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/90 p-1 shadow-2xs">
+          <div className="inline-flex items-center rounded-2xl border border-slate-200 bg-white p-1 shadow-2xs">
             <button
               type="button"
               onClick={jumpToday}
-              className="rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/70 transition-all cursor-pointer"
+              className="rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer"
             >
               Today
             </button>
-            <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+            <div className="h-4 w-px bg-slate-200 mx-1" />
             <button
               type="button"
               onClick={prevPeriod}
-              className="p-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-xl transition-all cursor-pointer"
+              className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
               title="Previous"
             >
               <ChevronLeft className="size-4" />
@@ -346,7 +529,7 @@ export function GoogleCalendarSuite({
             <button
               type="button"
               onClick={nextPeriod}
-              className="p-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-xl transition-all cursor-pointer"
+              className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
               title="Next"
             >
               <ChevronRight className="size-4" />
@@ -354,7 +537,7 @@ export function GoogleCalendarSuite({
           </div>
 
           {/* View selector buttons */}
-          <div className="inline-flex items-center rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-100/80 dark:bg-slate-800/90 p-1 shadow-2xs text-xs font-bold">
+          <div className="inline-flex items-center rounded-2xl border border-slate-200 bg-slate-100/80 p-1 shadow-2xs text-xs font-bold">
             {(["week", "month", "day", "agenda"] as CalendarViewType[]).map((v) => (
               <button
                 key={v}
@@ -363,8 +546,8 @@ export function GoogleCalendarSuite({
                 className={cn(
                   "rounded-xl px-3 py-1.5 capitalize transition-all cursor-pointer",
                   view === v
-                    ? "bg-white dark:bg-amber-500 text-slate-900 dark:text-slate-950 shadow-xs ring-1 ring-slate-900/5 font-extrabold"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200",
+                    ? "bg-white text-slate-900 shadow-xs ring-1 ring-slate-900/5 font-extrabold"
+                    : "text-slate-600 hover:text-slate-900",
                 )}
               >
                 {v}
@@ -387,6 +570,267 @@ export function GoogleCalendarSuite({
         </div>
       </div>
 
+      {/* 2.4 Google Calendar 2-Way Bidirectional Sync HUD Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-2.5 bg-gradient-to-r from-indigo-50/80 via-purple-50/50 to-sky-50/60 border-b border-slate-100 text-xs font-semibold">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <GoogleIcon className="size-4" />
+            <span className="font-extrabold text-slate-800 text-[11px] tracking-wide uppercase">
+              দ্বিমুখী গুগল ক্যালেন্ডার সিঙ্ক (2-Way Sync):
+            </span>
+          </div>
+
+          {googleSync?.connected ? (
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100/90 border border-emerald-300 px-2.5 py-0.5 text-[11px] font-bold text-emerald-950">
+                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>সংযুক্ত: {googleSync.email || "Primary Calendar"}</span>
+              </span>
+
+              <span className="inline-flex items-center gap-1 rounded-full bg-purple-100/90 border border-purple-300 px-2.5 py-0.5 text-[11px] font-bold text-purple-900">
+                <span>🛡️ {googleSync.busy_count}টি বাহ্যিক ইভেন্ট আস্ট্রা স্লটে সুরক্ষিত (Blocked)</span>
+              </span>
+
+              {googleSync.last_synced_at && (
+                <span className="text-[10px] text-slate-500 font-medium hidden md:inline">
+                  সর্বশেষ সিঙ্ক: {new Date(googleSync.last_synced_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
+            </div>
+          ) : (
+            <span className="text-[11px] text-slate-600 font-medium">
+              ব্যক্তিগত ডক্টর বা ফ্যামিলি অ্যাপয়েন্টমেন্টের সময় স্বয়ংক্রিয়ভাবে আস্ট্রার বুকিং বন্ধ রাখতে গুগল ক্যালেন্ডার যুক্ত করুন।
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {googleSync?.connected ? (
+            <>
+              <button
+                type="button"
+                onClick={() => syncGoogleMutation.mutate()}
+                disabled={syncGoogleMutation.isPending}
+                className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-indigo-700 hover:bg-indigo-50 hover:text-indigo-900 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                title="Refresh busy periods from Google Calendar now"
+              >
+                <RefreshCw className={cn("size-3 text-indigo-600", syncGoogleMutation.isPending && "animate-spin")} />
+                <span>{syncGoogleMutation.isPending ? "সিঙ্ক হচ্ছে..." : "এখনই সিঙ্ক করুন (Sync)"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm("Are you sure you want to disconnect Google Calendar sync? External events will no longer block bookings.")) {
+                    disconnectGoogleMutation.mutate();
+                  }
+                }}
+                disabled={disconnectGoogleMutation.isPending}
+                className="flex items-center gap-1 rounded-xl bg-white border border-rose-200 px-2 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                title="Disconnect Google Calendar"
+              >
+                <span>সংযোগ বিচ্ছিন্ন (Disconnect)</span>
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={handleConnectGoogle}
+              disabled={isConnectingGoogle}
+              className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:border-slate-400 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+            >
+              <GoogleIcon className="size-3.5" />
+              <span>{isConnectingGoogle ? "সংযোগ স্থাপন হচ্ছে..." : "গুগল ক্যালেন্ডার যুক্ত করুন"}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 2.5 Panchang & Rahu Kaal Shield Real-time HUD Strip */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-2.5 bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-emerald-500/10 border-b border-slate-100 text-xs font-semibold select-none">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 text-slate-800 mr-1">
+            <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-extrabold uppercase text-[10px] tracking-wider text-slate-700">বৈদিক পঞ্চাঙ্গ ও রাহুকাল শিল্ড:</span>
+          </div>
+
+          {/* Today's Rahu Kaal Alert */}
+          <div className="flex items-center gap-1.5 rounded-xl bg-rose-100/90 border border-rose-300/80 px-2.5 py-1 text-rose-900 text-[11px] font-extrabold shadow-2xs">
+            <ShieldAlert className="size-3.5 text-rose-600 shrink-0" />
+            <span>রাহুকাল (Rahu Kaal): {currentDayKaalTimes.rahuKaal.formatted}</span>
+          </div>
+
+          {/* Today's Abhijit Muhurat */}
+          <div className="flex items-center gap-1.5 rounded-xl bg-emerald-100/90 border border-emerald-300/80 px-2.5 py-1 text-emerald-950 text-[11px] font-extrabold shadow-2xs">
+            <Sparkles className="size-3.5 text-emerald-600 shrink-0" />
+            <span>অভিজিৎ মুহূর্ত (Abhijit): {currentDayKaalTimes.abhijit.formatted}</span>
+          </div>
+
+          {/* Yamaghanta & Gulika indicators */}
+          <div className="hidden lg:flex items-center gap-1.5 rounded-xl bg-amber-100/90 border border-amber-300/80 px-2.5 py-1 text-amber-950 text-[11px] font-extrabold shadow-2xs">
+            <AlertTriangle className="size-3.5 text-amber-600 shrink-0" />
+            <span>যমঘণ্ট: {currentDayKaalTimes.yamaghanta.formatted}</span>
+          </div>
+          <div className="hidden xl:flex items-center gap-1.5 rounded-xl bg-amber-50 border border-amber-200 px-2.5 py-1 text-amber-900 text-[11px] font-bold shadow-2xs">
+            <Clock className="size-3.5 text-amber-600 shrink-0" />
+            <span>গুলিকা: {currentDayKaalTimes.gulika.formatted}</span>
+          </div>
+        </div>
+
+        {/* Legend & Tatkal Surge triggers */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSurgeModalOpen(true)}
+            className={cn(
+              "flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer shadow-2xs",
+              auspiciousTransit?.is_tatkal_surge_active
+                ? "bg-amber-500 text-white hover:bg-amber-600 border border-amber-600 shadow-amber-500/20"
+                : "bg-white border border-amber-300 text-amber-900 hover:bg-amber-50"
+            )}
+            title="Auspicious Day Tatkal Dynamic Surge Pricing"
+          >
+            <Zap className={cn("size-3.5", auspiciousTransit?.is_tatkal_surge_active ? "fill-white text-white" : "fill-amber-600 text-amber-600")} />
+            <span>
+              {auspiciousTransit?.is_tatkal_surge_active
+                ? `তৎকাল সক্রিয় (${auspiciousTransit.active_tatkal_multiplier || 1.5}x)`
+                : "তৎকাল ডায়নামিক সার্জ (Tatkal Surge)"}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPanchangGuideOpen(true)}
+            className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-sky-700 hover:text-sky-900 hover:bg-sky-50 transition-all cursor-pointer shadow-2xs"
+          >
+            <Compass className="size-3.5 text-sky-600" />
+            <span>পঞ্চাঙ্গ নির্দেশিকা (Panchang Legend)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 2.6 Auspicious Day Vedic Transit Surge Ribbon */}
+      {auspiciousTransit && (
+        <div
+          className={cn(
+            "flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-2.5 border-b text-xs transition-all select-none",
+            auspiciousTransit.is_auspicious_transit_day
+              ? "bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border-amber-300/80"
+              : "bg-slate-50/70 border-slate-100"
+          )}
+        >
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            {auspiciousTransit.is_auspicious_transit_day ? (
+              <>
+                <div className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 px-2.5 py-1 text-white shadow-xs">
+                  <Flame className="size-3.5 text-yellow-200 animate-pulse shrink-0" />
+                  <span className="font-black text-[11px] tracking-wide uppercase">
+                    {auspiciousTransit.badge_label || "শুভ তিথি ট্রানজিট"}
+                  </span>
+                </div>
+
+                <span className="font-extrabold text-amber-950 text-xs">
+                  {auspiciousTransit.primary_event}
+                </span>
+
+                <span className="rounded-full bg-amber-200/90 border border-amber-400 px-2.5 py-0.5 text-[10px] font-black text-amber-950 shadow-2xs">
+                  🔥 {auspiciousTransit.remedial_demand_surge || "১০x প্রতিকার চাহিদা"}
+                </span>
+
+                {/* Recommended Remedies Pills */}
+                {auspiciousTransit.recommended_remedies?.slice(0, 3).map((remedy, idx) => (
+                  <span
+                    key={idx}
+                    className="hidden lg:inline-flex items-center gap-1 rounded-full bg-white/90 border border-amber-300 px-2.5 py-0.5 text-[10px] font-bold text-amber-900 shadow-2xs"
+                  >
+                    ✨ {remedy}
+                  </span>
+                ))}
+              </>
+            ) : (
+              <div className="flex items-center gap-2 text-slate-600 text-[11px]">
+                <Clock className="size-3.5 text-slate-400" />
+                <span className="font-bold">
+                  তারিখ: {currentDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                </span>
+                <span className="text-slate-400">·</span>
+                <span>সাধারণ তিথি — যে কোনো সময় ১-ক্লিকে তৎকাল ডায়নামিক সার্জ চালু করতে পারেন</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {auspiciousTransit.is_tatkal_surge_active ? (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-100 border border-emerald-300 px-2.5 py-1 text-[11px] font-extrabold text-emerald-950 shadow-2xs">
+                  <Zap className="size-3 text-emerald-600 fill-emerald-600" />
+                  <span>
+                    তৎকাল সার্জ সক্রিয় ({auspiciousTransit.active_tatkal_multiplier || 1.5}x) · {auspiciousTransit.active_tatkal_windows_count}টি স্লট লাইভ
+                  </span>
+                </span>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={deactivateSurgeMutation.isPending}
+                  onClick={() => deactivateSurgeMutation.mutate()}
+                  className="h-7 text-[11px] font-bold text-rose-700 border-rose-300 hover:bg-rose-50 hover:text-rose-900 transition-all cursor-pointer shadow-2xs"
+                >
+                  {deactivateSurgeMutation.isPending ? "বাতিল হচ্ছে..." : "স্বাভাবিক ফি-তে ফিরুন"}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <Button
+                  size="sm"
+                  disabled={activateSurgeMutation.isPending}
+                  onClick={() =>
+                    activateSurgeMutation.mutate({
+                      multiplier: 1.5,
+                      customTitle: `${auspiciousTransit.badge_label || "শুভ তিথি"} তৎকাল (1.5x)`,
+                    })
+                  }
+                  className="h-7 bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-extrabold text-[11px] shadow-xs cursor-pointer"
+                >
+                  <Zap className="size-3 mr-1 fill-white" />
+                  <span>
+                    {activateSurgeMutation.isPending
+                      ? "চালু হচ্ছে..."
+                      : "১-ক্লিকে তৎকাল সার্জ (১.৫x)"}
+                  </span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={activateSurgeMutation.isPending}
+                  onClick={() =>
+                    activateSurgeMutation.mutate({
+                      multiplier: 2.0,
+                      customTitle: `${auspiciousTransit.badge_label || "মহাযোগ"} VIP তৎকাল (2.0x)`,
+                    })
+                  }
+                  className="h-7 border-amber-400 bg-amber-50 hover:bg-amber-100 text-amber-950 font-extrabold text-[11px] shadow-2xs cursor-pointer"
+                  title="মহাযোগ বা বিশেষ অমাবস্যা/গ্রহণে ২x তৎকাল ফি"
+                >
+                  <span>২.০x সার্জ</span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSurgeModalOpen(true)}
+                  className="h-7 text-amber-900 hover:bg-amber-100/60 text-[11px] font-bold cursor-pointer"
+                  title="কাস্টমাইজ করুন"
+                >
+                  <span>কাস্টম...</span>
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 3. CALENDAR BODY BY VIEW */}
       {view === "week" && (
         <WeekCalendarView
@@ -398,6 +842,7 @@ export function GoogleCalendarSuite({
           onOpenSession={onOpenSession}
           getGoogleCalendarUrl={getGoogleCalendarUrl}
           onDeleteWindow={(w) => setDeleteTargetWindow(w)}
+          busyIntervals={googleSync?.busy_intervals ?? []}
         />
       )}
 
@@ -411,6 +856,7 @@ export function GoogleCalendarSuite({
             setView("day");
           }}
           onOpenSession={onOpenSession}
+          busyIntervals={googleSync?.busy_intervals ?? []}
         />
       )}
 
@@ -423,21 +869,27 @@ export function GoogleCalendarSuite({
           onSlotClick={(h) => handleSlotClick(currentDate, h)}
           onOpenSession={onOpenSession}
           onOpenPrescription={onOpenPrescription}
+          onOpenCertificate={onOpenCertificate}
           onCancelAppointment={onCancelAppointment}
           onCompleteAppointment={onCompleteAppointment}
           getGoogleCalendarUrl={getGoogleCalendarUrl}
           onDeleteWindow={(w) => setDeleteTargetWindow(w)}
+          busyIntervals={googleSync?.busy_intervals ?? []}
         />
       )}
 
       {view === "agenda" && (
         <AgendaCalendarView
           bookings={bookings}
+          windows={windows}
           onOpenSession={onOpenSession}
           onOpenPrescription={onOpenPrescription}
+          onOpenCertificate={onOpenCertificate}
           onCancelAppointment={onCancelAppointment}
           onCompleteAppointment={onCompleteAppointment}
+          onDeleteWindow={(w) => setDeleteTargetWindow(w)}
           getGoogleCalendarUrl={getGoogleCalendarUrl}
+          busyIntervals={googleSync?.busy_intervals ?? []}
         />
       )}
 
@@ -449,19 +901,19 @@ export function GoogleCalendarSuite({
         description={`Set open booking hours for ${quickSlotModal.date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}.`}
       >
         <div className="space-y-5 pt-2">
-          <div className="rounded-2xl border border-sky-200/80 dark:border-sky-800/80 bg-sky-50/70 dark:bg-sky-950/60 p-4 space-y-2 text-xs text-sky-950 dark:text-sky-200 transition-colors">
-            <div className="flex items-center gap-2 font-bold text-sky-900 dark:text-sky-300">
-              <Sparkles className="size-4 text-sky-600 dark:text-sky-400" />
+          <div className="rounded-2xl border border-sky-200/70 bg-sky-50/50 p-4 space-y-2 text-xs text-sky-950">
+            <div className="flex items-center gap-2 font-bold text-sky-900">
+              <Sparkles className="size-4 text-sky-600" />
               <span>Fast Calendar Slot Activation</span>
             </div>
-            <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className="text-slate-600 leading-relaxed">
               Opening this window permits clients to reserve 15, 30, or 60-minute consultations with you during this timeframe.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Start Time (IST)</label>
+              <label className="text-xs font-bold text-slate-700">Start Time (IST)</label>
               <select
                 value={quickSlotModal.startHour}
                 onChange={(e) =>
@@ -471,7 +923,7 @@ export function GoogleCalendarSuite({
                     endHour: Math.max(prev.endHour, Number(e.target.value) + 1),
                   }))
                 }
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800"
               >
                 {HOURS.map((h) => {
                   const d = new Date();
@@ -486,13 +938,13 @@ export function GoogleCalendarSuite({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-200">End Time (IST)</label>
+              <label className="text-xs font-bold text-slate-700">End Time (IST)</label>
               <select
                 value={quickSlotModal.endHour}
                 onChange={(e) =>
                   setQuickSlotModal((prev) => ({ ...prev, endHour: Number(e.target.value) }))
                 }
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800"
               >
                 {HOURS.filter((h) => h > quickSlotModal.startHour).map((h) => {
                   const d = new Date();
@@ -508,27 +960,125 @@ export function GoogleCalendarSuite({
             </div>
           </div>
 
+          {/* Real-time Panchang & Rahu Kaal Shield Warning / Blessing */}
+          {(() => {
+            const collision = checkRahuKaalCollision(
+              quickSlotModal.date,
+              quickSlotModal.startHour,
+              0,
+              quickSlotModal.endHour,
+              0,
+            );
+
+            return (
+              <div className="space-y-2.5">
+                {/* 1. Rahu Kaal Alert (Red) */}
+                {collision.hasRahuKaalCollision && (
+                  <div className="rounded-2xl border-2 border-rose-400 bg-gradient-to-r from-rose-50 via-rose-100/70 to-rose-50 p-4 space-y-2 shadow-xs animate-in fade-in-50 duration-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-black text-rose-900 text-xs sm:text-sm">
+                        <ShieldAlert className="size-4.5 text-rose-600 shrink-0" />
+                        <span>⚠️ বৈদিক সতর্কতা: রাহুকাল (Rahu Kaal Alert)</span>
+                      </div>
+                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-rose-200 text-rose-950">
+                        Inauspicious Window
+                      </span>
+                    </div>
+
+                    <p className="text-xs font-bold text-rose-900 leading-relaxed">
+                      Today {collision.rahuKaalLabel} is Rahu Kaal. Do you still wish to open this slot?
+                    </p>
+
+                    <p className="text-[11px] text-rose-800/90 leading-normal">
+                      বৈদিক জ্যোতিষ শাস্ত্রে রাহুকালকে নতুন কাজের জন্য অশুভ বলে গণ্য করা হয়। তবে রাহুর মহাদশা, কালসর্প দোষ বা তান্ত্রিক/আধ্যাত্মিক প্রতিকারের পরামর্শের জন্য অনেক প্রবীণ জ্যোতিষী এই সময় উন্মুক্ত রাখেন।
+                    </p>
+                  </div>
+                )}
+
+                {/* 2. Yamaghanta / Gulika Alert (Amber) */}
+                {!collision.hasRahuKaalCollision && collision.hasYamaghantaCollision && (
+                  <div className="rounded-2xl border border-amber-300 bg-amber-50/90 p-3.5 space-y-1.5 shadow-xs">
+                    <div className="flex items-center gap-2 font-bold text-amber-900 text-xs">
+                      <AlertTriangle className="size-4 text-amber-600 shrink-0" />
+                      <span>যমঘণ্ট কাল সতর্কতা ({collision.yamaghantaLabel})</span>
+                    </div>
+                    <p className="text-xs text-amber-800 leading-normal">
+                      Today {collision.yamaghantaLabel} is Yamaghanta Kaal. Do you wish to proceed?
+                    </p>
+                  </div>
+                )}
+
+                {!collision.hasRahuKaalCollision && !collision.hasYamaghantaCollision && collision.hasGulikaCollision && (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-3.5 space-y-1.5 shadow-xs">
+                    <div className="flex items-center gap-2 font-bold text-amber-900 text-xs">
+                      <Clock className="size-4 text-amber-600 shrink-0" />
+                      <span>গুলিকা কাল সতর্কবার্তা ({collision.gulikaLabel})</span>
+                    </div>
+                    <p className="text-xs text-amber-800 leading-normal">
+                      Today {collision.gulikaLabel} is Gulika Kaal.
+                    </p>
+                  </div>
+                )}
+
+                {/* 3. Abhijit Muhurat Blessing (Gold/Green) */}
+                {collision.hasAbhijitIntersection && (
+                  <div className="rounded-2xl border border-emerald-300 bg-emerald-50/90 p-3.5 space-y-1 text-emerald-950 shadow-xs">
+                    <div className="flex items-center gap-2 font-black text-emerald-900 text-xs">
+                      <Sparkles className="size-4 text-emerald-600 shrink-0" />
+                      <span>✨ পরম শুভ অভিজিৎ মুহূর্ত (Abhijit: {collision.abhijitLabel})</span>
+                    </div>
+                    <p className="text-[11px] text-emerald-800 font-medium">
+                      এই নির্বাচিত সময়টি পরম শুভ অভিজিৎ মুহূর্ত অন্তর্ভুক্ত করেছে—যা জাতকের যেকোনো সমস্যার সমাধানে সর্বাধিক ফলদায়ক!
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Google Calendar External Event Collision Warning */}
+          {collidingBusyIntervals.length > 0 && (
+            <div className="rounded-2xl border-2 border-purple-300 bg-purple-50/90 p-4 space-y-2 text-purple-950 shadow-xs">
+              <div className="flex items-center gap-2 font-black text-purple-900 text-xs sm:text-sm">
+                <GoogleIcon className="size-4" />
+                <span>⚠️ গুগল ক্যালেন্ডার ব্যস্ততা সংঘাত (Google Calendar Collision)</span>
+              </div>
+              <p className="text-xs text-purple-800 leading-normal">
+                আপনার গুগল ক্যালেন্ডারে এই সময়ে ব্যক্তিগত ব্যস্ততা রয়েছে:{" "}
+                <span className="font-bold">
+                  {collidingBusyIntervals
+                    .map(
+                      (bi) =>
+                        `${formatTime(new Date(bi.starts_at))} – ${formatTime(new Date(bi.ends_at))} (${bi.title})`
+                    )
+                    .join(", ")}
+                </span>
+                । আস্ট্রার ক্যালেন্ডার শিল্ড স্বয়ংক্রিয়ভাবে ঐ নির্দিষ্ট সময়ে ক্লায়েন্ট বুকিং ব্লক রাখবে।
+              </p>
+            </div>
+          )}
+
           {/* Already open slots on this selected date */}
           {(() => {
             const dateKey = formatDateKey(quickSlotModal.date);
             const dayWins = windows.filter((w) => formatDateKey(new Date(w.starts_at)) === dateKey);
             if (dayWins.length === 0) return null;
             return (
-              <div className="space-y-2 rounded-2xl border border-sky-200/80 bg-sky-50/60 dark:border-sky-800/60 dark:bg-sky-950/40 p-3.5">
-                <div className="text-[11px] font-bold text-sky-950 dark:text-sky-200 flex items-center justify-between">
+              <div className="space-y-2 rounded-2xl border border-sky-200/80 bg-sky-50/60 p-3.5">
+                <div className="text-[11px] font-bold text-sky-950 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <Sparkles className="size-3 text-sky-600 dark:text-sky-400" />
+                    <Sparkles className="size-3 text-sky-600" />
                     <span>Already Open Slots on this Day:</span>
                   </span>
-                  <span className="text-sky-700 dark:text-sky-300 font-semibold">{dayWins.length} slot(s) active</span>
+                  <span className="text-sky-700 font-semibold">{dayWins.length} slot(s) active</span>
                 </div>
                 <div className="space-y-1.5 max-h-36 overflow-y-auto pr-0.5">
                   {dayWins.map((w) => (
                     <div
                       key={w.id}
-                      className="flex items-center justify-between bg-white dark:bg-slate-900 px-3 py-2 rounded-xl border border-sky-100 dark:border-slate-800 text-xs shadow-2xs"
+                      className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-sky-100 text-xs shadow-2xs"
                     >
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">
+                      <span className="font-semibold text-slate-800 tabular-nums">
                         {formatTime(new Date(w.starts_at))} – {formatTime(new Date(w.ends_at))}
                       </span>
                       {onRemoveWindow && (
@@ -538,7 +1088,7 @@ export function GoogleCalendarSuite({
                             setQuickSlotModal((p) => ({ ...p, isOpen: false }));
                             setDeleteTargetWindow(w);
                           }}
-                          className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors px-2 py-1 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                          className="text-rose-600 hover:text-rose-700 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors px-2 py-1 rounded-md hover:bg-rose-50"
                         >
                           <Trash2 className="size-3" />
                           <span>Delete Slot</span>
@@ -551,7 +1101,7 @@ export function GoogleCalendarSuite({
             );
           })()}
 
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
             <Button
               variant="outline"
               size="sm"
@@ -692,6 +1242,259 @@ export function GoogleCalendarSuite({
           </div>
         </Modal>
       )}
+
+      {/* 7. Vedic Panchang & Rahu Kaal Guide Modal */}
+      {panchangGuideOpen && (
+        <Modal
+          open={panchangGuideOpen}
+          onClose={() => setPanchangGuideOpen(false)}
+          title="বৈদিক পঞ্চাঙ্গ ও রাহুকাল শিল্ড গাইড (Panchang Shield Guide)"
+          description={`Selected Date: ${currentDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })} (IST)`}
+          footer={
+            <div className="flex items-center justify-end w-full">
+              <Button variant="secondary" onClick={() => setPanchangGuideOpen(false)}>
+                Got it
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-4 py-2 text-xs">
+            {/* Kaal Cards Overview */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-3.5 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-rose-900">
+                  <ShieldAlert className="size-4 text-rose-600" />
+                  <span>রাহুকাল (Rahu Kaal)</span>
+                </div>
+                <p className="text-base font-extrabold text-rose-950 tabular-nums">
+                  {currentDayKaalTimes.rahuKaal.formatted}
+                </p>
+                <p className="text-[11px] text-rose-700/90 leading-tight">
+                  অশুভ সময়। নতুন শুভ সূচনা বর্জনীয়। তবে রাহুর দোষ ও তান্ত্রিক প্রতিকারের জন্য অনুকূল।
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3.5 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-emerald-950">
+                  <Sparkles className="size-4 text-emerald-600" />
+                  <span>অভিজিৎ মুহূর্ত (Abhijit)</span>
+                </div>
+                <p className="text-base font-extrabold text-emerald-950 tabular-nums">
+                  {currentDayKaalTimes.abhijit.formatted}
+                </p>
+                <p className="text-[11px] text-emerald-700/90 leading-tight">
+                  সর্বাধিক শুভ বিজয় মুহূর্ত। সকল কার্য সিদ্ধিদায়ক ও দোষ প্রশমনকারী।
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-3.5 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-amber-950">
+                  <AlertTriangle className="size-4 text-amber-600" />
+                  <span>যমঘণ্ট কাল (Yamaghanta)</span>
+                </div>
+                <p className="text-base font-extrabold text-amber-950 tabular-nums">
+                  {currentDayKaalTimes.yamaghanta.formatted}
+                </p>
+                <p className="text-[11px] text-amber-700/90 leading-tight">
+                  সতর্কতামূলক সময়। গুরুত্বপূর্ণ সিদ্ধান্ত গ্রহণে সংযম কাম্য।
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-amber-200/70 bg-amber-50/50 p-3.5 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                  <Clock className="size-4 text-amber-600" />
+                  <span>গুলিকা কাল (Gulika Kaal)</span>
+                </div>
+                <p className="text-base font-extrabold text-amber-950 tabular-nums">
+                  {currentDayKaalTimes.gulika.formatted}
+                </p>
+                <p className="text-[11px] text-amber-700/90 leading-tight">
+                  শনির পুত্র গুলিকার সময়। আধ্যাত্মিক সাধনা ও ধ্যানের জন্য উপযুক্ত।
+                </p>
+              </div>
+            </div>
+
+            {/* Tag Color Reference */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+              <h4 className="font-bold text-slate-800 text-xs">ক্যালেন্ডার পঞ্চাঙ্গ কালার কোড (Visual Legend):</h4>
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div className="flex items-center gap-2">
+                  <span className="size-3 rounded-full bg-emerald-500 shadow-xs" />
+                  <span className="font-semibold text-slate-700">Gold/Green: অভিজিৎ ও অমৃত কাল</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="size-3 rounded-full bg-teal-500 shadow-xs" />
+                  <span className="font-semibold text-slate-700">Teal: শুভ ও লাভ যোগ (কল্যাণকর)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="size-3 rounded-full bg-rose-500 shadow-xs" />
+                  <span className="font-semibold text-slate-700">Red: রাহুকাল (সতর্কতা ও প্রতিকার)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="size-3 rounded-full bg-amber-500 shadow-xs" />
+                  <span className="font-semibold text-slate-700">Amber: যমঘণ্ট ও গুলিকা কাল</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* 8. Auspicious Day Tatkal Dynamic Surge Modal */}
+      {surgeModalOpen && (
+        <Modal
+          open={surgeModalOpen}
+          onClose={() => setSurgeModalOpen(false)}
+          title="শুভ তিথিতে তৎকাল ডায়নামিক সার্জ (Vedic Transit Surge Pricing)"
+          description={`তারিখ: ${currentDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })} (IST)`}
+          footer={
+            <div className="flex items-center justify-between w-full">
+              {auspiciousTransit?.is_tatkal_surge_active ? (
+                <Button
+                  variant="outline"
+                  disabled={deactivateSurgeMutation.isPending}
+                  onClick={() => deactivateSurgeMutation.mutate()}
+                  className="text-rose-600 border-rose-300 hover:bg-rose-50 font-bold"
+                >
+                  {deactivateSurgeMutation.isPending ? "বাতিল হচ্ছে..." : "সার্জ বন্ধ করুন (স্বাভাবিক ফি)"}
+                </Button>
+              ) : (
+                <span className="text-[11px] text-slate-500 font-medium">
+                  স্বয়ংক্রিয়ভাবে উইন্ডোর ফি আপডেট হবে
+                </span>
+              )}
+              <div className="flex items-center gap-2">
+                <Button variant="secondary" onClick={() => setSurgeModalOpen(false)}>
+                  বন্ধ করুন
+                </Button>
+                <Button
+                  disabled={activateSurgeMutation.isPending}
+                  onClick={() =>
+                    activateSurgeMutation.mutate({
+                      multiplier: surgeMultiplier,
+                      customTitle: surgeTitle || undefined,
+                      openWindow: surgeAutoOpenWindow,
+                    })
+                  }
+                  className="bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-extrabold shadow-sm"
+                >
+                  <Zap className="size-4 mr-1.5 fill-white" />
+                  <span>
+                    {activateSurgeMutation.isPending
+                      ? "প্রয়োগ হচ্ছে..."
+                      : `সার্জ সক্রিয় করুন (${surgeMultiplier}x)`}
+                  </span>
+                </Button>
+              </div>
+            </div>
+          }
+        >
+          <div className="space-y-4 py-2 text-xs">
+            {/* Transit Intelligence Banner */}
+            {auspiciousTransit?.is_auspicious_transit_day ? (
+              <div className="rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 p-4 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 text-white px-2.5 py-0.5 text-xs font-black uppercase shadow-xs">
+                    <Flame className="size-3.5 fill-yellow-200 text-yellow-200" />
+                    <span>{auspiciousTransit.badge_label || "শুভ তিথি"}</span>
+                  </span>
+                  <span className="rounded-full bg-amber-200 border border-amber-400 px-2 py-0.5 text-[10px] font-black text-amber-950">
+                    🔥 {auspiciousTransit.remedial_demand_surge || "১০x চাহিদা"}
+                  </span>
+                </div>
+                <p className="text-sm font-extrabold text-amber-950">
+                  {auspiciousTransit.primary_event}
+                </p>
+                {auspiciousTransit.recommended_remedies && auspiciousTransit.recommended_remedies.length > 0 && (
+                  <div className="space-y-1 pt-1">
+                    <span className="text-[11px] font-bold text-amber-900 block">
+                      প্রস্তাবিত বিশেষ বৈদিক প্রতিকার:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {auspiciousTransit.recommended_remedies.map((remedy, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-full bg-white/90 border border-amber-300 px-2.5 py-0.5 text-[10px] font-bold text-amber-900"
+                        >
+                          ✨ {remedy}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 space-y-1">
+                <p className="text-xs font-bold text-slate-800">
+                  সাধারণ ক্যালেন্ডার দিন (Standard Transit Day)
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  বিশেষ তিথি না হলেও আপনি অতিরিক্ত কাজের চাপ বা জরুরি তৎকালের জন্য এই দিনে ডায়নামিক প্রিমিয়াম নির্ধারণ করতে পারেন।
+                </p>
+              </div>
+            )}
+
+            {/* Multiplier Selector */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-800 block">
+                তৎকাল প্রিমিয়াম মাল্টিপ্লায়ার (Surge Multiplier):
+              </label>
+              <div className="grid grid-cols-5 gap-2">
+                {[1.25, 1.5, 1.75, 2.0, 2.5].map((mult) => (
+                  <button
+                    key={mult}
+                    type="button"
+                    onClick={() => setSurgeMultiplier(mult)}
+                    className={cn(
+                      "flex flex-col items-center justify-center p-2.5 rounded-xl border font-bold transition-all cursor-pointer",
+                      surgeMultiplier === mult
+                        ? "bg-amber-600 border-amber-700 text-white shadow-sm ring-2 ring-amber-500/30 scale-[1.02]"
+                        : "bg-white border-slate-200 text-slate-800 hover:bg-amber-50 hover:border-amber-300"
+                    )}
+                  >
+                    <span className="text-sm font-black">{mult}x</span>
+                    <span className="text-[9px] uppercase font-bold opacity-80">
+                      {mult === 1.5 ? "জনপ্রিয়" : mult === 2.0 ? "মহাযোগ" : mult >= 2.0 ? "ভিআইপি" : "স্ট্যান্ডার্ড"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Title */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-800 block">
+                কাস্টম স্লট শিরোনাম / ব্যানার (ঐচ্ছিক):
+              </label>
+              <input
+                type="text"
+                value={surgeTitle}
+                onChange={(e) => setSurgeTitle(e.target.value)}
+                placeholder="যেমন: অমাবস্যা কালাসর্প শান্তি তৎকাল"
+                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+
+            {/* Auto Open Window Toggle */}
+            <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/50 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold text-slate-800">
+                  স্লট না থাকলে প্রাইম আওয়ার খুলুন (১০:০০ - ২২:০০ IST)
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  এই দিনে কোনো উইন্ডো খোলা না থাকলে স্বয়ংক্রিয়ভাবে সারাদিনের জন্য স্লট তৈরি হবে।
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={surgeAutoOpenWindow}
+                onChange={(e) => setSurgeAutoOpenWindow(e.target.checked)}
+                className="size-4 accent-amber-600 rounded cursor-pointer"
+              />
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -708,6 +1511,7 @@ function WeekCalendarView({
   onOpenSession,
   getGoogleCalendarUrl,
   onDeleteWindow,
+  busyIntervals = [],
 }: {
   weekDays: Date[];
   bookings: Appointment[];
@@ -717,6 +1521,7 @@ function WeekCalendarView({
   onOpenSession: (appointment: Appointment) => void;
   getGoogleCalendarUrl: (a: Appointment) => string;
   onDeleteWindow?: (w: { id: string; starts_at: string; ends_at: string; day: string }) => void;
+  busyIntervals?: Array<{ starts_at: string; ends_at: string; title: string; source: string; is_external: boolean }>;
 }) {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -735,8 +1540,8 @@ function WeekCalendarView({
   return (
     <div className="flex flex-col flex-1 select-none">
       {/* Week Header Row */}
-      <div className="grid grid-cols-[64px_repeat(7,1fr)] border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#10182b] sticky top-0 z-20 shadow-xs transition-colors">
-        <div className="p-3 text-center border-r border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-end justify-center pb-2">
+      <div className="grid grid-cols-[64px_repeat(7,1fr)] border-b border-slate-200 bg-white sticky top-0 z-20 shadow-xs">
+        <div className="p-3 text-center border-r border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-end justify-center pb-2">
           Time
         </div>
 
@@ -749,16 +1554,14 @@ function WeekCalendarView({
             <div
               key={d.toISOString()}
               className={cn(
-                "p-2.5 text-center border-r border-slate-100 dark:border-slate-800 transition-colors",
-                isToday
-                  ? "bg-amber-50/70 dark:bg-amber-950/40"
-                  : "bg-white dark:bg-[#10182b]",
+                "p-2.5 text-center border-r border-slate-100 transition-colors",
+                isToday ? "bg-amber-50/50" : "bg-white",
               )}
             >
               <p
                 className={cn(
                   "text-[10px] font-extrabold uppercase tracking-wider",
-                  isToday ? "text-amber-600 dark:text-amber-400" : "text-slate-400 dark:text-slate-400",
+                  isToday ? "text-amber-600" : "text-slate-400",
                 )}
               >
                 {dayName}
@@ -768,8 +1571,8 @@ function WeekCalendarView({
                   className={cn(
                     "inline-flex size-8 items-center justify-center rounded-full font-display text-sm font-black transition-all",
                     isToday
-                      ? "bg-amber-500 text-slate-950 shadow-[0_4px_12px_rgba(245,158,11,0.4)]"
-                      : "text-slate-800 dark:text-slate-100",
+                      ? "bg-amber-500 text-white shadow-[0_4px_10px_rgba(245,158,11,0.4)]"
+                      : "text-slate-800",
                   )}
                 >
                   {dayNum}
@@ -783,10 +1586,10 @@ function WeekCalendarView({
       {/* Week Scrollable Time Grid */}
       <div
         ref={scrollContainerRef}
-        className="relative overflow-y-auto max-h-[640px] grid grid-cols-[64px_repeat(7,1fr)] bg-white dark:bg-[#0a0f1d] transition-colors"
+        className="relative overflow-y-auto max-h-[640px] grid grid-cols-[64px_repeat(7,1fr)] bg-slate-50/20"
       >
         {/* Time labels column */}
-        <div className="border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-[#0d1424] text-right pr-2 select-none transition-colors">
+        <div className="border-r border-slate-100 bg-white text-right pr-2 select-none">
           {HOURS.map((h) => {
             const timeDate = new Date();
             timeDate.setHours(h, 0, 0, 0);
@@ -794,7 +1597,7 @@ function WeekCalendarView({
               <div
                 key={h}
                 style={{ height: `${HOUR_HEIGHT}px` }}
-                className="relative -top-2 text-[10px] font-bold text-slate-400 dark:text-slate-400"
+                className="relative -top-2 text-[10px] font-bold text-slate-400"
               >
                 {formatTime(timeDate)}
               </div>
@@ -819,6 +1622,12 @@ function WeekCalendarView({
             return formatDateKey(bStart) === dateKey;
           });
 
+          // Google Calendar external busy intervals on this day
+          const dayBusy = busyIntervals.filter((bi) => {
+            const biStart = new Date(bi.starts_at);
+            return formatDateKey(biStart) === dateKey;
+          });
+
           // Current time needle position (if today)
           let currentMinutesOffset = -1;
           if (isToday) {
@@ -833,23 +1642,76 @@ function WeekCalendarView({
             <div
               key={dateKey}
               className={cn(
-                "relative border-r border-slate-100 dark:border-slate-800 transition-colors group",
-                isToday
-                  ? "bg-amber-50/25 dark:bg-amber-950/20"
-                  : "bg-white dark:bg-[#0a0f1d] hover:bg-slate-50/60 dark:hover:bg-slate-900/50",
+                "relative border-r border-slate-100 transition-colors group",
+                isToday ? "bg-amber-50/20" : "hover:bg-slate-50/40",
               )}
               style={{ height: `${HOURS.length * HOUR_HEIGHT}px` }}
             >
-              {/* Hour horizontal grid lines & click handler */}
-              {HOURS.map((h) => (
-                <div
-                  key={h}
-                  onClick={() => onSlotClick(colDate, h)}
-                  style={{ height: `${HOUR_HEIGHT}px` }}
-                  className="border-b border-slate-100 dark:border-slate-800/70 cursor-pointer hover:bg-sky-50/40 dark:hover:bg-sky-950/40 transition-colors relative"
-                  title={`Click to open availability at ${h}:00 on ${dateKey}`}
-                />
-              ))}
+              {/* Hour horizontal grid lines & click handler with Panchang & Rahu Kaal Shield */}
+              {HOURS.map((h) => {
+                const pBadge = getHourPanchangBadge(colDate, h);
+                return (
+                  <div
+                    key={h}
+                    onClick={() => onSlotClick(colDate, h)}
+                    style={{ height: `${HOUR_HEIGHT}px` }}
+                    className={cn(
+                      "border-b border-slate-100/90 cursor-pointer transition-colors relative group/cell",
+                      pBadge.type === "rahu_kaal"
+                        ? "bg-rose-50/20 hover:bg-rose-100/35 border-l-2 border-l-rose-500"
+                        : pBadge.type === "yamaghanta" || pBadge.type === "gulika"
+                        ? "bg-amber-50/20 hover:bg-amber-100/30 border-l-2 border-l-amber-400"
+                        : pBadge.type === "abhijit"
+                        ? "bg-emerald-50/30 hover:bg-emerald-100/40 border-l-2 border-l-emerald-500"
+                        : pBadge.type === "amrit"
+                        ? "bg-amber-50/30 hover:bg-amber-100/40 border-l-2 border-l-amber-500"
+                        : "hover:bg-sky-50/30",
+                    )}
+                    title={`[${pBadge.badgeBn}] Click to open availability at ${h}:00 on ${dateKey}`}
+                  >
+                    {/* Floating mini badge for auspicious / inauspicious hours */}
+                    {pBadge.type === "rahu_kaal" && (
+                      <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-rose-100/95 border border-rose-300 px-1 py-0.2 text-[8.5px] font-black text-rose-900 shadow-2xs pointer-events-none">
+                        <ShieldAlert className="size-2.5 text-rose-600" />
+                        <span>রাহুকাল</span>
+                      </span>
+                    )}
+
+                    {pBadge.type === "yamaghanta" && (
+                      <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-amber-100/90 border border-amber-300 px-1 py-0.2 text-[8.5px] font-bold text-amber-900 shadow-2xs pointer-events-none">
+                        <AlertTriangle className="size-2.5 text-amber-600" />
+                        <span>যমঘণ্ট</span>
+                      </span>
+                    )}
+
+                    {pBadge.type === "gulika" && (
+                      <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-amber-50/90 border border-amber-200 px-1 py-0.2 text-[8.5px] font-bold text-amber-800 shadow-2xs pointer-events-none">
+                        <span>গুলিকা</span>
+                      </span>
+                    )}
+
+                    {pBadge.type === "abhijit" && (
+                      <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-emerald-100/95 border border-emerald-300 px-1.5 py-0.2 text-[8.5px] font-black text-emerald-950 shadow-2xs pointer-events-none">
+                        <Sparkles className="size-2.5 text-emerald-600" />
+                        <span>অভিজিৎ</span>
+                      </span>
+                    )}
+
+                    {pBadge.type === "amrit" && (
+                      <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-amber-100/95 border border-amber-300 px-1.5 py-0.2 text-[8.5px] font-black text-amber-950 shadow-2xs pointer-events-none">
+                        <Sparkles className="size-2.5 text-amber-600" />
+                        <span>অমৃত</span>
+                      </span>
+                    )}
+
+                    {pBadge.type === "shubh" && (
+                      <span className="absolute top-1 right-1.5 hidden group-hover/cell:flex items-center gap-0.5 rounded-md bg-teal-100/90 border border-teal-200 px-1 py-0.2 text-[8.5px] font-extrabold text-teal-800 shadow-2xs pointer-events-none">
+                        <span>🌿 {pBadge.shortTagBn}</span>
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
 
               {/* Availability Windows (Interactive Background Blocks) */}
               {dayWindows.map((w) => {
@@ -864,11 +1726,11 @@ function WeekCalendarView({
                   <div
                     key={w.id}
                     style={{ top: `${top}px`, height: `${height}px` }}
-                    className="absolute inset-x-1 rounded-xl bg-gradient-to-b from-sky-500/15 to-indigo-500/15 dark:from-sky-950/60 dark:to-indigo-950/60 border border-sky-400/40 dark:border-sky-500/50 p-1.5 z-10 overflow-hidden hover:border-sky-500 dark:hover:border-sky-400 hover:bg-sky-500/20 dark:hover:bg-sky-900/40 transition-all group/win shadow-xs"
+                    className="absolute inset-x-1 rounded-xl bg-gradient-to-b from-sky-500/15 to-indigo-500/15 border border-sky-400/40 p-1.5 z-10 overflow-hidden hover:border-sky-500 hover:bg-sky-500/20 transition-all group/win"
                   >
                     <div className="flex items-center justify-between gap-1">
-                      <span className="inline-flex items-center gap-1 rounded-md bg-sky-100/90 dark:bg-sky-900/90 px-1.5 py-0.5 text-[9px] font-bold text-sky-900 dark:text-sky-200 border border-sky-300/40 dark:border-sky-500/40 shadow-2xs">
-                        <Sparkles className="size-2.5 text-sky-600 dark:text-sky-400 shrink-0" />
+                      <span className="inline-flex items-center gap-1 rounded-md bg-sky-100/90 px-1.5 py-0.5 text-[9px] font-bold text-sky-900 shadow-2xs">
+                        <Sparkles className="size-2.5 text-sky-600 shrink-0" />
                         <span className="truncate">Open: {formatTime(s)} – {formatTime(e)}</span>
                       </span>
                       {onDeleteWindow && (
@@ -878,13 +1740,51 @@ function WeekCalendarView({
                             e.stopPropagation();
                             onDeleteWindow(w);
                           }}
-                          className="size-5 rounded-md bg-white/95 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/60 text-slate-400 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center justify-center transition-colors cursor-pointer shadow-2xs shrink-0"
+                          className="size-5 rounded-md bg-white/95 hover:bg-rose-50 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer shadow-2xs shrink-0"
                           title="Delete this open availability slot"
                         >
                           <Trash2 className="size-3" />
                         </button>
                       )}
                     </div>
+                  </div>
+                );
+              })}
+
+              {/* External Google Calendar Busy Intervals (Astra Shielded Blocks) */}
+              {dayBusy.map((bi, idx) => {
+                const s = new Date(bi.starts_at);
+                const e = new Date(bi.ends_at);
+                const startMins = Math.max(0, (s.getHours() - 6) * 60 + s.getMinutes());
+                const endMins = Math.min(HOURS.length * 60, (e.getHours() - 6) * 60 + e.getMinutes());
+                const top = (startMins / 60) * HOUR_HEIGHT;
+                const height = Math.max(26, ((endMins - startMins) / 60) * HOUR_HEIGHT);
+
+                return (
+                  <div
+                    key={`gcal-busy-${idx}-${bi.starts_at}`}
+                    style={{ top: `${top}px`, height: `${height}px` }}
+                    className="absolute inset-x-1 rounded-xl bg-gradient-to-r from-purple-500/25 via-indigo-500/20 to-purple-600/20 border-2 border-purple-400/80 p-2 z-15 backdrop-blur-[1px] shadow-xs flex flex-col justify-between overflow-hidden group/gcal hover:border-purple-500 transition-all"
+                    title={`[গুগল ক্যালেন্ডার ব্যস্ততা] ${bi.title}: ${formatTime(s)} - ${formatTime(e)}. External commitment blocks Astra client reservations.`}
+                  >
+                    <div className="flex items-center justify-between gap-1 leading-tight">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <GoogleIcon className="size-3.5 shrink-0" />
+                        <span className="font-black text-[10px] text-purple-950 truncate">
+                          {bi.title || "ব্যস্ত (Busy)"}
+                        </span>
+                      </div>
+                      <span className="rounded bg-purple-200/90 px-1 py-0.2 text-[8px] font-black uppercase text-purple-900 shrink-0">
+                        Shielded
+                      </span>
+                    </div>
+
+                    {height >= 42 && (
+                      <div className="flex items-center justify-between text-[9px] font-bold text-purple-800">
+                        <span>{formatTime(s)} – {formatTime(e)}</span>
+                        <span className="text-[8px] text-purple-700 font-extrabold">🛡️ বুকিং ব্লকড</span>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -914,17 +1814,17 @@ function WeekCalendarView({
                     className={cn(
                       "absolute inset-x-1.5 rounded-xl p-2 cursor-pointer z-20 transition-all shadow-xs overflow-hidden flex flex-col justify-between border",
                       isCancelled
-                        ? "bg-rose-50 dark:bg-rose-950/80 text-rose-800 dark:text-rose-200 border-rose-300 dark:border-rose-700/60 opacity-75"
+                        ? "bg-rose-50 text-rose-800 border-rose-300 opacity-70"
                         : isNoShow
-                        ? "bg-amber-50 dark:bg-amber-950/80 text-amber-950 dark:text-amber-100 border-amber-400 dark:border-amber-600/60 hover:shadow-md"
+                        ? "bg-amber-50 text-amber-950 border-amber-400 hover:shadow-md"
                         : isCompleted
-                        ? "bg-emerald-50 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-100 border-emerald-300 dark:border-emerald-600/60 hover:shadow-md"
-                        : "bg-gradient-to-tr from-sky-600 to-indigo-600 text-white border-sky-400 dark:border-sky-400/80 shadow-md hover:shadow-xl hover:scale-[1.01]",
+                        ? "bg-emerald-50 text-emerald-900 border-emerald-300 hover:shadow-md"
+                        : "bg-gradient-to-tr from-sky-600 to-indigo-600 text-white border-sky-400 hover:shadow-lg hover:scale-[1.01]",
                     )}
                   >
                     <div>
                       <div className="flex items-center justify-between gap-1 leading-tight">
-                        <span className="font-extrabold text-[11px] truncate text-white drop-shadow-2xs">
+                        <span className="font-bold text-[11px] truncate">
                           {b.peer?.name || "Client"}
                         </span>
                         {pillar && (
@@ -936,13 +1836,13 @@ function WeekCalendarView({
 
                       <p
                         className={cn(
-                          "text-[9px] font-semibold truncate mt-0.5",
+                          "text-[9px] font-medium truncate mt-0.5",
                           isCancelled
-                            ? "text-rose-600 dark:text-rose-300"
+                            ? "text-rose-600"
                             : isNoShow
-                            ? "text-amber-800 dark:text-amber-200"
+                            ? "text-amber-800"
                             : isCompleted
-                            ? "text-emerald-700 dark:text-emerald-200"
+                            ? "text-emerald-700"
                             : "text-sky-100",
                         )}
                       >
@@ -998,12 +1898,14 @@ function MonthCalendarView({
   windows,
   onSelectDate,
   onOpenSession,
+  busyIntervals = [],
 }: {
   currentDate: Date;
   bookings: Appointment[];
   windows: Array<{ id: string; day: string; starts_at: string; ends_at: string }>;
   onSelectDate: (d: Date) => void;
   onOpenSession: (appointment: Appointment) => void;
+  busyIntervals?: Array<{ starts_at: string; ends_at: string; title: string; source: string; is_external: boolean }>;
 }) {
   const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   const startDay = monthStart.getDay(); // 0 is Sunday
@@ -1026,7 +1928,7 @@ function MonthCalendarView({
   return (
     <div className="flex flex-col flex-1">
       {/* Weekday Names Header */}
-      <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#10182b] text-center text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 py-2.5 transition-colors">
+      <div className="grid grid-cols-7 border-b border-slate-200 bg-white text-center text-[10px] font-bold uppercase tracking-wider text-slate-400 py-2.5">
         <span>Mon</span>
         <span>Tue</span>
         <span>Wed</span>
@@ -1037,36 +1939,37 @@ function MonthCalendarView({
       </div>
 
       {/* Days Grid */}
-      <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800/80 bg-slate-200 dark:bg-slate-800/80 gap-px">
+      <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-100 gap-px">
         {days.map(({ date, isCurrentMonth }) => {
           const key = formatDateKey(date);
           const isToday = key === todayKey;
 
           const dayBookings = bookings.filter((b) => formatDateKey(new Date(b.starts_at)) === key);
           const dayWindows = windows.filter((w) => formatDateKey(new Date(w.starts_at)) === key);
+          const dayBusyCount = busyIntervals.filter((bi) => formatDateKey(new Date(bi.starts_at)) === key).length;
 
           return (
             <div
               key={key}
               onClick={() => onSelectDate(date)}
               className={cn(
-                "min-h-[110px] p-2 bg-white dark:bg-[#0c1220] flex flex-col justify-between cursor-pointer transition-colors hover:bg-sky-50/30 dark:hover:bg-slate-800/60 group",
-                !isCurrentMonth && "bg-slate-50/70 text-slate-400 dark:bg-[#090d18] dark:text-slate-600",
-                isToday && "ring-2 ring-inset ring-amber-400 dark:ring-amber-500",
+                "min-h-[110px] p-2 bg-white flex flex-col justify-between cursor-pointer transition-colors hover:bg-sky-50/20 group",
+                !isCurrentMonth && "bg-slate-50/60 text-slate-400",
+                isToday && "ring-2 ring-inset ring-amber-400",
               )}
             >
               <div className="flex items-center justify-between">
                 <span
                   className={cn(
                     "inline-flex size-6 items-center justify-center rounded-full text-xs font-bold",
-                    isToday ? "bg-amber-500 text-slate-950 font-black shadow-xs" : "text-slate-700 dark:text-slate-200",
+                    isToday ? "bg-amber-500 text-white font-black" : "text-slate-700",
                   )}
                 >
                   {date.getDate()}
                 </span>
 
                 {dayWindows.length > 0 && (
-                  <span className="size-2 rounded-full bg-sky-500 shadow-xs" title="Open Window active" />
+                  <span className="size-2 rounded-full bg-sky-500" title="Open Window active" />
                 )}
               </div>
 
@@ -1082,10 +1985,10 @@ function MonthCalendarView({
                     className={cn(
                       "rounded-md px-1.5 py-0.5 text-[9px] font-bold truncate flex items-center justify-between gap-1",
                       b.status === "booked"
-                        ? "bg-sky-100 text-sky-900 border border-sky-300 dark:bg-sky-950/90 dark:text-sky-200 dark:border-sky-700"
+                        ? "bg-sky-100 text-sky-900 border border-sky-300"
                         : b.status === "completed"
-                        ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700"
-                        : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 line-through",
+                        ? "bg-emerald-100 text-emerald-900"
+                        : "bg-slate-100 text-slate-500 line-through",
                     )}
                   >
                     <span className="truncate">{b.peer?.name || "Client"}</span>
@@ -1096,13 +1999,20 @@ function MonthCalendarView({
                 ))}
 
                 {dayBookings.length > 3 && (
-                  <p className="text-[9px] font-bold text-slate-400 dark:text-slate-400 pl-1">
+                  <p className="text-[9px] font-bold text-slate-400 pl-1">
                     +{dayBookings.length - 3} more
                   </p>
                 )}
+
+                {dayBusyCount > 0 && (
+                  <div className="rounded-md px-1.5 py-0.5 text-[8.5px] font-bold bg-purple-100 text-purple-900 border border-purple-200 truncate flex items-center gap-1 shadow-2xs">
+                    <GoogleIcon className="size-2.5 shrink-0" />
+                    <span>{dayBusyCount} Google busy</span>
+                  </div>
+                )}
               </div>
 
-              <div className="text-[9px] text-slate-400 dark:text-slate-400 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors pt-1">
+              <div className="text-[9px] text-slate-400 group-hover:text-sky-600 transition-colors pt-1">
                 {dayWindows.length > 0 ? `${dayWindows.length} open window(s)` : ""}
               </div>
             </div>
@@ -1124,35 +2034,48 @@ function DayCalendarView({
   onSlotClick,
   onOpenSession,
   onOpenPrescription,
+  onOpenCertificate,
   onCancelAppointment,
   onCompleteAppointment,
   getGoogleCalendarUrl,
   onDeleteWindow,
+  busyIntervals = [],
 }: {
   date: Date;
   bookings: Appointment[];
-  windows: Array<{ id: string; day: string; starts_at: string; ends_at: string }>;
+  windows: Array<{
+    id: string;
+    day: string;
+    starts_at: string;
+    ends_at: string;
+    is_tatkal?: boolean;
+    tatkal_multiplier?: number;
+    custom_title?: string | null;
+  }>;
   now: Date;
   onSlotClick: (hour: number) => void;
   onOpenSession: (appointment: Appointment) => void;
   onOpenPrescription: (appointment: Appointment) => void;
+  onOpenCertificate?: (appointment: Appointment) => void;
   onCancelAppointment: (appointmentId: string) => void;
   onCompleteAppointment: (appointmentId: string) => void;
   getGoogleCalendarUrl: (a: Appointment) => string;
   onDeleteWindow?: (w: { id: string; starts_at: string; ends_at: string; day: string }) => void;
+  busyIntervals?: Array<{ starts_at: string; ends_at: string; title: string; source: string; is_external: boolean }>;
 }) {
   const dateKey = formatDateKey(date);
   const isToday = dateKey === formatDateKey(now);
 
   const dayBookings = bookings.filter((b) => formatDateKey(new Date(b.starts_at)) === dateKey);
   const dayWindows = windows.filter((w) => formatDateKey(new Date(w.starts_at)) === dateKey);
+  const dayBusy = busyIntervals.filter((bi) => formatDateKey(new Date(bi.starts_at)) === dateKey);
 
   return (
-    <div className="p-6 space-y-6 bg-white dark:bg-[#0c1220] transition-colors">
+    <div className="p-6 space-y-6">
       {/* Day Overview Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
         <div>
-          <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">
+          <h3 className="font-display text-lg font-bold text-slate-900">
             {date.toLocaleDateString("en-US", {
               weekday: "long",
               month: "long",
@@ -1160,7 +2083,7 @@ function DayCalendarView({
               year: "numeric",
             })}
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-slate-500">
             {dayBookings.length} booking(s) scheduled · {dayWindows.length} open window(s) active
           </p>
         </div>
@@ -1191,15 +2114,33 @@ function DayCalendarView({
               return (
                 <div
                   key={w.id}
-                  className="flex items-center justify-between gap-2 rounded-xl border border-sky-200 bg-white p-3 shadow-2xs hover:border-sky-300 transition-all"
+                  className={cn(
+                    "flex items-center justify-between gap-2 rounded-xl border p-3 shadow-2xs transition-all",
+                    w.is_tatkal
+                      ? "border-amber-300 bg-gradient-to-r from-amber-50/90 via-yellow-50/50 to-white ring-1 ring-amber-400/30 hover:border-amber-400"
+                      : "border-sky-200 bg-white hover:border-sky-300"
+                  )}
                 >
                   <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-slate-800 tabular-nums">
-                      {formatTime(s)} – {formatTime(e)}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-bold text-slate-800 tabular-nums">
+                        {formatTime(s)} – {formatTime(e)}
+                      </p>
+                      {w.is_tatkal && (
+                        <span className="flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-600 to-yellow-600 px-2 py-0.5 text-[9px] font-black text-white shadow-2xs">
+                          <Zap className="size-2.5 fill-white text-white" />
+                          <span>{w.tatkal_multiplier ? `${w.tatkal_multiplier}x Tatkal` : "VIP Tatkal"}</span>
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[10px] text-slate-400">
                       Duration: {Math.round((e.getTime() - s.getTime()) / 60000)} mins
                     </p>
+                    {w.custom_title && (
+                      <p className="text-[10px] font-bold text-amber-800 truncate max-w-[180px]">
+                        {w.custom_title}
+                      </p>
+                    )}
                   </div>
                   {onDeleteWindow && (
                     <Button
@@ -1220,6 +2161,46 @@ function DayCalendarView({
         </div>
       )}
 
+      {/* Active Google Calendar Busy Intervals on this Day */}
+      {dayBusy.length > 0 && (
+        <div className="rounded-2xl border border-purple-200/90 bg-purple-50/70 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-purple-950 flex items-center gap-1.5">
+              <GoogleIcon className="size-4" />
+              <span>গুগল ক্যালেন্ডার বাহ্যিক ব্যস্ততা (Google Calendar Busy Periods)</span>
+            </span>
+            <span className="text-[11px] font-bold text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-full border border-purple-200">
+              {dayBusy.length} বাহ্যিক ইভেন্ট সুরক্ষিত
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+            {dayBusy.map((bi, idx) => {
+              const s = new Date(bi.starts_at);
+              const e = new Date(bi.ends_at);
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between gap-2 rounded-xl border border-purple-200 bg-white p-3 shadow-2xs"
+                >
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-bold text-purple-950 truncate max-w-[180px]">
+                      {bi.title}
+                    </p>
+                    <p className="text-[10px] text-purple-700 font-semibold tabular-nums">
+                      {formatTime(s)} – {formatTime(e)}
+                    </p>
+                  </div>
+                  <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[9px] font-black uppercase text-purple-900 shrink-0">
+                    Shielded
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Hourly View */}
       <div className="space-y-4">
         {HOURS.map((h) => {
@@ -1227,6 +2208,8 @@ function DayCalendarView({
           hourStart.setHours(h, 0, 0, 0);
           const hourEnd = new Date(date);
           hourEnd.setHours(h + 1, 0, 0, 0);
+
+          const pBadge = getHourPanchangBadge(date, h);
 
           const slotBookings = dayBookings.filter((b) => {
             const s = new Date(b.starts_at);
@@ -1239,26 +2222,85 @@ function DayCalendarView({
             return s <= hourStart && hourEnd <= e;
           });
 
+          const hourBusy = dayBusy.filter((item) => {
+            const s = new Date(item.starts_at);
+            const e = new Date(item.ends_at);
+            return s < hourEnd && e > hourStart;
+          });
+
           return (
             <div
               key={h}
               className={cn(
                 "rounded-2xl border p-4 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4",
                 slotBookings.length > 0
-                  ? "bg-white dark:bg-slate-900/90 border-sky-300 dark:border-sky-500/60 shadow-xs"
+                  ? "bg-white border-sky-300 shadow-sm"
                   : isWindowActive
-                  ? "bg-sky-50/50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800/80"
-                  : "bg-slate-50/40 dark:bg-slate-900/40 border-slate-200/70 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/50",
+                  ? "bg-sky-50/40 border-sky-200"
+                  : pBadge.type === "rahu_kaal"
+                  ? "bg-rose-50/20 border-rose-200/80 hover:bg-rose-50/40"
+                  : pBadge.type === "abhijit" || pBadge.type === "amrit"
+                  ? "bg-emerald-50/20 border-emerald-200/80 hover:bg-emerald-50/40"
+                  : "bg-slate-50/30 border-slate-200/70 hover:bg-slate-50",
               )}
             >
-              <div className="flex items-center gap-3">
-                <span className="font-display text-sm font-bold text-slate-700 dark:text-slate-300 min-w-[70px]">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="font-display text-sm font-bold text-slate-700 min-w-[70px]">
                   {formatTime(hourStart)}
                 </span>
 
                 {isWindowActive && (
-                  <span className="rounded-full bg-sky-100 dark:bg-sky-900/80 text-sky-800 dark:text-sky-200 border border-sky-300/40 dark:border-sky-700 px-2.5 py-0.5 text-[10px] font-bold">
+                  <span className="rounded-full bg-sky-100 text-sky-800 px-2.5 py-0.5 text-[10px] font-bold">
                     Open Window
+                  </span>
+                )}
+
+                {/* Panchang & Rahu Kaal Badge for this hour */}
+                {pBadge.type === "rahu_kaal" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 border border-rose-300 text-rose-900 px-2.5 py-0.5 text-[11px] font-black shadow-2xs">
+                    <ShieldAlert className="size-3 text-rose-600" />
+                    <span>{pBadge.badgeBn}</span>
+                  </span>
+                )}
+
+                {pBadge.type === "yamaghanta" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 px-2.5 py-0.5 text-[11px] font-extrabold shadow-2xs">
+                    <AlertTriangle className="size-3 text-amber-600" />
+                    <span>{pBadge.badgeBn}</span>
+                  </span>
+                )}
+
+                {pBadge.type === "gulika" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900 px-2.5 py-0.5 text-[11px] font-bold shadow-2xs">
+                    <Clock className="size-3 text-amber-600" />
+                    <span>{pBadge.badgeBn}</span>
+                  </span>
+                )}
+
+                {pBadge.type === "abhijit" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-950 px-2.5 py-0.5 text-[11px] font-black shadow-2xs">
+                    <Sparkles className="size-3 text-emerald-600" />
+                    <span>{pBadge.badgeBn}</span>
+                  </span>
+                )}
+
+                {pBadge.type === "amrit" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 text-amber-950 px-2.5 py-0.5 text-[11px] font-black shadow-2xs">
+                    <Sparkles className="size-3 text-amber-600" />
+                    <span>{pBadge.badgeBn}</span>
+                  </span>
+                )}
+
+                {pBadge.type === "shubh" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-teal-100 border border-teal-200 text-teal-900 px-2.5 py-0.5 text-[11px] font-bold shadow-2xs">
+                    <span>🌿 {pBadge.badgeBn}</span>
+                  </span>
+                )}
+
+                {hourBusy.length > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 border border-purple-300 text-purple-900 px-2.5 py-0.5 text-[11px] font-black shadow-2xs">
+                    <GoogleIcon className="size-3" />
+                    <span>গুগল ক্যালেন্ডার ব্যস্ত ({hourBusy.map((b) => `${formatTime(new Date(b.starts_at))}-${formatTime(new Date(b.ends_at))}`).join(", ")})</span>
                   </span>
                 )}
               </div>
@@ -1269,10 +2311,10 @@ function DayCalendarView({
                     <div
                       key={b.id}
                       onClick={() => onOpenSession(b)}
-                      className="rounded-xl border border-slate-200 dark:border-slate-700/80 p-3 bg-white dark:bg-slate-800/90 hover:border-sky-400 dark:hover:border-sky-400 cursor-pointer transition-all shadow-2xs space-y-2"
+                      className="rounded-xl border border-slate-200 p-3 bg-white hover:border-sky-400 cursor-pointer transition-all shadow-2xs space-y-2"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-slate-900 dark:text-white">{b.peer?.name || "Client"}</span>
+                        <span className="font-bold text-xs text-slate-900">{b.peer?.name || "Client"}</span>
                         {b.is_no_show ? (
                           <Badge tone="gold">Client No-Show</Badge>
                         ) : (
@@ -1282,31 +2324,76 @@ function DayCalendarView({
                         )}
                       </div>
 
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <p className="text-[11px] text-slate-500">
                         {formatTime(new Date(b.starts_at))} – {formatTime(new Date(b.ends_at))} ({b.minutes} min)
                       </p>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700 text-xs">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenPrescription(b);
-                          }}
-                          className="text-amber-700 dark:text-amber-400 font-bold hover:underline"
-                        >
-                          📜 Prescription
-                        </button>
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs flex-wrap gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenPrescription(b);
+                            }}
+                            className="text-amber-700 font-bold hover:underline cursor-pointer"
+                          >
+                            📜 Prescription
+                          </button>
 
-                        <a
-                          href={getGoogleCalendarUrl(b)}
-                          target="_blank"
-                          rel="noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-sky-600 dark:text-sky-400 font-bold hover:underline"
-                        >
-                          📅 Add to GCal
-                        </a>
+                          {onOpenCertificate && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenCertificate(b);
+                              }}
+                              className="text-purple-700 font-bold hover:underline cursor-pointer"
+                            >
+                              👑 Certificate
+                            </button>
+                          )}
+
+                          <a
+                            href={getGoogleCalendarUrl(b)}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-sky-600 font-bold hover:underline"
+                          >
+                            📅 GCal
+                          </a>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {b.status === "booked" && now.getTime() >= new Date(b.starts_at).getTime() && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onCompleteAppointment(b.id);
+                              }}
+                              className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-700 transition-colors shadow-2xs cursor-pointer"
+                            >
+                              <CheckCircle2 className="size-3" />
+                              <span>Complete</span>
+                            </button>
+                          )}
+
+                          {b.status === "booked" && new Date(b.starts_at).getTime() > now.getTime() && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onCancelAppointment(b.id);
+                              }}
+                              className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="size-3" />
+                              <span>Cancel</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1315,7 +2402,7 @@ function DayCalendarView({
                 <button
                   type="button"
                   onClick={() => onSlotClick(h)}
-                  className="text-xs font-semibold text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
+                  className="text-xs font-semibold text-slate-400 hover:text-sky-600 transition-colors"
                 >
                   + Click to open slot at this hour
                 </button>
@@ -1333,18 +2420,34 @@ function DayCalendarView({
 ========================================================================= */
 function AgendaCalendarView({
   bookings,
+  windows = [],
   onOpenSession,
   onOpenPrescription,
+  onOpenCertificate,
   onCancelAppointment,
   onCompleteAppointment,
+  onDeleteWindow,
   getGoogleCalendarUrl,
+  busyIntervals = [],
 }: {
   bookings: Appointment[];
+  windows?: Array<{
+    id: string;
+    day: string;
+    starts_at: string;
+    ends_at: string;
+    is_tatkal?: boolean;
+    tatkal_multiplier?: number;
+    custom_title?: string | null;
+  }>;
   onOpenSession: (appointment: Appointment) => void;
   onOpenPrescription: (appointment: Appointment) => void;
+  onOpenCertificate?: (appointment: Appointment) => void;
   onCancelAppointment: (appointmentId: string) => void;
   onCompleteAppointment: (appointmentId: string) => void;
+  onDeleteWindow?: (w: { id: string; starts_at: string; ends_at: string; day: string }) => void;
   getGoogleCalendarUrl: (a: Appointment) => string;
+  busyIntervals?: Array<{ starts_at: string; ends_at: string; title: string; source: string; is_external: boolean }>;
 }) {
   const sorted = React.useMemo(() => {
     return [...bookings].sort(
@@ -1352,79 +2455,265 @@ function AgendaCalendarView({
     );
   }, [bookings]);
 
-  if (!sorted.length) {
+  const hasBookings = sorted.length > 0;
+  const hasWindows = windows && windows.length > 0;
+  const hasBusy = busyIntervals && busyIntervals.length > 0;
+
+  if (!hasBookings && !hasWindows && !hasBusy) {
     return (
-      <div className="p-12 text-center text-slate-400 dark:text-slate-500">
-        <Clock className="size-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-        <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No scheduled appointments on record</p>
+      <div className="p-12 text-center text-slate-400">
+        <Clock className="size-10 mx-auto text-slate-300 mb-2" />
+        <p className="text-sm font-bold text-slate-700">No scheduled appointments or open slots on record</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-4 bg-white dark:bg-[#0c1220] transition-colors">
-      {sorted.map((b) => {
-        const s = new Date(b.starts_at);
-        const e = new Date(b.ends_at);
-        const pillar = b.consultation_pillar ? PILLAR_ICONS[b.consultation_pillar] : null;
+    <div className="p-6 space-y-6">
+      {/* 1. Scheduled Bookings Feed */}
+      {hasBookings && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+              <CalendarIcon className="size-4 text-amber-600" />
+              <span>Scheduled Client Consultations ({sorted.length})</span>
+            </h3>
+            <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+              Sorted chronologically
+            </span>
+          </div>
 
-        return (
-          <div
-            key={b.id}
-            onClick={() => onOpenSession(b)}
-            className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-4.5 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs"
-          >
-            <div className="flex items-start gap-3.5">
-              <Avatar name={b.peer?.name || "Client"} src={b.peer?.avatar_url ?? undefined} size="md" />
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">{b.peer?.name || "Client"}</h4>
-                  {b.is_no_show ? (
-                    <Badge tone="gold">Client No-Show</Badge>
-                  ) : (
-                    <Badge tone={b.status === "booked" ? "green" : b.status === "completed" ? "blue" : "red"}>
-                      {APPOINTMENT_STATUS_LABELS[b.status]}
-                    </Badge>
+          <div className="space-y-3.5">
+            {sorted.map((b) => {
+              const s = new Date(b.starts_at);
+              const e = new Date(b.ends_at);
+              const pillar = b.consultation_pillar ? PILLAR_ICONS[b.consultation_pillar] : null;
+              const nowMs = Date.now();
+              const startsMs = s.getTime();
+              const canComplete = b.status === "booked" && nowMs >= startsMs;
+              const canCancel = b.status === "booked" && startsMs > nowMs;
+
+              return (
+                <div
+                  key={b.id}
+                  onClick={() => onOpenSession(b)}
+                  className="rounded-2xl border border-slate-200 bg-white p-4.5 hover:border-slate-300 transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs"
+                >
+                  <div className="flex items-start gap-3.5">
+                    <Avatar name={b.peer?.name || "Client"} src={b.peer?.avatar_url ?? undefined} size="md" />
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-bold text-sm text-slate-900">{b.peer?.name || "Client"}</h4>
+                        {b.is_no_show ? (
+                          <Badge tone="gold">Client No-Show</Badge>
+                        ) : (
+                          <Badge tone={b.status === "booked" ? "green" : b.status === "completed" ? "blue" : "red"}>
+                            {APPOINTMENT_STATUS_LABELS[b.status]}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5">
+                        📅 {s.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {formatTime(s)} – {formatTime(e)} ({b.minutes} mins)
+                      </p>
+                      {pillar && (
+                        <p className="text-xs text-amber-700 font-semibold mt-1">
+                          {pillar.icon} {pillar.label}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <a
+                      href={getGoogleCalendarUrl(b)}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all"
+                    >
+                      📅 Add to GCal
+                    </a>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenPrescription(b);
+                      }}
+                    >
+                      📜 Prescription
+                    </Button>
+
+                    {onOpenCertificate && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-purple-200 text-purple-800 hover:bg-purple-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenCertificate(b);
+                        }}
+                      >
+                        👑 Certificate
+                      </Button>
+                    )}
+
+                    {/* Complete Session Action Button */}
+                    {canComplete && (
+                      <Button
+                        size="sm"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCompleteAppointment(b.id);
+                        }}
+                      >
+                        <CheckCircle2 className="size-3.5 mr-1" />
+                        Complete
+                      </Button>
+                    )}
+
+                    {/* Cancel / Delete Booking Action Button */}
+                    {canCancel && (
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCancelAppointment(b.id);
+                        }}
+                      >
+                        <Trash2 className="size-3.5 mr-1" />
+                        Cancel
+                      </Button>
+                    )}
+
+                    <Button size="sm" onClick={() => onOpenSession(b)}>
+                      Open Session
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 2. Open Availability Windows (Active Booking Slots) */}
+      {hasWindows && (
+        <div className={cn("space-y-3", hasBookings && "pt-6 border-t border-slate-200/80")}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="size-4 text-sky-600" />
+              <h3 className="font-extrabold text-sm text-slate-900">
+                Open Availability Windows ({windows.length})
+              </h3>
+            </div>
+            <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+              Slots open for seeker bookings
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {windows.map((w) => {
+              const ws = new Date(w.starts_at);
+              const we = new Date(w.ends_at);
+              const durationMins = Math.round((we.getTime() - ws.getTime()) / 60000);
+              return (
+                <div
+                  key={w.id}
+                  className={cn(
+                    "flex items-center justify-between gap-3 rounded-2xl border p-3.5 shadow-2xs transition-all",
+                    w.is_tatkal
+                      ? "border-amber-300 bg-gradient-to-r from-amber-50/70 via-yellow-50/40 to-white ring-1 ring-amber-400/20 hover:border-amber-400"
+                      : "border-sky-200 bg-sky-50/40 hover:border-sky-300"
+                  )}
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-slate-900 tabular-nums">
+                        {formatTime(ws)} – {formatTime(we)}
+                      </span>
+                      {w.is_tatkal && (
+                        <span className="flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-600 to-yellow-600 px-2 py-0.5 text-[9px] font-black text-white shadow-2xs">
+                          <Zap className="size-2.5 fill-white text-white" />
+                          <span>{w.tatkal_multiplier ? `${w.tatkal_multiplier}x Tatkal` : "VIP Tatkal"}</span>
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      📅 {ws.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {durationMins}m
+                    </p>
+                    {w.custom_title && (
+                      <p className="text-[10px] text-amber-800 font-bold truncate max-w-[160px]">
+                        {w.custom_title}
+                      </p>
+                    )}
+                  </div>
+
+                  {onDeleteWindow && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onDeleteWindow(w)}
+                      className="text-rose-600 border-rose-200 hover:bg-rose-50 text-xs font-bold shrink-0"
+                      title="Delete this open availability slot"
+                    >
+                      <Trash2 className="size-3.5 mr-1" />
+                      Delete
+                    </Button>
                   )}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  📅 {s.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {formatTime(s)} – {formatTime(e)} ({b.minutes} mins)
-                </p>
-                {pillar && (
-                  <p className="text-xs text-amber-700 dark:text-amber-400 font-semibold mt-1">
-                    {pillar.icon} {pillar.label}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <a
-                href={getGoogleCalendarUrl(b)}
-                target="_blank"
-                rel="noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
-              >
-                📅 Add to GCal
-              </a>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenPrescription(b);
-                }}
-              >
-                Prescription
-              </Button>
-              <Button size="sm" onClick={() => onOpenSession(b)}>
-                Open Session
-              </Button>
-            </div>
+              );
+            })}
           </div>
-        );
-      })}
+        </div>
+      )}
+
+      {/* 3. Google Calendar External Busy Periods */}
+      {hasBusy && (
+        <div className="space-y-4 pt-2">
+          <div className="flex items-center justify-between">
+            <h3 className="font-extrabold text-sm text-purple-950 flex items-center gap-2">
+              <GoogleIcon className="size-4" />
+              <span>গুগল ক্যালেন্ডার বাহ্যিক ব্যস্ততা ({busyIntervals.length})</span>
+            </h3>
+            <span className="text-xs text-purple-700 font-semibold hidden sm:inline">
+              আস্ট্রা প্ল্যাটফর্ম এই সময়ে ক্লায়েন্ট বুকিং স্বয়ংক্রিয়ভাবে ব্লক রেখেছে
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {busyIntervals.map((bi, idx) => {
+              const s = new Date(bi.starts_at);
+              const e = new Date(bi.ends_at);
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-purple-200 bg-purple-50/50 p-3.5 shadow-2xs hover:border-purple-300 transition-all"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-purple-950 tabular-nums">
+                        {formatTime(s)} – {formatTime(e)}
+                      </span>
+                      <span className="rounded-full bg-purple-100 text-purple-800 px-1.5 py-0.2 text-[9px] font-extrabold">
+                        Shielded
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-purple-800 font-bold truncate max-w-[180px]">
+                      {bi.title}
+                    </p>
+                    <p className="text-[10px] text-purple-600 font-medium">
+                      📅 {s.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

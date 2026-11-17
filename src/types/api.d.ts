@@ -3489,7 +3489,7 @@ export interface components {
          * ConsultationMode
          * @enum {string}
          */
-        ConsultationMode: "chat" | "call" | "video";
+        ConsultationMode: "chat" | "call" | "video" | "appointment";
         /**
          * ConsultationQuote
          * @description What a session with this astrologer costs me, right now.
