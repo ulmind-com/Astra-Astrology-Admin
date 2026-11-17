@@ -793,6 +793,54 @@ export const cmsAdminApi = {
   },
 };
 
+export interface ShopHeroBannerItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  cta_text: string;
+  cta_link: string;
+  badge_text?: string | null;
+  image_url: string;
+  is_active: boolean;
+}
+
+export interface ShopStoreReelItem {
+  id: string;
+  user_handle: string;
+  user_name?: string | null;
+  rating: number;
+  quote: string;
+  thumbnail_url: string;
+  video_url?: string | null;
+  likes_count: string;
+  tagged_product_title?: string | null;
+  tagged_product_price?: number | null;
+  tagged_product_slug?: string | null;
+  is_active: boolean;
+}
+
+export interface ShopBannerSettingsData {
+  announcement_bar_text?: string | null;
+  announcement_bar_link?: string | null;
+  announcement_bar_active: boolean;
+  hero_banners: ShopHeroBannerItem[];
+  reels: ShopStoreReelItem[];
+}
+
+export const shopAdminApi = {
+  getBanners: () => api.get<ShopBannerSettingsData>(endpoints.admin.shopBanners),
+  updateBanners: (body: Partial<ShopBannerSettingsData>) =>
+    api.put<ShopBannerSettingsData>(endpoints.admin.shopBanners, body),
+  uploadImage: async (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return apiFetch<{ url: string; public_id: string }>(endpoints.admin.shopUploadImage, {
+      method: "POST",
+      body: fd,
+    });
+  },
+};
+
 export interface PasskeyInfo {
   id: string;
   credential_id: string;
