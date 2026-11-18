@@ -16,6 +16,13 @@ import {
   ExternalLink,
   Flame,
   RefreshCw,
+  ShieldCheck,
+  Truck,
+  Coins,
+  Lock,
+  Info,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
@@ -44,12 +51,16 @@ import {
 import { ApiError } from "@/lib/api/client";
 import { useRequireAuth } from "@/providers/auth-provider";
 
-type ActiveTab = "announcement" | "hero_banners" | "reels";
+type ActiveTab = "hero_banners" | "announcement" | "policies" | "reels";
 
 const DEFAULT_SHOP_DATA: ShopBannerSettingsData = {
   announcement_bar_text: "🛍️ Discover Sacred Jewellery & Energised Remedies Based on Your Mulank & Kundli ✨",
   announcement_bar_link: "/shop",
   announcement_bar_active: true,
+  cod_enabled: true,
+  cashback_credit_timing: "on_delivery",
+  allow_user_cancellation: true,
+  cancellation_grace_hours: 24,
   hero_banners: [
     {
       id: "banner-lumus",
@@ -212,6 +223,10 @@ export default function ShopCMSPage() {
         announcement_bar_active: serverData.announcement_bar_active ?? true,
         hero_banners: serverData.hero_banners?.length ? serverData.hero_banners : DEFAULT_SHOP_DATA.hero_banners,
         reels: serverData.reels?.length ? serverData.reels : DEFAULT_SHOP_DATA.reels,
+        cod_enabled: serverData.cod_enabled ?? true,
+        cashback_credit_timing: serverData.cashback_credit_timing ?? "on_delivery",
+        allow_user_cancellation: serverData.allow_user_cancellation ?? true,
+        cancellation_grace_hours: serverData.cancellation_grace_hours ?? 24,
       });
     }
   }, [serverData]);
@@ -366,6 +381,18 @@ export default function ShopCMSPage() {
         >
           <Sparkles className="size-4" />
           <span>Top Announcement</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("policies")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+            activeTab === "policies"
+              ? "bg-amber-600 text-white shadow-xs"
+              : "text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-900"
+          }`}
+        >
+          <ShieldCheck className="size-4 text-emerald-400" />
+          <span>🛡️ COD, Policies & Anti-Fraud</span>
         </button>
         <button
           type="button"
@@ -564,6 +591,218 @@ export default function ShopCMSPage() {
             </div>
           </CardBody>
         </Card>
+      )}
+
+      {/* Store Policies, COD & Anti-Fraud Tab */}
+      {activeTab === "policies" && (
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-base font-bold text-stone-900 dark:text-white flex items-center gap-2">
+              <ShieldCheck className="size-5 text-emerald-600" />
+              <span>Store Policies, COD & Anti-Fraud Security Controls</span>
+            </h3>
+            <p className="text-xs text-stone-500 dark:text-stone-400">
+              Manage Cash on Delivery (COD) availability, customer order cancellation rules, and anti-fraud cashback coin release triggers.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* 1. COD Control Card */}
+            <Card className="border border-stone-200 dark:border-stone-800">
+              <CardHeader>
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <Truck className="size-4 text-amber-600" />
+                  <span>Cash on Delivery (COD) Control</span>
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Enable or disable Cash on Delivery across the entire AstroStore with 1 click.
+                </CardDescription>
+              </CardHeader>
+              <CardBody className="space-y-4">
+                <div className="flex items-center justify-between p-3.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/50">
+                  <div className="space-y-0.5 pr-4">
+                    <span className="text-xs font-bold text-stone-900 dark:text-white">
+                      Enable Cash on Delivery (COD)
+                    </span>
+                    <p className="text-[11px] text-stone-500">
+                      When turned off, customers can only pay using Prepaid methods (UPI, Cards, NetBanking).
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.cod_enabled ?? true}
+                    onChange={(checked) => {
+                      setFormData((prev) => ({ ...prev, cod_enabled: checked }));
+                      setIsDirty(true);
+                    }}
+                  />
+                </div>
+
+                <div className="p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-300 space-y-1">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <Info className="size-3.5" />
+                    <span>Current Status: {(formData.cod_enabled ?? true) ? "COD is Active" : "COD is Disabled"}</span>
+                  </div>
+                  <p className="text-[11px]">
+                    {(formData.cod_enabled ?? true)
+                      ? "Customers across serviceable PIN codes can place orders with Cash on Delivery."
+                      : "Only online payment is allowed. Checkout and Pincode tracker will show COD as disabled."}
+                  </p>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* 2. Cashback Credit Timing Trigger Card */}
+            <Card className="border border-stone-200 dark:border-stone-800">
+              <CardHeader>
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <Coins className="size-4 text-emerald-600" />
+                  <span>Cashback Coins Disbursement Trigger</span>
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Configure precisely when 100% wallet cashback coins are unlocked and credited to the devotee's wallet.
+                </CardDescription>
+              </CardHeader>
+              <CardBody className="space-y-3">
+                {/* Option A: On Delivery (Recommended) */}
+                <label
+                  className={`flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                    (formData.cashback_credit_timing || "on_delivery") === "on_delivery"
+                      ? "border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-xs"
+                      : "border-stone-200 dark:border-stone-800 hover:border-stone-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="cashback_timing"
+                    value="on_delivery"
+                    checked={(formData.cashback_credit_timing || "on_delivery") === "on_delivery"}
+                    onChange={() => {
+                      setFormData((prev) => ({ ...prev, cashback_credit_timing: "on_delivery" }));
+                      setIsDirty(true);
+                    }}
+                    className="mt-0.5 accent-emerald-600"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-bold text-stone-900 dark:text-white">
+                        🛡️ Upon Successful Delivery (Recommended • 100% Anti-Fraud)
+                      </span>
+                      <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-sm bg-emerald-100 text-emerald-800">
+                        SAFE
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-stone-600 dark:text-stone-400 leading-relaxed">
+                      Cashback coins are reserved upon order confirmation and credited to the devotee's wallet only after physical doorstep delivery. Eliminates cancellation abuse where a user spends coins on astrologers and cancels the order!
+                    </p>
+                  </div>
+                </label>
+
+                {/* Option B: On Payment */}
+                <label
+                  className={`flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                    formData.cashback_credit_timing === "on_payment"
+                      ? "border-amber-600 bg-amber-50/50 dark:bg-amber-950/20 shadow-xs"
+                      : "border-stone-200 dark:border-stone-800 hover:border-stone-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="cashback_timing"
+                    value="on_payment"
+                    checked={formData.cashback_credit_timing === "on_payment"}
+                    onChange={() => {
+                      setFormData((prev) => ({ ...prev, cashback_credit_timing: "on_payment" }));
+                      setIsDirty(true);
+                    }}
+                    className="mt-0.5 accent-amber-600"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-stone-900 dark:text-white">
+                        ⚡ Instant Upon Online Payment Verification
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-stone-600 dark:text-stone-400 leading-relaxed">
+                      Coins are credited immediately. If customer spends the coins on consultations, our automatic anti-fraud lock prevents them from cancelling the order.
+                    </p>
+                  </div>
+                </label>
+              </CardBody>
+            </Card>
+
+            {/* 3. Customer Order Cancellation Policy */}
+            <Card className="border border-stone-200 dark:border-stone-800">
+              <CardHeader>
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <Clock className="size-4 text-blue-600" />
+                  <span>Customer Order Cancellation Policy</span>
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Controls whether and how long customers can cancel orders before dispatch.
+                </CardDescription>
+              </CardHeader>
+              <CardBody className="space-y-4">
+                <div className="flex items-center justify-between p-3.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/50">
+                  <div className="space-y-0.5 pr-4">
+                    <span className="text-xs font-bold text-stone-900 dark:text-white">
+                      Allow Online Cancellation Before Dispatch
+                    </span>
+                    <p className="text-[11px] text-stone-500">
+                      When disabled, customers cannot cancel orders online and must contact customer support.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.allow_user_cancellation ?? true}
+                    onChange={(checked) => {
+                      setFormData((prev) => ({ ...prev, allow_user_cancellation: checked }));
+                      setIsDirty(true);
+                    }}
+                  />
+                </div>
+
+                <Field label="Cancellation Grace Window (Hours)" hint="Hours from order placement during which cancellation is allowed before shipping.">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={168}
+                    value={formData.cancellation_grace_hours ?? 24}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, cancellation_grace_hours: Number(e.target.value) }));
+                      setIsDirty(true);
+                    }}
+                  />
+                </Field>
+              </CardBody>
+            </Card>
+
+            {/* 4. Anti-Fraud Spent Coins Protection Shield Status */}
+            <Card className="border border-stone-200 dark:border-stone-800">
+              <CardHeader>
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <Lock className="size-4 text-emerald-600" />
+                  <span>Anti-Gaming Spent Coins Shield</span>
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Automated financial security guard built into backend cancellation endpoints.
+                </CardDescription>
+              </CardHeader>
+              <CardBody className="space-y-3">
+                <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-300 dark:border-emerald-800 text-xs text-emerald-950 dark:text-emerald-300 space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-sm">
+                    <CheckCircle2 className="size-4.5 text-emerald-600" />
+                    <span>Real-Time Coin Spent Protection: ACTIVE</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed">
+                    If an order's credited cashback coins have already been consumed by the devotee for live astrologer calls or chats, the backend strictly rejects any cancellation attempt with an error message:
+                  </p>
+                  <blockquote className="p-2 rounded bg-white/80 dark:bg-black/30 border-l-2 border-emerald-600 text-[10px] font-mono">
+                    "এই অর্ডারের জন্য প্রাপ্ত ক্যাশব্যাক কয়েন ইতিমধ্যে জ্যোতিষী পরামর্শে ব্যবহার করা হয়েছে। তাই এই অর্ডারটি সরাসরি বাতিল করা সম্ভব নয়।"
+                  </blockquote>
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+        </div>
       )}
 
       {/* Customer Reels Tab */}

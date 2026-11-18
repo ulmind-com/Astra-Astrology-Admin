@@ -1004,6 +1004,15 @@ export interface ShopBannerSettingsData {
   announcement_bar_active: boolean;
   hero_banners: ShopHeroBannerItem[];
   reels: ShopStoreReelItem[];
+  // Store Policies, COD & Anti-Fraud Cashback Controls
+  cod_enabled?: boolean;
+  cashback_credit_timing?: "on_delivery" | "on_payment" | string;
+  allow_user_cancellation?: boolean;
+  cancellation_grace_hours?: number;
+  cashback_enabled?: boolean;
+  cashback_percent?: number;
+  free_shipping_threshold?: number;
+  standard_shipping_fee?: number;
 }
 
 
@@ -1108,6 +1117,35 @@ export const shopAdminApi = {
 
   updateBannerSettings: (body: Partial<ShopBannerSettings>) =>
     api.put<ShopBannerSettings>(endpoints.admin.shop.banners, body),
+
+  listOrders: (params?: {
+    status?: string;
+    payment_status?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) =>
+    api.get<{ items: any[]; total: number; page: number; limit: number; pages: number }>(
+      endpoints.admin.shop.orders,
+      { query: params }
+    ),
+
+  getOrder: (id: string) =>
+    api.get<any>(endpoints.admin.shop.order(id)),
+
+  updateOrder: (id: string, body: {
+    order_status?: string;
+    courier_partner?: string;
+    tracking_id?: string;
+    tracking_url?: string;
+    estimated_delivery_date?: string;
+    notes?: string;
+    consecration_certificate_url?: string;
+  }) =>
+    api.patch<any>(endpoints.admin.shop.order(id), body),
+
+  cancelOrder: (id: string, reason?: string) =>
+    api.post<any>(endpoints.admin.shop.cancelOrder(id), {}, { query: { reason } }),
 };
 
 

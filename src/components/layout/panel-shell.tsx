@@ -27,6 +27,7 @@ import {
   Fingerprint,
   LifeBuoy,
   ShoppingBag,
+  Package,
   Boxes,
   Tags,
   GraduationCap,
@@ -75,6 +76,7 @@ const ADMIN_FINANCIAL_NAV: NavItem[] = [
 ];
 
 const ADMIN_STORE_NAV: NavItem[] = [
+  { href: "/orders", label: "Remedy Orders & Dispatch", icon: Package },
   { href: "/products", label: "Astro Products", icon: ShoppingBag },
   { href: "/inventory", label: "Inventory & Alerts", icon: Boxes },
   { href: "/categories", label: "Categories & Banners", icon: Tags },
