@@ -835,6 +835,7 @@ export interface ShopHeroBannerItem {
   badge_text?: string | null;
   image_url: string;
   is_active: boolean;
+  hide_text_overlay?: boolean;
 }
 
 export interface ShopBannerSettings {

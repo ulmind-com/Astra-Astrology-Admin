@@ -52,6 +52,17 @@ const DEFAULT_SHOP_DATA: ShopBannerSettingsData = {
   announcement_bar_active: true,
   hero_banners: [
     {
+      id: "banner-lumus",
+      title: "Discover India's First Crystal-Infused Perfumes",
+      subtitle: "Where every fragrance meets the energy of crystals.",
+      cta_text: "Shop Now",
+      cta_link: "/shop?category=perfumes",
+      badge_text: "LUMUS × ASTROTALK",
+      image_url: "/images/banners/banner-lumus-clean.jpg",
+      hide_text_overlay: true,
+      is_active: true,
+    },
+    {
       id: "banner-1",
       title: "WEAR YOUR ZODIAC",
       subtitle: "Discover the new zodiac ring collection handcrafted in sterling silver and energized with Vedic rituals.",
