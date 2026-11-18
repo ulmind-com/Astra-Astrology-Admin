@@ -1009,6 +1009,7 @@ export interface ShopBannerSettingsData {
   cashback_credit_timing?: "on_delivery" | "on_payment" | string;
   allow_user_cancellation?: boolean;
   cancellation_grace_hours?: number;
+  checkout_reservation_minutes?: number;
   cashback_enabled?: boolean;
   cashback_percent?: number;
   free_shipping_threshold?: number;
@@ -1146,6 +1147,9 @@ export const shopAdminApi = {
 
   cancelOrder: (id: string, reason?: string) =>
     api.post<any>(endpoints.admin.shop.cancelOrder(id), {}, { query: { reason } }),
+
+  sweepAbandonedInventory: () =>
+    api.post<{ restored_orders_count: number }>(endpoints.admin.shop.sweepAbandonedInventory, {}),
 };
 
 
