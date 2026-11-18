@@ -131,6 +131,7 @@ const STATUS_MAP: Record<
   shipped: { label: "Dispatched", badge: "bg-purple-100 text-purple-900 border-purple-300", color: "purple" },
   out_for_delivery: { label: "Out for Delivery", badge: "bg-teal-100 text-teal-900 border-teal-300", color: "teal" },
   delivered: { label: "Delivered", badge: "bg-emerald-100 text-emerald-900 border-emerald-300", color: "emerald" },
+  rto: { label: "RTO (Courier Return)", badge: "bg-rose-100 text-rose-900 border-rose-300", color: "rose" },
   cancelled: { label: "Cancelled", badge: "bg-rose-100 text-rose-900 border-rose-300", color: "rose" },
   returned: { label: "Returned", badge: "bg-stone-200 text-stone-700 border-stone-400", color: "stone" },
   expired: { label: "Expired (Unpaid)", badge: "bg-amber-50 text-amber-800 border-amber-200", color: "amber" },
@@ -159,6 +160,7 @@ export default function AdminOrdersPage() {
   const [estimatedDelivery, setEstimatedDelivery] = React.useState<string>("");
   const [dispatchNotes, setDispatchNotes] = React.useState<string>("");
   const [targetStatus, setTargetStatus] = React.useState<string>("");
+  const [rtoReason, setRtoReason] = React.useState<string>("");
 
   // Search debounce
   React.useEffect(() => {
@@ -176,7 +178,9 @@ export default function AdminOrdersPage() {
       else if (activeTab === "packed") statusParam = "packed";
       else if (activeTab === "shipped") statusParam = "shipped";
       else if (activeTab === "delivered") statusParam = "delivered";
+      else if (activeTab === "rto") statusParam = "rto";
       else if (activeTab === "cancelled") statusParam = "cancelled";
+      else if (activeTab === "expired") statusParam = "expired";
 
       const res = await shopAdminApi.listOrders({
         page,
@@ -256,6 +260,7 @@ export default function AdminOrdersPage() {
         : ""
     );
     setDispatchNotes("");
+    setRtoReason(order.rto_reason || "");
     setTargetStatus(order.order_status);
     setManageModalOpen(true);
   };
@@ -299,6 +304,7 @@ export default function AdminOrdersPage() {
       tracking_url: trackingUrl.trim() || undefined,
       estimated_delivery_date: estimatedDelivery ? new Date(estimatedDelivery).toISOString() : undefined,
       notes: dispatchNotes.trim() || undefined,
+      rto_reason: targetStatus === "rto" ? (rtoReason.trim() || "Courier Return to Origin (Customer Unreached/Refused)") : undefined,
     };
     updateMutation.mutate({ orderId: selectedOrder.id, payload });
   };
@@ -419,6 +425,7 @@ export default function AdminOrdersPage() {
               { id: "packed", label: "Packed & Sealed" },
               { id: "shipped", label: `In Transit (${inTransitCount})` },
               { id: "delivered", label: "Delivered" },
+              { id: "rto", label: "RTO (Courier Return)" },
               { id: "cancelled", label: "Cancelled" },
               { id: "expired", label: "Expired (Unpaid)" },
             ].map((tab) => (
@@ -719,9 +726,27 @@ export default function AdminOrdersPage() {
                   <option value="shipped">4. Dispatched via Courier (In Transit)</option>
                   <option value="out_for_delivery">5. Out for Delivery</option>
                   <option value="delivered">6. Delivered (Unlocks 100% Cashback Coins)</option>
+                  <option value="rto">7. RTO (Courier Return to Origin - Parcel Undelivered)</option>
                   <option value="cancelled">Cancelled</option>
                 </Select>
               </Field>
+
+              {/* RTO Specific Details */}
+              {targetStatus === "rto" && (
+                <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 space-y-2">
+                  <Field label="RTO Reason" hint="Why was the parcel returned by courier?">
+                    <Input
+                      value={rtoReason}
+                      onChange={(e) => setRtoReason(e.target.value)}
+                      placeholder="e.g. Customer refused delivery / Phone unreachable / Fake Address"
+                      className="text-xs font-medium"
+                    />
+                  </Field>
+                  <p className="text-[11px] text-rose-800 leading-relaxed">
+                    ⚠️ <b>Automated Protection Active:</b> Marking as RTO will atomically restore product stock to the warehouse, cancel any pending cashback coins, and record the attempt. If this phone number exceeds the max RTO threshold, COD will be automatically blocked for this user.
+                  </p>
+                </div>
+              )}
 
               {/* Courier Dispatch Controls (Shows prominently for Shipped / Packed) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">

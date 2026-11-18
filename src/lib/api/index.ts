@@ -1009,6 +1009,8 @@ export interface ShopBannerSettingsData {
   allow_user_cancellation?: boolean;
   cancellation_grace_hours?: number;
   checkout_reservation_minutes?: number;
+  cod_max_rto_allowed?: number;
+  cod_blacklisted_phones?: string[];
   cashback_enabled?: boolean;
   cashback_percent?: number;
   free_shipping_threshold?: number;
