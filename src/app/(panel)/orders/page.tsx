@@ -133,6 +133,7 @@ const STATUS_MAP: Record<
   delivered: { label: "Delivered", badge: "bg-emerald-100 text-emerald-900 border-emerald-300", color: "emerald" },
   cancelled: { label: "Cancelled", badge: "bg-rose-100 text-rose-900 border-rose-300", color: "rose" },
   returned: { label: "Returned", badge: "bg-stone-200 text-stone-700 border-stone-400", color: "stone" },
+  expired: { label: "Expired (Unpaid)", badge: "bg-amber-50 text-amber-800 border-amber-200", color: "amber" },
 };
 
 export default function AdminOrdersPage() {
@@ -220,6 +221,24 @@ export default function AdminOrdersPage() {
     },
     onError: (err) => {
       const msg = err instanceof ApiError ? err.message : "Failed to cancel order";
+      toast.error(msg);
+    },
+  });
+
+  // Manual sweep of expired abandoned checkouts
+  const sweepMutation = useMutation({
+    mutationFn: async () => {
+      return await shopAdminApi.sweepAbandonedInventory();
+    },
+    onSuccess: (res: any) => {
+      const count = res?.restored_orders_count ?? 0;
+      toast.success(`Inventory TTL Sweep: ${count} expired checkout(s) restored.`);
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ["admin_shop_orders"] });
+      queryClient.invalidateQueries({ queryKey: ["shop_inventory"] });
+    },
+    onError: (err) => {
+      const msg = err instanceof ApiError ? err.message : "Failed to sweep expired checkouts";
       toast.error(msg);
     },
   });
@@ -313,6 +332,16 @@ export default function AdminOrdersPage() {
         description="Manage devotee orders, Kashi Vishwanath Pran-Pratishtha consecration progress, and multi-courier dispatch tracking (DTDC, Blue Dart, Delhivery)."
         action={
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => sweepMutation.mutate()}
+              loading={sweepMutation.isPending}
+              title="Sweep expired unpaid checkouts and restore reserved stock"
+            >
+              <Sparkles className="size-3.5 mr-1 text-purple-600" />
+              Sweep Expired Carts
+            </Button>
             <Button variant="secondary" size="sm" onClick={() => refetch()} loading={isFetching}>
               <RefreshCw className="size-3.5 mr-1" />
               Refresh
@@ -391,6 +420,7 @@ export default function AdminOrdersPage() {
               { id: "shipped", label: `In Transit (${inTransitCount})` },
               { id: "delivered", label: "Delivered" },
               { id: "cancelled", label: "Cancelled" },
+              { id: "expired", label: "Expired (Unpaid)" },
             ].map((tab) => (
               <button
                 key={tab.id}

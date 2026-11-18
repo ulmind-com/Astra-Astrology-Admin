@@ -156,6 +156,7 @@ export const endpoints = {
       category: (id: string) => `/admin/shop/categories/${id}`,
       banners: "/admin/shop/banners",
       cleanupOrphanedImages: "/admin/shop/cleanup-orphaned-images",
+      sweepAbandonedInventory: "/admin/shop/inventory/sweep-abandoned",
       orders: "/admin/shop/orders",
       order: (id: string) => `/admin/shop/orders/${id}`,
       cancelOrder: (id: string) => `/admin/shop/orders/${id}/cancel`,

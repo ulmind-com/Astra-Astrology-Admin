@@ -40,6 +40,7 @@ import {
   Field,
   Input,
   LoadingBlock,
+  Select,
   Switch,
 } from "@/components/ui";
 import {
@@ -61,6 +62,7 @@ const DEFAULT_SHOP_DATA: ShopBannerSettingsData = {
   cashback_credit_timing: "on_delivery",
   allow_user_cancellation: true,
   cancellation_grace_hours: 24,
+  checkout_reservation_minutes: 20,
   hero_banners: [
     {
       id: "banner-1",
@@ -216,6 +218,7 @@ export default function ShopCMSPage() {
         cashback_credit_timing: serverData.cashback_credit_timing ?? "on_delivery",
         allow_user_cancellation: serverData.allow_user_cancellation ?? true,
         cancellation_grace_hours: serverData.cancellation_grace_hours ?? 24,
+        checkout_reservation_minutes: serverData.checkout_reservation_minutes ?? 20,
       });
     }
   }, [serverData]);
@@ -787,6 +790,52 @@ export default function ShopCMSPage() {
                   <blockquote className="p-2 rounded bg-white/80 dark:bg-black/30 border-l-2 border-emerald-600 text-[10px] font-mono">
                     "এই অর্ডারের জন্য প্রাপ্ত ক্যাশব্যাক কয়েন ইতিমধ্যে জ্যোতিষী পরামর্শে ব্যবহার করা হয়েছে। তাই এই অর্ডারটি সরাসরি বাতিল করা সম্ভব নয়।"
                   </blockquote>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* 5. Stock Reservation & Abandoned Checkout TTL Engine */}
+            <Card className="border border-stone-200 dark:border-stone-800">
+              <CardHeader>
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <ShieldCheck className="size-4 text-purple-600" />
+                  <span>Stock Reservation & Abandoned Checkout TTL Engine</span>
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Temporarily reserves item inventory during online checkout and automatically restores it if payment is abandoned.
+                </CardDescription>
+              </CardHeader>
+              <CardBody className="space-y-4">
+                <Field
+                  label="Checkout Stock Reservation Window (Minutes)"
+                  hint="How long stock remains reserved for uncompleted Razorpay checkouts before being restored back to the store catalog."
+                >
+                  <Select
+                    value={String(formData.checkout_reservation_minutes ?? 20)}
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        checkout_reservation_minutes: Number(e.target.value),
+                      }));
+                      setIsDirty(true);
+                    }}
+                  >
+                    <option value="10">10 Minutes (Fast Flash Sales)</option>
+                    <option value="15">15 Minutes (Standard Retail)</option>
+                    <option value="20">20 Minutes (Recommended - Industry Standard)</option>
+                    <option value="30">30 Minutes (Relaxed Window)</option>
+                    <option value="60">60 Minutes (Maximum Window)</option>
+                  </Select>
+                </Field>
+
+                <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 text-xs text-purple-950 dark:text-purple-300 space-y-1">
+                  <div className="flex items-center gap-2 font-bold">
+                    <Sparkles className="size-4 text-purple-600" />
+                    <span>Automated 5-Minute Background Reversion Worker: ACTIVE</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed">
+                    The backend sweeps uncompleted checkouts every 5 minutes. If a customer opens Razorpay and abandons without paying, their reserved stock is automatically returned to active inventory without any admin intervention.
+                  </p>
                 </div>
               </CardBody>
             </Card>
