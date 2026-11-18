@@ -32,6 +32,8 @@ import {
   Tags,
   GraduationCap,
   MessageSquareQuote,
+  Flame,
+  BookOpen,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -53,6 +55,13 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
 };
 
+const PUROHIT_NAV: NavItem[] = [
+  { href: "/purohit-dashboard", label: "Purohit Dashboard", icon: Flame },
+  { href: "/purohit-dashboard/pujas", label: "My Puja Catalog", icon: BookOpen },
+  { href: "/purohit-dashboard/bookings", label: "Live Puja Bookings", icon: CalendarDays },
+  { href: "/me/password", label: "Password", icon: Lock },
+];
+
 const ASTROLOGER_NAV: NavItem[] = [
   { href: "/me", label: "My Profile", icon: UserRound },
   { href: "/appointments", label: "Appointments", icon: CalendarDays },
@@ -65,6 +74,7 @@ const ASTROLOGER_NAV: NavItem[] = [
 const ADMIN_MENU_NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/astrologers", label: "Astrologers", icon: Users },
+  { href: "/purohits", label: "Purohits & Pandits", icon: Flame },
   { href: "/support", label: "Support Tickets", icon: LifeBuoy },
 ];
 
@@ -344,7 +354,9 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Navigation Sections */}
-          {user?.role === "astrologer" ? (
+          {user?.role === "purohit" ? (
+            renderNavGroup("PUROHIT ALTAR PORTAL", PUROHIT_NAV, isMobile)
+          ) : user?.role === "astrologer" ? (
             renderNavGroup("ASTROLOGER PORTAL", ASTROLOGER_NAV, isMobile)
           ) : (
             <>

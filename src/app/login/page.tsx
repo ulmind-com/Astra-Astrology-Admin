@@ -178,7 +178,13 @@ function LoginForm() {
 
   React.useEffect(() => {
     if (loading || !user) return;
-    router.replace(user.role === "astrologer" ? "/me" : "/dashboard");
+    if (user.role === "purohit") {
+      router.replace("/purohit-dashboard");
+    } else if (user.role === "astrologer") {
+      router.replace("/me");
+    } else {
+      router.replace("/dashboard");
+    }
   }, [user, loading, router]);
 
   // The API is on a platform that sleeps when idle, so the first request after
@@ -203,7 +209,7 @@ function LoginForm() {
       if (result.user.role === "user") {
         setError(
           new ApiError(
-            "This portal is exclusively for verified Astrologers and Platform Administrators.",
+            "This portal is exclusively for verified Astrologers, Purohits, and Platform Administrators.",
             403,
             "insufficient_role",
           ),
@@ -212,7 +218,10 @@ function LoginForm() {
         return;
       }
       signIn(result);
-      if (result.user.role === "astrologer") {
+      if (result.user.role === "purohit") {
+        toast.success(`Welcome back, Purohit ${result.user.first_name}!`);
+        router.replace("/purohit-dashboard");
+      } else if (result.user.role === "astrologer") {
         toast.success(`Welcome back, Astrologer ${result.user.first_name}!`);
         router.replace("/me");
       } else {
