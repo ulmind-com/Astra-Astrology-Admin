@@ -31,13 +31,16 @@ export interface PaginatedResult<T> {
 }
 
 // -------------------------------------------------------------------- auth
-export type AuthResult = S["AuthResult"];
+export type UserRole = S["UserRole"] | "purohit";
+export type UserPublic = Omit<S["UserPublic"], "role"> & {
+  role: UserRole;
+};
+export type AuthResult = Omit<S["AuthResult"], "user"> & {
+  user: UserPublic;
+};
 export type TokenPair = S["TokenPair"];
-export type UserPublic = S["UserPublic"];
 export type OtpSentResult = S["OtpSentResult"];
 export type EmailAvailability = S["EmailAvailability"];
-export type UserRole = S["UserRole"];
-export type AccountStatus = S["AccountStatus"];
 export type AuthProvider = S["AuthProvider"];
 
 // ----------------------------------------------------------------- profile
@@ -135,6 +138,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   astrologer: "Astrologer",
   admin: "Admin",
   super_admin: "Super Admin",
+  purohit: "Purohit",
 };
 
 /** The languages the platform starts with. Free text, so this is only a hint. */

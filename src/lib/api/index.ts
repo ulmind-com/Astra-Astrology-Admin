@@ -1304,3 +1304,114 @@ export const courseAdminApi = {
       endpoints.admin.courses.courseLearnerProgress(courseId, userId)
     ),
 };
+
+// ------------------------------------------------------------------- Purohit Types & APIs
+export interface PurohitPujaItem {
+  id: string;
+  puja_name: string;
+  description: string;
+  duration_minutes: number;
+  price_inr: number;
+  samagri_notes?: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface PurohitData {
+  id: string;
+  user_id: string;
+  display_name: string;
+  slug: string;
+  title: string;
+  bio?: string | null;
+  avatar_url?: string | null;
+  phone?: string;
+  email?: string;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+  experience_years: number;
+  languages: string[];
+  is_online: boolean;
+  is_verified: boolean;
+  pujas: PurohitPujaItem[];
+  rating: number;
+  total_pujas_performed: number;
+  starting_price_inr: number;
+  created_at?: string;
+}
+
+export interface PurohitCreatedData extends PurohitData {
+  temporary_password: string;
+  email_sent: boolean;
+}
+
+export interface PujaBookingData {
+  id: string;
+  booking_number: string;
+  user_id: string;
+  user_name: string;
+  user_phone: string;
+  purohit_id: string;
+  purohit_name: string;
+  puja_item_id: string;
+  puja_name: string;
+  puja_duration_minutes: number;
+  amount_inr: number;
+  sankalpa_name: string;
+  sankalpa_gotra: string;
+  sankalpa_wish?: string | null;
+  room_id: string;
+  zego_app_id?: number;
+  zego_token?: string | null;
+  status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled";
+  payment_status: "pending" | "paid" | "failed" | "refunded";
+  started_at?: string | null;
+  completed_at?: string | null;
+  created_at: string;
+}
+
+export interface ApiResponse<T> {
+  success?: boolean;
+  message?: string;
+  data: T;
+}
+
+export const adminPurohitApi = {
+  list: (params?: { limit?: number; offset?: number }) =>
+    api.get<ApiResponse<PurohitData[]>>("/admin/purohits", { query: params }),
+  create: (body: any) =>
+    api.post<ApiResponse<PurohitCreatedData>>("/admin/purohits", body),
+  get: (id: string) =>
+    api.get<ApiResponse<PurohitData>>(`/admin/purohits/${id}`),
+  update: (id: string, body: any) =>
+    api.put<ApiResponse<PurohitData>>(`/admin/purohits/${id}`, body),
+  delete: (id: string) =>
+    api.delete<{ message: string }>(`/admin/purohits/${id}`),
+};
+
+export const purohitPortalApi = {
+  getMyProfile: () =>
+    api.get<ApiResponse<PurohitData>>("/purohits/me/profile"),
+  setAvailability: (isOnline: boolean) =>
+    api.put<ApiResponse<PurohitData>>("/purohits/me/availability", { is_online: isOnline }),
+  addPuja: (body: {
+    puja_name: string;
+    description: string;
+    duration_minutes: number;
+    price_inr: number;
+    samagri_notes?: string | null;
+    is_active?: boolean;
+  }) => api.post<ApiResponse<PurohitPujaItem>>("/purohits/me/pujas", body),
+  updatePuja: (pujaId: string, body: any) =>
+    api.put<ApiResponse<PurohitPujaItem>>(`/purohits/me/pujas/${pujaId}`, body),
+  deletePuja: (pujaId: string) =>
+    api.delete<{ message: string }>(`/purohits/me/pujas/${pujaId}`),
+  getMyBookings: () =>
+    api.get<ApiResponse<PujaBookingData[]>>("/purohits/me/bookings"),
+  completeBooking: (bookingId: string) =>
+    api.post<ApiResponse<PujaBookingData>>(`/purohits/bookings/${bookingId}/complete`),
+  getRoomToken: (bookingId: string) =>
+    api.get<ApiResponse<PujaBookingData>>(`/purohits/bookings/${bookingId}/token`),
+};
