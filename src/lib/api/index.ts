@@ -1003,6 +1003,15 @@ export interface ShopBannerSettingsData {
   announcement_bar_active: boolean;
   hero_banners: ShopHeroBannerItem[];
   reels: ShopStoreReelItem[];
+  // Store Policies, COD & Anti-Fraud Cashback Controls
+  cod_enabled?: boolean;
+  cashback_credit_timing?: "on_delivery" | "on_payment" | string;
+  allow_user_cancellation?: boolean;
+  cancellation_grace_hours?: number;
+  cashback_enabled?: boolean;
+  cashback_percent?: number;
+  free_shipping_threshold?: number;
+  standard_shipping_fee?: number;
 }
 
 
