@@ -23,12 +23,26 @@ function read(name: string, value: string | undefined, fallback: string): string
  */
 const DEPLOYED_API_URL = "https://astra-astrology-backend.onrender.com";
 
-export const env = {
-  apiUrl: read(
+function getResolvedApiUrl(): string {
+  const configured = read(
     "NEXT_PUBLIC_API_URL",
     process.env.NEXT_PUBLIC_API_URL,
     DEPLOYED_API_URL,
-  ).replace(/\/+$/, ""),
+  ).replace(/\/+$/, "");
+
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    const isLocalHost = host === "localhost" || host === "127.0.0.1" || host.endsWith(".local");
+    if (!isLocalHost && (configured.includes("localhost") || configured.includes("127.0.0.1"))) {
+      return DEPLOYED_API_URL;
+    }
+  }
+
+  return configured;
+}
+
+export const env = {
+  apiUrl: getResolvedApiUrl(),
   apiPrefix: process.env.NEXT_PUBLIC_API_PREFIX ?? "/api/v1",
   appName: process.env.NEXT_PUBLIC_APP_NAME ?? "DivinLink",
   isProduction: process.env.NODE_ENV === "production",
