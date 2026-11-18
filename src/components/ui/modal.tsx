@@ -25,7 +25,7 @@ export function Modal({
   description?: string;
   children?: React.ReactNode;
   footer?: React.ReactNode;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
 }) {
   const ref = React.useRef<HTMLDialogElement>(null);
 
@@ -48,7 +48,7 @@ export function Modal({
     return () => dialog.removeEventListener("cancel", handle);
   }, [onClose]);
 
-  const widths = { sm: "max-w-sm", md: "max-w-lg", lg: "max-w-2xl" };
+  const widths = { sm: "max-w-sm", md: "max-w-lg", lg: "max-w-2xl", xl: "max-w-3xl" };
 
   return (
     <dialog
