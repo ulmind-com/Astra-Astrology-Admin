@@ -5,9 +5,11 @@ import {
   ArrowLeft,
   Award,
   CheckCircle2,
+  Coins,
   DollarSign,
   FileCheck,
   Flame,
+  Gift,
   HelpCircle,
   Info,
   Loader2,
@@ -153,6 +155,42 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
   const [isFeatured, setIsFeatured] = React.useState<boolean>(initialProduct?.is_featured ?? false);
   const [isEnergized, setIsEnergized] = React.useState<boolean>(initialProduct?.is_energized ?? true);
 
+  // 100% Wallet Cashback & Free Gift Configuration
+  const [cashbackPercent, setCashbackPercent] = React.useState<number>(
+    initialProduct?.cashback_percent ?? 100
+  );
+  const [enableCashback, setEnableCashback] = React.useState<boolean>(
+    (initialProduct?.cashback_percent ?? 100) > 0
+  );
+  const [hasFreeGift, setHasFreeGift] = React.useState<boolean>(
+    initialProduct?.free_gift_value !== undefined && initialProduct?.free_gift_value !== null
+      ? initialProduct.free_gift_value > 0
+      : true
+  );
+  const [freeGiftTitle, setFreeGiftTitle] = React.useState<string>(
+    initialProduct?.free_gift_title || "Raw Selenite Charging Plate"
+  );
+  const [freeGiftValue, setFreeGiftValue] = React.useState<number>(
+    initialProduct?.free_gift_value ?? 729
+  );
+  const [freeGiftBadge, setFreeGiftBadge] = React.useState<string>(
+    initialProduct?.free_gift_badge || "FREE Raw Selenite Plate worth ₹729"
+  );
+  const [freeGiftImageUrl, setFreeGiftImageUrl] = React.useState<string>(
+    initialProduct?.free_gift_image_url || ""
+  );
+
+  // Lab Certification
+  const [labCertified, setLabCertified] = React.useState<boolean>(
+    initialProduct?.lab_certified ?? true
+  );
+  const [labCertificateName, setLabCertificateName] = React.useState<string>(
+    initialProduct?.lab_certificate_name || "Govt. Approved Gemological Lab"
+  );
+  const [labCertificateNumber, setLabCertificateNumber] = React.useState<string>(
+    initialProduct?.lab_certificate_number || ""
+  );
+
   // Auto-slugify when title changes (if not editing or if slug matches old title)
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle);
@@ -279,6 +317,14 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
       featured_image: primaryImage,
       video_url: videoUrl.trim() || undefined,
       certificate_image_url: certificateImageUrl.trim() || undefined,
+      cashback_percent: enableCashback ? Number(cashbackPercent) : 0,
+      free_gift_title: hasFreeGift ? freeGiftTitle.trim() : undefined,
+      free_gift_value: hasFreeGift ? Number(freeGiftValue) : 0,
+      free_gift_badge: hasFreeGift ? freeGiftBadge.trim() : undefined,
+      free_gift_image_url: hasFreeGift && freeGiftImageUrl.trim() ? freeGiftImageUrl.trim() : undefined,
+      lab_certified: labCertified,
+      lab_certificate_name: labCertified ? labCertificateName.trim() : undefined,
+      lab_certificate_number: labCertified && labCertificateNumber.trim() ? labCertificateNumber.trim() : undefined,
       is_active: isActive,
       is_featured: isFeatured,
       is_energized: isEnergized,
@@ -707,6 +753,133 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                       ₹{marginINR.toLocaleString("en-IN")} (
                       {salePrice > 0 ? Math.round((marginINR / salePrice) * 100) : 0}%)
                     </span>
+                  </div>
+                )}
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* Section: 100% Wallet Cashback & Free Sacred Gift Controls */}
+          <Card className="rounded-2xl border-emerald-200/80 bg-gradient-to-b from-emerald-50/40 via-white to-white shadow-sm">
+            <CardHeader className="pb-3 border-b border-emerald-100">
+              <div className="flex items-center gap-2">
+                <Coins className="size-4 text-emerald-600" />
+                <CardTitle className="text-base font-bold text-slate-800">
+                  100% Cashback & Free Gift Controls
+                </CardTitle>
+              </div>
+              <CardDescription className="text-xs">
+                Configure consultation coins cashback and complimentary sacred gifts for this product.
+              </CardDescription>
+            </CardHeader>
+            <CardBody className="space-y-4 pt-4">
+              {/* Cashback Switch */}
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-emerald-200/60 shadow-xs">
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Consultation Cashback Bridge</p>
+                  <p className="text-[11px] text-slate-500">Credited to customer wallet on prepaid orders</p>
+                </div>
+                <Switch
+                  checked={enableCashback}
+                  onChange={(val) => {
+                    setEnableCashback(val);
+                    if (val && cashbackPercent === 0) setCashbackPercent(100);
+                  }}
+                />
+              </div>
+
+              {enableCashback && (
+                <div className="space-y-3 p-3 rounded-xl bg-emerald-50/50 border border-emerald-200">
+                  <Field label="Cashback Percentage (%)" hint="Default is 100% (e.g. ₹999 = 999 coins)">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="200"
+                        value={cashbackPercent}
+                        onChange={(e) => setCashbackPercent(parseInt(e.target.value) || 0)}
+                      />
+                      <span className="text-xs font-bold text-slate-600">%</span>
+                    </div>
+                  </Field>
+
+                  {/* Preset Quick Buttons */}
+                  <div className="flex gap-1.5 flex-wrap">
+                    {[0, 50, 100, 150].map((pct) => (
+                      <button
+                        key={pct}
+                        type="button"
+                        onClick={() => {
+                          setCashbackPercent(pct);
+                          if (pct === 0) setEnableCashback(false);
+                        }}
+                        className={`text-[11px] px-2.5 py-1 rounded-lg border font-semibold transition-all ${
+                          cashbackPercent === pct
+                            ? "bg-emerald-600 text-white border-emerald-600"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        {pct}% Cashback
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Live Calculation Preview */}
+                  <div className="rounded-lg bg-white p-2.5 border border-emerald-200 text-xs space-y-1">
+                    <div className="flex justify-between text-slate-600">
+                      <span>Customer receives:</span>
+                      <span className="font-bold text-emerald-700">
+                        {Math.round(salePrice * (cashbackPercent / 100))} Consultation Coins
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-slate-500 text-[11px]">
+                      <span>Free live consultation value:</span>
+                      <span className="font-medium text-slate-700">
+                        ~{Math.max(1, Math.round((salePrice * (cashbackPercent / 100)) / 15))} mins (@ 15 coins/min)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Free Gift Toggle & Fields */}
+              <div className="pt-2 border-t border-slate-100 space-y-3">
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-amber-200/60 shadow-xs">
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">Complimentary Free Gift</p>
+                    <p className="text-[11px] text-slate-500">Included free with every purchase of this remedy</p>
+                  </div>
+                  <Switch checked={hasFreeGift} onChange={setHasFreeGift} />
+                </div>
+
+                {hasFreeGift && (
+                  <div className="space-y-3 p-3 rounded-xl bg-amber-50/50 border border-amber-200">
+                    <Field label="Free Gift Title">
+                      <Input
+                        placeholder="e.g. Raw Selenite Charging Plate"
+                        value={freeGiftTitle}
+                        onChange={(e) => setFreeGiftTitle(e.target.value)}
+                      />
+                    </Field>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Field label="Gift Value (₹)">
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="729"
+                          value={freeGiftValue}
+                          onChange={(e) => setFreeGiftValue(parseFloat(e.target.value) || 0)}
+                        />
+                      </Field>
+                      <Field label="Badge Text">
+                        <Input
+                          placeholder="e.g. FREE Raw Selenite Plate worth ₹729"
+                          value={freeGiftBadge}
+                          onChange={(e) => setFreeGiftBadge(e.target.value)}
+                        />
+                      </Field>
+                    </div>
                   </div>
                 )}
               </div>
