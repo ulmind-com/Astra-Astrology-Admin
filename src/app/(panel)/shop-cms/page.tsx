@@ -63,6 +63,8 @@ const DEFAULT_SHOP_DATA: ShopBannerSettingsData = {
   allow_user_cancellation: true,
   cancellation_grace_hours: 24,
   checkout_reservation_minutes: 20,
+  cod_max_rto_allowed: 2,
+  cod_blacklisted_phones: [],
   hero_banners: [
     {
       id: "banner-lumus",
@@ -215,6 +217,7 @@ export default function ShopCMSPage() {
   });
 
   const [formData, setFormData] = React.useState<ShopBannerSettingsData>(DEFAULT_SHOP_DATA);
+  const [newBlacklistPhone, setNewBlacklistPhone] = React.useState<string>("");
   const [isDirty, setIsDirty] = React.useState(false);
 
   React.useEffect(() => {
@@ -230,6 +233,8 @@ export default function ShopCMSPage() {
         allow_user_cancellation: serverData.allow_user_cancellation ?? true,
         cancellation_grace_hours: serverData.cancellation_grace_hours ?? 24,
         checkout_reservation_minutes: serverData.checkout_reservation_minutes ?? 20,
+        cod_max_rto_allowed: serverData.cod_max_rto_allowed ?? 2,
+        cod_blacklisted_phones: serverData.cod_blacklisted_phones ?? [],
       });
     }
   }, [serverData]);
@@ -847,6 +852,129 @@ export default function ShopCMSPage() {
                   <p className="text-[11px] leading-relaxed">
                     The backend sweeps uncompleted checkouts every 5 minutes. If a customer opens Razorpay and abandons without paying, their reserved stock is automatically returned to active inventory without any admin intervention.
                   </p>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* COD RTO Shield & Blacklist Engine */}
+            <Card className="border border-stone-200 dark:border-stone-800">
+              <CardHeader>
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <ShieldCheck className="size-4 text-rose-600" />
+                  <span>COD Fake Order Protection & Anti-Abuse Blacklist Shield</span>
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Eliminates double courier loss by detecting serial unreceived COD parcels and automatically restricting repeat offenders to prepaid orders only.
+                </CardDescription>
+              </CardHeader>
+              <CardBody className="space-y-4">
+                <Field
+                  label="Auto-Blacklist Threshold (Max Unreceived COD Parcels)"
+                  hint="Number of failed/unreceived Cash on Delivery parcels before COD is blocked for that phone number."
+                >
+                  <Select
+                    value={String(formData.cod_max_rto_allowed ?? 2)}
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        cod_max_rto_allowed: Number(e.target.value),
+                      }));
+                      setIsDirty(true);
+                    }}
+                  >
+                    <option value="1">1 RTO (Strict - Zero Tolerance for Courier Refusals)</option>
+                    <option value="2">2 RTOs (Recommended - Allows 1 Genuine Emergency)</option>
+                    <option value="3">3 RTOs (Lenient)</option>
+                    <option value="5">5 RTOs (High Tolerance)</option>
+                  </Select>
+                </Field>
+
+                {/* Blacklisted Numbers Management */}
+                <div className="space-y-2 pt-2 border-t border-stone-200 dark:border-stone-800">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-stone-900 dark:text-white">
+                      Blacklisted Phone Numbers ({(formData.cod_blacklisted_phones || []).length})
+                    </span>
+                    <span className="text-[11px] text-stone-500">
+                      These numbers cannot place COD orders but can still buy prepaid.
+                    </span>
+                  </div>
+
+                  {/* Add number manually */}
+                  <div className="flex gap-2">
+                    <Input
+                      value={newBlacklistPhone}
+                      onChange={(e) => setNewBlacklistPhone(e.target.value)}
+                      placeholder="Enter 10-digit phone number to block..."
+                      className="text-xs font-mono"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const clean = newBlacklistPhone.replace(/\D/g, "").slice(-10);
+                        if (clean.length !== 10) {
+                          toast.error("Please enter a valid 10-digit mobile number");
+                          return;
+                        }
+                        const current = formData.cod_blacklisted_phones || [];
+                        if (current.includes(clean)) {
+                          toast.error("This number is already blacklisted");
+                          return;
+                        }
+                        setFormData((prev) => ({
+                          ...prev,
+                          cod_blacklisted_phones: [...(prev.cod_blacklisted_phones || []), clean],
+                        }));
+                        setNewBlacklistPhone("");
+                        setIsDirty(true);
+                        toast.success(`Phone +91 ${clean} added to COD Blacklist`);
+                      }}
+                      className="text-xs font-bold shrink-0 text-rose-600 border-rose-200 hover:bg-rose-50"
+                    >
+                      Block Phone
+                    </Button>
+                  </div>
+
+                  {/* List of blocked numbers */}
+                  {(formData.cod_blacklisted_phones || []).length > 0 ? (
+                    <div className="flex flex-wrap gap-2 pt-1 max-h-36 overflow-y-auto p-2 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800">
+                      {(formData.cod_blacklisted_phones || []).map((phone) => (
+                        <span
+                          key={phone}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-100 text-rose-900 text-xs font-mono font-bold"
+                        >
+                          <span>+91 {phone}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                cod_blacklisted_phones: (prev.cod_blacklisted_phones || []).filter(
+                                  (p) => p !== phone
+                                ),
+                              }));
+                              setIsDirty(true);
+                              toast.success(`Removed +91 ${phone} from COD blacklist`);
+                            }}
+                            className="hover:text-rose-700 ml-1 cursor-pointer"
+                            title="Unblock number"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-stone-400 italic py-1">
+                      No phone numbers currently blacklisted. Serial RTO abusers will appear here automatically.
+                    </p>
+                  )}
+                </div>
+
+                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-950 dark:text-amber-300">
+                  💡 <b>Devotee Experience:</b> If a blacklisted user visits checkout, the COD option will display a polite notice stating COD is temporarily unavailable for their contact, and guide them to complete their purchase seamlessly via UPI, Card, or Netbanking.
                 </div>
               </CardBody>
             </Card>
