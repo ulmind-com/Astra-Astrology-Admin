@@ -22,7 +22,7 @@ export default function PurohitPujaRoomPage() {
     queryKey: ["puja_room_token", bookingId],
     queryFn: async () => {
       const resp = await purohitPortalApi.getRoomToken(bookingId);
-      return resp.data;
+      return ((resp as any)?.data !== undefined ? (resp as any).data : resp) as PujaBookingData;
     },
     enabled: ready && !!bookingId,
   });
