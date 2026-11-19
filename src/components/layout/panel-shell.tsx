@@ -92,6 +92,7 @@ const ADMIN_STORE_NAV: NavItem[] = [
   { href: "/inventory", label: "Inventory & Alerts", icon: Boxes },
   { href: "/categories", label: "Categories & Banners", icon: Tags },
   { href: "/coupons", label: "Coupons & Discounts", icon: Ticket },
+  { href: "/product-reviews", label: "Product Reviews", icon: Star },
 ];
 
 const ADMIN_GURUKUL_NAV: NavItem[] = [
