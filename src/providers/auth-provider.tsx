@@ -63,7 +63,11 @@ export function AuthProvider({
 
   // Trust the cached user for the first paint, then confirm it with the API.
   React.useEffect(() => {
-    setUser(session.user);
+    const cached = session.user;
+    if (cached) {
+      setUser(cached);
+      setLoading(false);
+    }
     void refresh();
   }, [refresh]);
 

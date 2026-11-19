@@ -41,7 +41,9 @@ export default function PurohitBookingsPage() {
       return (Array.isArray(list) ? list : []) as PujaBookingData[];
     },
     enabled: ready,
-    refetchInterval: 10000,
+    staleTime: 30 * 1000,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: false,
   });
 
   const completeMutation = useMutation({
@@ -68,7 +70,7 @@ export default function PurohitBookingsPage() {
     return bookings;
   }, [bookings, filter]);
 
-  if (!ready || isLoading) {
+  if (!ready || (isLoading && bookings.length === 0)) {
     return <LoadingBlock label="Loading your Puja Bookings..." />;
   }
 

@@ -56,6 +56,8 @@ export default function PurohitPujaCatalogPage() {
       return ((res as any)?.data !== undefined ? (res as any).data : res) as PurohitData;
     },
     enabled: ready,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Add Puja Mutation
@@ -155,7 +157,7 @@ export default function PurohitPujaCatalogPage() {
     }
   };
 
-  if (!ready || isLoading) {
+  if (!ready || (isLoading && !profile)) {
     return <LoadingBlock label="Loading your Puja Catalog..." />;
   }
 
