@@ -143,6 +143,15 @@ export const endpoints = {
     cmsHomepage: "/admin/cms/homepage",
     cmsHomepageReset: "/admin/cms/homepage/reset",
     cmsUploadImage: "/admin/cms/upload-image",
+    purohits: {
+      list: "/admin/purohits",
+      create: "/admin/purohits",
+      uploadAvatar: "/admin/purohits/upload-avatar",
+      deleteAvatar: "/admin/purohits/delete-avatar",
+      detail: (id: string) => `/admin/purohits/${id}`,
+      update: (id: string) => `/admin/purohits/${id}`,
+      delete: (id: string) => `/admin/purohits/${id}`,
+    },
     shopBanners: "/admin/shop/banners",
     shopUploadImage: "/admin/shop/upload-image",
     shop: {

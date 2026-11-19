@@ -12,9 +12,11 @@ import {
   RefreshCw,
   Sparkles,
   Star,
+  UploadCloud,
   User,
   Video,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import * as React from "react";
 import { toast } from "sonner";
@@ -101,6 +103,23 @@ export default function PurohitDashboardPage() {
     },
   });
 
+  // Avatar Upload Mutation
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const avatarMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const res = await purohitPortalApi.uploadAvatar(file);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("প্রোফাইল ছবি সফলভাবে আপডেট করা হয়েছে!");
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
+    },
+    onError: (err) => {
+      const msg = err instanceof ApiError ? err.message : "Failed to update profile image";
+      toast.error(msg);
+    },
+  });
+
   if (!ready || profileLoading) {
     return <LoadingBlock label="Loading Purohit Altar Portal..." />;
   }
@@ -115,12 +134,34 @@ export default function PurohitDashboardPage() {
         title={`নমস্কার, ${profile?.display_name || user?.first_name}`}
         description={`পবিত্র বৈদিক পুরোহিত ড্যাশবোর্ড — ${profile?.title || "Vedic Acharya"}`}
         action={
-          <Link href="/purohit-dashboard/pujas">
-            <Button variant="outline" size="sm" className="font-bold">
-              <BookOpen className="size-4 mr-1.5" />
-              Manage Puja Catalog ({activePujas.length})
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/jpg"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) avatarMutation.mutate(file);
+              }}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              loading={avatarMutation.isPending}
+              onClick={() => fileInputRef.current?.click()}
+              className="font-bold text-xs bg-white dark:bg-stone-900 hover:bg-amber-50 hover:text-amber-700"
+            >
+              <UploadCloud className="size-4 mr-1.5 text-amber-600" />
+              Update Avatar
             </Button>
-          </Link>
+            <Link href="/purohit-dashboard/pujas">
+              <Button variant="outline" size="sm" className="font-bold text-xs">
+                <BookOpen className="size-4 mr-1.5" />
+                Manage Puja Catalog ({activePujas.length})
+              </Button>
+            </Link>
+          </div>
         }
       />
 
@@ -137,13 +178,23 @@ export default function PurohitDashboardPage() {
         <CardBody className="p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div
-              className={`size-14 rounded-2xl flex items-center justify-center shrink-0 border ${
+              className={`relative size-14 rounded-2xl flex items-center justify-center shrink-0 border overflow-hidden ${
                 isOnline
-                  ? "bg-emerald-500 text-white border-emerald-400 shadow-lg shadow-emerald-500/20"
-                  : "bg-stone-200 text-stone-500 border-stone-300 dark:bg-stone-800"
+                  ? "border-emerald-400 shadow-lg shadow-emerald-500/20 bg-emerald-500"
+                  : "border-stone-300 dark:border-stone-700 bg-stone-200 dark:bg-stone-800"
               }`}
             >
-              <Flame className={`size-7 ${isOnline ? "animate-pulse" : ""}`} />
+              {profile?.avatar_url ? (
+                <Image
+                  src={profile.avatar_url}
+                  alt={profile.display_name}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              ) : (
+                <Flame className={`size-7 ${isOnline ? "text-white animate-pulse" : "text-stone-500"}`} />
+              )}
             </div>
 
             <div>
