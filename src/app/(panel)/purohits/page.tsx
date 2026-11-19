@@ -63,7 +63,8 @@ export default function AdminPurohitsPage() {
     queryKey: ["admin_purohits"],
     queryFn: async () => {
       const response = await adminPurohitApi.list({ limit: 100 });
-      return response.data;
+      const data = (response as any)?.data !== undefined ? (response as any).data : response;
+      return (Array.isArray(data) ? data : []) as PurohitData[];
     },
     enabled: ready,
   });
@@ -71,7 +72,7 @@ export default function AdminPurohitsPage() {
   const updateMutation = useMutation({
     mutationFn: async ({ id, payload }: { id: string; payload: typeof editForm }) => {
       const res = await adminPurohitApi.update(id, payload);
-      return res.data;
+      return (res as any)?.data !== undefined ? (res as any).data : res;
     },
     onSuccess: () => {
       toast.success("Purohit profile & avatar updated successfully!");

@@ -54,7 +54,8 @@ export default function NewPurohitPage() {
   const createMutation = useMutation({
     mutationFn: async (payload: typeof form) => {
       const res = await adminPurohitApi.create(payload);
-      return res.data;
+      const data = ((res as any)?.data !== undefined ? (res as any).data : res) as PurohitCreatedData;
+      return data;
     },
     onSuccess: (data) => {
       setCreatedData(data);
@@ -80,7 +81,16 @@ export default function NewPurohitPage() {
   const handleCopyCredentials = () => {
     if (!createdData) return;
     const text = `DivinLink Purohit Login Credentials:\nPortal: https://admin.divinlink.com/login\nEmail: ${createdData.email}\nPassword: ${createdData.temporary_password}\n(Change your password after first login)`;
-    navigator.clipboard.writeText(text);
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    } else {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
     setCopied(true);
     toast.success("Login credentials copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);

@@ -37,7 +37,8 @@ export default function PurohitBookingsPage() {
     queryKey: ["purohit_me_bookings"],
     queryFn: async () => {
       const res = await purohitPortalApi.getMyBookings();
-      return res.data;
+      const list = (res as any)?.data !== undefined ? (res as any).data : res;
+      return (Array.isArray(list) ? list : []) as PujaBookingData[];
     },
     enabled: ready,
     refetchInterval: 10000,

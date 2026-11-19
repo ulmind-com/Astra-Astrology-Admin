@@ -45,7 +45,7 @@ export default function PurohitDashboardPage() {
     queryKey: ["purohit_me_profile"],
     queryFn: async () => {
       const res = await purohitPortalApi.getMyProfile();
-      return res.data;
+      return ((res as any)?.data !== undefined ? (res as any).data : res) as PurohitData;
     },
     enabled: ready,
   });
@@ -59,7 +59,8 @@ export default function PurohitDashboardPage() {
     queryKey: ["purohit_me_bookings"],
     queryFn: async () => {
       const res = await purohitPortalApi.getMyBookings();
-      return res.data;
+      const list = (res as any)?.data !== undefined ? (res as any).data : res;
+      return (Array.isArray(list) ? list : []) as PujaBookingData[];
     },
     enabled: ready,
     refetchInterval: 8000, // Poll every 8s for live incoming bookings
@@ -72,7 +73,7 @@ export default function PurohitDashboardPage() {
   const availabilityMutation = useMutation({
     mutationFn: async (isOnline: boolean) => {
       const res = await purohitPortalApi.setAvailability(isOnline);
-      return res.data;
+      return ((res as any)?.data !== undefined ? (res as any).data : res) as PurohitData;
     },
     onSuccess: (updated) => {
       queryClient.setQueryData(["purohit_me_profile"], updated);

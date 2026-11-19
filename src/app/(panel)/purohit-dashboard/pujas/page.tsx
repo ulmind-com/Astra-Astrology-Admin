@@ -29,7 +29,7 @@ import {
   Modal,
   Switch,
 } from "@/components/ui";
-import { purohitPortalApi, type PurohitPujaItem } from "@/lib/api";
+import { purohitPortalApi, type PurohitPujaItem, type PurohitData } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { useRequireAuth } from "@/providers/auth-provider";
 
@@ -53,7 +53,7 @@ export default function PurohitPujaCatalogPage() {
     queryKey: ["purohit_me_profile"],
     queryFn: async () => {
       const res = await purohitPortalApi.getMyProfile();
-      return res.data;
+      return ((res as any)?.data !== undefined ? (res as any).data : res) as PurohitData;
     },
     enabled: ready,
   });

@@ -1379,13 +1379,13 @@ export interface ApiResponse<T> {
 
 export const adminPurohitApi = {
   list: (params?: { limit?: number; offset?: number }) =>
-    api.get<ApiResponse<PurohitData[]>>("/admin/purohits", { query: params }),
+    api.get<PurohitData[]>("/admin/purohits", { query: params }),
   create: (body: any) =>
-    api.post<ApiResponse<PurohitCreatedData>>("/admin/purohits", body),
+    api.post<PurohitCreatedData>("/admin/purohits", body),
   get: (id: string) =>
-    api.get<ApiResponse<PurohitData>>(`/admin/purohits/${id}`),
+    api.get<PurohitData>(`/admin/purohits/${id}`),
   update: (id: string, body: any) =>
-    api.put<ApiResponse<PurohitData>>(`/admin/purohits/${id}`, body),
+    api.put<PurohitData>(`/admin/purohits/${id}`, body),
   delete: (id: string) =>
     api.delete<{ message: string }>(`/admin/purohits/${id}`),
   uploadAvatar: async (file: File, previousUrl?: string | null) => {
@@ -1403,7 +1403,7 @@ export const adminPurohitApi = {
     );
   },
   deleteAvatar: async (url: string) => {
-    return api.post<ApiResponse<{ deleted: boolean }>>(
+    return api.post<{ deleted: boolean }>(
       `${endpoints.admin.purohits.deleteAvatar}?url=${encodeURIComponent(url)}`
     );
   },
@@ -1411,7 +1411,7 @@ export const adminPurohitApi = {
 
 export const purohitPortalApi = {
   getMyProfile: () =>
-    api.get<ApiResponse<PurohitData>>("/purohits/me/profile"),
+    api.get<PurohitData>("/purohits/me/profile"),
   uploadAvatar: async (file: File) => {
     const fd = new FormData();
     fd.append("file", file);
@@ -1424,7 +1424,7 @@ export const purohitPortalApi = {
     );
   },
   setAvailability: (isOnline: boolean) =>
-    api.put<ApiResponse<PurohitData>>("/purohits/me/availability", { is_online: isOnline }),
+    api.put<PurohitData>("/purohits/me/availability", { is_online: isOnline }),
   addPuja: (body: {
     puja_name: string;
     description: string;
@@ -1432,15 +1432,15 @@ export const purohitPortalApi = {
     price_inr: number;
     samagri_notes?: string | null;
     is_active?: boolean;
-  }) => api.post<ApiResponse<PurohitPujaItem>>("/purohits/me/pujas", body),
+  }) => api.post<PurohitPujaItem>("/purohits/me/pujas", body),
   updatePuja: (pujaId: string, body: any) =>
-    api.put<ApiResponse<PurohitPujaItem>>(`/purohits/me/pujas/${pujaId}`, body),
+    api.put<PurohitPujaItem>(`/purohits/me/pujas/${pujaId}`, body),
   deletePuja: (pujaId: string) =>
     api.delete<{ message: string }>(`/purohits/me/pujas/${pujaId}`),
   getMyBookings: () =>
-    api.get<ApiResponse<PujaBookingData[]>>("/purohits/me/bookings"),
+    api.get<PujaBookingData[]>("/purohits/me/bookings"),
   completeBooking: (bookingId: string) =>
-    api.post<ApiResponse<PujaBookingData>>(`/purohits/bookings/${bookingId}/complete`),
+    api.post<PujaBookingData>(`/purohits/bookings/${bookingId}/complete`),
   getRoomToken: (bookingId: string) =>
-    api.get<ApiResponse<PujaBookingData>>(`/purohits/bookings/${bookingId}/token`),
+    api.get<PujaBookingData>(`/purohits/bookings/${bookingId}/token`),
 };
