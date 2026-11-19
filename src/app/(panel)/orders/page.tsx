@@ -57,6 +57,7 @@ import {
 } from "@/components/ui";
 import { shopAdminApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
+import { apiBase } from "@/lib/env";
 import { useRequireAuth } from "@/providers/auth-provider";
 
 function formatINR(n: number) {
@@ -654,15 +655,27 @@ export default function AdminOrdersPage() {
 
                       {/* Action */}
                       <td className="p-3.5 align-top text-right">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleOpenManageModal(order)}
-                          className="h-8 text-xs font-bold"
-                        >
-                          <span>Manage</span>
-                          <ChevronRight className="size-3.5 ml-1" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(`${apiBase}/admin/shop/orders/${order.id}/invoice/html?print=true`, "_blank")}
+                            title="Print GST Invoice / Packing Slip"
+                            className="h-8 text-xs font-bold text-amber-800 border-amber-300 hover:bg-amber-50"
+                          >
+                            <Printer className="size-3.5 mr-1 text-amber-600" />
+                            <span>Invoice</span>
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleOpenManageModal(order)}
+                            className="h-8 text-xs font-bold"
+                          >
+                            <span>Manage</span>
+                            <ChevronRight className="size-3.5 ml-1" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -703,13 +716,24 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setManageModalOpen(false)}
-                className="text-stone-400 hover:text-stone-600 p-1 rounded-lg"
-              >
-                <XCircle className="size-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(`${apiBase}/admin/shop/orders/${selectedOrder.id}/invoice/html?print=true`, "_blank")}
+                  className="text-xs font-bold border-amber-300 text-amber-800 hover:bg-amber-50"
+                >
+                  <Printer className="size-3.5 mr-1 text-amber-600" />
+                  <span>Print Invoice & Slip</span>
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setManageModalOpen(false)}
+                  className="text-stone-400 hover:text-stone-600 p-1 rounded-lg"
+                >
+                  <XCircle className="size-5" />
+                </button>
+              </div>
             </div>
 
             {/* Devotee Sankalpa Card */}
