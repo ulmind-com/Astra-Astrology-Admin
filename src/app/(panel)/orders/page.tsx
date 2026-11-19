@@ -35,6 +35,9 @@ import {
   Mail,
   User,
   Info,
+  QrCode,
+  Maximize2,
+  CreditCard,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -162,6 +165,11 @@ export default function AdminOrdersPage() {
   const [targetStatus, setTargetStatus] = React.useState<string>("");
   const [rtoReason, setRtoReason] = React.useState<string>("");
 
+  // Refund Management State
+  const [refundTxnId, setRefundTxnId] = React.useState<string>("");
+  const [refundNotes, setRefundNotes] = React.useState<string>("");
+  const [qrZoomOpen, setQrZoomOpen] = React.useState<boolean>(false);
+
   // Search debounce
   React.useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 350);
@@ -173,7 +181,9 @@ export default function AdminOrdersPage() {
     queryKey: ["admin_shop_orders", page, activeTab, paymentFilter, debouncedSearch],
     queryFn: async () => {
       let statusParam: string | undefined = undefined;
-      if (activeTab === "needs_consecration") statusParam = "confirmed";
+      let refundStatusParam: string | undefined = undefined;
+      if (activeTab === "refund_pending") refundStatusParam = "pending";
+      else if (activeTab === "needs_consecration") statusParam = "confirmed";
       else if (activeTab === "sanctifying") statusParam = "sanctifying";
       else if (activeTab === "packed") statusParam = "packed";
       else if (activeTab === "shipped") statusParam = "shipped";
@@ -186,6 +196,7 @@ export default function AdminOrdersPage() {
         page,
         limit: 25,
         status: statusParam,
+        refund_status: refundStatusParam,
         payment_status: paymentFilter !== "all" ? paymentFilter : undefined,
         search: debouncedSearch || undefined,
       });
@@ -196,6 +207,37 @@ export default function AdminOrdersPage() {
 
   const orders = data?.items || [];
   const totalCount = data?.total || 0;
+
+  // Complete refund mutation
+  const completeRefundMutation = useMutation({
+    mutationFn: async ({
+      orderId,
+      transactionId,
+      notes,
+    }: {
+      orderId: string;
+      transactionId?: string;
+      notes?: string;
+    }) => {
+      return await shopAdminApi.completeRefund(orderId, {
+        transaction_id: transactionId?.trim() || undefined,
+        notes: notes?.trim() || undefined,
+      });
+    },
+    onSuccess: (updated) => {
+      toast.success(
+        `Refund completed for Order #${updated.order_number}! Customer email sent & QR code purged from Cloudinary.`
+      );
+      setSelectedOrder(updated);
+      setRefundTxnId("");
+      setRefundNotes("");
+      queryClient.invalidateQueries({ queryKey: ["admin_shop_orders"] });
+    },
+    onError: (err) => {
+      const msg = err instanceof ApiError ? err.message : "Failed to complete refund";
+      toast.error(msg);
+    },
+  });
 
   // Update order mutation
   const updateMutation = useMutation({
@@ -261,6 +303,9 @@ export default function AdminOrdersPage() {
     );
     setDispatchNotes("");
     setRtoReason(order.rto_reason || "");
+    setRefundTxnId("");
+    setRefundNotes("");
+    setQrZoomOpen(false);
     setTargetStatus(order.order_status);
     setManageModalOpen(true);
   };
@@ -420,6 +465,7 @@ export default function AdminOrdersPage() {
           <div className="flex items-center gap-2 border-b border-stone-200 dark:border-stone-800 pb-2 overflow-x-auto scrollbar-none">
             {[
               { id: "all", label: "All Orders" },
+              { id: "refund_pending", label: "⚠️ Refund Requests" },
               { id: "needs_consecration", label: `Queued for Kashi (${pendingConsecrationCount})` },
               { id: "sanctifying", label: `In Pooja (${inConsecrationCount})` },
               { id: "packed", label: "Packed & Sealed" },
@@ -582,6 +628,20 @@ export default function AdminOrdersPage() {
                           {cfg.label}
                         </span>
 
+                        {order.refund_status === "pending" && (
+                          <div className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-300">
+                            <AlertCircle className="size-3 text-rose-600 animate-pulse" />
+                            <span>Refund Pending ({formatINR(order.refund_amount || order.grand_total)})</span>
+                          </div>
+                        )}
+
+                        {order.refund_status === "completed" && (
+                          <div className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            <CheckCircle2 className="size-3 text-emerald-600" />
+                            <span>Refunded</span>
+                          </div>
+                        )}
+
                         {order.tracking_id && (
                           <div className="text-[11px] text-indigo-700 font-medium flex items-center gap-1">
                             <Plane className="size-3" />
@@ -679,6 +739,212 @@ export default function AdminOrdersPage() {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* ----------------------------------------------------------- */}
+            {/* Devotee Refund Payout Hub (High Priority Action) */}
+            {/* ----------------------------------------------------------- */}
+            {selectedOrder.refund_status === "pending" && (
+              <div className="rounded-2xl border-2 border-rose-400 bg-rose-50/70 dark:bg-rose-950/30 p-5 space-y-4 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="size-10 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <CreditCard className="size-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-rose-950 dark:text-rose-200 flex items-center gap-2">
+                        <span>Devotee Refund Payout Hub</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-200 text-rose-900 border border-rose-300 uppercase tracking-wider">
+                          Action Required
+                        </span>
+                      </h4>
+                      <p className="text-xs text-rose-700 dark:text-rose-300">
+                        Customer cancelled within allowed window. Refund amount:{" "}
+                        <b>{formatINR(selectedOrder.refund_amount || selectedOrder.grand_total)}</b> (SLA:{" "}
+                        {selectedOrder.refund_sla_days || 3} business days).
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="text-[11px] text-stone-500 block">Total to Refund</span>
+                    <span className="text-xl font-black text-rose-700 dark:text-rose-400 font-mono">
+                      {formatINR(selectedOrder.refund_amount || selectedOrder.grand_total)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+                  {/* Devotee UPI Info */}
+                  <div className="p-3.5 rounded-xl bg-white dark:bg-stone-900 border border-rose-200 dark:border-rose-900 space-y-2">
+                    <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">
+                      Devotee UPI ID
+                    </span>
+                    <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
+                      <code className="text-xs font-mono font-bold text-stone-900 dark:text-white break-all">
+                        {selectedOrder.refund_upi_id || "No UPI ID specified"}
+                      </code>
+                      {selectedOrder.refund_upi_id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleCopy(selectedOrder.refund_upi_id)}
+                          className="h-7 px-2 text-xs shrink-0"
+                          title="Copy UPI ID"
+                        >
+                          <Copy className="size-3.5 mr-1" />
+                          Copy
+                        </Button>
+                      )}
+                    </div>
+                    {selectedOrder.refund_requested_at && (
+                      <p className="text-[10px] text-stone-500">
+                        Cancellation Request: {new Date(selectedOrder.refund_requested_at).toLocaleString("en-IN")}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Devotee UPI QR Code */}
+                  <div className="p-3.5 rounded-xl bg-white dark:bg-stone-900 border border-rose-200 dark:border-rose-900 space-y-2">
+                    <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">
+                      Devotee UPI QR Code
+                    </span>
+                    {selectedOrder.refund_qr_code_url ? (
+                      <div className="flex items-center gap-3">
+                        <div
+                          onClick={() => setQrZoomOpen(true)}
+                          className="relative size-20 rounded-lg border border-stone-200 dark:border-stone-700 overflow-hidden cursor-pointer hover:opacity-90 group shrink-0 bg-stone-100"
+                          title="Click to zoom and scan QR"
+                        >
+                          <Image
+                            src={selectedOrder.refund_qr_code_url}
+                            alt="Devotee Refund UPI QR"
+                            fill
+                            className="object-contain"
+                            unoptimized
+                          />
+                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                            <Maximize2 className="size-4" />
+                          </div>
+                        </div>
+                        <div className="space-y-1 text-xs">
+                          <p className="font-semibold text-stone-800 dark:text-stone-200">
+                            Screenshot uploaded by devotee
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setQrZoomOpen(true)}
+                            className="text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <QrCode className="size-3.5" />
+                            <span>Scan QR (Click to Enlarge)</span>
+                          </button>
+                          <p className="text-[10px] text-stone-400">
+                            *Auto-purged from Cloudinary once marked complete.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3 rounded-lg bg-stone-50 dark:bg-stone-800 text-stone-400 text-xs italic text-center">
+                        No QR code image uploaded (UPI ID provided).
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Refund Execution Form */}
+                <div className="p-3.5 rounded-xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-3">
+                  <span className="font-bold text-xs text-stone-900 dark:text-white block">
+                    Record Payout & Finalize Refund
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Field label="Bank UTR / Transaction Reference (Optional)">
+                      <Input
+                        value={refundTxnId}
+                        onChange={(e) => setRefundTxnId(e.target.value)}
+                        placeholder="e.g. UPI/328491823/ICICI or UTR number"
+                        className="text-xs font-mono"
+                      />
+                    </Field>
+                    <Field label="Admin Notes (Optional)">
+                      <Input
+                        value={refundNotes}
+                        onChange={(e) => setRefundNotes(e.target.value)}
+                        placeholder="e.g. Paid via PhonePe by Admin"
+                        className="text-xs"
+                      />
+                    </Field>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-stone-100 dark:border-stone-800">
+                    <p className="text-[11px] text-stone-500">
+                      ⚡ Completing refund will send confirmation email to customer & purge QR image from Cloudinary.
+                    </p>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        if (
+                          confirm(
+                            `Confirm that ₹${selectedOrder.refund_amount || selectedOrder.grand_total} has been refunded to ${selectedOrder.refund_upi_id || "the devotee"}?`
+                          )
+                        ) {
+                          completeRefundMutation.mutate({
+                            orderId: selectedOrder.id,
+                            transactionId: refundTxnId,
+                            notes: refundNotes,
+                          });
+                        }
+                      }}
+                      loading={completeRefundMutation.isPending}
+                      className="bg-rose-600 hover:bg-rose-700 text-white font-bold shrink-0"
+                    >
+                      <CheckCircle2 className="size-3.5 mr-1" />
+                      Complete Refund & Send Email
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Completed Refund Card */}
+            {selectedOrder.refund_status === "completed" && (
+              <div className="rounded-xl border border-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/20 p-4 text-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="font-bold flex items-center gap-1.5 text-emerald-900 dark:text-emerald-200">
+                    <CheckCircle2 className="size-4 text-emerald-600" />
+                    <span>Refund Completed & Paid Out</span>
+                  </div>
+                  <span className="font-mono font-bold text-emerald-800 dark:text-emerald-300 text-sm">
+                    {formatINR(selectedOrder.refund_amount || selectedOrder.grand_total)}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] text-emerald-950 dark:text-emerald-200">
+                  <div>
+                    <span className="text-stone-500 block">Devotee UPI ID:</span>
+                    <span className="font-mono font-bold">{selectedOrder.refund_upi_id || "N/A"}</span>
+                  </div>
+                  <div>
+                    <span className="text-stone-500 block">Bank UTR / Ref:</span>
+                    <span className="font-mono font-bold">{selectedOrder.refund_transaction_id || "Direct Transfer"}</span>
+                  </div>
+                  <div>
+                    <span className="text-stone-500 block">Completed On:</span>
+                    <span className="font-medium">
+                      {selectedOrder.refund_completed_at
+                        ? new Date(selectedOrder.refund_completed_at).toLocaleString("en-IN")
+                        : "Completed"}
+                    </span>
+                  </div>
+                </div>
+                {selectedOrder.refund_notes && (
+                  <p className="text-[11px] text-stone-600 dark:text-stone-400 italic">
+                    Note: "{selectedOrder.refund_notes}"
+                  </p>
+                )}
+                <p className="text-[10px] text-stone-500">
+                  🛡️ Cloudinary QR code screenshot was permanently purged upon completion to conserve storage.
+                </p>
               </div>
             )}
 
@@ -910,6 +1176,65 @@ export default function AdminOrdersPage() {
                 </Button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 5. QR Code Zoom Modal */}
+      {qrZoomOpen && selectedOrder?.refund_qr_code_url && (
+        <div
+          className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 p-4 animate-in fade-in cursor-pointer"
+          onClick={() => setQrZoomOpen(false)}
+        >
+          <div
+            className="relative max-w-sm w-full bg-white dark:bg-stone-900 rounded-2xl p-6 text-center space-y-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-stone-200 dark:border-stone-800">
+              <div className="text-left">
+                <h4 className="font-bold text-sm text-stone-900 dark:text-white">
+                  Scan Devotee UPI QR Code
+                </h4>
+                <p className="text-[11px] text-stone-500">
+                  Amount to Refund: {formatINR(selectedOrder.refund_amount || selectedOrder.grand_total)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQrZoomOpen(false)}
+                className="text-stone-400 hover:text-stone-600 p-1 rounded-lg"
+              >
+                <XCircle className="size-5" />
+              </button>
+            </div>
+
+            <div className="relative size-72 mx-auto rounded-xl border-2 border-stone-200 overflow-hidden bg-white p-2">
+              <Image
+                src={selectedOrder.refund_qr_code_url}
+                alt="Devotee Refund UPI QR Code"
+                fill
+                className="object-contain"
+                unoptimized
+              />
+            </div>
+
+            {selectedOrder.refund_upi_id && (
+              <div className="flex items-center justify-center gap-2 p-2 rounded-lg bg-stone-100 dark:bg-stone-800 text-xs font-mono font-bold">
+                <span>{selectedOrder.refund_upi_id}</span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(selectedOrder.refund_upi_id)}
+                  className="text-stone-500 hover:text-stone-800"
+                  title="Copy UPI ID"
+                >
+                  <Copy className="size-3.5" />
+                </button>
+              </div>
+            )}
+
+            <p className="text-xs text-stone-500">
+              Scan with PhonePe, Google Pay, or Paytm from your phone to send the refund.
+            </p>
           </div>
         </div>
       )}

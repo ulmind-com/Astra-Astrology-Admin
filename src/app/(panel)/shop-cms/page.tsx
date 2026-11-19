@@ -62,6 +62,7 @@ const DEFAULT_SHOP_DATA: ShopBannerSettingsData = {
   cashback_credit_timing: "on_delivery",
   allow_user_cancellation: true,
   cancellation_grace_hours: 24,
+  refund_sla_days: 3,
   checkout_reservation_minutes: 20,
   cod_max_rto_allowed: 2,
   cod_blacklisted_phones: [],
@@ -221,6 +222,7 @@ export default function ShopCMSPage() {
         cashback_credit_timing: serverData.cashback_credit_timing ?? "on_delivery",
         allow_user_cancellation: serverData.allow_user_cancellation ?? true,
         cancellation_grace_hours: serverData.cancellation_grace_hours ?? 24,
+        refund_sla_days: serverData.refund_sla_days ?? 3,
         checkout_reservation_minutes: serverData.checkout_reservation_minutes ?? 20,
         cod_max_rto_allowed: serverData.cod_max_rto_allowed ?? 2,
         cod_blacklisted_phones: serverData.cod_blacklisted_phones ?? [],
@@ -757,18 +759,33 @@ export default function ShopCMSPage() {
                   />
                 </div>
 
-                <Field label="Cancellation Grace Window (Hours)" hint="Hours from order placement during which cancellation is allowed before shipping.">
-                  <Input
-                    type="number"
-                    min={1}
-                    max={168}
-                    value={formData.cancellation_grace_hours ?? 24}
-                    onChange={(e) => {
-                      setFormData((prev) => ({ ...prev, cancellation_grace_hours: Number(e.target.value) }));
-                      setIsDirty(true);
-                    }}
-                  />
-                </Field>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Field label="Cancellation Grace Window (Hours)" hint="Hours from order placement during which cancellation is allowed before shipping.">
+                    <Input
+                      type="number"
+                      min={1}
+                      max={168}
+                      value={formData.cancellation_grace_hours ?? 24}
+                      onChange={(e) => {
+                        setFormData((prev) => ({ ...prev, cancellation_grace_hours: Number(e.target.value) }));
+                        setIsDirty(true);
+                      }}
+                    />
+                  </Field>
+
+                  <Field label="Refund SLA Window (Days)" hint="Estimated days within which customer's UPI/QR refund will be completed.">
+                    <Input
+                      type="number"
+                      min={1}
+                      max={14}
+                      value={formData.refund_sla_days ?? 3}
+                      onChange={(e) => {
+                        setFormData((prev) => ({ ...prev, refund_sla_days: Number(e.target.value) }));
+                        setIsDirty(true);
+                      }}
+                    />
+                  </Field>
+                </div>
               </CardBody>
             </Card>
 

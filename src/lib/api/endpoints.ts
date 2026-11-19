@@ -169,6 +169,7 @@ export const endpoints = {
       orders: "/admin/shop/orders",
       order: (id: string) => `/admin/shop/orders/${id}`,
       cancelOrder: (id: string) => `/admin/shop/orders/${id}/cancel`,
+      completeRefund: (id: string) => `/admin/shop/orders/${id}/complete-refund`,
     },
     courses: {
       list: "/admin/courses",
