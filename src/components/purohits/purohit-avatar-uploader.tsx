@@ -43,8 +43,9 @@ export function PurohitAvatarUploader({
     try {
       // Pass previous value so the backend can immediately destroy the replaced asset in Cloudinary
       const res = await adminPurohitApi.uploadAvatar(file, value || undefined);
-      if (res?.data?.url) {
-        onChange(res.data.url);
+      const imageUrl = res?.url || (res as any)?.data?.url;
+      if (imageUrl) {
+        onChange(imageUrl);
         toast.success("Avatar uploaded and converted to WebP successfully!", { id: toastId });
       } else {
         toast.error("Upload did not return a valid image URL.", { id: toastId });
