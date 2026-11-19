@@ -1506,6 +1506,49 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export interface PurohitApplicationData {
+  id: string;
+  application_number: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  age?: number | null;
+  address?: string | null;
+  city: string;
+  state: string;
+  pincode?: string | null;
+  vedic_shakha: string;
+  specializations: string[];
+  experience_years: number;
+  languages: string[];
+  bio?: string | null;
+  avatar_url?: string | null;
+  identity_proof_url?: string | null;
+  bank_account_number?: string | null;
+  bank_ifsc?: string | null;
+  bank_account_holder?: string | null;
+  upi_id?: string | null;
+  status: "pending" | "approved" | "rejected";
+  rejection_reason?: string | null;
+  reviewed_at?: string | null;
+  approved_user_id?: string | null;
+  approved_purohit_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PurohitApplicationApprovalResult {
+  application_id: string;
+  user_id: string;
+  purohit_id: string;
+  display_name: string;
+  email: string;
+  temporary_password: string;
+  email_sent: boolean;
+  dashboard_url: string;
+  message: string;
+}
+
 export const adminPurohitApi = {
   list: (params?: { limit?: number; offset?: number }) =>
     api.get<PurohitData[]>("/admin/purohits", { query: params }),
@@ -1517,6 +1560,14 @@ export const adminPurohitApi = {
     api.put<PurohitData>(`/admin/purohits/${id}`, body),
   delete: (id: string) =>
     api.delete<{ message: string }>(`/admin/purohits/${id}`),
+  listApplications: (params?: { status?: string; search?: string; limit?: number; offset?: number }) =>
+    api.get<PurohitApplicationData[]>("/admin/purohits/applications", { query: params }),
+  getApplication: (id: string) =>
+    api.get<PurohitApplicationData>(`/admin/purohits/applications/${id}`),
+  approveApplication: (id: string) =>
+    api.post<PurohitApplicationApprovalResult>(`/admin/purohits/applications/${id}/approve`),
+  rejectApplication: (id: string, body: { reason?: string }) =>
+    api.post<PurohitApplicationData>(`/admin/purohits/applications/${id}/reject`, body),
   uploadAvatar: async (file: File, previousUrl?: string | null) => {
     const fd = new FormData();
     fd.append("file", file);
