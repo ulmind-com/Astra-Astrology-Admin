@@ -1040,6 +1040,45 @@ export const passkeyApi = {
     api.post<AuthResult>(endpoints.passkeys.loginVerify, body, { auth: false }),
 };
 
+export interface ShopCoupon {
+  id: string;
+  code: string;
+  title: string;
+  description?: string | null;
+  discount_type: "percentage" | "flat";
+  discount_value: number;
+  min_order_amount: number;
+  max_discount_amount?: number | null;
+  usage_limit?: number | null;
+  usage_count: number;
+  per_user_limit: number;
+  first_order_only: boolean;
+  is_highlighted: boolean;
+  start_date?: string | null;
+  expiry_date?: string | null;
+  is_active: boolean;
+  is_valid_now: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShopCouponInput {
+  code?: string;
+  title: string;
+  description?: string | null;
+  discount_type: "percentage" | "flat";
+  discount_value: number;
+  min_order_amount?: number;
+  max_discount_amount?: number | null;
+  usage_limit?: number | null;
+  per_user_limit?: number;
+  first_order_only?: boolean;
+  is_highlighted?: boolean;
+  start_date?: string | null;
+  expiry_date?: string | null;
+  is_active?: boolean;
+}
+
 export const shopAdminApi = {
   uploadImage: async (file: File) => {
     const fd = new FormData();
@@ -1156,6 +1195,27 @@ export const shopAdminApi = {
 
   sweepAbandonedInventory: () =>
     api.post<{ restored_orders_count: number }>(endpoints.admin.shop.sweepAbandonedInventory, {}),
+
+  listCoupons: (params?: { search?: string; is_active?: boolean; page?: number; limit?: number }) =>
+    api.get<{ items: ShopCoupon[]; total: number; page: number; limit: number; pages: number }>(
+      endpoints.admin.shop.coupons,
+      { query: params }
+    ),
+
+  createCoupon: (body: ShopCouponInput) =>
+    api.post<ShopCoupon>(endpoints.admin.shop.coupons, body),
+
+  getCoupon: (id: string) =>
+    api.get<ShopCoupon>(endpoints.admin.shop.coupon(id)),
+
+  updateCoupon: (id: string, body: Partial<ShopCouponInput>) =>
+    api.put<ShopCoupon>(endpoints.admin.shop.coupon(id), body),
+
+  deleteCoupon: (id: string) =>
+    api.delete<{ deleted: boolean }>(endpoints.admin.shop.coupon(id)),
+
+  toggleCouponActive: (id: string) =>
+    api.patch<ShopCoupon>(endpoints.admin.shop.toggleCoupon(id), {}),
 };
 
 

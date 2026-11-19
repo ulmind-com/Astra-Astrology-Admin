@@ -34,6 +34,7 @@ import {
   MessageSquareQuote,
   Flame,
   BookOpen,
+  Ticket,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -90,6 +91,7 @@ const ADMIN_STORE_NAV: NavItem[] = [
   { href: "/products", label: "Astro Products", icon: ShoppingBag },
   { href: "/inventory", label: "Inventory & Alerts", icon: Boxes },
   { href: "/categories", label: "Categories & Banners", icon: Tags },
+  { href: "/coupons", label: "Coupons & Discounts", icon: Ticket },
 ];
 
 const ADMIN_GURUKUL_NAV: NavItem[] = [
