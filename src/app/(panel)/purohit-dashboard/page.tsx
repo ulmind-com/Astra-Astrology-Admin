@@ -41,7 +41,7 @@ export default function PurohitDashboardPage() {
   const { ready, user } = useRequireAuth({ roles: ["purohit"], signInPath: "/login" });
   const queryClient = useQueryClient();
 
-  // Fetch Purohit Profile
+  // Fetch Purohit Profile (cached for 5 minutes, zero redundant network blocking)
   const { data: profileRes, isLoading: profileLoading } = useQuery({
     queryKey: ["purohit_me_profile"],
     queryFn: async () => {
@@ -49,9 +49,11 @@ export default function PurohitDashboardPage() {
       return ((res as any)?.data !== undefined ? (res as any).data : res) as PurohitData;
     },
     enabled: ready,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
-  // Fetch Purohit Bookings
+  // Fetch Purohit Bookings (cached for 30s, polished polling)
   const {
     data: bookingsRes,
     isLoading: bookingsLoading,
@@ -64,7 +66,9 @@ export default function PurohitDashboardPage() {
       return (Array.isArray(list) ? list : []) as PujaBookingData[];
     },
     enabled: ready,
-    refetchInterval: 8000, // Poll every 8s for live incoming bookings
+    staleTime: 30 * 1000,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: false,
   });
 
   const profile = profileRes;
@@ -122,7 +126,7 @@ export default function PurohitDashboardPage() {
     },
   });
 
-  if (!ready || profileLoading) {
+  if (!ready || (profileLoading && !profileRes)) {
     return <LoadingBlock label="Loading Purohit Altar Portal..." />;
   }
 
