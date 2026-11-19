@@ -5,6 +5,7 @@ import {
   BookOpen,
   CalendarDays,
   CheckCircle2,
+  Coins,
   Flame,
   Phone,
   Play,
@@ -126,8 +127,18 @@ export default function PurohitDashboardPage() {
   }
 
   const isOnline = profile?.is_online ?? false;
-  const activePujas = profile?.pujas?.filter((p: PurohitPujaItem) => p.is_active) || [];
-  const pendingOrConfirmed = bookings.filter((b: PujaBookingData) => b.status === "confirmed" || b.status === "in_progress");
+  const allPujas = profile?.pujas || [];
+  const activePujas = allPujas.filter((p: PurohitPujaItem) => p.is_active);
+  const pendingOrConfirmed = bookings.filter(
+    (b: PujaBookingData) => b.status === "confirmed" || b.status === "in_progress"
+  );
+  const completedBookings = bookings.filter((b: PujaBookingData) => b.status === "completed");
+  const completedCount = (profile?.total_pujas_performed || 0) + completedBookings.length;
+  const uniqueDevotees = new Set(
+    bookings.filter((b) => b.status === "completed" || b.status === "confirmed").map((b) => b.user_id)
+  ).size;
+  const totalDakshina = completedBookings.reduce((sum, b) => sum + (b.amount_inr || 0), 0);
+  const hasRating = Boolean(profile?.rating && profile.rating > 0 && completedCount > 0);
 
   return (
     <div className="space-y-6">
@@ -235,45 +246,96 @@ export default function PurohitDashboardPage() {
       {/* ------------------------------------------------------------- */}
       {/* 2. STATS & PRICE CATALOG OVERVIEW                             */}
       {/* ------------------------------------------------------------- */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Active Puja Catalog */}
         <Card className="border border-stone-200 dark:border-stone-800">
           <CardBody className="p-4 flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+            <div className="size-10 rounded-xl bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
               <BookOpen className="size-5" />
             </div>
-            <div>
-              <span className="text-xs text-stone-500 font-medium">My Active Puja Catalog</span>
+            <div className="min-w-0">
+              <span className="text-xs text-stone-500 font-medium truncate block">
+                Active Puja Catalog
+              </span>
               <div className="text-xl font-bold text-stone-900 dark:text-white">
-                {activePujas.length} Pujas Listed
+                {activePujas.length} {activePujas.length === 1 ? "Puja" : "Pujas"} Listed
               </div>
+              <span className="text-[10px] text-stone-400">
+                {allPujas.length > activePujas.length
+                  ? `${allPujas.length - activePujas.length} inactive in catalog`
+                  : allPujas.length === 0
+                  ? "No pujas created yet"
+                  : "All offerings active"}
+              </span>
             </div>
           </CardBody>
         </Card>
 
+        {/* Card 2: Total Completed Pujas */}
         <Card className="border border-stone-200 dark:border-stone-800">
           <CardBody className="p-4 flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+            <div className="size-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 flex items-center justify-center shrink-0">
               <CalendarDays className="size-5" />
             </div>
-            <div>
-              <span className="text-xs text-stone-500 font-medium">Total Pujas Conducted</span>
+            <div className="min-w-0">
+              <span className="text-xs text-stone-500 font-medium truncate block">
+                Total Pujas Conducted
+              </span>
               <div className="text-xl font-bold text-stone-900 dark:text-white">
-                {profile?.total_pujas_performed || 0} Devotees
+                {completedCount} {completedCount === 1 ? "Puja" : "Pujas"}
               </div>
+              <span className="text-[10px] text-stone-400">
+                {completedCount > 0 ? `${uniqueDevotees} unique devotees served` : "No completed pujas yet"}
+              </span>
             </div>
           </CardBody>
         </Card>
 
+        {/* Card 3: Total Dakshina Received */}
         <Card className="border border-stone-200 dark:border-stone-800">
           <CardBody className="p-4 flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-              <Star className="size-5 text-emerald-600" />
+            <div className="size-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <Coins className="size-5" />
             </div>
-            <div>
-              <span className="text-xs text-stone-500 font-medium">Devotee Rating</span>
-              <div className="text-xl font-bold text-stone-900 dark:text-white">
-                {profile?.rating?.toFixed(1) || "5.0"} ★★★★★
+            <div className="min-w-0">
+              <span className="text-xs text-stone-500 font-medium truncate block">
+                Total Dakshina Received
+              </span>
+              <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                ₹{totalDakshina.toLocaleString("en-IN")}
               </div>
+              <span className="text-[10px] text-stone-400">
+                {completedCount > 0 ? "From completed bookings" : "Awaiting first completed puja"}
+              </span>
+            </div>
+          </CardBody>
+        </Card>
+
+        {/* Card 4: Devotee Rating */}
+        <Card className="border border-stone-200 dark:border-stone-800">
+          <CardBody className="p-4 flex items-center gap-3">
+            <div className="size-10 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <Star className="size-5 fill-amber-500/20" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-xs text-stone-500 font-medium truncate block">
+                Devotee Rating
+              </span>
+              <div className="text-xl font-bold text-stone-900 dark:text-white flex items-center gap-1.5">
+                {hasRating ? (
+                  <>
+                    <span>{profile?.rating?.toFixed(1)}</span>
+                    <span className="text-amber-500 text-sm">★</span>
+                  </>
+                ) : (
+                  <span className="text-sm font-semibold text-stone-500 dark:text-stone-400">
+                    New Purohit
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] text-stone-400">
+                {hasRating ? "Based on devotee reviews" : "No ratings yet"}
+              </span>
             </div>
           </CardBody>
         </Card>
@@ -423,24 +485,44 @@ export default function PurohitDashboardPage() {
           </Link>
         </CardHeader>
         <CardBody className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {profile?.pujas?.map((puja: PurohitPujaItem) => (
-              <div
-                key={puja.id}
-                className="p-3 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/30 flex items-center justify-between"
-              >
-                <div>
-                  <h5 className="font-bold text-xs text-stone-900 dark:text-white truncate max-w-[200px]">
-                    {puja.puja_name}
-                  </h5>
-                  <span className="text-[11px] text-stone-500">{puja.duration_minutes} mins</span>
+          {allPujas.length === 0 ? (
+            <div className="text-center py-8 px-4 border border-dashed border-stone-200 dark:border-stone-800 rounded-xl">
+              <BookOpen className="size-8 text-stone-400 mx-auto mb-2" />
+              <p className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+                আপনার ক্যাটালগে এখনো কোনো পূজা যুক্ত করা হয়নি।
+              </p>
+              <p className="text-[11px] text-stone-500 mt-1 max-w-sm mx-auto">
+                ভক্তরা যাতে আপনাকে বিভিন্ন পূজার জন্য অনলাইনে বুক করতে পারেন, নিচের বাটনে ক্লিক করে পূজা ও দক্ষিণা যুক্ত করুন।
+              </p>
+              <Link href="/purohit-dashboard/pujas">
+                <Button variant="outline" size="sm" className="mt-3 text-xs font-bold text-amber-700 hover:bg-amber-50">
+                  <Plus className="size-3.5 mr-1" />
+                  নতুন পূজা যুক্ত করুন
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {allPujas.map((puja: PurohitPujaItem) => (
+                <div
+                  key={puja.id}
+                  className="p-3 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/30 flex items-center justify-between"
+                >
+                  <div className="min-w-0 pr-2">
+                    <h5 className="font-bold text-xs text-stone-900 dark:text-white truncate">
+                      {puja.puja_name}
+                    </h5>
+                    <span className="text-[11px] text-stone-500">
+                      {puja.duration_minutes} mins {puja.is_active ? "" : "• (Inactive)"}
+                    </span>
+                  </div>
+                  <Badge tone="neutral" className="font-bold text-xs bg-emerald-100 text-emerald-900 border-emerald-300 shrink-0">
+                    ₹{puja.price_inr}
+                  </Badge>
                 </div>
-                <Badge tone="neutral" className="font-bold text-xs bg-emerald-100 text-emerald-900 border-emerald-300">
-                  ₹{puja.price_inr}
-                </Badge>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardBody>
       </Card>
     </div>
