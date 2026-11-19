@@ -40,7 +40,7 @@ import { useAuth, useRequireAuth } from "@/providers/auth-provider";
 
 export default function PasskeysSecurityPage() {
   const { ready } = useRequireAuth({
-    roles: ["admin", "super_admin", "astrologer"],
+    roles: ["admin", "super_admin", "astrologer", "purohit"],
     signInPath: "/login",
   });
   const { user } = useAuth();

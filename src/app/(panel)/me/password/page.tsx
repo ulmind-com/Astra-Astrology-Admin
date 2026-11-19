@@ -32,7 +32,7 @@ import { useAuth, useRequireAuth } from "@/providers/auth-provider";
 
 export default function ChangePasswordPage() {
   const { ready } = useRequireAuth({
-    roles: ["astrologer", "admin", "super_admin"],
+    roles: ["astrologer", "admin", "super_admin", "purohit"],
     signInPath: "/login",
   });
   const { user } = useAuth();

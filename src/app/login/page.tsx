@@ -5,6 +5,7 @@ import {
   Eye,
   EyeOff,
   Fingerprint,
+  Flame,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -24,7 +25,7 @@ import { playNavFeedback } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 
-type PortalType = "admin" | "astrologer";
+type PortalType = "admin" | "astrologer" | "purohit";
 
 /* ---------------------------------------------------------------------------
    Astrology illustration — a golden celestial scene sitting inside soft
@@ -166,8 +167,9 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const { signIn, user, loading } = useAuth();
 
+  const paramPortal = searchParams.get("portal");
   const initialPortal: PortalType =
-    searchParams.get("portal") === "astrologer" ? "astrologer" : "admin";
+    paramPortal === "astrologer" ? "astrologer" : paramPortal === "purohit" ? "purohit" : "admin";
 
   const [portal, setPortal] = React.useState<PortalType>(initialPortal);
   const [email, setEmail] = React.useState("");
@@ -288,10 +290,14 @@ function LoginForm() {
       setEmail("astroapp26@gmail.com");
       setPassword("");
       toast.info("Super Admin account selected. Enter your password to sign in.");
-    } else {
+    } else if (role === "astrologer") {
       setEmail("samiransamanta490@gmail.com");
       setPassword("");
       toast.info("Astrologer account selected (Kanu Banarjee). Enter your password to sign in.");
+    } else {
+      setEmail("samiransamanta394@gmail.com");
+      setPassword("");
+      toast.info("Vedic Purohit account selected. Enter your password to sign in.");
     }
   };
 
@@ -406,28 +412,39 @@ function LoginForm() {
             <h1 className="font-display text-4xl font-black tracking-tight text-white">Login</h1>
 
             {/* subtle portal switch (kept for functionality) */}
-            <div className="mt-5 grid grid-cols-2 gap-1 rounded-full border border-white/20 bg-white/10 p-1 backdrop-blur-sm">
+            <div className="mt-5 grid grid-cols-3 gap-1 rounded-full border border-white/20 bg-white/10 p-1 backdrop-blur-sm">
               <button
                 type="button"
                 onClick={() => switchPortal("admin")}
                 className={cn(
-                  "flex items-center justify-center gap-1.5 rounded-full py-2 text-xs font-bold transition-all cursor-pointer",
-                  !isAstrologerMode ? "bg-[#FFFBEA] text-[#7a5f12] shadow-sm" : "text-white/70 hover:text-white"
+                  "flex items-center justify-center gap-1 rounded-full py-2 text-[11px] font-bold transition-all cursor-pointer",
+                  portal === "admin" ? "bg-[#FFFBEA] text-[#7a5f12] shadow-sm" : "text-white/70 hover:text-white"
                 )}
               >
                 <ShieldCheck className="size-3.5" />
-                Super Admin
+                Admin
               </button>
               <button
                 type="button"
                 onClick={() => switchPortal("astrologer")}
                 className={cn(
-                  "flex items-center justify-center gap-1.5 rounded-full py-2 text-xs font-bold transition-all cursor-pointer",
-                  isAstrologerMode ? "bg-[#FFFBEA] text-[#7a5f12] shadow-sm" : "text-white/70 hover:text-white"
+                  "flex items-center justify-center gap-1 rounded-full py-2 text-[11px] font-bold transition-all cursor-pointer",
+                  portal === "astrologer" ? "bg-[#FFFBEA] text-[#7a5f12] shadow-sm" : "text-white/70 hover:text-white"
                 )}
               >
                 <Sparkles className="size-3.5" />
                 Astrologer
+              </button>
+              <button
+                type="button"
+                onClick={() => switchPortal("purohit")}
+                className={cn(
+                  "flex items-center justify-center gap-1 rounded-full py-2 text-[11px] font-bold transition-all cursor-pointer",
+                  portal === "purohit" ? "bg-[#FFFBEA] text-[#7a5f12] shadow-sm" : "text-white/70 hover:text-white"
+                )}
+              >
+                <Flame className="size-3.5" />
+                Purohit
               </button>
             </div>
 
@@ -440,7 +457,7 @@ function LoginForm() {
             <form onSubmit={onSubmit} className="mt-6 space-y-5" noValidate>
               <div className="space-y-2">
                 <label htmlFor="email" className="block text-sm font-semibold text-white/90">
-                  {isAstrologerMode ? "Astrologer Email" : "Username"}
+                  {portal === "astrologer" ? "Astrologer Email" : portal === "purohit" ? "Purohit Email" : "Admin Username / Email"}
                 </label>
                 <input
                   id="email"
@@ -450,7 +467,13 @@ function LoginForm() {
                   autoFocus
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your username"
+                  placeholder={
+                    portal === "astrologer"
+                      ? "astrologer@example.com"
+                      : portal === "purohit"
+                      ? "purohit@example.com"
+                      : "Enter your username or email"
+                  }
                   className="w-full rounded-xl border border-white/20 bg-white/12 px-4 py-3 text-sm font-medium text-white placeholder:text-white/50 transition-all focus:border-[#FFFBEA] focus:bg-white/18 focus:outline-hidden focus:ring-4 focus:ring-[#FFFBEA]/20"
                 />
               </div>
@@ -501,8 +524,10 @@ function LoginForm() {
               >
                 {busy
                   ? "Authenticating..."
-                  : isAstrologerMode
+                  : portal === "astrologer"
                   ? "Login to Astrologer Studio"
+                  : portal === "purohit"
+                  ? "Login to Purohit Altar"
                   : "Login to Console"}
                 <ArrowRight className="size-4" />
               </button>
@@ -526,26 +551,17 @@ function LoginForm() {
               </button>
             </form>
 
-            {/* switch / "register" line */}
-            <div className="mt-6 text-center text-sm font-semibold text-white/90">
-              {isAstrologerMode ? "Are you a Platform Admin?" : "Are you an Astrologer?"}
-              <br />
-              <button
-                type="button"
-                onClick={() => switchPortal(isAstrologerMode ? "admin" : "astrologer")}
-                className="mt-0.5 inline-flex items-center gap-1 text-[#FFFBEA] underline underline-offset-2 transition-colors hover:text-white cursor-pointer"
-              >
-                {isAstrologerMode ? "Admin Login" : "Astrologer Login"}
-              </button>
-            </div>
-
-            <div className="mt-3 text-center text-[11px] text-white/70">
+            <div className="mt-4 text-center text-[11px] text-white/70">
               <button
                 type="button"
                 onClick={() => fillSampleAccount(portal)}
                 className="font-semibold underline underline-offset-2 hover:text-white cursor-pointer"
               >
-                {isAstrologerMode ? "Autofill Astrologer (Kanu)" : "Autofill Super Admin"}
+                {portal === "astrologer"
+                  ? "Autofill Astrologer (Kanu)"
+                  : portal === "purohit"
+                  ? "Autofill Vedic Purohit"
+                  : "Autofill Super Admin"}
               </button>
             </div>
 
