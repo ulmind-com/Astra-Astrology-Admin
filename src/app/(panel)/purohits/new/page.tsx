@@ -96,6 +96,12 @@ export default function NewPurohitPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleCloseModal = () => {
+    setCredentialsModalOpen(false);
+    queryClient.invalidateQueries({ queryKey: ["admin_purohits"] });
+    router.push("/purohits");
+  };
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <PanelHeader
@@ -283,10 +289,7 @@ export default function NewPurohitPage() {
       {createdData && (
         <Modal
           open={credentialsModalOpen}
-          onClose={() => {
-            setCredentialsModalOpen(false);
-            router.push("/purohits");
-          }}
+          onClose={handleCloseModal}
           title="🎉 Purohit Account Created Successfully"
         >
           <div className="space-y-4 p-2">
@@ -334,10 +337,7 @@ export default function NewPurohitPage() {
             <div className="pt-2">
               <Button
                 variant="primary"
-                onClick={() => {
-                  setCredentialsModalOpen(false);
-                  router.push("/purohits");
-                }}
+                onClick={handleCloseModal}
                 className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs"
               >
                 Go to Purohits Directory

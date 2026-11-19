@@ -15,6 +15,7 @@ import {
   BookOpen,
   Calendar,
   Edit2,
+  RefreshCw,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -35,6 +36,7 @@ import {
 } from "@/components/ui";
 import { adminPurohitApi, type PurohitData, type PurohitPujaItem } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
+import { cn } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
 
 export default function AdminPurohitsPage() {
@@ -59,7 +61,12 @@ export default function AdminPurohitsPage() {
     bio: "",
   });
 
-  const { data: res, isLoading } = useQuery({
+  const {
+    data: res,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useQuery({
     queryKey: ["admin_purohits"],
     queryFn: async () => {
       const response = await adminPurohitApi.list({ limit: 100 });
@@ -67,6 +74,9 @@ export default function AdminPurohitsPage() {
       return (Array.isArray(data) ? data : []) as PurohitData[];
     },
     enabled: ready,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchInterval: 10000,
   });
 
   const updateMutation = useMutation({
@@ -99,14 +109,14 @@ export default function AdminPurohitsPage() {
     },
   });
 
-  const purohits = res || [];
+  const purohits = Array.isArray(res) ? res : [];
 
   const filteredPurohits = React.useMemo(() => {
     if (!search.trim()) return purohits;
     const q = search.toLowerCase();
     return purohits.filter(
       (p: PurohitData) =>
-        p.display_name.toLowerCase().includes(q) ||
+        (p.display_name && p.display_name.toLowerCase().includes(q)) ||
         (p.city && p.city.toLowerCase().includes(q)) ||
         (p.phone && p.phone.includes(q)) ||
         (p.email && p.email.toLowerCase().includes(q))
@@ -126,12 +136,25 @@ export default function AdminPurohitsPage() {
         title="Purohits & Vedic Pandits Hub"
         description="Manage verified Purohits, view live online availability, and oversee puja price catalogs."
         action={
-          <Link href="/purohits/new">
-            <Button variant="primary" size="sm" className="bg-amber-600 hover:bg-amber-700 text-white font-bold">
-              <Plus className="size-4 mr-1.5" />
-              Onboard New Purohit
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="text-xs font-semibold"
+              title="Refresh Purohits list"
+            >
+              <RefreshCw className={cn("size-3.5 mr-1.5", isFetching && "animate-spin text-amber-600")} />
+              Refresh
             </Button>
-          </Link>
+            <Link href="/purohits/new">
+              <Button variant="primary" size="sm" className="bg-amber-600 hover:bg-amber-700 text-white font-bold">
+                <Plus className="size-4 mr-1.5" />
+                Onboard New Purohit
+              </Button>
+            </Link>
+          </div>
         }
       />
 
