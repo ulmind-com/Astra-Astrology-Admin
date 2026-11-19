@@ -17,6 +17,7 @@ export default function RootPage() {
   React.useEffect(() => {
     if (loading) return;
     if (!user) router.replace("/login");
+    else if (user.role === "purohit") router.replace("/purohit-dashboard");
     else if (user.role === "astrologer") router.replace("/me");
     else router.replace("/dashboard");
   }, [user, loading, router]);

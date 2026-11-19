@@ -511,6 +511,16 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                 <h1 className="font-display text-2xl sm:text-[26px] font-black tracking-tight text-slate-900 leading-tight">
                   {pathname === "/dashboard"
                     ? "Platform Overview"
+                    : pathname === "/purohit-dashboard"
+                    ? "Purohit Altar & Schedule"
+                    : pathname === "/purohit-dashboard/pujas"
+                    ? "Sacred Puja Catalog"
+                    : pathname === "/purohit-dashboard/bookings"
+                    ? "Live Puja Bookings"
+                    : pathname === "/purohits"
+                    ? "Purohits & Vedic Pandits Hub"
+                    : pathname === "/purohits/new"
+                    ? "Onboard Vedic Purohit"
                     : pathname === "/me"
                     ? "My Astrologer Profile"
                     : pathname === "/me/password"
@@ -580,16 +590,16 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                 >
                   <Avatar
                     src={user?.avatar_url}
-                    name={user?.full_name || (user?.role === "astrologer" ? "Astrologer" : "Super Admin")}
+                    name={user?.full_name || (user?.role === "astrologer" ? "Astrologer" : user?.role === "purohit" ? "Vedic Purohit" : "Super Admin")}
                     size="sm"
                     className="size-8 rounded-full object-cover"
                   />
                   <div className="text-left">
                     <p className="text-xs font-extrabold text-slate-900 leading-none">
-                      {user?.full_name || (user?.role === "astrologer" ? "Astrologer" : "Super Admin")}
+                      {user?.full_name || (user?.role === "astrologer" ? "Astrologer" : user?.role === "purohit" ? "Vedic Purohit" : "Super Admin")}
                     </p>
                     <p className="mt-0.5 text-[10px] font-semibold text-slate-400 leading-none">
-                      {user?.role === "astrologer" ? "Astrologer" : "Super Admin"}
+                      {user?.role === "astrologer" ? "Astrologer" : user?.role === "purohit" ? "Vedic Purohit" : "Super Admin"}
                     </p>
                   </div>
                 </button>
@@ -598,7 +608,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                   <div className="absolute right-0 top-13 z-50 w-52 rounded-2xl bg-white p-2 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95">
                     <div className="px-3 py-2 border-b border-slate-100">
                       <p className="text-xs font-bold text-slate-900 truncate">
-                        {user?.full_name || "Super Admin"}
+                        {user?.full_name || (user?.role === "purohit" ? "Vedic Purohit" : "Super Admin")}
                       </p>
                       <p className="text-[10px] text-slate-400 truncate">
                         {user?.email || "astroapp26@gmail.com"}
@@ -606,12 +616,12 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                     </div>
 
                     <Link
-                      href="/me"
+                      href={user?.role === "purohit" ? "/purohit-dashboard" : "/me"}
                       onClick={() => setShowProfileMenu(false)}
                       className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                     >
                       <UserRound className="size-3.5 text-slate-500" />
-                      My Profile
+                      {user?.role === "purohit" ? "Purohit Dashboard" : "My Profile"}
                     </Link>
 
                     <Link

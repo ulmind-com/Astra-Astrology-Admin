@@ -7,7 +7,7 @@ import { useRequireAuth } from "@/providers/auth-provider";
 export default function PanelLayout({ children }: { children: React.ReactNode }) {
   // Ordinary users have no business in this app at all.
   const { ready } = useRequireAuth({
-    roles: ["admin", "super_admin", "astrologer"],
+    roles: ["admin", "super_admin", "astrologer", "purohit"],
     signInPath: "/login",
   });
 
