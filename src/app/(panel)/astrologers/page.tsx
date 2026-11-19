@@ -1,15 +1,23 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
+  AlertCircle,
   ArrowRight,
+  Award,
   BadgeCheck,
   Calendar,
+  Check,
   CheckCircle2,
   ChevronRight,
+  Clock,
   Coins,
+  Copy,
+  CreditCard,
+  ExternalLink,
   Eye,
+  FileText,
   Globe,
   GraduationCap,
   LayoutGrid,
@@ -19,18 +27,40 @@ import {
   Phone,
   PhoneCall,
   Plus,
+  RefreshCw,
   Search,
+  ShieldCheck,
   Sparkles,
   Star,
+  UserCheck,
   Users,
   Video,
   X,
+  XCircle,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import * as React from "react";
+import { toast } from "sonner";
 
-import { Avatar, LoadingBlock, StatusDot } from "@/components/ui";
-import { adminApi, adminSettingsApi } from "@/lib/api";
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  CardBody,
+  Field,
+  Input,
+  LoadingBlock,
+  Modal,
+  StatusDot,
+} from "@/components/ui";
+import {
+  adminApi,
+  adminSettingsApi,
+  type AstrologerApplicationApprovalResult,
+  type AstrologerApplicationData,
+} from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { cn, formatDate } from "@/lib/utils";
 import { useRequireAuth } from "@/providers/auth-provider";
@@ -46,6 +76,19 @@ export default function AstrologersListPage() {
     roles: ["admin", "super_admin"],
     signInPath: "/login",
   });
+  const queryClient = useQueryClient();
+
+  // Active Tab: "verified" | "applications"
+  const [activeTab, setActiveTab] = React.useState<"verified" | "applications">("verified");
+
+  // Application States
+  const [appStatusFilter, setAppStatusFilter] = React.useState<string>("pending");
+  const [appSearch, setAppSearch] = React.useState("");
+  const [detailModalApp, setDetailModalApp] = React.useState<AstrologerApplicationData | null>(null);
+  const [rejectModalApp, setRejectModalApp] = React.useState<AstrologerApplicationData | null>(null);
+  const [rejectionReason, setRejectionReason] = React.useState("");
+  const [approvalResult, setApprovalResult] = React.useState<AstrologerApplicationApprovalResult | null>(null);
+  const [copiedField, setCopiedField] = React.useState<string | null>(null);
 
   const [search, setSearch] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
@@ -84,6 +127,79 @@ export default function AstrologersListPage() {
     enabled: ready,
     placeholderData: (previous) => previous,
   });
+
+  // Fetch Astrologer Applications
+  const {
+    data: appRes,
+    isLoading: isLoadingApps,
+    isFetching: isFetchingApps,
+    refetch: refetchApps,
+  } = useQuery({
+    queryKey: ["admin_astrologer_applications", appStatusFilter, appSearch],
+    queryFn: async () => {
+      const res = await adminApi.listAstrologerApplications({
+        status: appStatusFilter === "all" ? undefined : appStatusFilter,
+        search: appSearch.trim() || undefined,
+        limit: 100,
+      });
+      const data = (res as any)?.data !== undefined ? (res as any).data : res;
+      return (Array.isArray(data) ? data : []) as AstrologerApplicationData[];
+    },
+    enabled: ready,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchInterval: 10000,
+  });
+
+  const applications = Array.isArray(appRes) ? appRes : [];
+  const pendingAppsCount = applications.filter((a) => a.status === "pending").length;
+
+  const approveMutation = useMutation({
+    mutationFn: async (appId: string) => {
+      const res = await adminApi.approveAstrologerApplication(appId);
+      return (res as any)?.data !== undefined ? (res as any).data : res;
+    },
+    onSuccess: (result: AstrologerApplicationApprovalResult) => {
+      toast.success(result.message || "Astrologer approved successfully!");
+      setApprovalResult(result);
+      if (detailModalApp?.id === result.application_id) {
+        setDetailModalApp(null);
+      }
+      queryClient.invalidateQueries({ queryKey: ["admin", "astrologers"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_astrologer_applications"] });
+    },
+    onError: (err) => {
+      const msg = err instanceof ApiError ? err.message : "Failed to approve application";
+      toast.error(msg);
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      const res = await adminApi.rejectAstrologerApplication(id, { reason: reason || undefined });
+      return (res as any)?.data !== undefined ? (res as any).data : res;
+    },
+    onSuccess: () => {
+      toast.success("Astrologer application marked as rejected.");
+      setRejectModalApp(null);
+      setRejectionReason("");
+      if (detailModalApp) {
+        setDetailModalApp(null);
+      }
+      queryClient.invalidateQueries({ queryKey: ["admin_astrologer_applications"] });
+    },
+    onError: (err) => {
+      const msg = err instanceof ApiError ? err.message : "Failed to reject application";
+      toast.error(msg);
+    },
+  });
+
+  const copyToClipboard = (text: string, fieldName: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldName);
+    toast.success(`Copied ${fieldName} to clipboard!`);
+    setTimeout(() => setCopiedField(null), 2500);
+  };
 
   const allAstrologers = astrologersList || [];
 
@@ -138,55 +254,122 @@ export default function AstrologersListPage() {
               <Sparkles className="size-4" />
             </span>
             <h2 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-slate-900 leading-tight">
-              Specialist Directory
+              Specialist Directory & Applications
             </h2>
           </div>
           <p className="mt-1 text-xs font-semibold text-slate-400">
-            Certified Vedic, Tarot, KP, and Nadi practitioners active across
-            Astra Blink
+            Certified Vedic, Tarot, KP, and Nadi practitioners active across Astra Blink
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* View Switcher */}
-          <div className="flex items-center rounded-2xl bg-white p-1 shadow-sm border border-slate-100">
-            <button
-              onClick={() => setViewMode("table")}
+          {/* Refresh Button */}
+          <button
+            onClick={() => {
+              refetch();
+              refetchApps();
+            }}
+            disabled={isFetching || isFetchingApps}
+            className="flex items-center gap-1.5 rounded-2xl bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm border border-slate-200 hover:bg-slate-50 transition-all cursor-pointer"
+            title="Refresh Directory"
+          >
+            <RefreshCw
               className={cn(
-                "flex size-9 items-center justify-center rounded-xl transition-all",
-                viewMode === "table"
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "text-slate-400 hover:text-slate-800 hover:bg-slate-50"
+                "size-3.5",
+                (isFetching || isFetchingApps) && "animate-spin text-amber-600"
               )}
-              title="Table View"
-              aria-label="Table View"
-            >
-              <LayoutList className="size-4" />
-            </button>
-            <button
-              onClick={() => setViewMode("grid")}
-              className={cn(
-                "flex size-9 items-center justify-center rounded-xl transition-all",
-                viewMode === "grid"
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "text-slate-400 hover:text-slate-800 hover:bg-slate-50"
-              )}
-              title="Grid View"
-              aria-label="Grid View"
-            >
-              <LayoutGrid className="size-4" />
-            </button>
-          </div>
+            />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
 
-          {/* Add Astrologer CTA */}
-          <Link href="/astrologers/new">
-            <button className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-[0_8px_20px_-4px_rgba(217,119,6,0.45)] transition-all hover:from-[#B45309] hover:to-[#D97706] hover:shadow-[0_12px_25px_-4px_rgba(217,119,6,0.55)] active:scale-95 cursor-pointer">
-              <Plus className="size-4 stroke-[2.5]" />
-              <span>Add Astrologer</span>
-            </button>
-          </Link>
+          {activeTab === "verified" && (
+            <>
+              {/* View Switcher */}
+              <div className="flex items-center rounded-2xl bg-white p-1 shadow-sm border border-slate-100">
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={cn(
+                    "flex size-9 items-center justify-center rounded-xl transition-all",
+                    viewMode === "table"
+                      ? "bg-slate-900 text-white shadow-xs"
+                      : "text-slate-400 hover:text-slate-800 hover:bg-slate-50"
+                  )}
+                  title="Table View"
+                  aria-label="Table View"
+                >
+                  <LayoutList className="size-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={cn(
+                    "flex size-9 items-center justify-center rounded-xl transition-all",
+                    viewMode === "grid"
+                      ? "bg-slate-900 text-white shadow-xs"
+                      : "text-slate-400 hover:text-slate-800 hover:bg-slate-50"
+                  )}
+                  title="Grid View"
+                  aria-label="Grid View"
+                >
+                  <LayoutGrid className="size-4" />
+                </button>
+              </div>
+
+              {/* Add Astrologer CTA */}
+              <Link href="/astrologers/new">
+                <button className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-[0_8px_20px_-4px_rgba(217,119,6,0.45)] transition-all hover:from-[#B45309] hover:to-[#D97706] hover:shadow-[0_12px_25px_-4px_rgba(217,119,6,0.55)] active:scale-95 cursor-pointer">
+                  <Plus className="size-4 stroke-[2.5]" />
+                  <span>Manual Add</span>
+                </button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
+
+      {/* ── TOP TABS: VERIFIED SPECIALISTS vs APPLICATIONS ── */}
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+        <button
+          onClick={() => setActiveTab("verified")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer",
+            activeTab === "verified"
+              ? "bg-[#D97706] text-white shadow-sm shadow-amber-600/30"
+              : "text-slate-600 hover:bg-slate-100"
+          )}
+        >
+          <UserCheck className="size-4" />
+          Verified Specialists ({allAstrologers.length})
+        </button>
+
+        <button
+          onClick={() => setActiveTab("applications")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer relative",
+            activeTab === "applications"
+              ? "bg-[#D97706] text-white shadow-sm shadow-amber-600/30"
+              : "text-slate-600 hover:bg-slate-100"
+          )}
+        >
+          <Clock className="size-4" />
+          ⏳ Pending Applications
+          {pendingAppsCount > 0 && (
+            <span
+              className={cn(
+                "ml-1 px-2 py-0.5 rounded-full text-xs font-black",
+                activeTab === "applications"
+                  ? "bg-white text-amber-800"
+                  : "bg-amber-600 text-white"
+              )}
+            >
+              {pendingAppsCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* ── TAB 1: VERIFIED SPECIALISTS ── */}
+      {activeTab === "verified" && (
+        <div className="space-y-6">
 
       {/* ── 2. 4 DEALDECK 3D METRIC CARDS ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
@@ -760,6 +943,289 @@ export default function AstrologersListPage() {
           ))}
         </div>
       )}
+      </div>
+      )}
+
+      {/* ── TAB 2: PENDING & PROCESSED ASTROLOGER APPLICATIONS ── */}
+      {activeTab === "applications" && (
+        <div className="space-y-5">
+          {/* Controls: Search & Filter Tabs */}
+          <Card className="border border-slate-200">
+            <CardBody className="p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="relative w-full sm:w-80">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                <Input
+                  value={appSearch}
+                  onChange={(e) => setAppSearch(e.target.value)}
+                  placeholder="Search by name, phone, email, app #..."
+                  className="pl-9 text-xs"
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
+                {[
+                  { key: "pending", label: "Pending" },
+                  { key: "approved", label: "Approved" },
+                  { key: "rejected", label: "Rejected" },
+                  { key: "all", label: "All" },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setAppStatusFilter(tab.key)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap cursor-pointer",
+                      appStatusFilter === tab.key
+                        ? "bg-slate-900 text-white"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* Applications List */}
+          {isLoadingApps ? (
+            <LoadingBlock label="Loading Astrologer onboarding applications..." />
+          ) : applications.length === 0 ? (
+            <Card className="border border-dashed border-slate-300 p-8 text-center">
+              <Clock className="size-10 text-slate-400 mx-auto mb-2" />
+              <p className="text-sm font-bold text-slate-700">
+                No {appStatusFilter !== "all" ? appStatusFilter : ""} applications found.
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Applicants who complete the website registration at /become-an-astrologer will appear here.
+              </p>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {applications.map((app) => (
+                <Card
+                  key={app.id}
+                  className={cn(
+                    "border transition-all overflow-hidden",
+                    app.status === "pending"
+                      ? "border-amber-300/80 bg-amber-50/15"
+                      : app.status === "approved"
+                      ? "border-emerald-200 bg-emerald-50/15"
+                      : "border-rose-200 bg-rose-50/15"
+                  )}
+                >
+                  <CardBody className="p-5 space-y-4">
+                    {/* Top Row: App #, Date, Status */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-xs px-2.5 py-1 rounded-md bg-slate-100 text-slate-800">
+                          {app.application_number}
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          Applied: {new Date(app.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+
+                      <div>
+                        {app.status === "pending" && (
+                          <Badge tone="neutral" className="bg-amber-100 text-amber-900 border-amber-300 font-bold text-xs">
+                            ⏳ Pending Review
+                          </Badge>
+                        )}
+                        {app.status === "approved" && (
+                          <Badge tone="neutral" className="bg-emerald-100 text-emerald-900 border-emerald-300 font-bold text-xs">
+                            ✅ Approved & Live
+                          </Badge>
+                        )}
+                        {app.status === "rejected" && (
+                          <Badge tone="neutral" className="bg-rose-100 text-rose-900 border-rose-300 font-bold text-xs">
+                            ❌ Rejected
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Applicant Profile Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Column 1: Identity & Contact */}
+                      <div className="flex items-start gap-3">
+                        <div className="relative size-14 rounded-2xl overflow-hidden bg-amber-100 shrink-0 border border-amber-200">
+                          {app.avatar_url ? (
+                            <Image src={app.avatar_url} alt={app.full_name} fill className="object-cover" unoptimized />
+                          ) : (
+                            <div className="size-full flex items-center justify-center text-amber-700 font-bold text-lg">
+                              {app.full_name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="font-bold text-base text-slate-900 flex items-center gap-1.5">
+                            {app.full_name}
+                            {app.age && <span className="text-xs font-normal text-slate-500">({app.age} yrs{app.gender ? `, ${app.gender}` : ""})</span>}
+                          </h4>
+                          <div className="text-xs text-slate-600 flex items-center gap-1.5">
+                            <Phone className="size-3.5 text-slate-400" />
+                            <span>{app.phone}</span>
+                          </div>
+                          <div className="text-xs text-slate-600 flex items-center gap-1.5">
+                            <Mail className="size-3.5 text-slate-400" />
+                            <span className="truncate">{app.email}</span>
+                          </div>
+                          <div className="text-xs text-slate-600 flex items-center gap-1.5">
+                            <Globe className="size-3.5 text-slate-400" />
+                            <span>{app.city}, {app.state} {app.pincode ? `(${app.pincode})` : ""}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Column 2: Competence, Skills & Specialisations */}
+                      <div className="space-y-2 border-t md:border-t-0 md:border-l border-slate-100 md:pl-4">
+                        <div className="flex items-center gap-2">
+                          <Award className="size-4 text-amber-600" />
+                          <span className="font-bold text-xs text-slate-900">
+                            {app.experience_years} Years Professional Experience
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          Languages: <span className="text-slate-800 font-medium">{app.languages?.join(", ")}</span>
+                        </div>
+
+                        {/* Disciplines / Skills */}
+                        <div>
+                          <div className="text-[11px] font-bold text-slate-500 mb-1">
+                            Astrological Disciplines ({app.skills?.length || 0}):
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {(app.skills || []).map((skill, i) => (
+                              <span
+                                key={i}
+                                className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200/80 text-[10px] text-amber-900 font-semibold"
+                              >
+                                {SKILL_LABELS[skill as Skill] || skill.replace("_", " ").toUpperCase()}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Specialisations */}
+                        {(app.specialisations || []).length > 0 && (
+                          <div>
+                            <div className="text-[11px] font-bold text-slate-500 mb-1">
+                              Consultation Focus:
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {app.specialisations.slice(0, 3).map((spec, i) => (
+                                <span
+                                  key={i}
+                                  className="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] text-slate-700 font-medium"
+                                >
+                                  {spec}
+                                </span>
+                              ))}
+                              {app.specialisations.length > 3 && (
+                                <span className="text-[10px] text-amber-600 font-bold self-center">
+                                  +{app.specialisations.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Column 3: Payout Details & Verification Doc */}
+                      <div className="space-y-2 border-t md:border-t-0 md:border-l border-slate-100 md:pl-4">
+                        <div className="flex items-center gap-2 text-xs">
+                          <CreditCard className="size-4 text-slate-400" />
+                          <span className="font-bold text-slate-800">Payout Details:</span>
+                        </div>
+                        <div className="text-xs text-slate-600 space-y-0.5">
+                          {app.upi_id && <div>UPI: <span className="font-mono text-slate-900 font-bold">{app.upi_id}</span></div>}
+                          {app.bank_account_number && (
+                            <div>Bank: <span className="font-mono">{app.bank_account_number.slice(-4).padStart(app.bank_account_number.length, "*")}</span> ({app.bank_ifsc || "IFSC"})</div>
+                          )}
+                          {app.bank_account_holder && <div>Holder: {app.bank_account_holder}</div>}
+                          {app.pan_card && <div>PAN: <span className="font-mono uppercase">{app.pan_card}</span></div>}
+                        </div>
+
+                        {/* ID Document Link */}
+                        <div className="pt-1">
+                          {app.identity_proof_url ? (
+                            <a
+                              href={app.identity_proof_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                            >
+                              <FileText className="size-3.5" />
+                              View Certificate / Credentials
+                              <ExternalLink className="size-3" />
+                            </a>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">No document attached</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bio or Rejection Reason Note */}
+                    {app.bio && (
+                      <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <b>Background & Consultation Philosophy:</b> {app.bio}
+                      </div>
+                    )}
+
+                    {app.status === "rejected" && app.rejection_reason && (
+                      <div className="text-xs text-rose-700 bg-rose-50 p-3 rounded-xl border border-rose-200">
+                        <b>Rejection Reason:</b> {app.rejection_reason}
+                      </div>
+                    )}
+
+                    {/* Action Bar */}
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDetailModalApp(app)}
+                        className="text-xs font-semibold cursor-pointer"
+                      >
+                        <Eye className="size-3.5 mr-1 text-slate-500" />
+                        View Full Details
+                      </Button>
+
+                      {app.status === "pending" && (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setRejectModalApp(app);
+                              setRejectionReason("");
+                            }}
+                            className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-bold cursor-pointer"
+                          >
+                            <XCircle className="size-3.5 mr-1" />
+                            Reject
+                          </Button>
+
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => approveMutation.mutate(app.id)}
+                            loading={approveMutation.isPending && approveMutation.variables === app.id}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer"
+                          >
+                            <CheckCircle2 className="size-3.5 mr-1" />
+                            Approve & Onboard
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── 5. INTERACTIVE 3D QUICK PROFILE SLIDE-OVER DRAWER ── */}
       {previewAstrologer && (
@@ -941,6 +1407,273 @@ export default function AstrologersListPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: APPLICATION FULL DETAILS                                            */}
+      {/* ========================================================================= */}
+      {detailModalApp && (
+        <Modal
+          open={!!detailModalApp}
+          onClose={() => setDetailModalApp(null)}
+          title={`Astrologer Application — ${detailModalApp.application_number}`}
+        >
+          <div className="space-y-4 max-h-[75vh] overflow-y-auto p-1 text-xs">
+            {/* Header */}
+            <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50 border border-amber-200">
+              <div>
+                <h4 className="font-bold text-base text-slate-900">{detailModalApp.full_name}</h4>
+                <p className="text-slate-500">
+                  {detailModalApp.experience_years} Years Experience
+                  {detailModalApp.age ? ` • Age: ${detailModalApp.age}` : ""}
+                  {detailModalApp.gender ? ` • ${detailModalApp.gender}` : ""}
+                </p>
+              </div>
+              <Badge
+                tone="neutral"
+                className={cn(
+                  "font-bold text-xs",
+                  detailModalApp.status === "pending"
+                    ? "bg-amber-100 text-amber-900 border-amber-300"
+                    : detailModalApp.status === "approved"
+                    ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                    : "bg-rose-100 text-rose-900 border-rose-300"
+                )}
+              >
+                {detailModalApp.status.toUpperCase()}
+              </Badge>
+            </div>
+
+            {/* Contact & Location */}
+            <div className="space-y-2 border p-3 rounded-xl border-slate-200">
+              <h5 className="font-bold text-slate-900">Contact & Address</h5>
+              <div className="grid grid-cols-2 gap-2 text-slate-600">
+                <div>Email: <b className="text-slate-900">{detailModalApp.email}</b></div>
+                <div>Phone: <b className="text-slate-900">{detailModalApp.phone}</b></div>
+                <div>City: {detailModalApp.city}</div>
+                <div>State: {detailModalApp.state}</div>
+                <div>Pincode: {detailModalApp.pincode || "N/A"}</div>
+                <div>Address: {detailModalApp.address || "N/A"}</div>
+              </div>
+            </div>
+
+            {/* Disciplines & Specialisations */}
+            <div className="space-y-2 border p-3 rounded-xl border-slate-200">
+              <h5 className="font-bold text-slate-900">Astrological Disciplines & Focus</h5>
+              <p><b>Languages:</b> {detailModalApp.languages?.join(", ")}</p>
+              <div>
+                <b>Practiced Systems:</b>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {(detailModalApp.skills || []).map((s, i) => (
+                    <span key={i} className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200 text-[11px] font-semibold">
+                      {SKILL_LABELS[s as Skill] || s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {(detailModalApp.specialisations || []).length > 0 && (
+                <div className="mt-1">
+                  <b>Consultation Focus:</b>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {detailModalApp.specialisations.map((spec, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px]">
+                        {spec}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {(detailModalApp.qualifications || []).length > 0 && (
+                <div className="mt-1">
+                  <b>Qualifications & Titles:</b>
+                  <p className="mt-0.5 text-slate-700">{detailModalApp.qualifications.join(", ")}</p>
+                </div>
+              )}
+              {detailModalApp.bio && (
+                <div className="mt-2 pt-2 border-t border-slate-100">
+                  <b>Background & Lineage:</b>
+                  <p className="mt-1 leading-relaxed text-slate-700">{detailModalApp.bio}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Bank & Payout */}
+            <div className="space-y-2 border p-3 rounded-xl border-slate-200">
+              <h5 className="font-bold text-slate-900">Financial & Payout Information</h5>
+              <div className="grid grid-cols-2 gap-2 text-slate-600">
+                <div>UPI ID: <b className="font-mono text-slate-900">{detailModalApp.upi_id || "N/A"}</b></div>
+                <div>PAN Card: <b className="font-mono text-slate-900">{detailModalApp.pan_card || "N/A"}</b></div>
+                <div>Account Holder: {detailModalApp.bank_account_holder || "N/A"}</div>
+                <div>Account Number: <span className="font-mono">{detailModalApp.bank_account_number || "N/A"}</span></div>
+                <div>IFSC Code: <span className="font-mono">{detailModalApp.bank_ifsc || "N/A"}</span></div>
+                <div>Bank Name: {detailModalApp.bank_name || "N/A"}</div>
+              </div>
+            </div>
+
+            {/* Attached Verification Doc */}
+            {detailModalApp.identity_proof_url && (
+              <div className="p-3 rounded-xl border border-blue-200 bg-blue-50/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="size-4 text-blue-600" />
+                  <span className="font-bold text-blue-900">Certificate / Identity Document</span>
+                </div>
+                <a
+                  href={detailModalApp.identity_proof_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1 bg-blue-600 text-white rounded-lg font-bold flex items-center gap-1 hover:bg-blue-700"
+                >
+                  Open Document <ExternalLink className="size-3" />
+                </a>
+              </div>
+            )}
+
+            {/* Actions */}
+            {detailModalApp.status === "pending" && (
+              <div className="flex items-center justify-end gap-2 pt-3 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setRejectModalApp(detailModalApp);
+                    setRejectionReason("");
+                  }}
+                  className="text-rose-600 hover:text-rose-700"
+                >
+                  Reject Application
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => approveMutation.mutate(detailModalApp.id)}
+                  loading={approveMutation.isPending}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                >
+                  Approve & Onboard
+                </Button>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: APPROVAL SUCCESS & CREDENTIALS                                       */}
+      {/* ========================================================================= */}
+      {approvalResult && (
+        <Modal
+          open={!!approvalResult}
+          onClose={() => setApprovalResult(null)}
+          title="🎉 Astrologer Approved & Live!"
+        >
+          <div className="space-y-4 p-1 text-xs">
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900">
+              <h4 className="font-bold text-sm mb-1">
+                {approvalResult.display_name} is now an active Astrologer!
+              </h4>
+              <p>
+                {approvalResult.email_sent
+                  ? `An official welcome email with login credentials has been sent to ${approvalResult.email}.`
+                  : `User account & Astrologer profile created. Welcome email could not be sent automatically; please provide the credentials manually.`}
+              </p>
+            </div>
+
+            <div className="space-y-3 border p-4 rounded-xl border-slate-200 bg-slate-50">
+              <div>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Login Email</label>
+                <div className="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 mt-1">
+                  <span className="font-mono font-bold text-slate-900">{approvalResult.email}</span>
+                  <button
+                    onClick={() => copyToClipboard(approvalResult.email, "Email")}
+                    className="text-slate-500 hover:text-amber-600 cursor-pointer"
+                  >
+                    {copiedField === "Email" ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Initial Password</label>
+                <div className="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 mt-1">
+                  <span className="font-mono font-bold text-amber-700 text-sm">{approvalResult.temporary_password}</span>
+                  <button
+                    onClick={() => copyToClipboard(approvalResult.temporary_password, "Password")}
+                    className="text-slate-500 hover:text-amber-600 cursor-pointer"
+                  >
+                    {copiedField === "Password" ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Astrologer Portal URL</label>
+                <div className="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 mt-1">
+                  <span className="font-mono text-slate-700 truncate mr-2">{approvalResult.dashboard_url}</span>
+                  <button
+                    onClick={() => copyToClipboard(approvalResult.dashboard_url, "Portal URL")}
+                    className="text-slate-500 hover:text-amber-600 cursor-pointer"
+                  >
+                    {copiedField === "Portal URL" ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <Button
+                variant="primary"
+                onClick={() => setApprovalResult(null)}
+                className="bg-slate-900 text-white font-bold"
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: REJECT APPLICATION                                                   */}
+      {/* ========================================================================= */}
+      {rejectModalApp && (
+        <Modal
+          open={!!rejectModalApp}
+          onClose={() => setRejectModalApp(null)}
+          title={`Reject Application — ${rejectModalApp.application_number}`}
+        >
+          <div className="space-y-4 p-1 text-xs">
+            <p className="text-slate-600">
+              Are you sure you want to reject the application submitted by <b>{rejectModalApp.full_name}</b>?
+            </p>
+
+            <Field label="Rejection Reason (Optional)">
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="e.g. Incomplete credentials, certification verification unconfirmed, etc."
+                rows={3}
+                className="w-full rounded-xl border border-slate-300 bg-white p-2.5 text-xs focus:border-rose-500 focus:outline-none"
+              />
+            </Field>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t">
+              <Button variant="outline" onClick={() => setRejectModalApp(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() =>
+                  rejectMutation.mutate({
+                    id: rejectModalApp.id,
+                    reason: rejectionReason,
+                  })
+                }
+                loading={rejectMutation.isPending}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold"
+              >
+                Confirm Rejection
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );

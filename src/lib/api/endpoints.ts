@@ -119,6 +119,10 @@ export const endpoints = {
   admin: {
     astrologers: "/admin/astrologers",
     astrologer: (id: string) => `/admin/astrologers/${id}`,
+    astrologerApplications: "/admin/astrologers/applications",
+    astrologerApplication: (id: string) => `/admin/astrologers/applications/${id}`,
+    approveAstrologerApplication: (id: string) => `/admin/astrologers/applications/${id}/approve`,
+    rejectAstrologerApplication: (id: string) => `/admin/astrologers/applications/${id}/reject`,
     wallets: "/admin/wallets",
     wallet: (userId: string) => `/admin/wallets/${userId}`,
     walletAdjust: (userId: string) => `/admin/wallets/${userId}/adjust`,

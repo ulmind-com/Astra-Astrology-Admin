@@ -229,6 +229,53 @@ export const astrologerApi = {
     api.delete<null>(endpoints.astrologers.galleryImage(publicId)),
 };
 
+export interface AstrologerApplicationData {
+  id: string;
+  application_number: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  gender?: string | null;
+  age?: number | null;
+  address?: string | null;
+  city: string;
+  state: string;
+  pincode?: string | null;
+  skills: string[];
+  specialisations: string[];
+  experience_years: number;
+  languages: string[];
+  qualifications: string[];
+  bio?: string | null;
+  avatar_url?: string | null;
+  identity_proof_url?: string | null;
+  bank_account_number?: string | null;
+  bank_ifsc?: string | null;
+  bank_account_holder?: string | null;
+  bank_name?: string | null;
+  upi_id?: string | null;
+  pan_card?: string | null;
+  status: "pending" | "approved" | "rejected";
+  rejection_reason?: string | null;
+  reviewed_at?: string | null;
+  approved_user_id?: string | null;
+  approved_astrologer_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AstrologerApplicationApprovalResult {
+  application_id: string;
+  user_id: string;
+  astrologer_id: string;
+  display_name: string;
+  email: string;
+  temporary_password: string;
+  email_sent: boolean;
+  dashboard_url: string;
+  message: string;
+}
+
 // ------------------------------------------------------------------ admin
 export const adminApi = {
   listAstrologers: (params: { search?: string; skip?: number; limit?: number } = {}) =>
@@ -243,6 +290,23 @@ export const adminApi = {
     api.patch<AstrologerProfile>(endpoints.admin.astrologer(id), body),
 
   deactivateAstrologer: (id: string) => api.delete<null>(endpoints.admin.astrologer(id)),
+
+  listAstrologerApplications: (params?: {
+    status?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }) =>
+    api.get<AstrologerApplicationData[]>(endpoints.admin.astrologerApplications, { query: params }),
+
+  getAstrologerApplication: (id: string) =>
+    api.get<AstrologerApplicationData>(endpoints.admin.astrologerApplication(id)),
+
+  approveAstrologerApplication: (id: string) =>
+    api.post<AstrologerApplicationApprovalResult>(endpoints.admin.approveAstrologerApplication(id)),
+
+  rejectAstrologerApplication: (id: string, body: { reason?: string }) =>
+    api.post<AstrologerApplicationData>(endpoints.admin.rejectAstrologerApplication(id), body),
 };
 
 // ----------------------------------------------------------------- health
