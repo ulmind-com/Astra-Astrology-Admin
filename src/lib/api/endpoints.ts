@@ -173,6 +173,9 @@ export const endpoints = {
       coupons: "/admin/shop/coupons",
       coupon: (id: string) => `/admin/shop/coupons/${id}`,
       toggleCoupon: (id: string) => `/admin/shop/coupons/${id}/toggle-active`,
+      reviews: "/admin/shop/reviews",
+      moderateReview: (id: string) => `/admin/shop/reviews/${id}/moderate`,
+      deleteReview: (id: string) => `/admin/shop/reviews/${id}`,
     },
     courses: {
       list: "/admin/courses",

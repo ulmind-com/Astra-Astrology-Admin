@@ -1217,7 +1217,52 @@ export const shopAdminApi = {
 
   toggleCouponActive: (id: string) =>
     api.patch<ShopCoupon>(endpoints.admin.shop.toggleCoupon(id), {}),
+
+  listReviews: (params?: {
+    page?: number;
+    limit?: number;
+    rating?: number;
+    is_hidden?: boolean;
+    product_id?: string;
+    search?: string;
+  }) =>
+    api.get<AdminProductReviewListResponse>(endpoints.admin.shop.reviews, {
+      query: params,
+    }),
+
+  moderateReview: (id: string, body: { is_hidden: boolean; hidden_reason?: string }) =>
+    api.patch<ProductReviewItem>(endpoints.admin.shop.moderateReview(id), body),
+
+  deleteReview: (id: string) =>
+    api.delete<{ deleted: boolean }>(endpoints.admin.shop.deleteReview(id)),
 };
+
+export interface ProductReviewItem {
+  id: string;
+  product_id: string;
+  product_slug: string;
+  user_id: string;
+  order_id: string;
+  rating: number;
+  title: string | null;
+  comment: string;
+  images: string[];
+  is_verified_buyer: boolean;
+  author_name: string;
+  author_avatar: string | null;
+  helpful_count: number;
+  is_hidden: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminProductReviewListResponse {
+  items: ProductReviewItem[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
 
 
 
