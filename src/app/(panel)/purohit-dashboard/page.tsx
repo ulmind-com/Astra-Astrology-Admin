@@ -108,7 +108,7 @@ export default function PurohitDashboardPage() {
   const avatarMutation = useMutation({
     mutationFn: async (file: File) => {
       const res = await purohitPortalApi.uploadAvatar(file);
-      return res.data;
+      return (res as any)?.data || res;
     },
     onSuccess: () => {
       toast.success("প্রোফাইল ছবি সফলভাবে আপডেট করা হয়েছে!");

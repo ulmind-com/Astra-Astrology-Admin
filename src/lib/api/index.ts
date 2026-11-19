@@ -1394,7 +1394,7 @@ export const adminPurohitApi = {
     if (previousUrl) {
       fd.append("previous_avatar_url", previousUrl);
     }
-    return apiFetch<ApiResponse<{ url: string; public_id: string; format: string }>>(
+    return apiFetch<{ url: string; public_id: string; format: string }>(
       endpoints.admin.purohits.uploadAvatar,
       {
         method: "POST",
@@ -1415,7 +1415,7 @@ export const purohitPortalApi = {
   uploadAvatar: async (file: File) => {
     const fd = new FormData();
     fd.append("file", file);
-    return apiFetch<ApiResponse<PurohitData>>(
+    return apiFetch<PurohitData>(
       "/purohits/me/avatar",
       {
         method: "POST",
