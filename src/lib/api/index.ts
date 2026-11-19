@@ -1389,11 +1389,41 @@ export const adminPurohitApi = {
     api.put<ApiResponse<PurohitData>>(`/admin/purohits/${id}`, body),
   delete: (id: string) =>
     api.delete<{ message: string }>(`/admin/purohits/${id}`),
+  uploadAvatar: async (file: File, previousUrl?: string | null) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    if (previousUrl) {
+      fd.append("previous_avatar_url", previousUrl);
+    }
+    return apiFetch<ApiResponse<{ url: string; public_id: string; format: string }>>(
+      endpoints.admin.purohits.uploadAvatar,
+      {
+        method: "POST",
+        body: fd,
+      }
+    );
+  },
+  deleteAvatar: async (url: string) => {
+    return api.post<ApiResponse<{ deleted: boolean }>>(
+      `${endpoints.admin.purohits.deleteAvatar}?url=${encodeURIComponent(url)}`
+    );
+  },
 };
 
 export const purohitPortalApi = {
   getMyProfile: () =>
     api.get<ApiResponse<PurohitData>>("/purohits/me/profile"),
+  uploadAvatar: async (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return apiFetch<ApiResponse<PurohitData>>(
+      "/purohits/me/avatar",
+      {
+        method: "POST",
+        body: fd,
+      }
+    );
+  },
   setAvailability: (isOnline: boolean) =>
     api.put<ApiResponse<PurohitData>>("/purohits/me/availability", { is_online: isOnline }),
   addPuja: (body: {

@@ -8,6 +8,7 @@ import * as React from "react";
 import { toast } from "sonner";
 
 import { PanelHeader } from "@/components/layout/panel-shell";
+import { PurohitAvatarUploader } from "@/components/purohits/purohit-avatar-uploader";
 import {
   Button,
   Card,
@@ -231,13 +232,11 @@ export default function NewPurohitPage() {
               </Field>
             </div>
 
-            <Field label="Profile Avatar URL (Optional)">
-              <Input
-                value={form.avatar_url}
-                onChange={(e) => setForm({ ...form, avatar_url: e.target.value })}
-                placeholder="https://..."
-              />
-            </Field>
+            <PurohitAvatarUploader
+              value={form.avatar_url}
+              onChange={(url) => setForm({ ...form, avatar_url: url })}
+              name={`${form.first_name} ${form.last_name}`.trim() || form.display_name || "Purohit"}
+            />
 
             <Field label="Sacred Bio & Parampara (Lineage)">
               <textarea

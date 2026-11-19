@@ -14,6 +14,7 @@ import {
   ExternalLink,
   BookOpen,
   Calendar,
+  Edit2,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,6 +22,7 @@ import * as React from "react";
 import { toast } from "sonner";
 
 import { PanelHeader } from "@/components/layout/panel-shell";
+import { PurohitAvatarUploader } from "@/components/purohits/purohit-avatar-uploader";
 import {
   Badge,
   Button,
@@ -42,6 +44,20 @@ export default function AdminPurohitsPage() {
   const [search, setSearch] = React.useState("");
   const [selectedPurohit, setSelectedPurohit] = React.useState<PurohitData | null>(null);
   const [catalogModalOpen, setCatalogModalOpen] = React.useState(false);
+  const [editModalOpen, setEditModalOpen] = React.useState(false);
+  const [editingPurohit, setEditingPurohit] = React.useState<PurohitData | null>(null);
+  const [editForm, setEditForm] = React.useState({
+    display_name: "",
+    title: "",
+    avatar_url: "",
+    phone: "",
+    city: "",
+    state: "",
+    pincode: "",
+    experience_years: 5,
+    languages: ["Bengali", "Sanskrit"],
+    bio: "",
+  });
 
   const { data: res, isLoading } = useQuery({
     queryKey: ["admin_purohits"],
@@ -50,6 +66,22 @@ export default function AdminPurohitsPage() {
       return response.data;
     },
     enabled: ready,
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, payload }: { id: string; payload: typeof editForm }) => {
+      const res = await adminPurohitApi.update(id, payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Purohit profile & avatar updated successfully!");
+      setEditModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["admin_purohits"] });
+    },
+    onError: (err) => {
+      const msg = err instanceof ApiError ? err.message : "Failed to update Purohit";
+      toast.error(msg);
+    },
   });
 
   const deleteMutation = useMutation({
@@ -257,18 +289,45 @@ export default function AdminPurohitsPage() {
 
               {/* Actions Footer */}
               <div className="p-3 bg-stone-50/80 dark:bg-stone-900/40 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedPurohit(purohit);
-                    setCatalogModalOpen(true);
-                  }}
-                  className="text-xs font-bold"
-                >
-                  <BookOpen className="size-3.5 mr-1" />
-                  View Catalog ({purohit.pujas?.length || 0})
-                </Button>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEditingPurohit(purohit);
+                      setEditForm({
+                        display_name: purohit.display_name,
+                        title: purohit.title || "Vedic Acharya",
+                        avatar_url: purohit.avatar_url || "",
+                        phone: purohit.phone || "",
+                        city: purohit.city || "",
+                        state: purohit.state || "",
+                        pincode: purohit.pincode || "",
+                        experience_years: purohit.experience_years || 5,
+                        languages: purohit.languages || ["Bengali", "Sanskrit"],
+                        bio: purohit.bio || "",
+                      });
+                      setEditModalOpen(true);
+                    }}
+                    className="text-xs font-bold bg-white dark:bg-stone-900 hover:bg-amber-50 hover:text-amber-700"
+                  >
+                    <Edit2 className="size-3.5 mr-1 text-amber-600" />
+                    Edit
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedPurohit(purohit);
+                      setCatalogModalOpen(true);
+                    }}
+                    className="text-xs font-bold"
+                  >
+                    <BookOpen className="size-3.5 mr-1" />
+                    Catalog ({purohit.pujas?.length || 0})
+                  </Button>
+                </div>
 
                 <Button
                   variant="ghost"
@@ -329,6 +388,108 @@ export default function AdminPurohitsPage() {
               </div>
             )}
           </div>
+        </Modal>
+      )}
+
+      {/* Edit Purohit & Avatar Modal */}
+      {editingPurohit && (
+        <Modal
+          open={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          title={`Edit Profile — ${editingPurohit.display_name}`}
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              updateMutation.mutate({ id: editingPurohit.id, payload: editForm });
+            }}
+            className="space-y-4 max-h-[75vh] overflow-y-auto p-1"
+          >
+            <PurohitAvatarUploader
+              value={editForm.avatar_url}
+              onChange={(url) => setEditForm({ ...editForm, avatar_url: url })}
+              name={editForm.display_name}
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Display Name">
+                <Input
+                  required
+                  value={editForm.display_name}
+                  onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })}
+                />
+              </Field>
+              <Field label="Sacred Title">
+                <Input
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  placeholder="Vedic Acharya"
+                />
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Phone">
+                <Input
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                />
+              </Field>
+              <Field label="City">
+                <Input
+                  value={editForm.city}
+                  onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                />
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Experience (Years)">
+                <Input
+                  type="number"
+                  value={editForm.experience_years}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, experience_years: Number(e.target.value) || 0 })
+                  }
+                />
+              </Field>
+              <Field label="Languages (comma separated)">
+                <Input
+                  value={editForm.languages.join(", ")}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      languages: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                    })
+                  }
+                />
+              </Field>
+            </div>
+
+            <Field label="Sacred Bio & Lineage">
+              <textarea
+                value={editForm.bio}
+                onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                rows={3}
+                placeholder="Vedic Priest background..."
+                className="w-full rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 p-2.5 text-xs focus:border-amber-600 focus:outline-none"
+              />
+            </Field>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-stone-200 dark:border-stone-800">
+              <Button variant="outline" type="button" onClick={() => setEditModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                type="submit"
+                loading={updateMutation.isPending}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
+              >
+                Save Changes
+              </Button>
+            </div>
+          </form>
         </Modal>
       )}
     </div>
