@@ -23,6 +23,8 @@ import {
   Info,
   Clock,
   AlertTriangle,
+  FileText,
+  Printer,
 } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
@@ -52,7 +54,7 @@ import {
 import { ApiError } from "@/lib/api/client";
 import { useRequireAuth } from "@/providers/auth-provider";
 
-type ActiveTab = "hero_banners" | "announcement" | "policies" | "reels";
+type ActiveTab = "hero_banners" | "announcement" | "policies" | "invoice_gst" | "reels";
 
 const DEFAULT_SHOP_DATA: ShopBannerSettingsData = {
   announcement_bar_text: "🛍️ Discover Sacred Jewellery & Energised Remedies Based on Your Mulank & Kundli ✨",
@@ -66,6 +68,18 @@ const DEFAULT_SHOP_DATA: ShopBannerSettingsData = {
   checkout_reservation_minutes: 20,
   cod_max_rto_allowed: 2,
   cod_blacklisted_phones: [],
+  company_legal_name: "DivinLink Vedic Services Private Limited",
+  company_trade_name: "DivinLink",
+  company_address: "Near Vishwanath Temple Corridor, Dashashwamedh Ghat, Varanasi, Uttar Pradesh - 221001",
+  company_state: "Uttar Pradesh",
+  company_state_code: "09",
+  company_phone: "+91 98765 43210",
+  company_email: "support@divinlink.com",
+  company_website: "https://www.divinlink.com",
+  company_pan: "",
+  company_gstin: "",
+  invoice_prefix: "DIVIN-INV",
+  invoice_footer_notes: "Thank you for seeking blessings with DivinLink. All sacred items are energized with Vedic mantras.",
   hero_banners: [
     {
       id: "banner-lumus",
@@ -237,6 +251,18 @@ export default function ShopCMSPage() {
         checkout_reservation_minutes: serverData.checkout_reservation_minutes ?? 20,
         cod_max_rto_allowed: serverData.cod_max_rto_allowed ?? 2,
         cod_blacklisted_phones: serverData.cod_blacklisted_phones ?? [],
+        company_legal_name: serverData.company_legal_name ?? DEFAULT_SHOP_DATA.company_legal_name,
+        company_trade_name: serverData.company_trade_name ?? DEFAULT_SHOP_DATA.company_trade_name,
+        company_address: serverData.company_address ?? DEFAULT_SHOP_DATA.company_address,
+        company_state: serverData.company_state ?? DEFAULT_SHOP_DATA.company_state,
+        company_state_code: serverData.company_state_code ?? DEFAULT_SHOP_DATA.company_state_code,
+        company_phone: serverData.company_phone ?? DEFAULT_SHOP_DATA.company_phone,
+        company_email: serverData.company_email ?? DEFAULT_SHOP_DATA.company_email,
+        company_website: serverData.company_website ?? DEFAULT_SHOP_DATA.company_website,
+        company_pan: serverData.company_pan ?? DEFAULT_SHOP_DATA.company_pan,
+        company_gstin: serverData.company_gstin ?? DEFAULT_SHOP_DATA.company_gstin,
+        invoice_prefix: serverData.invoice_prefix ?? DEFAULT_SHOP_DATA.invoice_prefix,
+        invoice_footer_notes: serverData.invoice_footer_notes ?? DEFAULT_SHOP_DATA.invoice_footer_notes,
       });
     }
   }, [serverData]);
@@ -415,6 +441,18 @@ export default function ShopCMSPage() {
         >
           <Video className="size-4" />
           <span>Customer Video Reels ({formData.reels.length})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("invoice_gst")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+            activeTab === "invoice_gst"
+              ? "bg-amber-600 text-white shadow-xs"
+              : "text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-900"
+          }`}
+        >
+          <FileText className="size-4 text-amber-500" />
+          <span>🧾 GST & Invoice Settings</span>
         </button>
       </div>
 
@@ -1129,6 +1167,203 @@ export default function ShopCMSPage() {
               </Card>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Invoice & GST Settings Tab */}
+      {activeTab === "invoice_gst" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="size-5 text-amber-500" />
+                    GSTIN & Commercial Invoice Settings
+                  </CardTitle>
+                  <CardDescription>
+                    Configure official seller identity, tax exemption status, and parcel packing slip headers.
+                  </CardDescription>
+                </div>
+                {formData.company_gstin?.trim() ? (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+                    <CheckCircle2 className="size-3.5" />
+                    <span>Tax Invoice Mode (GST Registered)</span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
+                    <Info className="size-3.5" />
+                    <span>Retail Invoice Mode (0% GST / Exemption)</span>
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+            <CardBody className="space-y-5">
+              {!formData.company_gstin?.trim() ? (
+                <div className="rounded-xl p-4 bg-amber-50/80 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/40 text-sm text-amber-900 dark:text-amber-200 space-y-1">
+                  <div className="font-semibold flex items-center gap-2">
+                    <AlertTriangle className="size-4 text-amber-600" />
+                    Operating Under Statutory GST Exemption (No GST Number Required Currently)
+                  </div>
+                  <p className="text-xs text-amber-700 dark:text-amber-300/80 leading-relaxed">
+                    Under Section 22/24 of the CGST Act, e-commerce businesses below threshold limit operate under exemption. 
+                    All invoices and parcel packing slips generated by the system will clearly show <strong>“RETAIL INVOICE / BILL OF SUPPLY”</strong> with <strong>Tax (0%): ₹0</strong>.
+                    When you acquire your GST registration, simply enter your GSTIN number below—the system will automatically upgrade all future invoices to standard <strong>Tax Invoices</strong> with state-wise IGST / CGST+SGST breakdown.
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-xl p-4 bg-emerald-50/80 border border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900/40 text-sm text-emerald-900 dark:text-emerald-200 space-y-1">
+                  <div className="font-semibold flex items-center gap-2">
+                    <CheckCircle2 className="size-4 text-emerald-600" />
+                    GSTIN is Configured: {formData.company_gstin}
+                  </div>
+                  <p className="text-xs text-emerald-700 dark:text-emerald-300/80 leading-relaxed">
+                    Invoices are generated with standard GSTIN headers, state codes, and dynamic tax calculation for domestic courier compliance.
+                  </p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Field label="Legal Business Name" hint="Appears under 'SOLD BY' on all official invoices">
+                  <Input
+                    value={formData.company_legal_name || ""}
+                    onChange={(e) => {
+                      setFormData((p) => ({ ...p, company_legal_name: e.target.value }));
+                      setIsDirty(true);
+                    }}
+                    placeholder="e.g. DivinLink Vedic Services Private Limited"
+                  />
+                </Field>
+
+                <Field label="Trade Name / Brand" hint="Customer-facing store name">
+                  <Input
+                    value={formData.company_trade_name || ""}
+                    onChange={(e) => {
+                      setFormData((p) => ({ ...p, company_trade_name: e.target.value }));
+                      setIsDirty(true);
+                    }}
+                    placeholder="e.g. DivinLink"
+                  />
+                </Field>
+              </div>
+
+              <Field label="Registered Temple Dispatch Address" hint="Full physical dispatch warehouse / dispatch center address printed on shipping slip">
+                <Input
+                  value={formData.company_address || ""}
+                  onChange={(e) => {
+                    setFormData((p) => ({ ...p, company_address: e.target.value }));
+                    setIsDirty(true);
+                  }}
+                  placeholder="e.g. Near Vishwanath Temple Corridor, Dashashwamedh Ghat, Varanasi, Uttar Pradesh - 221001"
+                />
+              </Field>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <Field label="Dispatch State">
+                  <Input
+                    value={formData.company_state || ""}
+                    onChange={(e) => {
+                      setFormData((p) => ({ ...p, company_state: e.target.value }));
+                      setIsDirty(true);
+                    }}
+                    placeholder="e.g. Uttar Pradesh"
+                  />
+                </Field>
+
+                <Field label="State Code" hint="2-digit GST state code">
+                  <Input
+                    value={formData.company_state_code || ""}
+                    onChange={(e) => {
+                      setFormData((p) => ({ ...p, company_state_code: e.target.value }));
+                      setIsDirty(true);
+                    }}
+                    placeholder="e.g. 09"
+                  />
+                </Field>
+
+                <Field label="GSTIN Number (Optional)" hint="Leave blank if currently not registered">
+                  <Input
+                    value={formData.company_gstin || ""}
+                    onChange={(e) => {
+                      setFormData((p) => ({ ...p, company_gstin: e.target.value }));
+                      setIsDirty(true);
+                    }}
+                    placeholder="e.g. 09AAAAA0000A1Z5"
+                  />
+                </Field>
+
+                <Field label="Company PAN (Optional)">
+                  <Input
+                    value={formData.company_pan || ""}
+                    onChange={(e) => {
+                      setFormData((p) => ({ ...p, company_pan: e.target.value }));
+                      setIsDirty(true);
+                    }}
+                    placeholder="e.g. ABCDE1234F"
+                  />
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Field label="Support Phone Number">
+                  <Input
+                    value={formData.company_phone || ""}
+                    onChange={(e) => {
+                      setFormData((p) => ({ ...p, company_phone: e.target.value }));
+                      setIsDirty(true);
+                    }}
+                    placeholder="+91 98765 43210"
+                  />
+                </Field>
+
+                <Field label="Support Email">
+                  <Input
+                    value={formData.company_email || ""}
+                    onChange={(e) => {
+                      setFormData((p) => ({ ...p, company_email: e.target.value }));
+                      setIsDirty(true);
+                    }}
+                    placeholder="support@divinlink.com"
+                  />
+                </Field>
+
+                <Field label="Website URL">
+                  <Input
+                    value={formData.company_website || ""}
+                    onChange={(e) => {
+                      setFormData((p) => ({ ...p, company_website: e.target.value }));
+                      setIsDirty(true);
+                    }}
+                    placeholder="https://www.divinlink.com"
+                  />
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Field label="Invoice Prefix" hint="Prefix for auto-generated invoice serial numbers">
+                  <Input
+                    value={formData.invoice_prefix || ""}
+                    onChange={(e) => {
+                      setFormData((p) => ({ ...p, invoice_prefix: e.target.value }));
+                      setIsDirty(true);
+                    }}
+                    placeholder="DIVIN-INV"
+                  />
+                </Field>
+
+                <Field label="Invoice Footer Blessings / Note" hint="Printed at the bottom of customer bills">
+                  <Input
+                    value={formData.invoice_footer_notes || ""}
+                    onChange={(e) => {
+                      setFormData((p) => ({ ...p, invoice_footer_notes: e.target.value }));
+                      setIsDirty(true);
+                    }}
+                    placeholder="Thank you for trusting DivinLink Vedic Remedies. Har Har Mahadev!"
+                  />
+                </Field>
+              </div>
+            </CardBody>
+          </Card>
         </div>
       )}
     </div>

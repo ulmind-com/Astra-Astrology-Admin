@@ -1017,6 +1017,19 @@ export interface ShopBannerSettingsData {
   cashback_percent?: number;
   free_shipping_threshold?: number;
   standard_shipping_fee?: number;
+  // Company & GST Profile for Invoices
+  company_legal_name?: string;
+  company_trade_name?: string;
+  company_address?: string;
+  company_state?: string;
+  company_state_code?: string;
+  company_phone?: string;
+  company_email?: string;
+  company_website?: string;
+  company_pan?: string | null;
+  company_gstin?: string | null;
+  invoice_prefix?: string;
+  invoice_footer_notes?: string;
 }
 
 
@@ -1235,6 +1248,12 @@ export const shopAdminApi = {
 
   deleteReview: (id: string) =>
     api.delete<{ deleted: boolean }>(endpoints.admin.shop.deleteReview(id)),
+
+  getOrderInvoice: (id: string) =>
+    api.get<any>(endpoints.admin.shop.orderInvoice(id)),
+
+  getOrderInvoiceHtmlUrl: (id: string, autoPrint: boolean = false) =>
+    `${endpoints.admin.shop.orderInvoiceHtml(id)}?print=${autoPrint}`,
 };
 
 export interface ProductReviewItem {
