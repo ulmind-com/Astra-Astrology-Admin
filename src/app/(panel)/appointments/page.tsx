@@ -2084,6 +2084,29 @@ function Schedule({
                       <span>Client Dossier</span>
                     </button>
 
+                    {/* Request BTR / Status */}
+                    {a.status === "booked" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBtrNote(a.btr_request_note || "Lagna cusp / Navamsha D9 precision check. Please verify exact hospital birth time and key life events.");
+                          setBtrAppointment(a);
+                        }}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer shadow-2xs",
+                          a.btr_fulfilled
+                            ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                            : a.btr_requested
+                            ? "border-sky-300 bg-sky-50 text-sky-800"
+                            : "border-indigo-200 bg-indigo-50/50 text-indigo-700 hover:bg-indigo-100/60"
+                        )}
+                        title={a.btr_fulfilled ? "Client submitted rectified birth details & life events" : "Request exact birth time & life events rectification from client"}
+                      >
+                        <Clock className={cn("size-3.5", a.btr_fulfilled ? "text-emerald-600" : "text-indigo-600")} />
+                        <span>{a.btr_fulfilled ? "BTR Rectified ✓" : a.btr_requested ? "BTR Requested ⏳" : "Request BTR"}</span>
+                      </button>
+                    )}
+
                     {/* Prescription Editor */}
                     <button
                       type="button"
@@ -2831,6 +2854,17 @@ function Schedule({
                       {dossierAppointment.birth_details.place_of_birth || dossierAppointment.birth_details.pob || "Not specified"}
                     </span>
                   </div>
+
+                  {dossierAppointment.birth_details.client_btr_notes && (
+                    <div className="col-span-2 rounded-xl bg-amber-50/70 p-2.5 border border-amber-200">
+                      <span className="text-[10px] text-amber-800 font-bold block mb-1">
+                        Rectified Historical Life Events (BTR Data)
+                      </span>
+                      <pre className="text-xs text-amber-950 font-sans whitespace-pre-wrap leading-relaxed">
+                        {dossierAppointment.birth_details.client_btr_notes}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-slate-400 italic">No specific birth coordinates submitted.</p>
