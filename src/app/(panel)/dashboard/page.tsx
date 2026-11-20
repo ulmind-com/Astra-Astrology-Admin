@@ -56,7 +56,7 @@ export default function DashboardPage() {
 
   // Interactive UI States
   const [dateFilter, setDateFilter] = React.useState<"today" | "week" | "month" | "year">("year");
-  const [activeBarIdx, setActiveBarIdx] = React.useState<number | null>(3); // Default pinned to April
+  const [activeBarIdx, setActiveBarIdx] = React.useState<number | null>(0);
   const [activeBubble, setActiveBubble] = React.useState<string | null>(null);
   const [activeRing, setActiveRing] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -144,19 +144,19 @@ export default function DashboardPage() {
     (skillCounts["vastu"] || 0) +
     (skillCounts["face_reading"] || 0);
 
-  const totalSkills = vedicCount + tarotCount + numerologyCount || 1;
-  const vedicPct = Math.min(100, Math.round((vedicCount / totalSkills) * 100)) || 64;
-  const tarotPct = Math.min(100, Math.round((tarotCount / totalSkills) * 100)) || 48;
-  const numerologyPct = Math.min(100, Math.round((numerologyCount / totalSkills) * 100)) || 32;
+  const totalSkills = vedicCount + tarotCount + numerologyCount;
+  const vedicPct = totalSkills > 0 ? Math.min(100, Math.round((vedicCount / totalSkills) * 100)) : 0;
+  const tarotPct = totalSkills > 0 ? Math.min(100, Math.round((tarotCount / totalSkills) * 100)) : 0;
+  const numerologyPct = totalSkills > 0 ? Math.min(100, Math.round((numerologyCount / totalSkills) * 100)) : 0;
 
   // Real Average Rates & Experience
   const avgExperience = list.length
-    ? Math.round((list.reduce((acc, curr) => acc + (curr.experience_years || 5), 0) / list.length) * 10) / 10
-    : 11.5;
+    ? Math.round((list.reduce((acc, curr) => acc + (curr.experience_years || 0), 0) / list.length) * 10) / 10
+    : 0;
 
   const avgChatRate = list.length
-    ? Math.round(list.reduce((acc, curr) => acc + (curr.rates?.chat_coins_per_minute || 20), 0) / list.length)
-    : 25;
+    ? Math.round(list.reduce((acc, curr) => acc + (curr.rates?.chat_coins_per_minute || 0), 0) / list.length)
+    : 0;
 
   const drawerConfig = {
     total: {
@@ -254,7 +254,7 @@ export default function DashboardPage() {
       callLabel: a.service_duration?.formatted_call || `${calls} mins`,
       videoLabel: a.service_duration?.formatted_video || `${video} mins`,
       consultations: a.total_consultations || 0,
-      rating: a.rating?.average ? a.rating.average.toFixed(1) : "5.0",
+      rating: a.rating?.count ? a.rating.average.toFixed(1) : "—",
       reviews: a.rating?.count || 0,
     };
   });
@@ -979,12 +979,12 @@ export default function DashboardPage() {
                     </td>
 
                     <td className="py-4 px-3 font-semibold text-slate-700">
-                      {astrologer.experience_years ? `${astrologer.experience_years} years` : "10+ years"}
+                      {astrologer.experience_years ? `${astrologer.experience_years} yrs` : "0 yrs"}
                     </td>
 
                     <td className="py-4 px-3">
                       <span className="font-extrabold text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
-                        {astrologer.rates?.chat_coins_per_minute ?? 20} coins/min
+                        {astrologer.rates?.chat_coins_per_minute !== undefined ? `${astrologer.rates.chat_coins_per_minute} coins/min` : "—"}
                       </span>
                     </td>
 

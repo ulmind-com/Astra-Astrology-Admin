@@ -73,7 +73,7 @@ const DEFAULT_SHOP_DATA: ShopBannerSettingsData = {
   company_address: "Near Vishwanath Temple Corridor, Dashashwamedh Ghat, Varanasi, Uttar Pradesh - 221001",
   company_state: "Uttar Pradesh",
   company_state_code: "09",
-  company_phone: "+91 98765 43210",
+  company_phone: "+91 80000 00000",
   company_email: "support@divinlink.com",
   company_website: "https://www.divinlink.com",
   company_pan: "",
@@ -87,7 +87,7 @@ const DEFAULT_SHOP_DATA: ShopBannerSettingsData = {
       subtitle: "Where every fragrance meets the energy of crystals.",
       cta_text: "Shop Now",
       cta_link: "/shop?category=perfumes",
-      badge_text: "LUMUS × ASTROTALK",
+      badge_text: "DIVINLINK SACRED",
       image_url: "/images/banners/banner-lumus-clean.jpg",
       hide_text_overlay: true,
       is_active: true,
@@ -143,78 +143,7 @@ const DEFAULT_SHOP_DATA: ShopBannerSettingsData = {
       is_active: true,
     },
   ],
-  reels: [
-    {
-      id: "reel-1",
-      user_handle: "@sneha_vats",
-      user_name: "Sneha Vats",
-      rating: 5,
-      quote: "Wearing the 7-Mukhi Rudraksha cleared my Saturn Sade Sati career blocks in 3 weeks! 🌟",
-      thumbnail_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80",
-      video_url: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-sparkling-gemstone-41315-large.mp4",
-      likes_count: "4.8k",
-      tagged_product_title: "খাঁটি নেপালি ৭-মুখী রুদ্রাক্ষ",
-      tagged_product_price: 1899,
-      tagged_product_slug: "nepali-7-mukhi-rudraksha",
-      is_active: true,
-    },
-    {
-      id: "reel-2",
-      user_handle: "@rohit_astroglow",
-      user_name: "Rohit K.",
-      rating: 5,
-      quote: "Unboxing my Super Dhan Yog Band! The energy feel is absolutely authentic and energizing. 💰",
-      thumbnail_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80",
-      video_url: "https://assets.mixkit.co/videos/preview/mixkit-woman-wearing-spiritual-beads-bracelet-43098-large.mp4",
-      likes_count: "3.9k",
-      tagged_product_title: "Super Dhan Yog Band",
-      tagged_product_price: 1099,
-      tagged_product_slug: "super-dhan-yog-band",
-      is_active: true,
-    },
-    {
-      id: "reel-3",
-      user_handle: "@dr_kunal",
-      user_name: "Dr. Kunal Mehta",
-      rating: 5,
-      quote: "Pyrite Stud Ring transformed my clinic consultation inquiries within a month! ✨",
-      thumbnail_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80",
-      video_url: "https://assets.mixkit.co/videos/preview/mixkit-shiny-gemstones-and-crystals-on-display-42410-large.mp4",
-      likes_count: "5.2k",
-      tagged_product_title: "Pyrite Stud Ring",
-      tagged_product_price: 799,
-      tagged_product_slug: "pyrite-stud-ring",
-      is_active: true,
-    },
-    {
-      id: "reel-4",
-      user_handle: "@ananya_sen",
-      user_name: "Ananya Sen",
-      rating: 5,
-      quote: "Original Karungali Mala quality is incredible, heavy and pure ebony wood with silver caps. 🙏",
-      thumbnail_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80",
-      video_url: "https://assets.mixkit.co/videos/preview/mixkit-close-up-of-hands-holding-rosary-beads-42998-large.mp4",
-      likes_count: "4.1k",
-      tagged_product_title: "Original Karungali Malai (108 Beads)",
-      tagged_product_price: 1299,
-      tagged_product_slug: "original-karungali-malai",
-      is_active: true,
-    },
-    {
-      id: "reel-5",
-      user_handle: "@vikram_aditya",
-      user_name: "Vikram Aditya",
-      rating: 5,
-      quote: "Mulank 4 Rahu bracelet brought immense mental focus and shielded me from burnout. 🔮",
-      thumbnail_url: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80",
-      video_url: "https://assets.mixkit.co/videos/preview/mixkit-person-meditating-with-crystals-in-front-42350-large.mp4",
-      likes_count: "2.8k",
-      tagged_product_title: "Mulank 4 Rahu Crystal Bracelet",
-      tagged_product_price: 999,
-      tagged_product_slug: "mulank-4-rahu-crystal-bracelet",
-      is_active: true,
-    },
-  ],
+  reels: [],
 };
 
 export default function ShopCMSPage() {
@@ -242,7 +171,7 @@ export default function ShopCMSPage() {
         announcement_bar_link: serverData.announcement_bar_link ?? DEFAULT_SHOP_DATA.announcement_bar_link,
         announcement_bar_active: serverData.announcement_bar_active ?? true,
         hero_banners: serverData.hero_banners?.length ? serverData.hero_banners : DEFAULT_SHOP_DATA.hero_banners,
-        reels: serverData.reels?.length ? serverData.reels : DEFAULT_SHOP_DATA.reels,
+        reels: serverData.reels ?? [],
         cod_enabled: serverData.cod_enabled ?? true,
         cashback_credit_timing: serverData.cashback_credit_timing ?? "on_delivery",
         allow_user_cancellation: serverData.allow_user_cancellation ?? true,
@@ -1056,7 +985,14 @@ export default function ShopCMSPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {formData.reels.map((r, idx) => (
+            {formData.reels.length === 0 ? (
+              <div className="col-span-full rounded-2xl border border-dashed border-stone-300 dark:border-stone-700 p-8 text-center bg-stone-50/50 dark:bg-stone-900/30">
+                <Video className="size-8 mx-auto text-stone-400 mb-2" />
+                <p className="text-sm font-semibold text-stone-700 dark:text-stone-300">No customer story reels added yet.</p>
+                <p className="text-xs text-stone-500 mt-1">Click &quot;Add Story Reel&quot; to upload authentic customer testimonials.</p>
+              </div>
+            ) : (
+              formData.reels.map((r, idx) => (
               <Card key={r.id || idx} className="overflow-hidden border border-stone-200 dark:border-stone-800 flex flex-col justify-between">
                 <CardHeader className="bg-stone-50/80 dark:bg-stone-900/50 flex flex-row items-center justify-between border-b border-stone-200 dark:border-stone-800 py-2.5">
                   <div className="flex items-center gap-2">
@@ -1165,7 +1101,7 @@ export default function ShopCMSPage() {
                   </div>
                 </CardBody>
               </Card>
-            ))}
+            )))}
           </div>
         </div>
       )}
