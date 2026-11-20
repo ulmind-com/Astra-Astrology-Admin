@@ -602,11 +602,6 @@ export default function AdminOrdersPage() {
                         <div className="font-medium text-stone-800 dark:text-stone-200 max-w-xs truncate">
                           {order.items?.map((it: any) => `${it.title} (x${it.quantity})`).join(", ")}
                         </div>
-                        {order.free_gifts && order.free_gifts.length > 0 && (
-                          <div className="text-[10px] text-amber-700 font-bold">
-                            🎁 Free: {order.free_gifts[0]?.title || "Selenite Plate"}
-                          </div>
-                        )}
                       </td>
 
                       {/* Total & Payment */}
