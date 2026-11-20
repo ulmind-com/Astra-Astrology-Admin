@@ -1475,20 +1475,18 @@ export default function ShopCMSPage() {
         </div>
       )}
 
-      {/* Floating save button — stays reachable no matter where you scroll */}
-      {isDirty && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <Button
-            size="lg"
-            onClick={handleSave}
-            disabled={saveMutation.isPending}
-            className="shadow-xl shadow-amber-900/20"
-          >
-            <Save className="size-4 mr-2" />
-            {saveMutation.isPending ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-      )}
+      {/* Floating save button — always visible and reachable while scrolling */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          size="lg"
+          onClick={handleSave}
+          disabled={saveMutation.isPending}
+          className={`shadow-xl shadow-amber-900/20 ${isDirty ? "ring-2 ring-amber-400 animate-pulse" : ""}`}
+        >
+          <Save className="size-4 mr-2" />
+          {saveMutation.isPending ? "Saving..." : isDirty ? "Save Changes" : "Save Settings"}
+        </Button>
+      </div>
     </div>
   );
 }
