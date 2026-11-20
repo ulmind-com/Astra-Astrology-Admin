@@ -9,7 +9,6 @@ import {
   Save,
   RotateCw,
   Eye,
-  Video,
   Layers,
   Image as ImageIcon,
   CheckCircle2,
@@ -54,7 +53,7 @@ import {
 import { ApiError } from "@/lib/api/client";
 import { useRequireAuth } from "@/providers/auth-provider";
 
-type ActiveTab = "hero_banners" | "announcement" | "policies" | "invoice_gst" | "reels";
+type ActiveTab = "hero_banners" | "announcement" | "policies" | "invoice_gst";
 
 const DEFAULT_SHOP_DATA: ShopBannerSettingsData = {
   announcement_bar_text: "🛍️ Discover Sacred Jewellery & Energised Remedies Based on Your Mulank & Kundli ✨",
@@ -254,45 +253,6 @@ export default function ShopCMSPage() {
     setIsDirty(true);
   };
 
-  const addReel = () => {
-    const newReel: ShopStoreReelItem = {
-      id: `reel-${Date.now()}`,
-      user_handle: "@customer",
-      user_name: "Customer Review",
-      rating: 5,
-      quote: "Amazing results after wearing this consecrated remedy! Highly recommended.",
-      thumbnail_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80",
-      video_url: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-sparkling-gemstone-41315-large.mp4",
-      likes_count: "3.2k",
-      tagged_product_title: "Consecrated Remedy",
-      tagged_product_price: 999,
-      tagged_product_slug: "nepali-7-mukhi-rudraksha",
-      is_active: true,
-    };
-    setFormData((prev) => ({
-      ...prev,
-      reels: [...prev.reels, newReel],
-    }));
-    setIsDirty(true);
-  };
-
-  const removeReel = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      reels: prev.reels.filter((_, i) => i !== index),
-    }));
-    setIsDirty(true);
-  };
-
-  const updateReel = (index: number, patch: Partial<ShopStoreReelItem>) => {
-    setFormData((prev) => {
-      const updated = [...prev.reels];
-      updated[index] = { ...updated[index], ...patch };
-      return { ...prev, reels: updated };
-    });
-    setIsDirty(true);
-  };
-
   return (
     <div className="space-y-6 pb-20">
       <PanelHeader
@@ -359,18 +319,7 @@ export default function ShopCMSPage() {
           <ShieldCheck className="size-4 text-emerald-400" />
           <span>🛡️ COD, Policies & Anti-Fraud</span>
         </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("reels")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
-            activeTab === "reels"
-              ? "bg-amber-600 text-white shadow-xs"
-              : "text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-900"
-          }`}
-        >
-          <Video className="size-4" />
-          <span>Customer Video Reels ({formData.reels.length})</span>
-        </button>
+
         <button
           type="button"
           onClick={() => setActiveTab("invoice_gst")}
@@ -962,146 +911,6 @@ export default function ShopCMSPage() {
                 </div>
               </CardBody>
             </Card>
-          </div>
-        </div>
-      )}
-
-      {/* Customer Reels Tab */}
-      {activeTab === "reels" && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-bold text-stone-900 dark:text-white">
-                Customer Stories & Video Reels
-              </h3>
-              <p className="text-xs text-stone-500">
-                Vertical 9:16 video cards in the 'Loved by You, Shared by You' section with verified reviews & tagged products.
-              </p>
-            </div>
-            <Button variant="outline" size="sm" onClick={addReel}>
-              <Plus className="size-4 mr-1.5" />
-              Add Story Reel
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {formData.reels.length === 0 ? (
-              <div className="col-span-full rounded-2xl border border-dashed border-stone-300 dark:border-stone-700 p-8 text-center bg-stone-50/50 dark:bg-stone-900/30">
-                <Video className="size-8 mx-auto text-stone-400 mb-2" />
-                <p className="text-sm font-semibold text-stone-700 dark:text-stone-300">No customer story reels added yet.</p>
-                <p className="text-xs text-stone-500 mt-1">Click &quot;Add Story Reel&quot; to upload authentic customer testimonials.</p>
-              </div>
-            ) : (
-              formData.reels.map((r, idx) => (
-              <Card key={r.id || idx} className="overflow-hidden border border-stone-200 dark:border-stone-800 flex flex-col justify-between">
-                <CardHeader className="bg-stone-50/80 dark:bg-stone-900/50 flex flex-row items-center justify-between border-b border-stone-200 dark:border-stone-800 py-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className="flex size-5 items-center justify-center rounded-full bg-amber-500 text-white text-[11px] font-bold">
-                      {idx + 1}
-                    </span>
-                    <span className="text-xs font-bold text-stone-900 dark:text-white">
-                      {r.user_handle || `@user${idx + 1}`}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={r.is_active}
-                      onChange={(val: boolean) => updateReel(idx, { is_active: val })}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeReel(idx)}
-                      className="text-rose-600 hover:text-rose-700 p-1"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-
-                <CardBody className="p-4 space-y-3">
-                  <div className="relative aspect-9/16 max-h-48 w-full rounded-xl overflow-hidden bg-stone-900 mx-auto">
-                    {r.thumbnail_url ? (
-                      <Image
-                        src={r.thumbnail_url}
-                        alt={r.user_handle}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="flex size-full items-center justify-center text-stone-500">
-                        <Video className="size-8" />
-                      </div>
-                    )}
-                    <span className="absolute bottom-2 left-2 text-[10px] font-bold bg-black/70 text-white px-2 py-0.5 rounded-md">
-                      ❤️ {r.likes_count}
-                    </span>
-                  </div>
-
-                  <Field label="Thumbnail URL">
-                    <Input
-                      value={r.thumbnail_url}
-                      onChange={(e) => updateReel(idx, { thumbnail_url: e.target.value })}
-                      placeholder="https://..."
-                    />
-                  </Field>
-
-                  <Field label="Video URL (mp4 preview)">
-                    <Input
-                      value={r.video_url || ""}
-                      onChange={(e) => updateReel(idx, { video_url: e.target.value })}
-                      placeholder="https://..."
-                    />
-                  </Field>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <Field label="User Handle">
-                      <Input
-                        value={r.user_handle}
-                        onChange={(e) => updateReel(idx, { user_handle: e.target.value })}
-                        placeholder="@username"
-                      />
-                    </Field>
-                    <Field label="Likes Count">
-                      <Input
-                        value={r.likes_count}
-                        onChange={(e) => updateReel(idx, { likes_count: e.target.value })}
-                        placeholder="e.g. 4.8k"
-                      />
-                    </Field>
-                  </div>
-
-                  <Field label="Review / Quote">
-                    <Input
-                      value={r.quote}
-                      onChange={(e) => updateReel(idx, { quote: e.target.value })}
-                      placeholder="Customer quote..."
-                    />
-                  </Field>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <Field label="Tagged Product Title">
-                      <Input
-                        value={r.tagged_product_title || ""}
-                        onChange={(e) => updateReel(idx, { tagged_product_title: e.target.value })}
-                        placeholder="Product name"
-                      />
-                    </Field>
-                    <Field label="Tagged Price (₹)">
-                      <Input
-                        type="number"
-                        value={r.tagged_product_price || ""}
-                        onChange={(e) =>
-                          updateReel(idx, { tagged_product_price: Number(e.target.value) || 0 })
-                        }
-                        placeholder="999"
-                      />
-                    </Field>
-                  </div>
-                </CardBody>
-              </Card>
-            )))}
           </div>
         </div>
       )}

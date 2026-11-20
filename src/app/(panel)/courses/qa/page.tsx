@@ -45,6 +45,7 @@ import {
   Textarea,
 } from "@/components/ui";
 import { courseAdminApi } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import type { AdminCourseQuestion, AdminCourseQuestionAnswer, CourseAdminItem } from "@/types";
 
 export default function GurukulQAPage() {
@@ -240,173 +241,176 @@ export default function GurukulQAPage() {
         </div>
       </div>
 
-      {/* Metric Counters */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="rounded-2xl border border-border bg-surface p-4 flex items-center justify-between shadow-soft">
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground">মোট জিজ্ঞাসা (Total Inquiries)</p>
-            <p className="text-2xl font-serif font-bold text-foreground mt-0.5">{totalCount}</p>
-          </div>
-          <div className="p-3 rounded-full bg-brand-500/10 text-brand-600">
-            <MessageSquare className="h-5 w-5" />
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-surface p-4 flex items-center justify-between shadow-soft">
-          <div>
-            <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">অপেক্ষমান উত্তর (Pending Reply)</p>
-            <p className="text-2xl font-serif font-bold text-amber-600 dark:text-amber-400 mt-0.5">{unansweredCount}</p>
-          </div>
-          <div className="p-3 rounded-full bg-amber-500/10 text-amber-600">
-            <Clock className="h-5 w-5" />
+      {/* Metric Counters - Ultra Pro Luxury Glassmorphism */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="relative overflow-hidden rounded-3xl border border-amber-200/90 dark:border-amber-900/40 bg-gradient-to-br from-white via-white to-amber-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-amber-950/20 p-5 shadow-xs hover:shadow-md transition-all group">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                মোট জিজ্ঞাসা (Total Inquiries)
+              </p>
+              <p className="text-3xl font-black text-slate-900 dark:text-white mt-1.5">{totalCount}</p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">সব লেকচারের সম্মিলিত ডাউট</p>
+            </div>
+            <div className="size-12 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+              <MessageSquare className="size-6" />
+            </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-surface p-4 flex items-center justify-between shadow-soft">
-          <div>
-            <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">সমাধান হয়েছে (Resolved)</p>
-            <p className="text-2xl font-serif font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{resolvedCount}</p>
+        <div className="relative overflow-hidden rounded-3xl border border-orange-200/90 dark:border-orange-900/40 bg-gradient-to-br from-white via-white to-orange-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-orange-950/20 p-5 shadow-xs hover:shadow-md transition-all group">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                <span className="size-2 rounded-full bg-orange-500 animate-pulse" />
+                <span>অপেক্ষমান উত্তর (Pending Reply)</span>
+              </div>
+              <p className="text-3xl font-black text-slate-900 dark:text-white mt-1.5">{unansweredCount}</p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">আচার্যের উত্তরের অপেক্ষায়</p>
+            </div>
+            <div className="size-12 rounded-2xl bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+              <Clock className="size-6" />
+            </div>
           </div>
-          <div className="p-3 rounded-full bg-emerald-500/10 text-emerald-600">
-            <CheckCircle2 className="h-5 w-5" />
+        </div>
+
+        <div className="relative overflow-hidden rounded-3xl border border-emerald-200/90 dark:border-emerald-900/40 bg-gradient-to-br from-white via-white to-emerald-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/20 p-5 shadow-xs hover:shadow-md transition-all group">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                সমাধান হয়েছে (Resolved)
+              </p>
+              <p className="text-3xl font-black text-slate-900 dark:text-white mt-1.5">{resolvedCount}</p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">সন্তুষ্ট শিক্ষার্থী ও মীমাংসিত</p>
+            </div>
+            <div className="size-12 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+              <CheckCircle2 className="size-6" />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Filter Toolbar */}
-      <Card>
-        <CardBody className="p-4 space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {/* Filter by Course */}
-            <div>
-              <label className="block text-xs font-bold text-foreground mb-1">কোর্স অনুযায়ী ফিল্টার</label>
-              <Select
-                value={selectedCourseId}
-                onChange={(e) => {
-                  setSelectedCourseId(e.target.value);
-                  setSelectedLessonId("");
-                }}
-              >
-                <option value="">সকল কোর্স (All Masterclasses)</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            {/* Filter by Lesson (Video) */}
-            <div>
-              <label className="block text-xs font-bold text-foreground mb-1">নির্দিষ্ট ভিডিও লেকচার</label>
-              <Select
-                value={selectedLessonId}
-                onChange={(e) => setSelectedLessonId(e.target.value)}
-                disabled={!selectedCourseId || availableLessons.length === 0}
-              >
-                <option value="">সকল ভিডিও লেকচার (All Lessons)</option>
-                {availableLessons.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.sectionTitle}: {l.title}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            {/* Search Input */}
-            <div>
-              <label className="block text-xs font-bold text-foreground mb-1">ছাত্র বা বিষয়ের নাম খুঁজুন</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Student name, email, phone, or question..."
-                  className="pl-9"
-                />
-              </div>
-            </div>
+      {/* Filter Toolbar - Ultra Pro Enterprise Card */}
+      <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Filter by Course */}
+          <div>
+            <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+              কোর্স অনুযায়ী ফিল্টার
+            </label>
+            <select
+              value={selectedCourseId}
+              onChange={(e) => {
+                setSelectedCourseId(e.target.value);
+                setSelectedLessonId("");
+              }}
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-amber-500 focus:outline-hidden transition-colors cursor-pointer"
+            >
+              <option value="">সকল কোর্স (All Masterclasses)</option>
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Status Tabs */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
-            <span className="text-xs font-bold text-muted-foreground mr-1">অবস্থা:</span>
-            <Button
-              size="sm"
-              variant={statusFilter === "all" ? "primary" : "outline"}
-              onClick={() => setStatusFilter("all")}
-              className="text-xs py-1 h-7"
+          {/* Filter by Lesson (Video) */}
+          <div>
+            <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+              নির্দিষ্ট ভিডিও লেকচার
+            </label>
+            <select
+              value={selectedLessonId}
+              onChange={(e) => setSelectedLessonId(e.target.value)}
+              disabled={!selectedCourseId || availableLessons.length === 0}
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-amber-500 focus:outline-hidden transition-colors cursor-pointer disabled:opacity-50"
             >
-              সকল প্রশ্ন ({totalCount})
-            </Button>
-            <Button
-              size="sm"
-              variant={statusFilter === "unanswered" ? "primary" : "outline"}
-              onClick={() => setStatusFilter("unanswered")}
-              className="text-xs py-1 h-7 gap-1"
-            >
-              <span>অপেক্ষমান উত্তর</span>
-              {unansweredCount > 0 && (
-                <span className="rounded-full bg-amber-500/20 px-1.5 py-0.2 text-[10px] font-bold text-amber-700">
-                  {unansweredCount}
-                </span>
-              )}
-            </Button>
-            <Button
-              size="sm"
-              variant={statusFilter === "answered" ? "primary" : "outline"}
-              onClick={() => setStatusFilter("answered")}
-              className="text-xs py-1 h-7"
-            >
-              উত্তর দেওয়া হয়েছে
-            </Button>
-            <Button
-              size="sm"
-              variant={statusFilter === "resolved" ? "primary" : "outline"}
-              onClick={() => setStatusFilter("resolved")}
-              className="text-xs py-1 h-7"
-            >
-              মীমাংসিত ({resolvedCount})
-            </Button>
-            <Button
-              size="sm"
-              variant={statusFilter === "hidden" ? "primary" : "outline"}
-              onClick={() => setStatusFilter("hidden")}
-              className="text-xs py-1 h-7 gap-1"
-            >
-              <span>লুকানো / স্প্যাম</span>
-              {hiddenCount > 0 && (
-                <span className="rounded-full bg-danger/20 px-1.5 py-0.2 text-[10px] font-bold text-danger">
-                  {hiddenCount}
-                </span>
-              )}
-            </Button>
+              <option value="">সকল ভিডিও লেকচার (All Lessons)</option>
+              {availableLessons.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.sectionTitle}: {l.title}
+                </option>
+              ))}
+            </select>
           </div>
-        </CardBody>
-      </Card>
+
+          {/* Search Input */}
+          <div>
+            <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+              ছাত্র বা বিষয়ের নাম খুঁজুন
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Student name, email, phone, or question..."
+                className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 pl-10 pr-4 py-2.5 text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-amber-500 focus:outline-hidden transition-colors"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Status Tabs */}
+        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <span className="text-xs font-bold text-slate-400 dark:text-slate-500 mr-1">অবস্থা:</span>
+          {[
+            { id: "all", label: `সকল প্রশ্ন (${totalCount})` },
+            { id: "unanswered", label: `অপেক্ষমান উত্তর (${unansweredCount})` },
+            { id: "answered", label: "উত্তর দেওয়া হয়েছে" },
+            { id: "resolved", label: `মীমাংসিত (${resolvedCount})` },
+            { id: "hidden", label: `লুকানো / স্প্যাম (${hiddenCount})` },
+          ].map((tabItem) => (
+            <button
+              key={tabItem.id}
+              type="button"
+              onClick={() => setStatusFilter(tabItem.id as any)}
+              className={cn(
+                "rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer border",
+                statusFilter === tabItem.id
+                  ? "bg-amber-600 text-white border-amber-600 shadow-2xs font-black"
+                  : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              )}
+            >
+              {tabItem.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Inquiry Feed */}
       {error ? (
-        <Card className="border-red-500/30 bg-red-500/5">
-          <CardBody className="p-4 flex items-center justify-between text-xs text-red-600 dark:text-red-400">
-            <span>প্রশ্ন লোড করতে সমস্যা হয়েছে: {(error as any)?.message || "সার্ভার এরর"}</span>
-            <Button size="sm" variant="outline" onClick={() => refetch()} className="gap-1 text-xs">
-              <RefreshCw className="h-3 w-3" /> পুনরায় চেষ্টা করুন
-            </Button>
-          </CardBody>
-        </Card>
+        <div className="rounded-3xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 p-5 flex items-center justify-between text-xs text-rose-700 dark:text-rose-400">
+          <span>প্রশ্ন লোড করতে সমস্যা হয়েছে: {(error as any)?.message || "সার্ভার সংযোগ ত্রুটি"}</span>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-800 text-xs font-bold text-rose-700 dark:text-rose-300 hover:bg-rose-100 cursor-pointer"
+          >
+            <RefreshCw className="size-3" /> পুনরায় চেষ্টা করুন
+          </button>
+        </div>
       ) : isLoading ? (
-        <LoadingBlock label="লোড হচ্ছে গুরুকুল জিজ্ঞাসা..." />
+        <div className="py-20 text-center">
+          <LoadingBlock label="লোড হচ্ছে গুরুকুল জিজ্ঞাসা..." />
+        </div>
       ) : questions.length === 0 ? (
-        <EmptyState
-          title="কোনো জিজ্ঞাসা পাওয়া যায়নি"
-          description="বর্তমান ফিল্টারে কোনো ছাত্রের প্রশ্ন নেই।"
-        />
+        <div className="rounded-3xl border border-dashed border-amber-300/80 dark:border-amber-800/60 bg-gradient-to-br from-amber-50/30 via-white to-amber-50/20 dark:from-slate-900/60 dark:via-slate-900 dark:to-amber-950/10 p-12 text-center space-y-3">
+          <div className="size-14 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-inner">
+            <MessageSquareQuote className="size-7" />
+          </div>
+          <h4 className="font-serif text-lg font-bold text-slate-900 dark:text-white">
+            কোনো জিজ্ঞাসা পাওয়া যায়নি
+          </h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+            যখন ছাত্ররা ভিডিও লেকচারের নির্দিষ্ট অংশে কোনো পয়েন্টে প্রশ্ন জিজ্ঞাসা করবেন, এখানে তাৎক্ষণিকভাবে রিয়েল-টাইম দেখা যাবে এবং আচার্য সরাসরি উত্তর প্রদান করতে পারবেন।
+          </p>
+        </div>
       ) : (
         <div className="space-y-4">
           {questions.map((q: AdminCourseQuestion) => (
-            <Card key={q.id} className="overflow-hidden border-border transition-colors hover:border-amber-500/40">
-              <CardBody className="p-5 space-y-4">
+            <div key={q.id} className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 space-y-4 shadow-xs hover:border-amber-400 dark:hover:border-amber-500/80 transition-all">
                 {/* Top Row: Course & Video Lecture Context */}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -711,8 +715,7 @@ export default function GurukulQAPage() {
                     </div>
                   )}
                 </div>
-              </CardBody>
-            </Card>
+            </div>
           ))}
         </div>
       )}
