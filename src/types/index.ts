@@ -59,11 +59,28 @@ export type Gender = S["Gender"];
 export type MaritalStatus = S["MaritalStatus"];
 
 // -------------------------------------------------------------- astrologer
+export interface ServiceDurationStats {
+  chat_minutes: number;
+  call_minutes: number;
+  video_minutes: number;
+  total_minutes?: number;
+  chat_hours: number;
+  call_hours: number;
+  video_hours: number;
+  total_hours: number;
+  formatted_chat?: string;
+  formatted_call?: string;
+  formatted_video?: string;
+  formatted_total?: string;
+}
+
 export type AstrologerPublic = S["AstrologerPublic"] & {
   banner_image_url?: string | null;
+  service_duration?: ServiceDurationStats | null;
 };
 export type AstrologerProfile = S["AstrologerProfile"] & {
   banner_image_url?: string | null;
+  service_duration?: ServiceDurationStats | null;
   brahma_pause_until?: string | null;
   brahma_pause_reason?: string | null;
   brahma_pause_activated_at?: string | null;
