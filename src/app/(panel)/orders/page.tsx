@@ -184,6 +184,7 @@ export default function AdminOrdersPage() {
       let statusParam: string | undefined = undefined;
       let refundStatusParam: string | undefined = undefined;
       if (activeTab === "refund_pending") refundStatusParam = "pending";
+      else if (activeTab === "placed") statusParam = "placed";
       else if (activeTab === "needs_consecration") statusParam = "confirmed";
       else if (activeTab === "sanctifying") statusParam = "sanctifying";
       else if (activeTab === "packed") statusParam = "packed";
@@ -191,6 +192,7 @@ export default function AdminOrdersPage() {
       else if (activeTab === "delivered") statusParam = "delivered";
       else if (activeTab === "rto") statusParam = "rto";
       else if (activeTab === "cancelled") statusParam = "cancelled";
+      else if (activeTab === "abandoned") statusParam = "abandoned";
       else if (activeTab === "expired") statusParam = "expired";
 
       const res = await shopAdminApi.listOrders({
@@ -465,7 +467,8 @@ export default function AdminOrdersPage() {
           {/* Status Tabs */}
           <div className="flex items-center gap-2 border-b border-stone-200 dark:border-stone-800 pb-2 overflow-x-auto scrollbar-none">
             {[
-              { id: "all", label: "All Orders" },
+              { id: "all", label: "All Valid Orders" },
+              { id: "placed", label: "New (Placed)" },
               { id: "refund_pending", label: "⚠️ Refund Requests" },
               { id: "needs_consecration", label: `Queued for Kashi (${pendingConsecrationCount})` },
               { id: "sanctifying", label: `In Pooja (${inConsecrationCount})` },
@@ -474,6 +477,7 @@ export default function AdminOrdersPage() {
               { id: "delivered", label: "Delivered" },
               { id: "rto", label: "RTO (Courier Return)" },
               { id: "cancelled", label: "Cancelled" },
+              { id: "abandoned", label: "Abandoned Checkouts" },
               { id: "expired", label: "Expired (Unpaid)" },
             ].map((tab) => (
               <button
