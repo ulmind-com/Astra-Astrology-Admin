@@ -602,6 +602,14 @@ export default function AdminOrdersPage() {
                         <div className="font-medium text-stone-800 dark:text-stone-200 max-w-xs truncate">
                           {order.items?.map((it: any) => `${it.title} (x${it.quantity})`).join(", ")}
                         </div>
+                        {order.free_gifts && order.free_gifts.length > 0 && (
+                          <div className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-900/50 px-2 py-0.5">
+                            <Gift className="size-3 text-amber-600" />
+                            <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300">
+                              + Gift: {order.free_gifts[0]?.title || order.free_gifts[0]?.badge}
+                            </span>
+                          </div>
+                        )}
                       </td>
 
                       {/* Total & Payment */}
@@ -762,6 +770,32 @@ export default function AdminOrdersPage() {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Complimentary gift(s) to INCLUDE in this parcel — packing reminder */}
+            {selectedOrder.free_gifts && selectedOrder.free_gifts.length > 0 && (
+              <div className="rounded-xl border-2 border-amber-300 bg-amber-50/80 dark:bg-amber-950/20 p-3.5 space-y-2">
+                <div className="font-bold flex items-center gap-1.5 text-amber-900 dark:text-amber-300 text-sm">
+                  <Gift className="size-4 text-amber-600" />
+                  <span>Include FREE Gift in this parcel</span>
+                </div>
+                {selectedOrder.free_gifts.map((g: any, i: number) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between gap-2 rounded-lg bg-white dark:bg-stone-900 border border-amber-200 dark:border-amber-900/40 px-3 py-2"
+                  >
+                    <span className="text-xs font-semibold text-stone-800 dark:text-stone-200">
+                      {g.title || g.badge}
+                    </span>
+                    <span className="shrink-0 text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+                      FREE{g.value ? ` · ${formatINR(g.value)}` : ""}
+                    </span>
+                  </div>
+                ))}
+                <p className="text-[11px] text-amber-800 dark:text-amber-300/80">
+                  Please pack the complimentary gift along with the order before dispatch.
+                </p>
               </div>
             )}
 
