@@ -165,16 +165,16 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
   const [hasFreeGift, setHasFreeGift] = React.useState<boolean>(
     initialProduct?.free_gift_value !== undefined && initialProduct?.free_gift_value !== null
       ? initialProduct.free_gift_value > 0
-      : true
+      : false
   );
   const [freeGiftTitle, setFreeGiftTitle] = React.useState<string>(
-    initialProduct?.free_gift_title || "Raw Selenite Charging Plate"
+    initialProduct?.free_gift_title || ""
   );
   const [freeGiftValue, setFreeGiftValue] = React.useState<number>(
-    initialProduct?.free_gift_value ?? 729
+    initialProduct?.free_gift_value ?? 0
   );
   const [freeGiftBadge, setFreeGiftBadge] = React.useState<string>(
-    initialProduct?.free_gift_badge || "FREE Raw Selenite Plate worth ₹729"
+    initialProduct?.free_gift_badge || ""
   );
   const [freeGiftImageUrl, setFreeGiftImageUrl] = React.useState<string>(
     initialProduct?.free_gift_image_url || ""

@@ -1081,6 +1081,13 @@ export interface ShopBannerSettingsData {
   cashback_percent?: number;
   free_shipping_threshold?: number;
   standard_shipping_fee?: number;
+  // Threshold-based complimentary gift
+  free_gift_enabled?: boolean;
+  free_gift_min_cart_value?: number;
+  free_gift_default_title?: string;
+  free_gift_default_value?: number;
+  free_gift_default_badge?: string;
+  free_gift_default_image_url?: string | null;
   // Company & GST Profile for Invoices
   company_legal_name?: string;
   company_trade_name?: string;

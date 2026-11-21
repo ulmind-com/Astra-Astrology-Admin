@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Truck,
   Coins,
+  Gift,
   Lock,
   Info,
   Clock,
@@ -67,6 +68,12 @@ const DEFAULT_SHOP_DATA: ShopBannerSettingsData = {
   checkout_reservation_minutes: 20,
   cod_max_rto_allowed: 2,
   cod_blacklisted_phones: [],
+  free_gift_enabled: false,
+  free_gift_min_cart_value: 0,
+  free_gift_default_title: "",
+  free_gift_default_value: 0,
+  free_gift_default_badge: "",
+  free_gift_default_image_url: "",
   company_legal_name: "DivinLink Vedic Services Private Limited",
   company_trade_name: "DivinLink",
   company_address: "Near Vishwanath Temple Corridor, Dashashwamedh Ghat, Varanasi, Uttar Pradesh - 221001",
@@ -179,6 +186,12 @@ export default function ShopCMSPage() {
         checkout_reservation_minutes: serverData.checkout_reservation_minutes ?? 20,
         cod_max_rto_allowed: serverData.cod_max_rto_allowed ?? 2,
         cod_blacklisted_phones: serverData.cod_blacklisted_phones ?? [],
+        free_gift_enabled: serverData.free_gift_enabled ?? true,
+        free_gift_min_cart_value: serverData.free_gift_min_cart_value ?? 499,
+        free_gift_default_title: serverData.free_gift_default_title ?? "",
+        free_gift_default_value: serverData.free_gift_default_value ?? 0,
+        free_gift_default_badge: serverData.free_gift_default_badge ?? "",
+        free_gift_default_image_url: serverData.free_gift_default_image_url ?? "",
         company_legal_name: serverData.company_legal_name ?? DEFAULT_SHOP_DATA.company_legal_name,
         company_trade_name: serverData.company_trade_name ?? DEFAULT_SHOP_DATA.company_trade_name,
         company_address: serverData.company_address ?? DEFAULT_SHOP_DATA.company_address,
@@ -531,6 +544,107 @@ export default function ShopCMSPage() {
               Manage Cash on Delivery (COD) availability, customer order cancellation rules, and anti-fraud cashback coin release triggers.
             </p>
           </div>
+
+          {/* Complimentary Gift Offer (threshold-based) */}
+          <Card className="border border-amber-200 dark:border-amber-900/40">
+            <CardHeader>
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <Gift className="size-4 text-amber-600" />
+                <span>Complimentary Gift Offer</span>
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Automatically grant a free gift when the cart subtotal crosses the threshold. Shown dynamically in cart, checkout and order details across web &amp; app.
+              </CardDescription>
+            </CardHeader>
+            <CardBody className="space-y-4">
+              <div className="flex items-center justify-between p-3.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/50">
+                <div className="space-y-0.5 pr-4">
+                  <span className="text-xs font-bold text-stone-900 dark:text-white">Enable Free Gift Offer</span>
+                  <p className="text-[11px] text-stone-500">When off, no complimentary gift is shown or granted anywhere.</p>
+                </div>
+                <Switch
+                  checked={formData.free_gift_enabled ?? true}
+                  onChange={(checked) => {
+                    setFormData((prev) => ({ ...prev, free_gift_enabled: checked }));
+                    setIsDirty(true);
+                  }}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-stone-700 dark:text-stone-300">Minimum cart subtotal (₹)</label>
+                  <Input
+                    type="number"
+                    value={formData.free_gift_min_cart_value ?? 499}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, free_gift_min_cart_value: Number(e.target.value) || 0 }));
+                      setIsDirty(true);
+                    }}
+                  />
+                  <p className="text-[11px] text-stone-500">Gift unlocks when subtotal ≥ this amount.</p>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-stone-700 dark:text-stone-300">Gift value (₹)</label>
+                  <Input
+                    type="number"
+                    value={formData.free_gift_default_value ?? 0}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, free_gift_default_value: Number(e.target.value) || 0 }));
+                      setIsDirty(true);
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-stone-700 dark:text-stone-300">Gift title</label>
+                <Input
+                  value={formData.free_gift_default_title ?? ""}
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, free_gift_default_title: e.target.value }));
+                    setIsDirty(true);
+                  }}
+                  placeholder="e.g. Raw Selenite Charging Plate"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-stone-700 dark:text-stone-300">Badge text</label>
+                <Input
+                  value={formData.free_gift_default_badge ?? ""}
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, free_gift_default_badge: e.target.value }));
+                    setIsDirty(true);
+                  }}
+                  placeholder="e.g. FREE Raw Selenite Plate worth ₹729"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-stone-700 dark:text-stone-300">Gift image URL (optional)</label>
+                <Input
+                  value={formData.free_gift_default_image_url ?? ""}
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, free_gift_default_image_url: e.target.value }));
+                    setIsDirty(true);
+                  }}
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div className="p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-300">
+                <div className="font-bold flex items-center gap-1.5">
+                  <Info className="size-3.5" />
+                  <span>
+                    {(formData.free_gift_enabled ?? true)
+                      ? `Active: “${formData.free_gift_default_title || "Gift"}” on orders ≥ ₹${formData.free_gift_min_cart_value ?? 499}`
+                      : "Gift offer is currently disabled"}
+                  </span>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* 1. COD Control Card */}
@@ -1111,6 +1225,19 @@ export default function ShopCMSPage() {
           </Card>
         </div>
       )}
+
+      {/* Floating save button — always visible and reachable while scrolling */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          size="lg"
+          onClick={handleSave}
+          disabled={saveMutation.isPending}
+          className={`shadow-xl shadow-amber-900/20 ${isDirty ? "ring-2 ring-amber-400 animate-pulse" : ""}`}
+        >
+          <Save className="size-4 mr-2" />
+          {saveMutation.isPending ? "Saving..." : isDirty ? "Save Changes" : "Save Settings"}
+        </Button>
+      </div>
     </div>
   );
 }
