@@ -159,6 +159,11 @@ export default function EarningsPage() {
   const [adminNotes, setAdminNotes] = React.useState("");
   const [rejectionReason, setRejectionReason] = React.useState("");
 
+  // Admin Payout Desk Sub-Filter & Modals
+  const [adminBeneficiaryDesk, setAdminBeneficiaryDesk] = React.useState<"all" | "astrologer" | "purohit">("all");
+  const [qrPreviewTarget, setQrPreviewTarget] = React.useState<AstrologerPayoutRecord | null>(null);
+  const [breakdownTarget, setBreakdownTarget] = React.useState<{ userId: string; name: string; type: string } | null>(null);
+
   // Debounce search input
   React.useEffect(() => {
     const handler = setTimeout(() => {
@@ -279,11 +284,28 @@ export default function EarningsPage() {
   });
 
   const adminPayouts = useQuery({
-    queryKey: ["admin", "payouts", adminPayoutFilter],
+    queryKey: ["admin", "payouts", adminPayoutFilter, adminBeneficiaryDesk],
     queryFn: () =>
-      earningsApi.adminPayouts(adminPayoutFilter === "all" ? undefined : adminPayoutFilter, 100),
+      earningsApi.adminPayouts(
+        adminPayoutFilter === "all" ? undefined : adminPayoutFilter,
+        100,
+        adminBeneficiaryDesk === "all" ? undefined : adminBeneficiaryDesk
+      ),
     enabled: ready && !isAstrologer,
     refetchInterval: 10000,
+  });
+
+  const payoutAnalytics = useQuery({
+    queryKey: ["admin", "payout-analytics"],
+    queryFn: earningsApi.adminPayoutAnalytics,
+    enabled: ready && !isAstrologer,
+    refetchInterval: 15000,
+  });
+
+  const beneficiaryBreakdown = useQuery({
+    queryKey: ["admin", "beneficiary-breakdown", breakdownTarget?.userId],
+    queryFn: () => (breakdownTarget ? earningsApi.adminBeneficiaryBreakdown(breakdownTarget.userId) : null),
+    enabled: !!breakdownTarget,
   });
 
   // =========================================================================
@@ -341,12 +363,13 @@ export default function EarningsPage() {
       return earningsApi.adminSettlePayout(id, { utr_number: utr.trim(), admin_notes: notes });
     },
     onSuccess: () => {
-      toast.success("Payout settled and marked paid with UTR reference.");
+      toast.success("Payout settled! Automated email advisory dispatched to beneficiary with UTR.");
       setSettlePayoutTarget(null);
       setUtrNumber("");
       setAdminNotes("");
       void adminPayouts.refetch();
       void platform.refetch();
+      void payoutAnalytics.refetch();
     },
     onError: (err: any) => {
       toast.error(err?.message || "Failed to settle payout.");
@@ -359,11 +382,12 @@ export default function EarningsPage() {
       return earningsApi.adminRejectPayout(id, { rejection_reason: reason.trim() });
     },
     onSuccess: () => {
-      toast.success("Payout request rejected. Locked balance refunded back to astrologer.");
+      toast.success("Payout request rejected. Locked balance refunded back to specialist.");
       setRejectPayoutTarget(null);
       setRejectionReason("");
       void adminPayouts.refetch();
       void platform.refetch();
+      void payoutAnalytics.refetch();
     },
     onError: (err: any) => {
       toast.error(err?.message || "Failed to reject payout.");
@@ -2156,14 +2180,97 @@ export default function EarningsPage() {
 
       {/* ── TAB 2: ADMIN PAYOUT SETTLEMENT DESK ── */}
       {adminTab === "payout_desk" && (
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] bg-white p-4 border border-slate-100 shadow-sm">
-            <div>
-              <h4 className="font-bold text-slate-900 text-sm">Astrologer Withdrawal Requests</h4>
-              <p className="text-xs text-slate-500">
-                Process bank transfers, enter UTR transaction numbers, or decline unauthorized requests.
+        <div className="space-y-6">
+          {/* Payout Analytics Overview Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs">
+              <div className="flex items-center justify-between text-slate-400 mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider">Total Disbursed</span>
+                <CheckCircle2 className="size-4 text-emerald-500" />
+              </div>
+              <div className="font-mono text-xl font-black text-emerald-600">
+                {formatEarning(payoutAnalytics.data?.total_settled_volume_paise || 0)}
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">
+                {payoutAnalytics.data?.settled_count || 0} successfully settled payouts
               </p>
             </div>
+
+            <div className="rounded-2xl border border-amber-100 bg-amber-50/40 p-4 shadow-xs">
+              <div className="flex items-center justify-between text-amber-700 mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider">Pending Clearance</span>
+                <Clock className="size-4 text-amber-500 animate-spin" />
+              </div>
+              <div className="font-mono text-xl font-black text-amber-700">
+                {formatEarning(payoutAnalytics.data?.total_pending_volume_paise || 0)}
+              </div>
+              <p className="text-[10px] text-amber-600 font-semibold mt-1">
+                {payoutAnalytics.data?.pending_count || 0} requests awaiting transfer
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4 shadow-xs">
+              <div className="flex items-center justify-between text-indigo-700 mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider">Astrologers Volume</span>
+                <Sparkles className="size-4 text-indigo-500" />
+              </div>
+              <div className="font-mono text-xl font-black text-indigo-800">
+                {formatEarning(payoutAnalytics.data?.astrologer_settled_volume_paise || 0)}
+              </div>
+              <p className="text-[10px] text-indigo-600 mt-1">
+                Consultation sessions settled
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-4 shadow-xs">
+              <div className="flex items-center justify-between text-orange-700 mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider">Pandit Ji's Volume</span>
+                <Flame className="size-4 text-orange-500" />
+              </div>
+              <div className="font-mono text-xl font-black text-orange-800">
+                {formatEarning(payoutAnalytics.data?.purohit_settled_volume_paise || 0)}
+              </div>
+              <p className="text-[10px] text-orange-600 mt-1">
+                Sacred Vedic pujas settled
+              </p>
+            </div>
+          </div>
+
+          {/* Section Header & Sub-Desk Selection (Astrologer vs Pandit Ji) */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-3xl bg-white p-5 border border-slate-100 shadow-sm">
+            <div>
+              <h4 className="font-bold text-slate-900 text-sm">Disbursement Desks & Beneficiaries</h4>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Verify bank coordinates, scan uploaded UPI QR codes, review session breakdowns, and settle with UTR.
+              </p>
+            </div>
+
+            {/* Beneficiary Type Tabs */}
+            <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100/80 rounded-2xl">
+              {[
+                { id: "all", label: "All Specialists", icon: Users },
+                { id: "astrologer", label: "🌟 Astrologers Payout", icon: Sparkles },
+                { id: "purohit", label: "🪔 Pandit Ji's Payout", icon: Flame },
+              ].map((desk) => (
+                <button
+                  key={desk.id}
+                  onClick={() => setAdminBeneficiaryDesk(desk.id as any)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer",
+                    adminBeneficiaryDesk === desk.id
+                      ? "bg-white text-slate-900 shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  )}
+                >
+                  <desk.icon className="size-3.5" />
+                  <span>{desk.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Status Filters Bar */}
+          <div className="flex items-center justify-between gap-3 px-1">
             <div className="flex items-center gap-1.5">
               {[
                 { id: "all", label: "All Requests" },
@@ -2178,7 +2285,7 @@ export default function EarningsPage() {
                     "rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer",
                     adminPayoutFilter === tab.id
                       ? "bg-slate-900 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      : "bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-100"
                   )}
                 >
                   {tab.label}
@@ -2187,143 +2294,390 @@ export default function EarningsPage() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[26px] bg-white border border-slate-100/90 shadow-[0_12px_32px_rgba(20,25,45,0.03)]">
+          {/* Payouts Table */}
+          <div className="overflow-hidden rounded-3xl bg-white border border-slate-100/90 shadow-[0_12px_32px_rgba(20,25,45,0.03)]">
             {payoutsList.length === 0 ? (
               <div className="py-16 text-center text-xs text-slate-400">
                 <Building className="size-8 mx-auto text-slate-300 mb-2" />
                 <p className="font-bold text-slate-700">No payout requests in this filter</p>
+                <p className="text-[11px] text-slate-400 mt-1">Requests matching the selected desk will appear here.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="border-b border-slate-100 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                      <th className="py-4 pl-6 pr-4">Astrologer</th>
+                      <th className="py-4 pl-6 pr-4">Beneficiary Specialist</th>
                       <th className="py-4 px-4">Requested At</th>
                       <th className="py-4 px-4">Payout Method & Details</th>
+                      <th className="py-4 px-4 text-center">UPI QR Code</th>
                       <th className="py-4 px-4 text-right">Net Payable</th>
                       <th className="py-4 px-4 text-center">Status</th>
                       <th className="py-4 px-4">UTR Reference</th>
-                      <th className="py-4 pr-6 pl-4 text-right">Settlement Actions</th>
+                      <th className="py-4 pr-6 pl-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {payoutsList.map((payout) => (
-                      <tr key={payout.id} className="hover:bg-slate-50/60 transition-colors">
-                        <td className="py-4 pl-6 pr-4 whitespace-nowrap">
-                          <p className="font-bold text-slate-900 text-xs">
-                            {payout.astrologer_name || "Specialist"}
-                          </p>
-                          <span className="font-mono text-[9px] text-slate-400 block truncate">
-                            ID: {payout.astrologer_id}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 whitespace-nowrap">
-                          <span className="font-bold text-slate-900 block">
-                            {formatDateTime(payout.requested_at)}
-                          </span>
-                          <span className="text-[10px] text-slate-400">
-                            {timeAgo(payout.requested_at)}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="space-y-0.5">
-                            <span className="font-bold text-slate-800 capitalize flex items-center gap-1.5">
-                              {payout.payout_method === "upi" ? (
-                                <QrCode className="size-3.5 text-indigo-600" />
-                              ) : (
-                                <Building className="size-3.5 text-emerald-600" />
-                              )}
-                              {payout.payout_method === "upi" ? "UPI VPA" : "Bank Transfer"}
-                            </span>
-                            {payout.payout_method === "upi" ? (
-                              <p className="font-mono text-[11px] text-indigo-700 select-all font-bold">
-                                {payout.upi_id}
+                    {payoutsList.map((payout) => {
+                      const isPurohitItem = payout.beneficiary_type === "purohit";
+                      const specialistName = payout.beneficiary_name || payout.astrologer_name || "Specialist";
+
+                      return (
+                        <tr key={payout.id} className="hover:bg-slate-50/60 transition-colors">
+                          <td className="py-4 pl-6 pr-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="font-bold text-slate-900 text-xs">
+                                {specialistName}
                               </p>
-                            ) : (
-                              <div className="font-mono text-[10px] text-slate-600">
-                                <p className="font-bold text-slate-800">
-                                  {payout.account_holder_name} • {payout.bank_name}
-                                </p>
-                                <p className="select-all">
-                                  A/C: {payout.account_number_masked || `••${payout.account_number_last4}`} | IFSC: {payout.ifsc}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 text-right whitespace-nowrap">
-                          <span className="font-mono text-base font-black text-emerald-600 block">
-                            {formatEarning(payout.net_payable_paise)}
-                          </span>
-                          <span className="text-[10px] text-slate-400">
-                            Gross: {formatEarning(payout.amount_paise)}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          {payout.status === "settled" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
-                              <CheckCircle2 className="size-3 text-emerald-600" />
-                              Settled
-                            </span>
-                          )}
-                          {payout.status === "pending" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
-                              <Clock className="size-3 text-amber-600 animate-spin" />
-                              Pending
-                            </span>
-                          )}
-                          {payout.status === "rejected" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-0.5 text-[10px] font-bold text-rose-700">
-                              Rejected
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-4 px-4 font-mono text-[11px]">
-                          {payout.utr_number ? (
-                            <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 select-all">
-                              {payout.utr_number}
-                            </span>
-                          ) : payout.rejection_reason ? (
-                            <span className="text-rose-600 text-[10px] font-sans">
-                              {payout.rejection_reason}
-                            </span>
-                          ) : (
-                            <span className="text-slate-400">—</span>
-                          )}
-                        </td>
-                        <td className="py-4 pr-6 pl-4 text-right whitespace-nowrap">
-                          {payout.status === "pending" ? (
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                onClick={() => {
-                                  setSettlePayoutTarget(payout);
-                                  setUtrNumber("");
-                                }}
-                                className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 active:scale-95 transition-all cursor-pointer shadow-xs"
+                              <span
+                                className={cn(
+                                  "rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border",
+                                  isPurohitItem
+                                    ? "bg-amber-50 text-amber-800 border-amber-200"
+                                    : "bg-indigo-50 text-indigo-800 border-indigo-200"
+                                )}
                               >
-                                Mark Paid (UTR)
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setRejectPayoutTarget(payout);
-                                  setRejectionReason("");
-                                }}
-                                className="rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-all cursor-pointer"
-                              >
-                                Reject
-                              </button>
+                                {isPurohitItem ? "🪔 Pandit Ji" : "🌟 Astrologer"}
+                              </span>
                             </div>
-                          ) : (
-                            <span className="text-[11px] text-slate-400 font-medium">Completed</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                            <span className="font-mono text-[9px] text-slate-400 block truncate">
+                              ID: {payout.purohit_id || payout.astrologer_id}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 whitespace-nowrap">
+                            <span className="font-bold text-slate-900 block">
+                              {formatDateTime(payout.requested_at)}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              {timeAgo(payout.requested_at)}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="space-y-0.5">
+                              <span className="font-bold text-slate-800 capitalize flex items-center gap-1.5">
+                                {payout.payout_method === "upi" ? (
+                                  <QrCode className="size-3.5 text-indigo-600" />
+                                ) : (
+                                  <Building className="size-3.5 text-emerald-600" />
+                                )}
+                                {payout.payout_method === "upi" ? "UPI VPA" : "Bank Transfer"}
+                              </span>
+                              {payout.payout_method === "upi" ? (
+                                <p className="font-mono text-[11px] text-indigo-700 select-all font-bold">
+                                  {payout.upi_id || "Direct QR Transfer"}
+                                </p>
+                              ) : (
+                                <div className="font-mono text-[10px] text-slate-600">
+                                  <p className="font-bold text-slate-800">
+                                    {payout.account_holder_name} • {payout.bank_name}
+                                  </p>
+                                  <p className="select-all">
+                                    A/C: {payout.account_number_masked || `••${payout.account_number_last4}`} | IFSC: {payout.ifsc}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-center whitespace-nowrap">
+                            {payout.upi_qr_url ? (
+                              <button
+                                onClick={() => setQrPreviewTarget(payout)}
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-900 hover:bg-amber-100 transition-colors shadow-xs cursor-pointer"
+                                title="Click to view & scan full-size UPI QR Code"
+                              >
+                                <QrCode className="size-3.5 text-amber-700" />
+                                <span>Scan QR</span>
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-slate-400">No QR</span>
+                            )}
+                          </td>
+                          <td className="py-4 px-4 text-right whitespace-nowrap">
+                            <span className="font-mono text-base font-black text-emerald-600 block">
+                              {formatEarning(payout.net_payable_paise)}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              Gross: {formatEarning(payout.amount_paise)}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 text-center">
+                            {payout.status === "settled" && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                                <CheckCircle2 className="size-3 text-emerald-600" />
+                                Settled
+                              </span>
+                            )}
+                            {payout.status === "pending" && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
+                                <Clock className="size-3 text-amber-600 animate-spin" />
+                                Pending
+                              </span>
+                            )}
+                            {payout.status === "rejected" && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-0.5 text-[10px] font-bold text-rose-700">
+                                Rejected
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-4 px-4 font-mono text-[11px]">
+                            {payout.utr_number ? (
+                              <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 select-all">
+                                {payout.utr_number}
+                              </span>
+                            ) : payout.rejection_reason ? (
+                              <span className="text-rose-600 text-[10px] font-sans">
+                                {payout.rejection_reason}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
+                          </td>
+                          <td className="py-4 pr-6 pl-4 text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* Granular Breakdown / More Details Button */}
+                              <button
+                                onClick={() =>
+                                  setBreakdownTarget({
+                                    userId: payout.astrologer_id || payout.purohit_id || "",
+                                    name: specialistName,
+                                    type: payout.beneficiary_type || "astrologer",
+                                  })
+                                }
+                                className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+                                title="Inspect consultation/puja ledger items"
+                              >
+                                Details
+                              </button>
+
+                              {payout.status === "pending" && (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      setSettlePayoutTarget(payout);
+                                      setUtrNumber("");
+                                    }}
+                                    className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 active:scale-95 transition-all cursor-pointer shadow-xs"
+                                  >
+                                    Settle (UTR)
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setRejectPayoutTarget(payout);
+                                      setRejectionReason("");
+                                    }}
+                                    className="rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-all cursor-pointer"
+                                  >
+                                    Reject
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: ADMIN VIEW & SCAN UPI QR CODE ── */}
+      {qrPreviewTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm"
+            onClick={() => setQrPreviewTarget(null)}
+          />
+          <div className="relative z-10 w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200 text-center space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 text-left">
+              <div className="flex items-center gap-2">
+                <div className="flex size-8 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+                  <QrCode className="size-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">UPI QR Code Scanner</h3>
+                  <p className="text-[10px] text-slate-400">Scan to pay directly from your mobile app</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setQrPreviewTarget(null)}
+                className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            {/* QR Canvas */}
+            <div className="p-3 bg-white rounded-2xl border-2 border-amber-400/50 shadow-inner flex flex-col items-center">
+              {qrPreviewTarget.upi_qr_url ? (
+                <img
+                  src={qrPreviewTarget.upi_qr_url}
+                  alt="Specialist UPI QR Code"
+                  className="size-56 object-contain rounded-xl"
+                />
+              ) : (
+                <div className="size-56 flex items-center justify-center text-slate-400 text-xs">
+                  No QR Code Available
+                </div>
+              )}
+            </div>
+
+            <div>
+              <p className="font-bold text-slate-900 text-sm">
+                {qrPreviewTarget.beneficiary_name || qrPreviewTarget.astrologer_name}
+              </p>
+              {qrPreviewTarget.upi_id && (
+                <div className="flex items-center justify-center gap-1.5 mt-0.5">
+                  <span className="font-mono text-xs font-bold text-indigo-700 select-all">
+                    {qrPreviewTarget.upi_id}
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(qrPreviewTarget.upi_id!);
+                      toast.success("UPI ID copied!");
+                    }}
+                    className="text-slate-400 hover:text-slate-700 cursor-pointer"
+                  >
+                    <Copy className="size-3" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl bg-emerald-50 p-3 border border-emerald-100">
+              <span className="text-[11px] text-emerald-800 font-semibold block">Net Disbursement Amount</span>
+              <span className="font-mono text-xl font-black text-emerald-700">
+                {formatEarning(qrPreviewTarget.net_payable_paise)}
+              </span>
+            </div>
+
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Open PhonePe, GPay, Paytm, or BHIM on your phone and scan the QR code above. Once paid, click below to log the UTR.
+            </p>
+
+            {qrPreviewTarget.status === "pending" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSettlePayoutTarget(qrPreviewTarget);
+                  setQrPreviewTarget(null);
+                  setUtrNumber("");
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-xs font-bold text-white shadow-md hover:bg-emerald-700 active:scale-95 transition-all cursor-pointer"
+              >
+                <span>Payment Done? Enter UTR & Settle</span>
+                <ArrowRight className="size-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: ADMIN GRANULAR BENEFICIARY BREAKDOWN ── */}
+      {breakdownTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm"
+            onClick={() => setBreakdownTarget(null)}
+          />
+          <div className="relative z-10 w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[85vh] space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <Receipt className="size-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">
+                    Earnings Breakdown: {breakdownTarget.name}
+                  </h3>
+                  <p className="text-xs text-slate-400 capitalize">
+                    {breakdownTarget.type === "purohit" ? "Vedic Puja Offerings Ledger" : "Consultation Sessions Ledger"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setBreakdownTarget(null)}
+                className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            {/* Financial Overview Cards in Modal */}
+            {beneficiaryBreakdown.data && (
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+                  <span className="text-slate-400 text-[10px] block">Total Lifetime</span>
+                  <strong className="font-mono font-bold text-slate-900">
+                    {formatEarning(beneficiaryBreakdown.data.total_earnings_paise)}
+                  </strong>
+                </div>
+                <div className="rounded-xl bg-amber-50 p-2.5 border border-amber-100">
+                  <span className="text-amber-700 text-[10px] block">Pending Payout</span>
+                  <strong className="font-mono font-bold text-amber-800">
+                    {formatEarning(beneficiaryBreakdown.data.pending_payout_paise)}
+                  </strong>
+                </div>
+                <div className="rounded-xl bg-emerald-50 p-2.5 border border-emerald-100">
+                  <span className="text-emerald-700 text-[10px] block">Settled to Date</span>
+                  <strong className="font-mono font-bold text-emerald-800">
+                    {formatEarning(beneficiaryBreakdown.data.settled_payout_paise)}
+                  </strong>
+                </div>
+              </div>
+            )}
+
+            {/* Transactions List */}
+            <div className="overflow-y-auto flex-1 divide-y divide-slate-100 pr-1">
+              {beneficiaryBreakdown.isLoading ? (
+                <div className="py-12 text-center text-xs text-slate-400">
+                  <RefreshCw className="size-6 animate-spin mx-auto text-indigo-500 mb-2" />
+                  <p>Loading itemized transaction history...</p>
+                </div>
+              ) : !beneficiaryBreakdown.data?.items?.length ? (
+                <div className="py-12 text-center text-xs text-slate-400">
+                  No source transactions found for this specialist.
+                </div>
+              ) : (
+                beneficiaryBreakdown.data.items.map((item) => (
+                  <div key={item.id} className="py-3 flex items-center justify-between text-xs gap-3">
+                    <div>
+                      <p className="font-bold text-slate-900">{item.title}</p>
+                      <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
+                        <span>Devotee: <strong className="text-slate-600">{item.user_name || "Guest"}</strong></span>
+                        <span>•</span>
+                        <span>{item.duration_label}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {formatDateTime(item.created_at)}
+                      </span>
+                    </div>
+
+                    <div className="text-right whitespace-nowrap">
+                      <span className="font-mono font-bold text-emerald-600 text-sm block">
+                        +{formatEarning(item.earning_paise)}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        {item.status}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-slate-100 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setBreakdownTarget(null)}
+                className="rounded-xl bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -2342,8 +2696,8 @@ export default function EarningsPage() {
                   <CheckCircle2 className="size-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-base">Settle Astrologer Payout</h3>
-                  <p className="text-xs text-slate-400">Confirm bank disbursement with UTR</p>
+                  <h3 className="font-bold text-slate-900 text-base">Settle Specialist Payout</h3>
+                  <p className="text-xs text-slate-400">Confirm bank disbursement with UTR & trigger email</p>
                 </div>
               </div>
               <button
@@ -2357,8 +2711,8 @@ export default function EarningsPage() {
             <div className="mt-4 space-y-4">
               <div className="rounded-2xl bg-emerald-50/60 p-3.5 border border-emerald-100">
                 <div className="flex justify-between text-xs text-emerald-900 font-semibold mb-1">
-                  <span>Astrologer:</span>
-                  <span className="font-bold">{settlePayoutTarget.astrologer_name || "Specialist"}</span>
+                  <span>Beneficiary Specialist:</span>
+                  <span className="font-bold">{settlePayoutTarget.beneficiary_name || settlePayoutTarget.astrologer_name || "Specialist"}</span>
                 </div>
                 <div className="flex justify-between text-xs text-emerald-900 font-semibold">
                   <span>Payable Amount:</span>
@@ -2393,13 +2747,17 @@ export default function EarningsPage() {
                   className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                 />
               </div>
+
+              <div className="rounded-xl bg-emerald-50/80 border border-emerald-200/80 p-3 text-[11px] text-emerald-800 leading-relaxed">
+                ✓ Marking settled automatically fires an email advisory to the specialist with UTR reference advising them to verify their account.
+              </div>
             </div>
 
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setSettlePayoutTarget(null)}
-                className="rounded-xl px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100"
+                className="rounded-xl px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
               >
                 Cancel
               </button>

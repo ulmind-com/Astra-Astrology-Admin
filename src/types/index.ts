@@ -405,13 +405,20 @@ export interface AstrologerEarningsBalance {
   account_number_last4?: string | null;
   ifsc?: string | null;
   upi_id?: string | null;
+  upi_qr_url?: string | null;
+  upi_qr_public_id?: string | null;
   pan_card?: string | null;
   has_bank_details: boolean;
+  beneficiary_type?: "astrologer" | "purohit";
+  beneficiary_name?: string | null;
 }
 
 export interface AstrologerPayoutRecord {
   id: string;
-  astrologer_id: string;
+  astrologer_id?: string | null;
+  purohit_id?: string | null;
+  beneficiary_type?: "astrologer" | "purohit";
+  beneficiary_name?: string | null;
   astrologer_name?: string | null;
   amount_paise: number;
   tds_percent: number;
@@ -424,6 +431,7 @@ export interface AstrologerPayoutRecord {
   account_number_masked?: string | null;
   ifsc?: string | null;
   upi_id?: string | null;
+  upi_qr_url?: string | null;
   status: "pending" | "approved" | "settled" | "rejected";
   utr_number?: string | null;
   admin_notes?: string | null;
@@ -440,7 +448,41 @@ export interface BankDetailsUpdate {
   ifsc?: string | null;
   bank_name?: string | null;
   upi_id?: string | null;
+  upi_qr_url?: string | null;
   pan_card?: string | null;
+}
+
+export interface PayoutAnalytics {
+  total_payouts_volume_paise: number;
+  total_settled_volume_paise: number;
+  total_pending_volume_paise: number;
+  astrologer_settled_volume_paise: number;
+  purohit_settled_volume_paise: number;
+  pending_count: number;
+  settled_count: number;
+  rejected_count: number;
+}
+
+export interface BeneficiaryBreakdownItem {
+  id: string;
+  title: string;
+  service_type: "consultation" | "puja";
+  user_name?: string | null;
+  duration_label?: string | null;
+  gross_paise: number;
+  earning_paise: number;
+  created_at: string;
+  status: string;
+}
+
+export interface BeneficiaryBreakdownResponse {
+  user_id: string;
+  beneficiary_name: string;
+  beneficiary_type: string;
+  total_earnings_paise: number;
+  pending_payout_paise: number;
+  settled_payout_paise: number;
+  items: BeneficiaryBreakdownItem[];
 }
 
 /** Earnings are money, so they are paise — never coins. */

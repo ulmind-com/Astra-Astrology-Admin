@@ -24,6 +24,8 @@ import type {
   AstrologerEarningsBalance,
   AstrologerPayoutRecord,
   BankDetailsUpdate,
+  BeneficiaryBreakdownResponse,
+  PayoutAnalytics,
   AstrologerCreate,
   AstrologerCreated,
   AstrologerProfile,
@@ -570,12 +572,26 @@ export const earningsApi = {
     api.get<AstrologerPayoutRecord[]>("/astrologers/me/earnings/payouts", { query: { limit } }),
 
   updateBankDetails: (body: BankDetailsUpdate) =>
-    api.patch<{ saved: boolean }>("/astrologers/me/earnings/bank-details", body),
+    api.patch<{ saved: boolean }>("/earnings/bank-details", body),
 
-  adminPayouts: (status?: string, limit = 100) =>
+  uploadUpiQr: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return api.post<{ upi_qr_url: string; upi_qr_public_id: string }>("/earnings/upi-qr", formData);
+  },
+
+  deleteUpiQr: () => api.delete<{ deleted: boolean }>("/earnings/upi-qr"),
+
+  adminPayouts: (status?: string, limit = 100, beneficiary_type?: string) =>
     api.get<AstrologerPayoutRecord[]>("/admin/earnings/payouts", {
-      query: { status: status || undefined, limit },
+      query: { status: status || undefined, beneficiary_type: beneficiary_type || undefined, limit },
     }),
+
+  adminPayoutAnalytics: () =>
+    api.get<PayoutAnalytics>("/admin/earnings/payout-analytics"),
+
+  adminBeneficiaryBreakdown: (userId: string) =>
+    api.get<BeneficiaryBreakdownResponse>(`/admin/earnings/beneficiary/${userId}/breakdown`),
 
   adminSettlePayout: (id: string, body: { utr_number: string; admin_notes?: string }) =>
     api.post<AstrologerPayoutRecord>(`/admin/earnings/payouts/${id}/settle`, body),
