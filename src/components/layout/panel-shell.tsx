@@ -19,6 +19,7 @@ import {
   Zap,
   PanelLeftClose,
   PanelLeftOpen,
+  Calendar,
   CalendarDays,
   Lock,
   Bot,
@@ -59,6 +60,7 @@ type NavItem = {
 const PUROHIT_NAV: NavItem[] = [
   { href: "/purohit-dashboard", label: "Purohit Dashboard", icon: Flame },
   { href: "/purohit-dashboard/pujas", label: "My Puja Catalog", icon: BookOpen },
+  { href: "/purohit-dashboard/availability", label: "Auspicious Slots & Schedule", icon: Calendar },
   { href: "/purohit-dashboard/bookings", label: "Live Puja Bookings", icon: CalendarDays },
   { href: "/me/password", label: "Password", icon: Lock },
 ];
@@ -523,6 +525,8 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                     ? "Purohit Altar & Schedule"
                     : pathname === "/purohit-dashboard/pujas"
                     ? "Sacred Puja Catalog"
+                    : pathname === "/purohit-dashboard/availability"
+                    ? "Auspicious Slots & Schedule"
                     : pathname === "/purohit-dashboard/bookings"
                     ? "Live Puja Bookings"
                     : pathname === "/purohits"

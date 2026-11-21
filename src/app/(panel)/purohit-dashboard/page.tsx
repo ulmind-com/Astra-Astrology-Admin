@@ -171,6 +171,16 @@ export default function PurohitDashboardPage() {
               <UploadCloud className="size-4 mr-1.5 text-amber-600" />
               Update Avatar
             </Button>
+            <Link href="/purohit-dashboard/availability">
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-bold text-xs border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-50/60"
+              >
+                <CalendarDays className="size-4 mr-1.5 text-amber-600" />
+                স্লট ও শুভ মুহূর্ত (Availability)
+              </Button>
+            </Link>
             <Link href="/purohit-dashboard/pujas">
               <Button variant="outline" size="sm" className="font-bold text-xs">
                 <BookOpen className="size-4 mr-1.5" />
@@ -231,6 +241,27 @@ export default function PurohitDashboardPage() {
                   ? "ভক্তরা আপনাকে সরাসরি অনলাইন দেখতে পাচ্ছেন এবং আপনার ক্যাটালগ থেকে যে কোনো পূজা বুক করতে পারেন।"
                   : "টগলটি চালু করুন যাতে ভক্তরা আপনাকে অনলাইন দেখতে পান এবং তাৎক্ষণিক পূজা বুক করতে পারেন।"}
               </p>
+
+              {/* Weekly Auspicious Slots summary badge */}
+              <div className="flex flex-wrap items-center gap-2 pt-2">
+                <span className="text-[11px] font-semibold text-stone-500">
+                  সাপ্তাহিক স্লট:
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-[10px] font-bold text-stone-700 dark:text-stone-300">
+                  <CalendarDays className="size-3 text-amber-600" />
+                  {profile?.available_days?.length || 7} দিন উপলব্ধ
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-[10px] font-bold text-stone-700 dark:text-stone-300">
+                  <Flame className="size-3 text-amber-600" />
+                  {profile?.available_slots?.length || 4} টি শুভ মুহূর্ত
+                </span>
+                <Link
+                  href="/purohit-dashboard/availability"
+                  className="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-1 ml-1"
+                >
+                  ক্যালেন্ডার ও মুহূর্ত পরিবর্তন করুন &rarr;
+                </Link>
+              </div>
             </div>
           </div>
 

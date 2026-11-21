@@ -1535,6 +1535,9 @@ export interface PurohitData {
   languages: string[];
   is_online: boolean;
   is_verified: boolean;
+  available_days?: string[];
+  available_slots?: string[];
+  weekly_schedule?: Record<string, string[]>;
   pujas: PurohitPujaItem[];
   rating: number;
   total_pujas_performed: number;
@@ -1675,8 +1678,21 @@ export const purohitPortalApi = {
       }
     );
   },
-  setAvailability: (isOnline: boolean) =>
-    api.put<PurohitData>("/purohits/me/availability", { is_online: isOnline }),
+  setAvailability: (
+    payload:
+      | {
+          is_online: boolean;
+          available_days?: string[];
+          available_slots?: string[];
+          weekly_schedule?: Record<string, string[]>;
+        }
+      | boolean
+  ) => {
+    const body = typeof payload === "boolean" ? { is_online: payload } : payload;
+    return api.put<PurohitData>("/purohits/me/availability", body);
+  },
+  getAvailability: () =>
+    api.get<PurohitData>("/purohits/me/availability"),
   addPuja: (body: {
     puja_name: string;
     description: string;
