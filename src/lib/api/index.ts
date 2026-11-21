@@ -1564,6 +1564,7 @@ export interface PujaBookingData {
   amount_inr: number;
   sankalpa_name: string;
   sankalpa_gotra: string;
+  sankalpa_nakshatra?: string | null;
   sankalpa_wish?: string | null;
   room_id: string;
   zego_app_id?: number;
