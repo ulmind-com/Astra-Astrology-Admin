@@ -463,8 +463,7 @@ export default function AstrologerPanelPage() {
                   >
                     <Star className="size-3.5 fill-amber-500 text-amber-500" />
                     <span>
-                      {profile.rating?.average ? profile.rating.average.toFixed(1) : "5.0"} ★ (
-                      {profile.rating?.count ?? 0} reviews)
+                      {profile.rating?.count ? `${profile.rating.average.toFixed(1)} ★ (${profile.rating.count} reviews)` : "New (No reviews yet)"}
                     </span>
                   </Link>
 
@@ -534,7 +533,7 @@ export default function AstrologerPanelPage() {
                     Client Rating & Feedback
                   </h3>
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 px-2 py-0.5 text-[10px] font-black text-amber-900">
-                    ★ {profile.rating?.average ? profile.rating.average.toFixed(1) : "5.0"}
+                    ★ {profile.rating?.count ? profile.rating.average.toFixed(1) : "0.0"}
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">

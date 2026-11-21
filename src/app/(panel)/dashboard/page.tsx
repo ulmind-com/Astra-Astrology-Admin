@@ -56,7 +56,7 @@ export default function DashboardPage() {
 
   // Interactive UI States
   const [dateFilter, setDateFilter] = React.useState<"today" | "week" | "month" | "year">("year");
-  const [activeBarIdx, setActiveBarIdx] = React.useState<number | null>(3); // Default pinned to April
+  const [activeBarIdx, setActiveBarIdx] = React.useState<number | null>(0);
   const [activeBubble, setActiveBubble] = React.useState<string | null>(null);
   const [activeRing, setActiveRing] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -144,19 +144,19 @@ export default function DashboardPage() {
     (skillCounts["vastu"] || 0) +
     (skillCounts["face_reading"] || 0);
 
-  const totalSkills = vedicCount + tarotCount + numerologyCount || 1;
-  const vedicPct = Math.min(100, Math.round((vedicCount / totalSkills) * 100)) || 64;
-  const tarotPct = Math.min(100, Math.round((tarotCount / totalSkills) * 100)) || 48;
-  const numerologyPct = Math.min(100, Math.round((numerologyCount / totalSkills) * 100)) || 32;
+  const totalSkills = vedicCount + tarotCount + numerologyCount;
+  const vedicPct = totalSkills > 0 ? Math.min(100, Math.round((vedicCount / totalSkills) * 100)) : 0;
+  const tarotPct = totalSkills > 0 ? Math.min(100, Math.round((tarotCount / totalSkills) * 100)) : 0;
+  const numerologyPct = totalSkills > 0 ? Math.min(100, Math.round((numerologyCount / totalSkills) * 100)) : 0;
 
   // Real Average Rates & Experience
   const avgExperience = list.length
-    ? Math.round((list.reduce((acc, curr) => acc + (curr.experience_years || 5), 0) / list.length) * 10) / 10
-    : 11.5;
+    ? Math.round((list.reduce((acc, curr) => acc + (curr.experience_years || 0), 0) / list.length) * 10) / 10
+    : 0;
 
   const avgChatRate = list.length
-    ? Math.round(list.reduce((acc, curr) => acc + (curr.rates?.chat_coins_per_minute || 20), 0) / list.length)
-    : 25;
+    ? Math.round(list.reduce((acc, curr) => acc + (curr.rates?.chat_coins_per_minute || 0), 0) / list.length)
+    : 0;
 
   const drawerConfig = {
     total: {
@@ -197,152 +197,67 @@ export default function DashboardPage() {
     },
   };
 
-  // Multi-Series Clustered Bar Data
-  const clusteredMonthsData = [
-    {
-      month: "Jan",
-      chat: 34,
-      calls: 24,
-      readings: 18,
-      chatLabel: "34.200",
-      callLabel: "24.150",
-      readingsLabel: "18.300",
-      totalRevenue: "₹48,650",
-    },
-    {
-      month: "Feb",
-      chat: 62,
-      calls: 48,
-      readings: 32,
-      chatLabel: "62.400",
-      callLabel: "48.200",
-      readingsLabel: "32.100",
-      totalRevenue: "₹76,400",
-    },
-    {
-      month: "Mar",
-      chat: 42,
-      calls: 28,
-      readings: 22,
-      chatLabel: "42.100",
-      callLabel: "28.300",
-      readingsLabel: "22.500",
-      totalRevenue: "₹54,200",
-    },
-    {
-      month: "Apr",
-      chat: 76,
-      calls: 64,
-      readings: 46,
-      chatLabel: "43.787",
-      callLabel: "39.784",
-      readingsLabel: "28.900",
-      totalRevenue: "₹1,12,471",
-    },
-    {
-      month: "May",
-      chat: 48,
-      calls: 32,
-      readings: 24,
-      chatLabel: "48.900",
-      callLabel: "32.400",
-      readingsLabel: "24.100",
-      totalRevenue: "₹62,800",
-    },
-    {
-      month: "Jun",
-      chat: 58,
-      calls: 44,
-      readings: 35,
-      chatLabel: "58.200",
-      callLabel: "44.600",
-      readingsLabel: "35.200",
-      totalRevenue: "₹78,900",
-    },
-    {
-      month: "Jul",
-      chat: 54,
-      calls: 38,
-      readings: 28,
-      chatLabel: "54.100",
-      callLabel: "38.200",
-      readingsLabel: "28.500",
-      totalRevenue: "₹71,300",
-    },
-  ];
+  // Real Aggregations from Live Database Records
+  const totalConsultations = list.reduce((acc, a) => acc + (a.total_consultations || 0), 0);
+  const totalChatMins = list.reduce((acc, a) => acc + (a.service_duration?.chat_minutes ?? 0), 0);
+  const totalCallMins = list.reduce((acc, a) => acc + (a.service_duration?.call_minutes ?? 0), 0);
+  const totalVideoMins = list.reduce((acc, a) => acc + (a.service_duration?.video_minutes ?? 0), 0);
+  const totalServiceMins = list.reduce(
+    (acc, a) =>
+      acc +
+      (a.service_duration?.total_minutes ??
+        ((a.service_duration?.chat_minutes ?? 0) +
+          (a.service_duration?.call_minutes ?? 0) +
+          (a.service_duration?.video_minutes ?? 0))),
+    0
+  );
+  const totalServiceHours = (totalServiceMins / 60).toFixed(1);
 
-  // Packed Bubble Chart Data for Location & Demand Analytics
-  const packedBubbles = [
-    {
-      id: "north",
-      name: "North India (Delhi NCR)",
-      value: "2.417",
-      growth: "+14.8%",
-      color: "from-[#B45309] to-[#D97706]",
-      size: "size-24 sm:size-26",
-      coords: "top-2 left-16 sm:left-24",
-      anim: "bubble-float-1",
-      textColor: "text-white",
-      topSpecialist: "Vedic & Kundli",
-    },
-    {
-      id: "west",
-      name: "West India (Mumbai & Gujarat)",
-      value: "2.281",
-      growth: "+12.2%",
-      color: "from-[#D97706] to-[#F59E0B]",
-      size: "size-26 sm:size-28",
-      coords: "bottom-1 left-2 sm:left-4",
-      anim: "bubble-float-2",
-      textColor: "text-white",
-      topSpecialist: "Tarot & Numerology",
-    },
-    {
-      id: "south",
-      name: "South India (Bengaluru & Chennai)",
-      value: "812",
-      growth: "+8.6%",
-      color: "from-[#F59E0B] to-[#FBBF24]",
-      size: "size-18 sm:size-20",
-      coords: "bottom-4 right-16 sm:right-20",
-      anim: "bubble-float-3",
-      textColor: "text-white",
-      topSpecialist: "KP & Nadi",
-    },
-    {
-      id: "nri",
-      name: "North America & UK (NRI Diaspora)",
-      value: "287",
-      growth: "+22.4%",
-      color: "from-[#FBBF24] to-[#FDE047]",
-      size: "size-16 sm:size-17",
-      coords: "top-4 left-0 sm:left-2",
-      anim: "bubble-float-4",
-      textColor: "text-slate-900",
-      topSpecialist: "Matchmaking & Career",
-    },
-    {
-      id: "gulf",
-      name: "Middle East (Dubai & UAE)",
-      value: "194",
-      growth: "+18.1%",
-      color: "from-[#FEF08A] to-[#FDE047]",
-      size: "size-13 sm:size-14",
-      coords: "top-8 right-4 sm:right-6",
-      anim: "bubble-float-2",
-      textColor: "text-slate-900",
-      topSpecialist: "Vastu & Gems",
-    },
-  ];
+  // Real Language Distribution from Live Astrologers
+  const langCounts: Record<string, number> = {};
+  list.forEach((a) => {
+    a.languages?.forEach((lang) => {
+      langCounts[lang] = (langCounts[lang] || 0) + 1;
+    });
+  });
+  const languageBreakdown = Object.entries(langCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => ({
+      name,
+      count,
+      pct: Math.round((count / (list.length || 1)) * 100),
+      flag: name.toLowerCase().includes("bengali")
+        ? "🇮🇳"
+        : name.toLowerCase().includes("hindi")
+        ? "🇮🇳"
+        : "🌐",
+    }));
 
-  // Country Traffic Distribution for Horizontal Progress Bars
-  const countryTraffic = [
-    { name: "India", flag: "🇮🇳", pct: 88, sessions: "48.2k", growth: "+14.2%" },
-    { name: "United States", flag: "🇺🇸", pct: 64, sessions: "18.4k", growth: "+21.5%" },
-    { name: "United Arab Emirates", flag: "🇦🇪", pct: 46, sessions: "9.2k", growth: "+11.8%" },
-    { name: "United Kingdom", flag: "🇬🇧", pct: 32, sessions: "5.8k", growth: "+9.4%" },
-    { name: "Australia", flag: "🇦🇺", pct: 24, sessions: "3.6k", growth: "+16.7%" },
-  ];
+  // Real Mode Availability Counts
+  const chatModeCount = list.filter((a) => a.modes_enabled?.includes("chat")).length;
+  const callModeCount = list.filter((a) => a.modes_enabled?.includes("call")).length;
+  const videoModeCount = list.filter((a) => a.modes_enabled?.includes("video")).length;
+
+  // Real Per-Astrologer Service Delivery Bar Data
+  const astrologerServiceBars = list.map((a) => {
+    const chat = a.service_duration?.chat_minutes ?? 0;
+    const calls = a.service_duration?.call_minutes ?? 0;
+    const video = a.service_duration?.video_minutes ?? 0;
+    const total = chat + calls + video;
+    return {
+      name: a.display_name || a.full_name || "Specialist",
+      chat,
+      calls,
+      video,
+      total,
+      chatLabel: a.service_duration?.formatted_chat || `${chat} mins`,
+      callLabel: a.service_duration?.formatted_call || `${calls} mins`,
+      videoLabel: a.service_duration?.formatted_video || `${video} mins`,
+      consultations: a.total_consultations || 0,
+      rating: a.rating?.count ? a.rating.average.toFixed(1) : "—",
+      reviews: a.rating?.count || 0,
+    };
+  });
 
   const filteredAstrologers = list.filter(
     (a) =>
@@ -426,7 +341,7 @@ export default function DashboardPage() {
         <div className="space-y-6 xl:col-span-7 flex flex-col">
           {/* 2x2 KPI STATISTIC CARDS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {/* Card 1: Total Sales / Total Astrologers (Hero Blue Card) */}
+            {/* Card 1: Total Astrologers (Hero Gold Card) */}
             <div
               role="button"
               tabIndex={0}
@@ -442,29 +357,29 @@ export default function DashboardPage() {
 
               <div className="flex items-center justify-between">
                 <div className="flex size-11 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shadow-sm group-hover:scale-110 transition-transform">
-                  <Ticket className="size-5 text-white stroke-[2.2]" />
+                  <Users className="size-5 text-white stroke-[2.2]" />
                 </div>
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#3CFE8A] px-2.5 py-0.5 text-[11px] font-black text-slate-900 shadow-sm">
-                  +2.08%
+                  Live Network
                 </span>
               </div>
 
               <div className="mt-4">
                 <p className="text-xs font-semibold text-white/90">
-                  Total Sales
+                  Total Astrologers
                 </p>
                 <div className="mt-1 flex items-baseline justify-between">
                   <h3 className="font-display text-[32px] sm:text-4xl font-black tracking-tight text-white leading-none">
-                    ₹6,12,917
+                    {list.length}
                   </h3>
                   <span className="text-[11px] font-medium text-white/80">
-                    Products vs last month
+                    {onlineCount} online · {listedCount} listed
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Card 2: Total Orders / Online Astrologers (White Card) */}
+            {/* Card 2: Online Astrologers (Emerald Card) */}
             <div
               role="button"
               tabIndex={0}
@@ -480,26 +395,26 @@ export default function DashboardPage() {
                   <Activity className="size-5 stroke-[2.2]" />
                 </div>
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#3CFE8A]/25 px-2.5 py-0.5 text-[11px] font-bold text-[#059669] shadow-sm">
-                  +12,4%
+                  Real-time
                 </span>
               </div>
 
               <div className="mt-4">
                 <p className="text-xs font-semibold text-slate-400">
-                  Total Orders
+                  Online Astrologers
                 </p>
                 <div className="mt-1 flex items-baseline justify-between">
                   <h3 className="font-display text-[32px] sm:text-4xl font-black tracking-tight text-slate-900 leading-none">
-                    34.760
+                    {onlineCount}
                   </h3>
                   <span className="text-[11px] font-medium text-slate-400">
-                    Orders vs last month
+                    Available for consultations
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Card 3: Visitor / Publicly Listed (White Card) */}
+            {/* Card 3: Total Consultations (White Card) */}
             <div
               role="button"
               tabIndex={0}
@@ -512,29 +427,29 @@ export default function DashboardPage() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex size-11 items-center justify-center rounded-2xl bg-amber-50 text-[#D97706] transition-transform group-hover:scale-110">
-                  <User className="size-5 stroke-[2.2]" />
+                  <UserCheck className="size-5 stroke-[2.2]" />
                 </div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-600 shadow-sm">
-                  -2,08%
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-[#D97706] shadow-sm">
+                  {listedCount} Active
                 </span>
               </div>
 
               <div className="mt-4">
                 <p className="text-xs font-semibold text-slate-400">
-                  Visitor
+                  Directory Listed
                 </p>
                 <div className="mt-1 flex items-baseline justify-between">
                   <h3 className="font-display text-[32px] sm:text-4xl font-black tracking-tight text-slate-900 leading-none">
-                    14.987
+                    {listedCount}
                   </h3>
                   <span className="text-[11px] font-medium text-slate-400">
-                    Users vs last month
+                    {totalConsultations} total consults
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Card 4: Total Sold Products / Featured Astrologers (White Card) */}
+            {/* Card 4: Featured Astrologers (White Card) */}
             <div
               role="button"
               tabIndex={0}
@@ -547,57 +462,60 @@ export default function DashboardPage() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex size-11 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 transition-transform group-hover:scale-110">
-                  <Truck className="size-5 stroke-[2.2]" />
+                  <Star className="size-5 stroke-[2.2]" />
                 </div>
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#3CFE8A]/25 px-2.5 py-0.5 text-[11px] font-bold text-[#059669] shadow-sm">
-                  +12,1%
+                  Verified
                 </span>
               </div>
 
               <div className="mt-4">
                 <p className="text-xs font-semibold text-slate-400">
-                  Total Sold Products
+                  Featured Specialists
                 </p>
                 <div className="mt-1 flex items-baseline justify-between">
                   <h3 className="font-display text-[32px] sm:text-4xl font-black tracking-tight text-slate-900 leading-none">
-                    12.987
+                    {featuredCount}
                   </h3>
                   <span className="text-[11px] font-medium text-slate-400">
-                    Products vs last month
+                    Promoted on Home
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Customer Habits (Clustered Column Chart) */}
+          {/* Astrologer Service Delivery & Consultations Chart */}
           <div className="rounded-[28px] bg-white p-6 sm:p-7 border border-slate-100/90 shadow-[0_12px_32px_rgba(20,25,45,0.03)]">
             {/* Header */}
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="font-display text-base sm:text-lg font-bold text-slate-900">
-                  Customer Habbits
+                  Service Hours & Delivery
                 </h3>
                 <p className="text-xs font-medium text-slate-400">
-                  Track your customer habbits
+                  Live minutes delivered across chat, call, and video modes
                 </p>
 
-                {/* Legend: Seen product (Grey) & Sales (Blue) */}
+                {/* Legend: Chat (Gold) & Call (Emerald) & Video (Purple) */}
                 <div className="mt-3 flex items-center gap-4 text-xs font-bold text-slate-600">
                   <div className="flex items-center gap-2">
-                    <span className="size-2.5 rounded-full bg-[#D7DBE7]" />
-                    <span>Seen product</span>
+                    <span className="size-2.5 rounded-full bg-[#F59E0B]" />
+                    <span>Chat ({totalChatMins}m)</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="size-2.5 rounded-full bg-[#F59E0B]" />
-                    <span>Sales</span>
+                    <span className="size-2.5 rounded-full bg-emerald-500" />
+                    <span>Call ({totalCallMins}m)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="size-2.5 rounded-full bg-purple-500" />
+                    <span>Video ({totalVideoMins}m)</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm cursor-pointer hover:bg-slate-50">
-                <span>This year</span>
-                <ChevronDown className="size-3 text-slate-400" />
+              <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
+                <span>{totalServiceHours} Total Hours</span>
               </div>
             </div>
 
@@ -606,117 +524,148 @@ export default function DashboardPage() {
               {/* Horizontal Gridlines */}
               <div className="absolute inset-x-0 top-8 bottom-10 flex flex-col justify-between pointer-events-none text-[11px] font-semibold text-slate-400">
                 <div className="flex items-center gap-3 border-b border-dashed border-slate-200/80 pb-1">
-                  <span className="w-7 text-right">60K</span>
+                  <span className="w-10 text-right">500m</span>
                   <div className="w-full" />
                 </div>
                 <div className="flex items-center gap-3 border-b border-dashed border-slate-200/80 pb-1">
-                  <span className="w-7 text-right">40K</span>
+                  <span className="w-10 text-right">250m</span>
                   <div className="w-full" />
                 </div>
                 <div className="flex items-center gap-3 border-b border-dashed border-slate-200/80 pb-1">
-                  <span className="w-7 text-right">20K</span>
+                  <span className="w-10 text-right">100m</span>
                   <div className="w-full" />
                 </div>
                 <div className="flex items-center gap-3 border-b border-dashed border-slate-200/80 pb-1">
-                  <span className="w-7 text-right">10K</span>
-                  <div className="w-full" />
-                </div>
-                <div className="flex items-center gap-3 pb-1">
-                  <span className="w-7 text-right">0K</span>
+                  <span className="w-10 text-right">0m</span>
                   <div className="w-full" />
                 </div>
               </div>
 
-              {/* Clustered Bars (2 bars per month: Grey and Blue) */}
-              <div className="relative z-10 ml-10 flex h-64 items-end justify-between px-1 sm:px-4">
-                {clusteredMonthsData.map((item, idx) => {
-                  const isHoveredOrPinned = activeBarIdx === idx;
-                  return (
-                    <div
-                      key={item.month}
-                      className="group relative flex flex-col items-center justify-end h-full cursor-pointer"
-                      onClick={() => setActiveBarIdx(idx)}
-                      onMouseEnter={() => setActiveBarIdx(idx)}
-                    >
-                      {/* DealDeck Black High-Contrast Tooltip */}
-                      {isHoveredOrPinned && (
-                        <div className="absolute -top-20 left-1/2 -translate-x-1/2 z-40 flex flex-col gap-1 rounded-2xl bg-[#0F172A] px-4 py-2.5 text-white shadow-2xl border border-slate-700/80 animate-in fade-in zoom-in-95 pointer-events-none min-w-[145px]">
-                          <div className="flex items-center gap-2 text-[11px] font-semibold">
-                            <span className="size-2 rounded-full bg-white" />
-                            <span className="font-bold text-white">{item.chatLabel} Products</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-[11px] font-semibold">
-                            <span className="size-2 rounded-full bg-[#F59E0B]" />
-                            <span className="font-bold text-white">{item.callLabel} Products</span>
-                          </div>
-                          {/* Triangle Pointer */}
-                          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 size-3 rotate-45 bg-[#0F172A] border-r border-b border-slate-700/80" />
-                        </div>
-                      )}
+              {/* Real Astrologer Service Delivery Bars */}
+              <div className="relative z-10 ml-12 flex h-64 items-end justify-around px-2 sm:px-6">
+                {astrologerServiceBars.length === 0 ? (
+                  <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">
+                    No active astrologers found
+                  </div>
+                ) : (
+                  astrologerServiceBars.map((item, idx) => {
+                    const isHoveredOrPinned = activeBarIdx === idx;
+                    const maxScale = Math.max(500, ...astrologerServiceBars.map((b) => Math.max(b.chat, b.calls, b.video, 1)));
+                    const chatHeight = Math.max(6, Math.min(220, (item.chat / maxScale) * 220));
+                    const callHeight = Math.max(6, Math.min(220, (item.calls / maxScale) * 220));
+                    const videoHeight = Math.max(6, Math.min(220, (item.video / maxScale) * 220));
 
-                      {/* 2 Clustered Bars: Grey then Blue */}
-                      <div className="flex items-end gap-1 sm:gap-1.5 transition-transform duration-200 group-hover:scale-105">
-                        {/* Bar 1: Grey / Seen product */}
-                        <div
-                          style={{ height: `${item.calls * 2.3}px` }}
-                          className="w-3 sm:w-4 rounded-t-lg bg-[#D7DBE7] transition-all duration-300 group-hover:bg-[#CBD2E1]"
-                        />
-                        {/* Bar 2: Royal Gold / Sales */}
-                        <div
-                          style={{ height: `${item.chat * 2.3}px` }}
-                          className={`w-3 sm:w-4 rounded-t-lg bg-[#F59E0B] transition-all duration-300 ${
-                            isHoveredOrPinned ? "shadow-[0_0_12px_rgba(245,158,11,0.6)]" : ""
-                          }`}
-                        />
-                      </div>
-
-                      {/* Month Label */}
-                      <span
-                        className={`mt-3 text-xs font-bold transition-colors ${
-                          isHoveredOrPinned ? "text-[#D97706]" : "text-slate-400"
-                        }`}
+                    return (
+                      <div
+                        key={item.name + idx}
+                        className="group relative flex flex-col items-center justify-end h-full cursor-pointer"
+                        onClick={() => setActiveBarIdx(idx)}
+                        onMouseEnter={() => setActiveBarIdx(idx)}
                       >
-                        {item.month}
-                      </span>
-                    </div>
-                  );
-                })}
+                        {/* High-Contrast Tooltip */}
+                        {isHoveredOrPinned && (
+                          <div className="absolute -top-24 left-1/2 -translate-x-1/2 z-40 flex flex-col gap-1 rounded-2xl bg-[#0F172A] px-4 py-2.5 text-white shadow-2xl border border-slate-700/80 animate-in fade-in zoom-in-95 pointer-events-none min-w-[170px]">
+                            <div className="font-bold text-xs text-white border-b border-slate-700/80 pb-1">
+                              {item.name}
+                            </div>
+                            <div className="flex items-center justify-between gap-2 text-[11px] font-semibold mt-1">
+                              <span className="flex items-center gap-1.5 text-amber-400">
+                                <span className="size-2 rounded-full bg-amber-400" />
+                                Chat
+                              </span>
+                              <span>{item.chatLabel}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2 text-[11px] font-semibold">
+                              <span className="flex items-center gap-1.5 text-emerald-400">
+                                <span className="size-2 rounded-full bg-emerald-400" />
+                                Call
+                              </span>
+                              <span>{item.callLabel}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2 text-[11px] font-semibold">
+                              <span className="flex items-center gap-1.5 text-purple-400">
+                                <span className="size-2 rounded-full bg-purple-400" />
+                                Video
+                              </span>
+                              <span>{item.videoLabel}</span>
+                            </div>
+                            <div className="mt-1 flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-800">
+                              <span>Consults: {item.consultations}</span>
+                              <span>Rating: {item.rating} ★</span>
+                            </div>
+                            {/* Triangle Pointer */}
+                            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 size-3 rotate-45 bg-[#0F172A] border-r border-b border-slate-700/80" />
+                          </div>
+                        )}
+
+                        {/* 3 Real Bars per Specialist: Chat (Gold), Call (Emerald), Video (Purple) */}
+                        <div className="flex items-end gap-1.5 transition-transform duration-200 group-hover:scale-105">
+                          {/* Bar 1: Chat / Gold */}
+                          <div
+                            style={{ height: `${chatHeight}px` }}
+                            className={`w-3.5 sm:w-5 rounded-t-lg bg-[#F59E0B] transition-all duration-300 ${
+                              isHoveredOrPinned ? "shadow-[0_0_12px_rgba(245,158,11,0.6)]" : ""
+                            }`}
+                          />
+                          {/* Bar 2: Call / Emerald */}
+                          <div
+                            style={{ height: `${callHeight}px` }}
+                            className="w-3.5 sm:w-5 rounded-t-lg bg-emerald-500 transition-all duration-300 group-hover:bg-emerald-400"
+                          />
+                          {/* Bar 3: Video / Purple */}
+                          <div
+                            style={{ height: `${videoHeight}px` }}
+                            className="w-3.5 sm:w-5 rounded-t-lg bg-purple-500 transition-all duration-300 group-hover:bg-purple-400"
+                          />
+                        </div>
+
+                        {/* Specialist Name */}
+                        <span
+                          className={`mt-3 text-xs font-bold transition-colors truncate max-w-[90px] sm:max-w-[120px] ${
+                            isHoveredOrPinned ? "text-[#D97706]" : "text-slate-400"
+                          }`}
+                        >
+                          {item.name}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── RIGHT COLUMN (5 COLS): PRODUCT STATISTIC + CUSTOMER GROWTH ── */}
+        {/* ── RIGHT COLUMN (5 COLS): SPECIALISATION BREAKDOWN + LANGUAGE MATRIX ── */}
         <div className="space-y-6 xl:col-span-5 flex flex-col">
-          {/* Card 1: Product Statistic (Multi-Ring Radial Chart) */}
+          {/* Card 1: Astrological Specialisation Breakdown (Radial Chart) */}
           <div className="rounded-[28px] bg-white p-6 sm:p-7 border border-slate-100/90 shadow-[0_12px_32px_rgba(20,25,45,0.03)] flex flex-col justify-between">
             {/* Header */}
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-display text-base sm:text-lg font-bold text-slate-900">
-                  Product Statistic
+                  Specialisation Breakdown
                 </h3>
                 <p className="text-xs font-medium text-slate-400">
-                  Track your product sales
+                  Verified Vedic & occult domain coverage
                 </p>
               </div>
 
-              <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm cursor-pointer hover:bg-slate-50">
-                <span>Today</span>
-                <ChevronDown className="size-3 text-slate-400" />
+              <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
+                <span>{totalSkills} Skills</span>
               </div>
             </div>
 
             {/* Radial Chart + Big Stat Block */}
             <div className="my-6 flex items-center justify-between gap-6">
-              {/* Concentric Multi-Ring SVG (Blue, Coral/Red, Slate) */}
+              {/* Concentric Multi-Ring SVG (Gold, Coral, Emerald) */}
               <div className="relative flex size-44 shrink-0 items-center justify-center">
                 <svg
                   className="size-40 -rotate-90 transition-all duration-700"
                   viewBox="0 0 160 160"
                   fill="none"
                 >
-                  {/* Outer Ring (Gold #F59E0B) */}
+                  {/* Outer Ring: Vedic Astrology */}
                   <circle cx="80" cy="80" r="64" stroke="#F1F5F9" strokeWidth="9" />
                   <circle
                     cx="80"
@@ -725,12 +674,12 @@ export default function DashboardPage() {
                     stroke="#F59E0B"
                     strokeWidth="9"
                     strokeDasharray={2 * Math.PI * 64}
-                    strokeDashoffset={2 * Math.PI * 64 * 0.28}
+                    strokeDashoffset={2 * Math.PI * 64 * (1 - Math.max(0.1, vedicPct / 100))}
                     strokeLinecap="round"
                     className="transition-all duration-1000 ease-out"
                   />
 
-                  {/* Middle Ring (Coral/Red #EF4444) */}
+                  {/* Middle Ring: Tarot & Palmistry */}
                   <circle cx="80" cy="80" r="48" stroke="#F1F5F9" strokeWidth="9" />
                   <circle
                     cx="80"
@@ -739,21 +688,21 @@ export default function DashboardPage() {
                     stroke="#EF4444"
                     strokeWidth="9"
                     strokeDasharray={2 * Math.PI * 48}
-                    strokeDashoffset={2 * Math.PI * 48 * 0.46}
+                    strokeDashoffset={2 * Math.PI * 48 * (1 - Math.max(0.1, tarotPct / 100))}
                     strokeLinecap="round"
                     className="transition-all duration-1000 ease-out"
                   />
 
-                  {/* Inner Ring (Slate #CBD5E1) */}
+                  {/* Inner Ring: Numerology & Vastu */}
                   <circle cx="80" cy="80" r="32" stroke="#F1F5F9" strokeWidth="9" />
                   <circle
                     cx="80"
                     cy="80"
                     r="32"
-                    stroke="#CBD5E1"
+                    stroke="#10B981"
                     strokeWidth="9"
                     strokeDasharray={2 * Math.PI * 32}
-                    strokeDashoffset={2 * Math.PI * 32 * 0.62}
+                    strokeDashoffset={2 * Math.PI * 32 * (1 - Math.max(0.1, numerologyPct / 100))}
                     strokeLinecap="round"
                     className="transition-all duration-1000 ease-out"
                   />
@@ -763,179 +712,158 @@ export default function DashboardPage() {
               {/* Big Stat Block */}
               <div className="flex flex-col items-start space-y-1.5">
                 <span className="font-display text-4xl font-black tracking-tight text-slate-900 leading-none">
-                  9.829
+                  {totalSkills}
                 </span>
                 <p className="text-xs font-semibold text-slate-400">
-                  Products Sales
+                  Domain Skills Mapped
                 </p>
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#3CFE8A]/25 px-2.5 py-0.5 text-xs font-bold text-[#059669]">
-                  <TrendingUp className="size-3 stroke-[2.5]" />
-                  +5,34%
+                  <CheckCircle2 className="size-3 stroke-[2.5]" />
+                  {list.length} Verified Astrologers
                 </span>
               </div>
             </div>
 
             {/* Category Rows with Category Icon, Label, Value and Pill */}
             <div className="space-y-3.5 border-t border-slate-100 pt-5">
-              {/* Electronic */}
+              {/* Vedic & Kundli */}
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-7 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
-                    <Sparkles className="size-4 text-[#D97706]" />
+                  <div className="flex size-7 items-center justify-center rounded-lg bg-amber-50 text-[#D97706]">
+                    <Sparkles className="size-4" />
                   </div>
-                  <span className="font-bold text-slate-800">Electronic</span>
+                  <span className="font-bold text-slate-800">Vedic & Kundli</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-extrabold text-slate-900">2.487</span>
-                  <span className="rounded-full bg-[#3CFE8A]/25 px-2 py-0.5 text-[10px] font-bold text-[#059669]">
-                    +1,8%
+                  <span className="font-extrabold text-slate-900">{vedicCount}</span>
+                  <span className="rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[10px] font-bold">
+                    {vedicPct}%
                   </span>
                 </div>
               </div>
 
-              {/* Games */}
+              {/* Tarot & Palmistry */}
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-7 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
-                    <Star className="size-4 text-emerald-500" />
+                  <div className="flex size-7 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
+                    <Star className="size-4" />
                   </div>
-                  <span className="font-bold text-slate-800">Games</span>
+                  <span className="font-bold text-slate-800">Tarot & Palmistry</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-extrabold text-slate-900">1.828</span>
-                  <span className="rounded-full bg-[#3CFE8A]/25 px-2 py-0.5 text-[10px] font-bold text-[#059669]">
-                    +2,3%
+                  <span className="font-extrabold text-slate-900">{tarotCount}</span>
+                  <span className="rounded-full bg-rose-50 text-rose-700 px-2 py-0.5 text-[10px] font-bold">
+                    {tarotPct}%
                   </span>
                 </div>
               </div>
 
-              {/* Furniture */}
+              {/* Numerology & Vastu */}
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-7 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
-                    <Layers className="size-4 text-amber-500" />
+                  <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                    <Layers className="size-4" />
                   </div>
-                  <span className="font-bold text-slate-800">Furniture</span>
+                  <span className="font-bold text-slate-800">Numerology & Vastu</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-extrabold text-slate-900">1.463</span>
-                  <span className="rounded-full bg-[#FF5C5C]/20 px-2 py-0.5 text-[10px] font-bold text-[#DC2626]">
-                    -1,04%
+                  <span className="font-extrabold text-slate-900">{numerologyCount}</span>
+                  <span className="rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[10px] font-bold">
+                    {numerologyPct}%
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Card 2: Customer Growth (Packed Bubbles + Country Progress Bars) */}
+          {/* Card 2: Astrologer Language Matrix & Consultation Modes */}
           <div className="rounded-[28px] bg-white p-6 sm:p-7 border border-slate-100/90 shadow-[0_12px_32px_rgba(20,25,45,0.03)] flex flex-col justify-between">
             {/* Header */}
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-display text-base sm:text-lg font-bold text-slate-900">
-                  Customer Growth
+                  Languages & Modes Matrix
                 </h3>
                 <p className="text-xs font-medium text-slate-400">
-                  Track customer by locations
+                  Multilingual and multi-modal consultation delivery
                 </p>
               </div>
 
-              <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm cursor-pointer hover:bg-slate-50">
-                <span>Today</span>
-                <ChevronDown className="size-3 text-slate-400" />
+              <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
+                <span>{languageBreakdown.length} Languages</span>
               </div>
             </div>
 
-            {/* Split Content: Left Packed Bubbles + Right Country Progress Bars */}
+            {/* Split Content: Left Mode Bubbles + Right Language Progress Bars */}
             <div className="my-5 grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
-              {/* Left (5 cols): Overlapping Packed Bubbles */}
+              {/* Left (5 cols): Overlapping Mode Bubbles */}
               <div className="sm:col-span-5 relative h-48 w-full flex items-center justify-center">
-                {/* Bubble 1 (Top-Right): 2.417 Deep Gold */}
+                {/* Bubble 1: Chat Mode */}
                 <div
                   className="absolute top-1 right-2 sm:right-3 size-20 sm:size-22 rounded-full bg-gradient-to-br from-[#B45309] to-[#D97706] shadow-[0_8px_20px_rgba(217,119,6,0.35)] flex flex-col items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform z-20 group"
-                  title="2.417 Direct Inquiries"
+                  title={`${chatModeCount} Astrologers offer Chat`}
                 >
-                  <span className="font-black text-sm sm:text-base leading-none">2.417</span>
+                  <MessageSquare className="size-4 mb-0.5 opacity-90" />
+                  <span className="font-black text-sm sm:text-base leading-none">{chatModeCount}</span>
+                  <span className="text-[9px] font-semibold opacity-90">Chat</span>
                 </div>
 
-                {/* Bubble 2 (Bottom-Left): 2.281 Electric Amber */}
+                {/* Bubble 2: Call Mode */}
                 <div
-                  className="absolute bottom-1 left-2 sm:left-3 size-22 sm:size-24 rounded-full bg-gradient-to-br from-[#D97706] to-[#F59E0B] shadow-[0_8px_22px_rgba(245,158,11,0.4)] flex flex-col items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform z-30 group"
-                  title="2.281 Live Consultations"
+                  className="absolute bottom-1 left-2 sm:left-3 size-22 sm:size-24 rounded-full bg-gradient-to-br from-emerald-600 to-teal-600 shadow-[0_8px_22px_rgba(5,150,105,0.4)] flex flex-col items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform z-30 group"
+                  title={`${callModeCount} Astrologers offer Voice Call`}
                 >
-                  <span className="font-black text-base sm:text-lg leading-none">2.281</span>
+                  <PhoneCall className="size-4 mb-0.5 opacity-90" />
+                  <span className="font-black text-base sm:text-lg leading-none">{callModeCount}</span>
+                  <span className="text-[9px] font-semibold opacity-90">Voice Call</span>
                 </div>
 
-                {/* Bubble 3 (Bottom-Right): 812 Warm Gold */}
+                {/* Bubble 3: Video Mode */}
                 <div
-                  className="absolute bottom-2 right-4 sm:right-6 size-15 sm:size-16 rounded-full bg-gradient-to-br from-[#F59E0B] to-[#FBBF24] shadow-[0_6px_16px_rgba(245,158,11,0.3)] flex flex-col items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform z-10 group"
-                  title="812 Consultations"
+                  className="absolute bottom-2 right-4 sm:right-6 size-15 sm:size-16 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 shadow-[0_6px_16px_rgba(147,51,234,0.3)] flex flex-col items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform z-10 group"
+                  title={`${videoModeCount} Astrologers offer Video`}
                 >
-                  <span className="font-bold text-xs sm:text-sm leading-none">812</span>
+                  <Video className="size-3.5 mb-0.5 opacity-90" />
+                  <span className="font-bold text-xs sm:text-sm leading-none">{videoModeCount}</span>
+                  <span className="text-[8px] font-semibold opacity-90">Video</span>
                 </div>
 
-                {/* Bubble 4 (Top-Left): 287 Soft Blue */}
+                {/* Bubble 4: Online Now */}
                 <div
-                  className="absolute top-4 left-5 sm:left-6 size-13 sm:size-14 rounded-full bg-[#93C5FD] shadow-sm flex flex-col items-center justify-center text-slate-900 cursor-pointer hover:scale-105 transition-transform z-10 group"
-                  title="287 Global NRI"
+                  className="absolute top-4 left-5 sm:left-6 size-13 sm:size-14 rounded-full bg-amber-400 shadow-sm flex flex-col items-center justify-center text-slate-900 cursor-pointer hover:scale-105 transition-transform z-10 group"
+                  title={`${onlineCount} Currently Online`}
                 >
-                  <span className="font-extrabold text-xs leading-none">287</span>
+                  <Activity className="size-3 mb-0.5" />
+                  <span className="font-extrabold text-xs leading-none">{onlineCount}</span>
+                  <span className="text-[8px] font-bold">Online</span>
                 </div>
               </div>
 
-              {/* Right (7 cols): Country Flags with Horizontal Progress Bars */}
-              <div className="sm:col-span-7 space-y-3.5 pl-0 sm:pl-2">
-                {/* United States */}
-                <div className="space-y-1 group">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-800">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base leading-none">🇺🇸</span>
-                      <span className="group-hover:text-[#D97706] transition-colors">United States</span>
+              {/* Right (7 cols): Language Distribution with Progress Bars */}
+              <div className="sm:col-span-7 space-y-3 pl-0 sm:pl-2">
+                {languageBreakdown.length === 0 ? (
+                  <div className="text-xs text-slate-400">No language data available</div>
+                ) : (
+                  languageBreakdown.slice(0, 4).map((lang) => (
+                    <div key={lang.name} className="space-y-1 group">
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base leading-none">{lang.flag}</span>
+                          <span className="group-hover:text-[#D97706] transition-colors">{lang.name}</span>
+                        </div>
+                        <span className="text-[11px] font-semibold text-slate-500">
+                          {lang.count} ({lang.pct}%)
+                        </span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                        <div
+                          style={{ width: `${Math.max(10, lang.pct)}%` }}
+                          className="h-full rounded-full bg-gradient-to-r from-[#D97706] to-[#F59E0B] transition-all duration-700"
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                    <div className="h-full w-[85%] rounded-full bg-gradient-to-r from-[#D97706] to-[#F59E0B] transition-all duration-700" />
-                  </div>
-                </div>
-
-                {/* Germany */}
-                <div className="space-y-1 group">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-800">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base leading-none">🇩🇪</span>
-                      <span className="group-hover:text-[#D97706] transition-colors">Germany</span>
-                    </div>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                    <div className="h-full w-[68%] rounded-full bg-gradient-to-r from-[#D97706] to-[#F59E0B] transition-all duration-700" />
-                  </div>
-                </div>
-
-                {/* Australia */}
-                <div className="space-y-1 group">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-800">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base leading-none">🇦🇺</span>
-                      <span className="group-hover:text-[#D97706] transition-colors">Australia</span>
-                    </div>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                    <div className="h-full w-[54%] rounded-full bg-gradient-to-r from-[#D97706] to-[#F59E0B] transition-all duration-700" />
-                  </div>
-                </div>
-
-                {/* France */}
-                <div className="space-y-1 group">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-800">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base leading-none">🇫🇷</span>
-                      <span className="group-hover:text-[#D97706] transition-colors">France</span>
-                    </div>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                    <div className="h-full w-[38%] rounded-full bg-gradient-to-r from-[#D97706] to-[#F59E0B] transition-all duration-700" />
-                  </div>
-                </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -1051,12 +979,12 @@ export default function DashboardPage() {
                     </td>
 
                     <td className="py-4 px-3 font-semibold text-slate-700">
-                      {astrologer.experience_years ? `${astrologer.experience_years} years` : "10+ years"}
+                      {astrologer.experience_years ? `${astrologer.experience_years} yrs` : "0 yrs"}
                     </td>
 
                     <td className="py-4 px-3">
                       <span className="font-extrabold text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
-                        {astrologer.rates?.chat_coins_per_minute ?? 20} coins/min
+                        {astrologer.rates?.chat_coins_per_minute !== undefined ? `${astrologer.rates.chat_coins_per_minute} coins/min` : "—"}
                       </span>
                     </td>
 

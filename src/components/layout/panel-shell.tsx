@@ -170,10 +170,15 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
 
         <div className={cn("space-y-1", isIconOnly && "flex flex-col items-center")}>
           {items.map((item) => {
-            const isActive =
-              item.href === "/dashboard" || item.href === "/me"
-                ? pathname === item.href
-                : pathname === item.href || pathname.startsWith(item.href + "/");
+            const isExactOnly =
+              item.href === "/dashboard" ||
+              item.href === "/me" ||
+              item.href === "/courses" ||
+              item.href === "/purohit-dashboard";
+
+            const isActive = isExactOnly
+              ? pathname === item.href
+              : pathname === item.href || pathname.startsWith(item.href + "/");
 
             if (isIconOnly) {
               return (

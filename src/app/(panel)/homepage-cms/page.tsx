@@ -66,7 +66,7 @@ const DEFAULT_SLIDES: HeroSlideConfig[] = [
     cta_text: "Generate Free Kundli",
     cta_link: "/kundli",
     badge_text: "100% Free & Accurate Kundli",
-    badge_rating: "500k+ Created",
+    badge_rating: "Swiss Ephemeris",
     image_url: "/images/readings-kundli.jpg",
     bg_gradient: "from-[#fff9e6] via-[#fff3cc] to-[#fde5a3]",
     border_color: "border-[#e8ce6b]",
@@ -92,7 +92,7 @@ const DEFAULT_SLIDES: HeroSlideConfig[] = [
     cta_text: "Start Palm Reading",
     cta_link: "/palm-reading",
     badge_text: "Next-Gen 3D Biometrics",
-    badge_rating: "99% Precision",
+    badge_rating: "3D Palmistry",
     image_url: "/images/readings-spirituality.jpg",
     bg_gradient: "from-[#f3faf6] via-[#e2f5ec] to-[#c7eedb]",
     border_color: "border-[#93dab7]",
@@ -147,9 +147,9 @@ const DEFAULT_CMS_DATA: HomePageCMSData = {
     { title: "Houses", subtitle: "READ MORE", link: "/kp-calculator", icon: "houses" },
   ],
   trust_stats: [
-    { value: "500+", label: "VERIFIED ASTROLOGERS" },
-    { value: "50K+", label: "HAPPY CONSULTATIONS" },
-    { value: "4.8★", label: "AVERAGE CLIENT RATING" },
+    { value: "100%", label: "VERIFIED JYOTISHIS" },
+    { value: "SWISS", label: "EPHEMERIS PRECISION" },
+    { value: "24×7", label: "PRIVATE & ENCRYPTED" },
   ],
   services_eyebrow: "What we offer",
   services_title: "What you can ask about",
@@ -896,7 +896,7 @@ export default function HomepageCMSPage() {
                       <Input
                         value={stat.value}
                         onChange={(e) => updateStat(idx, "value", e.target.value)}
-                        placeholder="500+"
+                        placeholder="100%"
                         className="font-bold font-mono text-base"
                       />
                     </Field>
@@ -904,7 +904,7 @@ export default function HomepageCMSPage() {
                       <Input
                         value={stat.label}
                         onChange={(e) => updateStat(idx, "label", e.target.value)}
-                        placeholder="VERIFIED ASTROLOGERS"
+                        placeholder="VERIFIED JYOTISHIS"
                       />
                     </Field>
                   </div>

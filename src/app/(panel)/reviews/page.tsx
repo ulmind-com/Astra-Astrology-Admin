@@ -94,9 +94,9 @@ export default function AstrologerReviewsPage() {
 
   const reviewData = reviewsQuery.data;
   const items: Review[] = (reviewData?.items as Review[]) || [];
-  const summary = reviewData?.summary || { average: 5.0, count: 0, breakdown: {} };
-  const totalCount = summary.count || items.length;
-  const avgRating = summary.average ? Number(summary.average.toFixed(1)) : 5.0;
+  const summary = reviewData?.summary || { average: 0, count: 0, breakdown: {} };
+  const totalCount = summary.count ?? items.length;
+  const avgRating = totalCount > 0 && summary.average ? Number(summary.average.toFixed(1)) : 0;
 
   // Breakdown counts for 5 down to 1
   const breakdown: Record<number, number> = {
