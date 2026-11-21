@@ -1119,6 +1119,8 @@ export interface AdminCourseOrder {
   failure_reason?: string | null;
   verified_via?: string | null;
   paid_at?: string | null;
+  invoice_number?: string | null;
+  invoice_email_sent?: boolean;
   created_at: string;
 }
 
@@ -1155,6 +1157,7 @@ export interface AdminCourseEnrollment {
   certificate_id?: string | null;
   certificate_url?: string | null;
   certificate_issued_at?: string | null;
+  invoice_number?: string | null;
   enrolled_at: string;
   expires_at?: string | null;
   is_expired?: boolean;
@@ -1205,6 +1208,7 @@ export interface AdminCourseLearnerDetail {
   certificate_id?: string | null;
   certificate_url?: string | null;
   certificate_issued_at?: string | null;
+  invoice_number?: string | null;
   last_accessed_at: string;
   sections: AdminCourseLearnerProgressSection[];
 }
