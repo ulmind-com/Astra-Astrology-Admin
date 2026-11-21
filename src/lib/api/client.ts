@@ -149,7 +149,7 @@ async function refreshSession(): Promise<boolean> {
 type Sent = { response: Response; payload: unknown };
 
 async function send(path: string, options: Options): Promise<Sent> {
-  const { method = "GET", body, query, auth = true, ...rest } = options;
+  const { method = "GET", body, query, auth = true, signal: callerSignal, ...rest } = options;
 
   const headers = new Headers(rest.headers);
   const isFormData = body instanceof FormData;
@@ -159,20 +159,41 @@ async function send(path: string, options: Options): Promise<Sent> {
     if (token) headers.set("Authorization", `Bearer ${token}`);
   }
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 45000);
+  if (callerSignal) {
+    if (callerSignal.aborted) {
+      controller.abort();
+    } else {
+      callerSignal.addEventListener("abort", () => controller.abort(), { once: true });
+    }
+  }
+
   let response: Response;
   try {
     response = await fetch(buildUrl(path, query), {
       ...rest,
       method,
       headers,
+      signal: controller.signal,
       body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
     });
-  } catch {
+  } catch (err) {
+    const aborted = err instanceof Error && err.name === "AbortError";
+    if (aborted && !callerSignal?.aborted) {
+      throw new ApiError(
+        "The server took too long to respond. Please try again.",
+        0,
+        "timeout",
+      );
+    }
     throw new ApiError(
       "Could not reach the server. Check your connection and try again.",
       0,
       "network_error",
     );
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   if (response.status === 204) return { response, payload: null };
@@ -186,26 +207,48 @@ async function send(path: string, options: Options): Promise<Sent> {
   return { response, payload };
 }
 
-/** One request, with a single retry after refreshing an expired token. */
+/** One request, with a single retry after refreshing an expired token or transient gateway blip. */
 async function sendWithRefresh(path: string, options: Options): Promise<Sent> {
-  const sent = await send(path, options);
-  const { response } = sent;
+  const method = options.method ?? "GET";
+  const isSafeMethod = method === "GET";
+  let sent: Sent;
+
+  try {
+    sent = await send(path, options);
+  } catch (err) {
+    if (isSafeMethod && err instanceof ApiError && (err.code === "timeout" || err.code === "network_error")) {
+      // Automatic retry for sleeping/waking Render backend
+      await new Promise((r) => setTimeout(r, 1000));
+      sent = await send(path, options);
+    } else {
+      throw err;
+    }
+  }
+
+  let { response } = sent;
   const auth = options.auth ?? true;
+
+  // Transient failover / 503 / 502 / 504 auto-retry:
+  const is503 = response.status === 503;
+  const isGateway = response.status === 502 || response.status === 504;
+  const code = (sent.payload as ApiErrorBody | null)?.error_code;
+
+  if ((isSafeMethod && (is503 || isGateway)) || code === "database_unavailable") {
+    await new Promise((r) => setTimeout(r, 800));
+    sent = await send(path, options);
+    response = sent.response;
+    if (response.ok) return sent;
+  }
 
   if (response.ok || response.status !== 401 || !auth) return sent;
 
-  const code = (sent.payload as ApiErrorBody | null)?.error_code;
-  if (code && CREDENTIAL_CODES.has(code)) return sent;
+  const errCode = (sent.payload as ApiErrorBody | null)?.error_code;
+  if (errCode && CREDENTIAL_CODES.has(errCode)) return sent;
   if (!session.refreshToken) return sent;
 
   const refreshed = await refreshSession();
   if (refreshed) return send(path, options);
 
-  // The refresh token is gone too, so this session is over. Clear it and try
-  // once more as a visitor: the catalogue and other open pages must still
-  // render rather than showing an error to someone who simply came back
-  // after a month. A page that genuinely needs an account answers 401 again,
-  // which is what it would have done anyway.
   session.clear();
   onUnauthorized.forEach((fn) => fn());
   return send(path, { ...options, auth: false });
