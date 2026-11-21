@@ -266,108 +266,110 @@ export function FeaturePricingCard({ settings }: { settings: PlatformSettings })
   }
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>
-          <span className="flex items-center gap-2">
-            <Sparkles className="size-4 text-brand-600" />
-            Feature Coin Pricing & Controls (ফিচার কয়েন কন্ট্রোল)
-          </span>
-        </CardTitle>
-        <CardDescription>
-          Set how many coins a user must spend per calculation. Setting <strong>0 coins</strong> makes the feature completely free.
-        </CardDescription>
-      </CardHeader>
+    <div className="mb-6 rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Sparkles className="size-5 text-amber-500" />
+            <span>Feature Coin Pricing & Controls (ফিচার কয়েন কন্ট্রোল)</span>
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Set how many coins a user must spend per calculation. Setting <strong className="text-emerald-600 font-bold">0 coins</strong> makes the feature completely free.
+          </p>
+        </div>
+      </div>
 
-      <CardBody>
-        <form onSubmit={submit} className="space-y-6">
-          <div className="divide-y divide-border rounded-xl border border-border bg-surface/50">
-            {FEATURES.map((feat) => {
-              const Icon = feat.icon;
-              const current = form[feat.id] || { coins: "0", enabled: true };
-              const coinNumber = Number(current.coins);
-              const isFree = coinNumber === 0;
+      <form onSubmit={submit} className="space-y-6">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800/80 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 overflow-hidden">
+          {FEATURES.map((feat) => {
+            const Icon = feat.icon;
+            const current = form[feat.id] || { coins: "0", enabled: true };
+            const coinNumber = Number(current.coins);
+            const isFree = coinNumber === 0;
 
-              return (
-                <div
-                  key={feat.id}
-                  className="flex flex-col gap-4 p-4 transition-colors sm:flex-row sm:items-center sm:justify-between hover:bg-surface-muted/30"
-                >
-                  {/* Left: Icon, Name & Description */}
-                  <div className="flex items-start gap-3.5">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:border-brand-800">
-                      <Icon className="size-5" />
-                    </div>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold text-foreground">{feat.name}</span>
-                        <span className="text-xs text-muted-foreground font-serif">
-                          ({feat.bengaliName})
-                        </span>
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[11px] font-bold border ${
-                            !current.enabled
-                              ? "bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/40 dark:text-rose-300"
-                              : isFree
-                              ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300"
-                              : "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300"
-                          }`}
-                        >
-                          {!current.enabled
-                            ? "Disabled"
-                            : isFree
-                            ? "Free (বিনামূল্যে)"
-                            : `${coinNumber} ${coinWord(coinNumber)}`}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground max-w-xl">
-                        {feat.description}
-                      </p>
-                    </div>
+            return (
+              <div
+                key={feat.id}
+                className="flex flex-col gap-4 p-4 transition-colors sm:flex-row sm:items-center sm:justify-between hover:bg-amber-50/30 dark:hover:bg-slate-800/40"
+              >
+                {/* Left: Icon, Name & Description */}
+                <div className="flex items-start gap-3.5">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-amber-200/80 dark:border-amber-800/60 bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 shadow-inner">
+                    <Icon className="size-5" />
                   </div>
-
-                  {/* Right: Controls (Coins Input & Enable Toggle) */}
-                  <div className="flex items-center gap-4 self-end sm:self-center">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-                        Coins:
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold text-slate-900 dark:text-white text-sm">{feat.name}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-serif">
+                        ({feat.bengaliName})
                       </span>
-                      <Input
-                        type="number"
-                        min={0}
-                        step={1}
-                        value={current.coins}
-                        onChange={(e) => handleCoinChange(feat.id, e.target.value)}
-                        className="w-24 text-center font-bold"
-                      />
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-black border tracking-wide ${
+                          !current.enabled
+                            ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-900"
+                            : isFree
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                            : "bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
+                        }`}
+                      >
+                        {!current.enabled
+                          ? "Disabled"
+                          : isFree
+                          ? "Free (বিনামূল্যে)"
+                          : `${coinNumber} ${coinWord(coinNumber)}`}
+                      </span>
                     </div>
-
-                    <div className="min-w-28">
-                      <Switch
-                        checked={current.enabled}
-                        label={current.enabled ? "Enabled" : "Off"}
-                        onChange={(val) => handleToggle(feat.id, val)}
-                      />
-                    </div>
+                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
+                      {feat.description}
+                    </p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
 
-          {fieldError && <Alert tone="error">{fieldError}</Alert>}
+                {/* Right: Controls (Coins Input & Enable Toggle) */}
+                <div className="flex items-center gap-4 self-end sm:self-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                      Coins:
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      value={current.coins}
+                      onChange={(e) => handleCoinChange(feat.id, e.target.value)}
+                      className="w-20 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-1.5 text-center text-xs font-black text-slate-900 dark:text-white shadow-2xs focus:border-amber-500 focus:outline-hidden"
+                    />
+                  </div>
 
-          <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-muted-foreground">
-              Changes take effect immediately across all web clients without a redeploy.
-            </span>
-            <Button type="submit" disabled={save.isPending}>
-              {save.isPending && <Loader2 className="size-4 animate-spin" />}
-              Save feature pricing
-            </Button>
-          </div>
-        </form>
-      </CardBody>
-    </Card>
+                  <div className="min-w-24">
+                    <Switch
+                      checked={current.enabled}
+                      label={current.enabled ? "Enabled" : "Off"}
+                      onChange={(val) => handleToggle(feat.id, val)}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {fieldError && <Alert tone="error">{fieldError}</Alert>}
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            Changes take effect immediately across all web clients without a redeploy.
+          </span>
+          <button
+            type="submit"
+            disabled={save.isPending}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold shadow-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+          >
+            {save.isPending && <Loader2 className="size-4 animate-spin" />}
+            <span>Save feature pricing</span>
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

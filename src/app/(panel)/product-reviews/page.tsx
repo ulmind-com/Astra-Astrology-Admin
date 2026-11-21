@@ -140,18 +140,18 @@ export default function ProductReviewsAdminPage() {
       {/* =================================================================== */}
       {/* 1. Header Banner */}
       {/* =================================================================== */}
-      <div className="rounded-2xl border border-amber-900/10 bg-linear-to-r from-amber-500/10 via-amber-500/5 to-transparent p-5">
+      <div className="rounded-3xl border border-amber-300/80 dark:border-amber-900/50 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-white dark:to-slate-900 p-5 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-stone-950 font-bold shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-slate-950 font-bold shadow-sm">
                 <Star className="size-5 fill-current" />
               </div>
               <div>
-                <h1 className="font-display text-xl font-bold text-stone-900 dark:text-stone-100">
+                <h1 className="font-display text-xl font-bold text-slate-900 dark:text-white">
                   Devotee Product Reviews & Ratings
                 </h1>
-                <p className="text-xs text-stone-500 dark:text-stone-400">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                   Verified buyer testimonials, photo proofs of sacred items, and community ratings
                 </p>
               </div>
@@ -162,7 +162,7 @@ export default function ProductReviewsAdminPage() {
             type="button"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="inline-flex items-center gap-2 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-4 py-2 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors shadow-2xs self-start sm:self-auto cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-2xs self-start sm:self-auto cursor-pointer"
           >
             <RefreshCw className={`size-3.5 ${isFetching ? "animate-spin" : ""}`} />
             <span>Refresh</span>
@@ -175,29 +175,29 @@ export default function ProductReviewsAdminPage() {
       {/* =================================================================== */}
       <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-stone-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by devotee name, headline, or text..."
-            className="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 pl-9 pr-3 py-2 text-xs focus:border-amber-500 focus:outline-none transition-colors"
+            className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 py-2.5 text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-amber-500 focus:outline-hidden transition-colors shadow-2xs"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Star Filter */}
-          <div className="flex items-center gap-1 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-1 text-xs">
+          <div className="flex items-center gap-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 text-xs shadow-2xs">
             <button
               type="button"
               onClick={() => {
                 setRatingFilter(undefined);
                 setPage(1);
               }}
-              className={`rounded-lg px-2.5 py-1 font-semibold transition-colors cursor-pointer ${
+              className={`rounded-xl px-3 py-1.5 font-bold transition-all cursor-pointer ${
                 ratingFilter === undefined
-                  ? "bg-amber-500 text-stone-950"
-                  : "text-stone-600 dark:text-stone-400 hover:text-stone-950"
+                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
               }`}
             >
               All Stars
@@ -210,20 +210,20 @@ export default function ProductReviewsAdminPage() {
                   setRatingFilter(r);
                   setPage(1);
                 }}
-                className={`flex items-center gap-1 rounded-lg px-2 py-1 font-semibold transition-colors cursor-pointer ${
+                className={`flex items-center gap-1 rounded-xl px-2.5 py-1.5 font-bold transition-all cursor-pointer ${
                   ratingFilter === r
-                    ? "bg-amber-500 text-stone-950"
-                    : "text-stone-600 dark:text-stone-400 hover:text-stone-950"
+                    ? "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
                 }`}
               >
                 <span>{r}</span>
-                <Star className="size-3 fill-current" />
+                <Star className="size-3 fill-current text-amber-500" />
               </button>
             ))}
           </div>
 
           {/* Visibility Filter */}
-          <div className="flex items-center gap-1 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-1 text-xs">
+          <div className="flex items-center gap-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 text-xs shadow-2xs">
             {(["all", "active", "hidden"] as const).map((tab) => (
               <button
                 key={tab}
@@ -232,10 +232,10 @@ export default function ProductReviewsAdminPage() {
                   setVisibilityFilter(tab);
                   setPage(1);
                 }}
-                className={`rounded-lg px-2.5 py-1 font-semibold capitalize transition-colors cursor-pointer ${
+                className={`rounded-xl px-3 py-1.5 font-bold capitalize transition-all cursor-pointer ${
                   visibilityFilter === tab
-                    ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950"
-                    : "text-stone-600 dark:text-stone-400 hover:text-stone-950"
+                    ? "bg-gradient-to-r from-[#D97706] to-[#EA580C] text-white shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
                 }`}
               >
                 {tab}
@@ -249,58 +249,60 @@ export default function ProductReviewsAdminPage() {
       {/* 3. Reviews List Grid */}
       {/* =================================================================== */}
       {isLoading ? (
-        <div className="py-20 text-center text-xs text-stone-500">
+        <div className="py-24 text-center text-xs font-bold text-slate-500">
           Loading devotee reviews...
         </div>
       ) : reviews.length === 0 ? (
-        <div className="rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-12 text-center space-y-3">
-          <MessageSquare className="size-8 text-stone-400 mx-auto" />
-          <h3 className="font-bold text-sm text-stone-900 dark:text-stone-100">
+        <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-14 text-center space-y-3.5 shadow-xs">
+          <div className="size-12 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-inner">
+            <MessageSquare className="size-6" />
+          </div>
+          <h3 className="font-bold text-base text-slate-900 dark:text-white">
             No reviews found
           </h3>
-          <p className="text-xs text-stone-500 max-w-sm mx-auto">
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
             {debouncedSearch || ratingFilter || visibilityFilter !== "all"
               ? "Try adjusting your filters or search keywords."
-              : "When devotees receive their consecrated remedies and submit reviews, they will appear here."}
+              : "When devotees receive their consecrated remedies and submit reviews, they will appear here in real time."}
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3.5">
           {reviews.map((rev) => (
             <div
               key={rev.id}
-              className={`rounded-2xl border p-4 sm:p-5 transition-all bg-white dark:bg-stone-900 shadow-2xs ${
+              className={`rounded-3xl border p-5 transition-all bg-white dark:bg-slate-900 shadow-xs ${
                 rev.is_hidden
-                  ? "border-rose-300 dark:border-rose-900/50 bg-rose-50/20 dark:bg-rose-950/10"
-                  : "border-stone-200 dark:border-stone-800 hover:border-amber-400/80"
+                  ? "border-rose-300 dark:border-rose-900/50 bg-rose-50/30 dark:bg-rose-950/20"
+                  : "border-slate-200/90 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500"
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 {/* Devotee Info & Rating */}
-                <div className="space-y-1.5 flex-1">
+                <div className="space-y-2 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-bold text-sm text-stone-900 dark:text-stone-100">
+                    <span className="font-bold text-sm text-slate-900 dark:text-white">
                       {rev.author_name}
                     </span>
 
                     {/* Verified Buyer Badge */}
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
                       <ShieldCheck className="size-3 text-emerald-600 shrink-0" />
                       <span>Verified Buyer</span>
                     </span>
 
                     {/* Status Badge */}
                     {rev.is_hidden ? (
-                      <span className="rounded-full bg-rose-100 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 px-2 py-0.5 text-[10px] font-bold text-rose-800 dark:text-rose-300">
+                      <span className="rounded-full bg-rose-100 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 px-2.5 py-0.5 text-[10px] font-bold text-rose-800 dark:text-rose-300">
                         Hidden from Store
                       </span>
                     ) : (
-                      <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
+                      <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
                         Live on Store
                       </span>
                     )}
 
-                    <span className="text-[11px] text-stone-400">
+                    <span className="text-[11px] text-slate-400">
                       • {timeAgo(rev.created_at)}
                     </span>
                   </div>
@@ -314,38 +316,38 @@ export default function ProductReviewsAdminPage() {
                           className={`size-3.5 ${
                             s <= rev.rating
                               ? "text-amber-500 fill-amber-500"
-                              : "text-stone-200 dark:text-stone-700"
+                              : "text-slate-200 dark:text-slate-700"
                           }`}
                         />
                       ))}
                     </div>
-                    <span className="text-xs font-bold text-stone-800 dark:text-stone-200">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       {rev.rating}.0 / 5.0
                     </span>
 
-                    <span className="text-stone-300 dark:text-stone-700">|</span>
+                    <span className="text-slate-300 dark:text-slate-700">|</span>
 
-                    <span className="text-[11px] font-medium text-stone-500 dark:text-stone-400">
-                      Product: <code className="text-amber-700 dark:text-amber-400 font-bold">{rev.product_slug}</code>
+                    <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                      Product: <code className="text-amber-700 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded-md">{rev.product_slug}</code>
                     </span>
                   </div>
 
                   {/* Headline */}
                   {rev.title && (
-                    <h4 className="font-bold text-xs sm:text-sm text-stone-900 dark:text-stone-100 pt-1">
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-white pt-1">
                       &ldquo;{rev.title}&rdquo;
                     </h4>
                   )}
 
                   {/* Comment */}
-                  <p className="text-xs text-stone-700 dark:text-stone-300 leading-relaxed pt-0.5 whitespace-pre-wrap">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed pt-0.5 whitespace-pre-wrap">
                     {rev.comment}
                   </p>
 
                   {/* Attached Photos */}
                   {rev.images && rev.images.length > 0 && (
                     <div className="pt-2 space-y-1">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 flex items-center gap-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                         <ImageIcon className="size-3" />
                         <span>Devotee Parcel Photos ({rev.images.length}):</span>
                       </p>
@@ -355,7 +357,7 @@ export default function ProductReviewsAdminPage() {
                             key={i}
                             type="button"
                             onClick={() => setSelectedImage(img)}
-                            className="relative size-16 rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-800 hover:scale-105 transition-transform cursor-pointer"
+                            className="relative size-16 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 hover:scale-105 transition-transform cursor-pointer shadow-2xs"
                           >
                             <Image
                               src={img}
@@ -373,7 +375,7 @@ export default function ProductReviewsAdminPage() {
 
                   {/* Helpful Count */}
                   {rev.helpful_count > 0 && (
-                    <p className="text-[11px] text-stone-500 dark:text-stone-400 pt-1 flex items-center gap-1">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-1 flex items-center gap-1">
                       <ThumbsUp className="size-3 text-amber-500" />
                       <span>{rev.helpful_count} devotees found this review helpful</span>
                     </p>
@@ -381,15 +383,15 @@ export default function ProductReviewsAdminPage() {
                 </div>
 
                 {/* Moderation Actions */}
-                <div className="flex sm:flex-col items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-stone-100 dark:border-stone-800">
+                <div className="flex sm:flex-col items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
                   <button
                     type="button"
                     onClick={() => handleToggleHide(rev)}
                     disabled={moderateMutation.isPending}
                     className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
                       rev.is_hidden
-                        ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
-                        : "bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-200 dark:bg-stone-800 dark:text-stone-300"
+                        ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300"
+                        : "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300"
                     }`}
                   >
                     {rev.is_hidden ? (
@@ -425,8 +427,8 @@ export default function ProductReviewsAdminPage() {
       {/* 4. Pagination */}
       {/* =================================================================== */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-4 border-t border-stone-200 dark:border-stone-800 text-xs">
-          <span className="text-stone-500">
+        <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800 text-xs">
+          <span className="text-slate-500">
             Showing Page {page} of {totalPages} ({totalReviews} total reviews)
           </span>
           <div className="flex items-center gap-2">
@@ -434,7 +436,7 @@ export default function ProductReviewsAdminPage() {
               type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="rounded-lg border border-stone-200 dark:border-stone-800 px-3 py-1.5 font-semibold text-stone-700 dark:text-stone-300 disabled:opacity-40 cursor-pointer"
+              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               Previous
             </button>
@@ -442,7 +444,7 @@ export default function ProductReviewsAdminPage() {
               type="button"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="rounded-lg border border-stone-200 dark:border-stone-800 px-3 py-1.5 font-semibold text-stone-700 dark:text-stone-300 disabled:opacity-40 cursor-pointer"
+              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               Next
             </button>
@@ -459,7 +461,7 @@ export default function ProductReviewsAdminPage() {
           onClick={() => setSelectedImage(null)}
         >
           <div
-            className="relative max-w-2xl max-h-[85vh] w-full bg-white dark:bg-stone-900 rounded-3xl overflow-hidden p-3 shadow-2xl"
+            className="relative max-w-2xl max-h-[85vh] w-full bg-white dark:bg-slate-900 rounded-3xl overflow-hidden p-3 shadow-2xl border border-slate-200 dark:border-slate-800"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -469,7 +471,7 @@ export default function ProductReviewsAdminPage() {
             >
               <X className="size-4" />
             </button>
-            <div className="relative aspect-4/3 w-full rounded-2xl overflow-hidden bg-stone-950">
+            <div className="relative aspect-4/3 w-full rounded-2xl overflow-hidden bg-slate-950">
               <Image
                 src={selectedImage}
                 alt="Enlarged Review Proof"
@@ -487,27 +489,27 @@ export default function ProductReviewsAdminPage() {
       {/* =================================================================== */}
       {hideModalReview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-3xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-5 shadow-2xl space-y-4">
+          <div className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-sm text-stone-900 dark:text-stone-100 flex items-center gap-2">
+              <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
                 <EyeOff className="size-4 text-rose-500" />
                 <span>Hide Review from Public Store</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setHideModalReview(null)}
-                className="text-stone-400 hover:text-stone-600"
+                className="text-slate-400 hover:text-slate-600 transition-colors"
               >
                 <X className="size-4" />
               </button>
             </div>
 
-            <p className="text-xs text-stone-500">
-              This review by <strong>{hideModalReview.author_name}</strong> will be immediately removed from the customer product page and will not count towards the product&apos;s average rating.
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              This review by <strong className="text-slate-800 dark:text-slate-200">{hideModalReview.author_name}</strong> will be immediately removed from the customer product page and will not count towards the product&apos;s average rating.
             </p>
 
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-stone-700 dark:text-stone-300">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                 Reason for Hiding (Internal Note):
               </label>
               <input
@@ -515,7 +517,7 @@ export default function ProductReviewsAdminPage() {
                 value={hiddenReason}
                 onChange={(e) => setHiddenReason(e.target.value)}
                 placeholder="e.g. Inappropriate language, spam, or off-topic"
-                className="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3 py-2 text-xs focus:border-amber-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:border-amber-500 focus:outline-hidden"
               />
             </div>
 
@@ -523,7 +525,7 @@ export default function ProductReviewsAdminPage() {
               <button
                 type="button"
                 onClick={() => setHideModalReview(null)}
-                className="rounded-xl px-4 py-2 text-xs font-semibold text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+                className="rounded-xl px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
