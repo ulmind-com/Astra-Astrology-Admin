@@ -36,6 +36,7 @@ import {
   Input,
   LoadingBlock,
   Select,
+  Switch,
 } from "@/components/ui";
 import { shopAdminApi, type ShopCoupon, type ShopCouponInput } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
@@ -518,19 +519,20 @@ export default function CouponsPage() {
 
                 {/* Action Toolbar */}
                 <div className="flex items-center justify-between gap-2 pt-2 border-t border-stone-100 dark:border-stone-800">
-                  <button
-                    type="button"
-                    onClick={() => toggleMutation.mutate(coupon.id)}
-                    disabled={toggleMutation.isPending}
-                    className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
-                      coupon.is_active
-                        ? "text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30"
-                        : "text-stone-600 bg-stone-100 hover:bg-stone-200 dark:bg-stone-800"
-                    }`}
-                  >
-                    <Power className="size-3" />
-                    <span>{coupon.is_active ? "Active" : "Activate"}</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={coupon.is_active}
+                      onChange={() => toggleMutation.mutate(coupon.id)}
+                      disabled={toggleMutation.isPending}
+                    />
+                    <span
+                      className={`text-xs font-bold ${
+                        coupon.is_active ? "text-emerald-600 dark:text-emerald-400" : "text-stone-400"
+                      }`}
+                    >
+                      {coupon.is_active ? "Active" : "Paused"}
+                    </span>
+                  </div>
 
                   <div className="flex items-center gap-1">
                     <Button

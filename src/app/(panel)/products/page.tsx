@@ -12,7 +12,9 @@ import {
   Package,
   Plus,
   RefreshCw,
+  RotateCcw,
   Search,
+  ShieldCheck,
   SlidersHorizontal,
   Sparkles,
   Tag,
@@ -34,12 +36,13 @@ import {
   EmptyState,
   Input,
   LoadingBlock,
+  Modal,
   Pagination,
   Select,
   Switch,
 } from "@/components/ui";
 import { shopAdminApi } from "@/lib/api";
-import type { ShopProduct, ShopProductCategory } from "@/types";
+import type { CloudinaryOrphanCleanupReport, ShopProduct, ShopProductCategory } from "@/types";
 
 export default function ProductsPage() {
   const queryClient = useQueryClient();
@@ -56,6 +59,28 @@ export default function ProductsPage() {
 
   // Delete modal state
   const [productToDelete, setProductToDelete] = React.useState<ShopProduct | null>(null);
+
+  // Storage Cleanup Modal state
+  const [cleanupModalOpen, setCleanupModalOpen] = React.useState(false);
+  const [cleanupReport, setCleanupReport] = React.useState<CloudinaryOrphanCleanupReport | null>(null);
+
+  // Cleanup orphaned images mutation
+  const cleanupMutation = useMutation({
+    mutationFn: async (dryRun: boolean) => {
+      return await shopAdminApi.cleanupOrphanedImages(dryRun);
+    },
+    onSuccess: (data, dryRun) => {
+      setCleanupReport(data);
+      if (!dryRun) {
+        toast.success(`Purged ${data.purged_count} orphaned image(s) from Cloudinary! Storage reclaimed.`);
+      } else {
+        toast.info(`Dry run complete: Found ${data.orphaned_found_count} orphaned image(s) across ${data.scanned_count} scanned.`);
+      }
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to scan/cleanup orphaned images.");
+    },
+  });
 
   // Debounce search
   React.useEffect(() => {
@@ -192,6 +217,19 @@ export default function ProductsPage() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => {
+                setCleanupReport(null);
+                setCleanupModalOpen(true);
+              }}
+              className="border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/30 flex items-center gap-1.5 shadow-2xs"
+              title="Audit and clean up unreferenced Cloudinary images"
+            >
+              <Sparkles className="size-3.5 text-amber-600" />
+              <span>Image Cleanup</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => refetch()}
               disabled={isRefetching}
               className="flex items-center gap-1.5"
@@ -213,7 +251,7 @@ export default function ProductsPage() {
       <Card className="rounded-2xl border-slate-200/80 shadow-sm">
         <CardBody className="p-4 space-y-3">
           {/* Active vs Archived View Switcher */}
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 dark:border-stone-800 pb-3">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -221,13 +259,15 @@ export default function ProductsPage() {
                   setViewArchived(false);
                   setPage(1);
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                   !viewArchived
                     ? "bg-amber-600 text-white shadow-xs"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    : "bg-slate-100 dark:bg-stone-800 text-slate-600 dark:text-stone-300 hover:bg-slate-200"
                 }`}
               >
-                Active Catalog
+                <Package className="size-3.5" />
+                <span>Active Catalog</span>
+                {!viewArchived && <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />}
               </button>
               <button
                 type="button"
@@ -235,24 +275,26 @@ export default function ProductsPage() {
                   setViewArchived(true);
                   setPage(1);
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                   viewArchived
-                    ? "bg-slate-800 text-white shadow-xs"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? "bg-slate-800 dark:bg-stone-700 text-white shadow-xs"
+                    : "bg-slate-100 dark:bg-stone-800 text-slate-600 dark:text-stone-300 hover:bg-slate-200"
                 }`}
               >
-                <span>Archived & Soft-Deleted</span>
+                <Trash2 className="size-3.5" />
+                <span>Archived / Trash</span>
                 {viewArchived && (
                   <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
                 )}
               </button>
             </div>
 
-            {viewArchived && (
-              <span className="text-xs text-amber-700 font-semibold bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
-                Viewing archived products preserved for past orders
-              </span>
-            )}
+            {viewArchived ? (
+              <div className="flex items-center gap-1.5 text-xs text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-3 py-1.5 rounded-xl">
+                <RotateCcw className="size-3.5 text-amber-600 shrink-0" />
+                <span>Soft-deleted products are preserved for historical order validity. 1-click <strong>Restore</strong> brings them back live anytime.</span>
+              </div>
+            ) : null}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
@@ -547,11 +589,11 @@ export default function ProductsPage() {
                               size="sm"
                               onClick={() => restoreMutation.mutate(p.id)}
                               disabled={restoreMutation.isPending}
-                              className="text-xs font-bold text-emerald-700 border-emerald-300 hover:bg-emerald-50 flex items-center gap-1.5 cursor-pointer"
-                              title="Restore Archived Product"
+                              className="text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                              title="Restore Archived Product to Active Store"
                             >
-                              <RefreshCw className={`size-3.5 ${restoreMutation.isPending ? "animate-spin" : ""}`} />
-                              Restore
+                              <RotateCcw className={`size-3.5 ${restoreMutation.isPending ? "animate-spin" : ""}`} />
+                              <span>Restore</span>
                             </Button>
                           ) : (
                             <>
@@ -619,6 +661,140 @@ export default function ProductsPage() {
           onConfirm={() => deleteMutation.mutate(productToDelete.id)}
           onClose={() => setProductToDelete(null)}
         />
+      )}
+
+      {/* Cloudinary Image Garbage Collection & Quota Optimization Modal */}
+      {cleanupModalOpen && (
+        <Modal
+          open={cleanupModalOpen}
+          onClose={() => setCleanupModalOpen(false)}
+          title="Cloudinary Image Storage Cleanup"
+          description="Discovers and purges orphaned Cloudinary image assets in 'products/' folder that are no longer referenced by any remedy product, category, or CMS banner."
+          size="lg"
+          footer={
+            <div className="flex items-center justify-between w-full">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCleanupModalOpen(false)}
+                disabled={cleanupMutation.isPending}
+              >
+                Close
+              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => cleanupMutation.mutate(true)}
+                  disabled={cleanupMutation.isPending}
+                  className="flex items-center gap-1.5 border-amber-300 text-amber-800 hover:bg-amber-50"
+                >
+                  <Search className="size-3.5 text-amber-600" />
+                  {cleanupMutation.isPending && cleanupMutation.variables === true
+                    ? "Scanning..."
+                    : "Scan & Preview (Dry Run)"}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (
+                      confirm(
+                        "Are you sure you want to permanently purge orphaned Cloudinary assets? This cannot be undone."
+                      )
+                    ) {
+                      cleanupMutation.mutate(false);
+                    }
+                  }}
+                  disabled={cleanupMutation.isPending}
+                  className="bg-rose-600 hover:bg-rose-700 text-white font-bold flex items-center gap-1.5 shadow-xs"
+                >
+                  <Trash2 className="size-3.5" />
+                  {cleanupMutation.isPending && cleanupMutation.variables === false
+                    ? "Purging..."
+                    : "Purge Orphaned Images"}
+                </Button>
+              </div>
+            </div>
+          }
+        >
+          <div className="space-y-4 py-2">
+            <div className="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-300 space-y-1.5">
+              <div className="font-bold flex items-center gap-1.5">
+                <ShieldCheck className="size-4 text-emerald-600" />
+                <span>Zero-Data-Loss Safety Guarantee</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-amber-800/90 dark:text-amber-300/90">
+                Active products, archived remedies (for past order receipts), categories, and homepage banners are all checked. Only unreferenced files (e.g. from cancelled drafts or replaced images) will be purged.
+              </p>
+            </div>
+
+            {cleanupMutation.isPending && (
+              <div className="p-6 text-center space-y-2">
+                <RefreshCw className="size-6 animate-spin mx-auto text-amber-600" />
+                <p className="text-xs font-semibold text-stone-600">
+                  {cleanupMutation.variables === true
+                    ? "Auditing Cloudinary product assets against database..."
+                    : "Executing asset garbage collection in Cloudinary..."}
+                </p>
+              </div>
+            )}
+
+            {cleanupReport && !cleanupMutation.isPending && (
+              <div className="space-y-3 animate-in fade-in">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <div className="p-3 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/50">
+                    <span className="text-[10px] text-stone-500 font-medium">Scanned Images</span>
+                    <p className="text-base font-black text-stone-900 dark:text-white font-mono">
+                      {cleanupReport.scanned_count}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/50">
+                    <span className="text-[10px] text-stone-500 font-medium">Active References</span>
+                    <p className="text-base font-black text-emerald-600 font-mono">
+                      {cleanupReport.referenced_count}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/50">
+                    <span className="text-[10px] text-stone-500 font-medium">Orphaned Found</span>
+                    <p className="text-base font-black text-amber-600 font-mono">
+                      {cleanupReport.orphaned_found_count}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/50">
+                    <span className="text-[10px] text-stone-500 font-medium">
+                      {cleanupReport.dry_run ? "Ready to Purge" : "Purged Successfully"}
+                    </span>
+                    <p className="text-base font-black text-rose-600 font-mono">
+                      {cleanupReport.dry_run ? cleanupReport.orphaned_found_count : cleanupReport.purged_count}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/40 text-xs flex items-center justify-between">
+                  <span className="text-stone-500 font-medium">Operation Mode:</span>
+                  <Badge tone={cleanupReport.dry_run ? "gold" : "green"}>
+                    {cleanupReport.dry_run ? "Preview (Dry Run - No Deletions)" : "Permanent Purge Complete"}
+                  </Badge>
+                </div>
+
+                {cleanupReport.purged_public_ids && cleanupReport.purged_public_ids.length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[11px] font-bold text-stone-700 dark:text-stone-300">
+                      Identified Cloudinary Public IDs ({cleanupReport.purged_public_ids.length}):
+                    </span>
+                    <div className="max-h-28 overflow-y-auto rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-900 text-stone-200 p-2 font-mono text-[10px] space-y-0.5">
+                      {cleanupReport.purged_public_ids.map((id) => (
+                        <div key={id} className="truncate">
+                          {id}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </Modal>
       )}
     </div>
   );
