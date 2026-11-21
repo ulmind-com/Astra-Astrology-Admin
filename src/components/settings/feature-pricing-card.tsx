@@ -304,19 +304,18 @@ export function FeaturePricingCard({ settings }: { settings: PlatformSettings })
                         ({feat.bengaliName})
                       </span>
                       <span
-                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-black border tracking-wide ${
-                          !current.enabled
-                            ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-900"
-                            : isFree
+                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-black border tracking-wide ${!current.enabled
+                          ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-900"
+                          : isFree
                             ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
                             : "bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
-                        }`}
+                          }`}
                       >
                         {!current.enabled
                           ? "Disabled"
                           : isFree
-                          ? "Free (বিনামূল্যে)"
-                          : `${coinNumber} ${coinWord(coinNumber)}`}
+                            ? "Free (বিনামূল্যে)"
+                            : `${coinNumber} ${coinWord(coinNumber)}`}
                       </span>
                     </div>
                     <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">

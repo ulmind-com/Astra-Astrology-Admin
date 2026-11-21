@@ -160,7 +160,13 @@ async function send(path: string, options: Options): Promise<Sent> {
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 45000);
+  let timedOut = false;
+  // Generous 60s bounded timeout to comfortably absorb cold-starts and large DB collections
+  const timeoutId = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, 60000);
+
   if (callerSignal) {
     if (callerSignal.aborted) {
       controller.abort();
@@ -178,9 +184,11 @@ async function send(path: string, options: Options): Promise<Sent> {
       signal: controller.signal,
       body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
     });
-  } catch (err) {
-    const aborted = err instanceof Error && err.name === "AbortError";
-    if (aborted && !callerSignal?.aborted) {
+  } catch (err: any) {
+    if (callerSignal?.aborted) {
+      throw err;
+    }
+    if (timedOut) {
       throw new ApiError(
         "The server took too long to respond. Please try again.",
         0,
@@ -216,9 +224,12 @@ async function sendWithRefresh(path: string, options: Options): Promise<Sent> {
   try {
     sent = await send(path, options);
   } catch (err) {
+    if (options.signal?.aborted) {
+      throw err;
+    }
     if (isSafeMethod && err instanceof ApiError && (err.code === "timeout" || err.code === "network_error")) {
       // Automatic retry for sleeping/waking Render backend
-      await new Promise((r) => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 1200));
       sent = await send(path, options);
     } else {
       throw err;
