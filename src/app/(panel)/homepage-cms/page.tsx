@@ -406,7 +406,7 @@ export default function HomepageCMSPage() {
       )}
 
       {/* Tabs Bar */}
-      <div className="mb-6 flex overflow-x-auto no-scrollbar gap-1 border-b border-border/60 pb-2">
+      <div className="mb-6 inline-flex rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 gap-1.5 shadow-xs overflow-x-auto max-w-full">
         {[
           { id: "slides", label: "Hero Banners / Slides", icon: Sparkles },
           { id: "hero", label: "Hero Typography", icon: Sliders },
@@ -422,10 +422,10 @@ export default function HomepageCMSPage() {
               key={id}
               type="button"
               onClick={() => setActiveTab(id as ActiveTab)}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg whitespace-nowrap transition-all ${
+              className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-all cursor-pointer ${
                 active
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                  ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}
             >
               <Icon className="size-3.5" />
