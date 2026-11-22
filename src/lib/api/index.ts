@@ -91,6 +91,7 @@ import type {
   AdminCourseLearnerDetail,
   AdminCourseLearnersResponse,
   AdminManualEnrollInput,
+  AdminEnrollmentValidityInput,
 } from "@/types";
 import type { CoPilotBirthDetailsInput, CoPilotSummary } from "@/types/copilot";
 import type { MilanRoom, MilanRoomSession } from "@/types/milan";
@@ -1524,6 +1525,25 @@ export const courseAdminApi = {
   getLearnerProgress: (courseId: string, userId: string) =>
     api.get<AdminCourseLearnerDetail>(
       endpoints.admin.courses.courseLearnerProgress(courseId, userId)
+    ),
+
+  updateEnrollmentValidity: (
+    courseId: string,
+    enrollmentId: string,
+    body: AdminEnrollmentValidityInput
+  ) =>
+    api.patch<AdminCourseEnrollment>(
+      endpoints.admin.courses.updateEnrollmentValidity(courseId, enrollmentId),
+      body
+    ),
+
+  updateEnrollmentValidityGlobal: (
+    enrollmentId: string,
+    body: AdminEnrollmentValidityInput
+  ) =>
+    api.patch<AdminCourseEnrollment>(
+      endpoints.admin.courses.updateEnrollmentValidityGlobal(enrollmentId),
+      body
     ),
 };
 

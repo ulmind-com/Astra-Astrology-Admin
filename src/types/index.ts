@@ -1164,6 +1164,13 @@ export interface AdminCourseEnrollment {
   last_accessed_at: string;
 }
 
+export interface AdminEnrollmentValidityInput {
+  mode: "lifetime" | "set_days" | "extend_days" | "set_date";
+  days?: number;
+  expires_at?: string;
+  note?: string;
+}
+
 export interface AdminCourseLearnerProgressLesson {
   lesson_id: string;
   title: string;

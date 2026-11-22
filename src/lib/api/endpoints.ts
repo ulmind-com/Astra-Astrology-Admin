@@ -209,6 +209,10 @@ export const endpoints = {
         `/admin/courses/${courseId}/learners/${userId}/progress`,
       revokeEnrollment: (courseId: string, enrollmentId: string) =>
         `/admin/courses/${courseId}/enrollments/${enrollmentId}`,
+      updateEnrollmentValidity: (courseId: string, enrollmentId: string) =>
+        `/admin/courses/${courseId}/enrollments/${enrollmentId}/validity`,
+      updateEnrollmentValidityGlobal: (enrollmentId: string) =>
+        `/admin/courses/enrollments/${enrollmentId}/validity`,
       questions: "/admin/courses/questions",
       videoPreview: (videoId: string) => `/admin/courses/preview-token/${videoId}`,
       answerQuestion: (questionId: string) => `/admin/courses/questions/${questionId}/answers`,
