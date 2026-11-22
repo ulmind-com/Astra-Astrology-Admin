@@ -180,6 +180,7 @@ export const endpoints = {
       completeRefund: (id: string) => `/admin/shop/orders/${id}/complete-refund`,
       orderInvoice: (id: string) => `/admin/shop/orders/${id}/invoice`,
       orderInvoiceHtml: (id: string) => `/admin/shop/orders/${id}/invoice/html`,
+      resendInvoiceEmail: (id: string) => `/admin/shop/orders/${id}/resend-invoice-email`,
       coupons: "/admin/shop/coupons",
       coupon: (id: string) => `/admin/shop/coupons/${id}`,
       toggleCoupon: (id: string) => `/admin/shop/coupons/${id}/toggle-active`,
