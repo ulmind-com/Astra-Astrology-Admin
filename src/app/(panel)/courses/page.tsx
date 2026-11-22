@@ -42,6 +42,7 @@ import {
   Textarea,
 } from "@/components/ui";
 import { courseAdminApi, shopAdminApi } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import type { CourseAdminInput, CourseAdminItem } from "@/types";
 
 const CATEGORIES = [
@@ -473,7 +474,7 @@ export default function CoursesAdminPage() {
                 <div className="relative h-44 w-full bg-stone-900">
                   <CourseCardThumbnail course={c} onEdit={() => openEditModal(c)} />
 
-                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap">
                     <Badge tone="brand">
                       {c.category.replace("_", " ")}
                     </Badge>
@@ -481,6 +482,15 @@ export default function CoursesAdminPage() {
                       <Badge tone="gold">
                         Featured
                       </Badge>
+                    )}
+                    {c.access_duration_days ? (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-600/90 text-white shadow-xs backdrop-blur-xs">
+                        ⏳ {c.access_duration_days}d Access
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-600/90 text-white shadow-xs backdrop-blur-xs">
+                        ✨ Lifetime
+                      </span>
                     )}
                   </div>
 
@@ -525,9 +535,24 @@ export default function CoursesAdminPage() {
                         </span>
                       )}
                     </div>
-                    <Badge tone="neutral">
-                      {c.total_lessons} Lessons
-                    </Badge>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Badge tone="neutral">
+                        {c.total_lessons} Lessons
+                      </Badge>
+                      {c.access_duration_days ? (
+                        <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                          {c.access_duration_days >= 365
+                            ? `${Math.round((c.access_duration_days / 365) * 10) / 10} Yr`
+                            : c.access_duration_days >= 30
+                            ? `${Math.round((c.access_duration_days / 30) * 10) / 10} Mo`
+                            : `${c.access_duration_days}d`}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                          Lifetime
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </CardBody>
               </div>
@@ -746,25 +771,81 @@ export default function CoursesAdminPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field
-              label="Access Validity (Days)"
-              hint="Leave blank or 0 for Lifetime Access"
-            >
-              <Input
-                type="number"
-                placeholder="e.g. 365 (blank = lifetime)"
-                value={formData.access_duration_days || ""}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setFormData((prev) => ({
-                    ...prev,
-                    access_duration_days: !isNaN(val) && val > 0 ? val : null,
-                  }));
-                }}
-              />
-            </Field>
+          {/* Access Validity / Course Expiry Duration */}
+          <div className="space-y-3 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-amber-500/10 to-transparent p-4 dark:border-amber-500/20">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <span>Course Access Validity & Expiry Duration</span>
+              </label>
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                {formData.access_duration_days
+                  ? `Active for ${formData.access_duration_days} Days`
+                  : "✨ Unlimited Lifetime Access"}
+              </span>
+            </div>
 
+            {/* Quick preset selector chips */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {[
+                { label: "✨ Lifetime (চিরস্থায়ী)", days: null },
+                { label: "1 Month (30d)", days: 30 },
+                { label: "3 Months (90d)", days: 90 },
+                { label: "6 Months (180d)", days: 180 },
+                { label: "1 Year (365d)", days: 365 },
+                { label: "2 Years (730d)", days: 730 },
+              ].map((opt) => {
+                const isSelected = formData.access_duration_days === opt.days;
+                return (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        access_duration_days: opt.days,
+                      }));
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer",
+                      isSelected
+                        ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                        : "bg-background border-border text-foreground hover:bg-muted/80"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom Days Input & Dynamic Explanation */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center pt-1">
+              <div className="sm:col-span-5">
+                <Input
+                  type="number"
+                  min={1}
+                  placeholder="Or custom days (e.g. 45, 60)..."
+                  value={formData.access_duration_days || ""}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setFormData((prev) => ({
+                      ...prev,
+                      access_duration_days: !isNaN(val) && val > 0 ? val : null,
+                    }));
+                  }}
+                  className="text-xs"
+                />
+              </div>
+              <p className="sm:col-span-7 text-[11px] text-muted-foreground leading-relaxed">
+                {formData.access_duration_days
+                  ? `Students have access for exactly ${formData.access_duration_days} days from enrollment. Expiry date and remaining days are shown in their dashboard.`
+                  : "Students enjoy permanent, lifelong access to all current and future lessons with no expiry."}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Certificate on Completion">
               <Select
                 value={formData.certificate_enabled ? "true" : "false"}

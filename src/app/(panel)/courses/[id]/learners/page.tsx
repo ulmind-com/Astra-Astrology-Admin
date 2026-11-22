@@ -5,6 +5,7 @@ import {
   AlertCircle,
   ArrowLeft,
   Award,
+  Calendar,
   CheckCircle2,
   Clock,
   Copy,
@@ -123,6 +124,12 @@ export default function CourseLearnersPage() {
   // Revoke Modal State
   const [revokeTarget, setRevokeTarget] = React.useState<AdminCourseEnrollment | null>(null);
 
+  // Extend / Edit Validity Modal State
+  const [validityTarget, setValidityTarget] = React.useState<AdminCourseEnrollment | null>(null);
+  const [validityMode, setValidityMode] = React.useState<"extend_days" | "set_days" | "lifetime">("extend_days");
+  const [validityDays, setValidityDays] = React.useState<number>(30);
+  const [validityNote, setValidityNote] = React.useState<string>("");
+
   React.useEffect(() => {
     const t = setTimeout(() => {
       setDebouncedSearch(searchInput.trim());
@@ -215,6 +222,30 @@ export default function CourseLearnersPage() {
     },
     onError: (err: any) => {
       toast.error(err?.message || "Failed to revoke enrollment");
+    },
+  });
+
+  // Update Enrollment Validity Mutation
+  const validityMutation = useMutation({
+    mutationFn: async () => {
+      if (!validityTarget) return;
+      return courseAdminApi.updateEnrollmentValidity(courseId, validityTarget.id, {
+        mode: validityMode,
+        days: validityMode === "lifetime" ? undefined : validityDays,
+        note: validityNote.trim() || undefined,
+      });
+    },
+    onSuccess: () => {
+      toast.success(
+        `Access validity updated for ${validityTarget?.student_name || "student"}!`
+      );
+      setValidityTarget(null);
+      setValidityNote("");
+      void queryClient.invalidateQueries({ queryKey: ["admin-course-learners", courseId] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-courses"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to update enrollment validity");
     },
   });
 
@@ -692,6 +723,22 @@ export default function CourseLearnersPage() {
 
                               <Button
                                 size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setValidityTarget(learner);
+                                  setValidityMode("extend_days");
+                                  setValidityDays(30);
+                                  setValidityNote("");
+                                }}
+                                className="h-7 px-2.5 text-[11px] gap-1 hover:border-amber-500/50 hover:text-amber-600"
+                                title="Extend or edit access validity"
+                              >
+                                <Calendar className="h-3 w-3 text-amber-500" />
+                                Validity
+                              </Button>
+
+                              <Button
+                                size="sm"
                                 variant="danger"
                                 onClick={() => setRevokeTarget(learner)}
                                 className="h-7 w-7 p-0"
@@ -1024,6 +1071,126 @@ export default function CourseLearnersPage() {
               className="bg-amber-600 hover:bg-amber-700 text-white"
             >
               {grantMutation.isPending ? "Enrolling..." : "Grant Access"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* EXTEND / EDIT COURSE ACCESS VALIDITY MODAL */}
+      {/* ========================================================================= */}
+      <Modal
+        open={Boolean(validityTarget)}
+        onClose={() => setValidityTarget(null)}
+        title="Extend / Update Course Access Validity"
+        size="md"
+      >
+        <div className="space-y-4">
+          {validityTarget && (
+            <div className="p-3.5 rounded-xl bg-muted/40 border border-border text-xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-foreground">
+                  {validityTarget.student_name || "Enrolled Student"}
+                </span>
+                <span className="text-[11px] font-mono text-muted-foreground">
+                  {validityTarget.student_email || validityTarget.user_id}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 pt-1 border-t border-border/50 text-[11px]">
+                <span className="text-muted-foreground">Current Expiry:</span>
+                {validityTarget.expires_at ? (
+                  validityTarget.is_expired ? (
+                    <Badge tone="red" className="text-[10px]">
+                      Expired on {formatDateTime(validityTarget.expires_at)}
+                    </Badge>
+                  ) : (
+                    <span className="font-semibold text-amber-600">
+                      Valid until {formatDateTime(validityTarget.expires_at)}
+                    </span>
+                  )
+                ) : (
+                  <Badge tone="green" className="text-[10px]">
+                    Lifetime Access
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-foreground">Select Validity Action</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {[
+                { label: "+30 Days Extension", mode: "extend_days", days: 30 },
+                { label: "+90 Days Extension", mode: "extend_days", days: 90 },
+                { label: "+180 Days Extension", mode: "extend_days", days: 180 },
+                { label: "+1 Year Extension", mode: "extend_days", days: 365 },
+                { label: "✨ Set Lifetime Access", mode: "lifetime", days: 0 },
+                { label: "⚙️ Custom Duration", mode: "set_days", days: validityDays || 30 },
+              ].map((pill) => {
+                const isSelected =
+                  pill.mode === "lifetime"
+                    ? validityMode === "lifetime"
+                    : pill.mode === validityMode && validityDays === pill.days;
+                return (
+                  <button
+                    key={pill.label}
+                    type="button"
+                    onClick={() => {
+                      setValidityMode(pill.mode as any);
+                      if (pill.days > 0) setValidityDays(pill.days);
+                    }}
+                    className={cn(
+                      "p-2.5 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer",
+                      isSelected
+                        ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                        : "bg-background border-border text-foreground hover:bg-muted/80"
+                    )}
+                  >
+                    {pill.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {validityMode !== "lifetime" && (
+            <Field
+              label={
+                validityMode === "extend_days"
+                  ? "Number of Days to Extend"
+                  : "New Access Duration (Days from Now)"
+              }
+              hint="Days will be added to student's access period"
+            >
+              <Input
+                type="number"
+                min={1}
+                value={validityDays}
+                onChange={(e) => setValidityDays(parseInt(e.target.value) || 0)}
+              />
+            </Field>
+          )}
+
+          <Field label="Admin Note / Reason (Optional)">
+            <Input
+              placeholder="e.g. Student requested 30-day exam extension..."
+              value={validityNote}
+              onChange={(e) => setValidityNote(e.target.value)}
+            />
+          </Field>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-border">
+            <Button variant="outline" size="sm" onClick={() => setValidityTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => validityMutation.mutate()}
+              disabled={validityMutation.isPending || (validityMode !== "lifetime" && (!validityDays || validityDays <= 0))}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {validityMutation.isPending ? "Updating..." : "Update Validity"}
             </Button>
           </div>
         </div>
