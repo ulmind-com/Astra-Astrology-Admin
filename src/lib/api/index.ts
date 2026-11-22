@@ -1294,6 +1294,12 @@ export const shopAdminApi = {
   completeRefund: (id: string, body?: { transaction_id?: string; notes?: string }) =>
     api.post<any>(endpoints.admin.shop.completeRefund(id), body || {}),
 
+  resendInvoiceEmail: (id: string) =>
+    api.post<{ success: boolean; message: string; order_number: string; invoice_number: string }>(
+      endpoints.admin.shop.resendInvoiceEmail(id),
+      {}
+    ),
+
   sweepAbandonedInventory: () =>
     api.post<{ restored_orders_count: number }>(endpoints.admin.shop.sweepAbandonedInventory, {}),
 

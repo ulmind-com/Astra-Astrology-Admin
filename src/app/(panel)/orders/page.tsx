@@ -274,6 +274,21 @@ export default function AdminOrdersPage() {
     },
   });
 
+  // Resend Tax Invoice Email mutation
+  const resendEmailMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      return await shopAdminApi.resendInvoiceEmail(orderId);
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || "Official Tax Invoice email sent to customer!");
+      queryClient.invalidateQueries({ queryKey: ["admin_shop_orders"] });
+    },
+    onError: (err) => {
+      const msg = err instanceof ApiError ? err.message : "Failed to resend invoice email";
+      toast.error(msg);
+    },
+  });
+
   // Manual sweep of expired abandoned checkouts
   const sweepMutation = useMutation({
     mutationFn: async () => {
@@ -658,6 +673,13 @@ export default function AdminOrdersPage() {
                             </span>
                           </div>
                         )}
+
+                        {order.invoice_email_sent && (
+                          <div className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                            <CheckCircle2 className="size-3 text-emerald-600" />
+                            <span>Invoice Emailed</span>
+                          </div>
+                        )}
                       </td>
 
                       {/* Action */}
@@ -724,6 +746,17 @@ export default function AdminOrdersPage() {
               </div>
 
               <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => resendEmailMutation.mutate(selectedOrder.id)}
+                  disabled={resendEmailMutation.isPending}
+                  className="text-xs font-bold border-stone-300 text-stone-700 hover:bg-stone-50"
+                  title="Resend Tax Invoice Email to customer"
+                >
+                  <Mail className="size-3.5 mr-1 text-stone-600" />
+                  <span>{resendEmailMutation.isPending ? "Sending..." : "Resend Email"}</span>
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"
