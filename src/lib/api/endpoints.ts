@@ -117,6 +117,11 @@ export const endpoints = {
   },
 
   admin: {
+    abuseReports: "/admin/abuse-reports",
+    abuseReport: (id: string) => `/admin/abuse-reports/${id}`,
+    abuseReportReview: (id: string) => `/admin/abuse-reports/${id}/review`,
+    abuseReportUnblock: (id: string) => `/admin/abuse-reports/${id}/unblock-client`,
+    abuseReportStats: "/admin/abuse-reports/stats",
     astrologers: "/admin/astrologers",
     astrologer: (id: string) => `/admin/astrologers/${id}`,
     astrologerApplications: "/admin/astrologers/applications",
