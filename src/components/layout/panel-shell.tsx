@@ -10,6 +10,7 @@ import {
   ScanFace,
   Search,
   Settings,
+  ShieldAlert,
   Sparkles,
   TrendingUp,
   UserRound,
@@ -78,6 +79,7 @@ const ADMIN_MENU_NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/astrologers", label: "Astrologers", icon: Users },
   { href: "/purohits", label: "Purohits & Pandits", icon: Flame },
+  { href: "/abuse-reports", label: "Abuse Reports", icon: ShieldAlert },
   { href: "/support", label: "Support Tickets", icon: LifeBuoy },
 ];
 

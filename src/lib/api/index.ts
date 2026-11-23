@@ -279,6 +279,86 @@ export interface AstrologerApplicationApprovalResult {
   message: string;
 }
 
+// ------------------------------------------------------------ abuse reports
+export interface AbuseReportListItem {
+  id: string;
+  astrologer_id: string;
+  astrologer_name: string | null;
+  client_user_id: string;
+  client_name: string | null;
+  client_email_masked: string | null;
+  reason: string;
+  action_taken: string;
+  status: string;
+  created_at: string;
+}
+
+export interface AbuseReportOut {
+  id: string;
+  astrologer_id: string;
+  astrologer_name: string | null;
+  astrologer_email: string | null;
+  client_user_id: string;
+  client_name: string | null;
+  client_email_masked: string | null;
+  appointment_id: string | null;
+  call_id: string | null;
+  reason: string;
+  notes: string | null;
+  action_taken: string;
+  status: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AbuseReportReviewRequest {
+  status: string;
+  admin_notes?: string | null;
+}
+
+export interface AbuseReportUnblockRequest {
+  client_user_id: string;
+}
+
+export interface AbuseReportStats {
+  total_reports: number;
+  pending_reports: number;
+  reviewed_reports: number;
+  resolved_reports: number;
+  dismissed_reports: number;
+  reports_today: number;
+  reports_this_week: number;
+  reports_this_month: number;
+  top_flagged_clients: Array<{
+    client_user_id: string;
+    client_name: string;
+    client_email_masked: string | null;
+    report_count: number;
+  }>;
+  top_flagging_astrologers: Array<{
+    astrologer_id: string;
+    astrologer_name: string;
+    report_count: number;
+  }>;
+  reports_by_status: Record<string, number>;
+  reports_by_action: Record<string, number>;
+}
+
+export interface PaginatedAbuseReports {
+  items: AbuseReportListItem[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    total_pages: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
+}
+
 // ------------------------------------------------------------------ admin
 export const adminApi = {
   listAstrologers: (params: { search?: string; skip?: number; limit?: number } = {}) =>
@@ -310,6 +390,45 @@ export const adminApi = {
 
   rejectAstrologerApplication: (id: string, body: { reason?: string }) =>
     api.post<AstrologerApplicationData>(endpoints.admin.rejectAstrologerApplication(id), body),
+};
+
+// ------------------------------------------------------------ admin: abuse reports
+export const adminAbuseApi = {
+  list: (params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    astrologer_id?: string;
+    client_user_id?: string;
+    search?: string;
+    from_date?: string;
+    to_date?: string;
+  } = {}) =>
+    api.get<PaginatedAbuseReports>(endpoints.admin.abuseReports, {
+      query: {
+        page: params.page,
+        limit: params.limit,
+        status: params.status || undefined,
+        astrologer_id: params.astrologer_id || undefined,
+        client_user_id: params.client_user_id || undefined,
+        search: params.search || undefined,
+        from_date: params.from_date || undefined,
+        to_date: params.to_date || undefined,
+      },
+    }),
+
+  get: (id: string) => api.get<AbuseReportOut>(endpoints.admin.abuseReport(id)),
+
+  review: (id: string, body: AbuseReportReviewRequest) =>
+    api.patch<AbuseReportOut>(endpoints.admin.abuseReportReview(id), body),
+
+  unblockClient: (id: string, body: AbuseReportUnblockRequest) =>
+    api.post<{ unblocked: boolean; client_user_id: string }>(
+      endpoints.admin.abuseReportUnblock(id),
+      body,
+    ),
+
+  stats: () => api.get<AbuseReportStats>(endpoints.admin.abuseReportStats),
 };
 
 // ----------------------------------------------------------------- health
