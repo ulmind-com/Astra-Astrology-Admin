@@ -18,6 +18,7 @@ import {
   Loader2,
   CheckCircle2,
   ExternalLink,
+  FileDown,
 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
@@ -79,6 +80,16 @@ const FEATURES: FeatureConfig[] = [
     icon: Compass,
     defaultCoins: 20,
     publicUrl: "https://astra-astrology-web.vercel.app/kundli",
+  },
+  {
+    id: "kundli_pdf",
+    keyPrefix: "kundli_pdf",
+    name: "Kundli Full PDF Report (DivinLink Horosoft Edition)",
+    bengaliName: "সম্পূর্ণ কুষ্ঠি ও রাশিফল PDF রিপোর্ট",
+    description: "113-Page Horosoft Model 7 Comprehensive Kundli PDF Dossier with Shodashvarga, Vimshottari/Yogini Dashas, Ashtakavarga, Shadbala, Lal Kitab & KP Analysis.",
+    icon: FileDown,
+    defaultCoins: 50,
+    publicUrl: "https://www.divinlink.com/kundli",
   },
   {
     id: "kundli_matching",
