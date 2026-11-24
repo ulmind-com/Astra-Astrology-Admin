@@ -761,6 +761,69 @@ export type FaceReadingSection = S["ReadingSectionOut"];
 export type FaceReadingAvailability = S["FaceReadingAvailability"];
 export type FaceRule = S["RuleOut"];
 
+// ------------------------------------------------------------ palm reading
+export interface PalmRuleCondition {
+  metric: string;
+  min?: number | null;
+  max?: number | null;
+  equals?: string | number | boolean | null;
+  contains?: string | null;
+  [key: string]: unknown;
+}
+
+export interface PalmRule {
+  id: string;
+  feature: string;
+  option: string;
+  label: string;
+  meaning: string;
+  area?: string | null;
+  source?: string | null;
+  requires: string[];
+  conditions: PalmRuleCondition[];
+  priority: number;
+  is_default: boolean;
+  enabled: boolean;
+  reviewed: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PalmRuleCreateInput {
+  feature: string;
+  option: string;
+  label: string;
+  meaning: string;
+  area?: string | null;
+  source?: string | null;
+  requires?: string[];
+  conditions?: PalmRuleCondition[];
+  priority?: number;
+  is_default?: boolean;
+  enabled?: boolean;
+  reviewed?: boolean;
+}
+
+export interface PalmRuleUpdateInput {
+  label?: string;
+  meaning?: string;
+  area?: string | null;
+  source?: string | null;
+  requires?: string[];
+  conditions?: PalmRuleCondition[];
+  priority?: number;
+  is_default?: boolean;
+  enabled?: boolean;
+  reviewed?: boolean;
+}
+
+export interface PalmRulesMeta {
+  features: Array<{ value: string; label: string }>;
+  feature_labels: Record<string, string>;
+  requirements: Array<{ value: string; label: string; reason: string }>;
+  areas: string[];
+}
+
 // ------------------------------------------------------- astro store & shop
 export interface ShopProductCategory {
   id: string;

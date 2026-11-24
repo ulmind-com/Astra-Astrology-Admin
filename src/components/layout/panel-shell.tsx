@@ -33,6 +33,7 @@ import {
   Boxes,
   Tags,
   GraduationCap,
+  Hand,
   MessageSquareQuote,
   Flame,
   BookOpen,
@@ -111,6 +112,7 @@ const ADMIN_TOOLS_NAV: NavItem[] = [
   { href: "/ai-knowledge", label: "AI Astrologer Hub", icon: Bot },
   { href: "/feature-pricing", label: "Feature Pricing", icon: Sparkles },
   { href: "/face-rules", label: "Face Rules", icon: ScanFace },
+  { href: "/palm-rules", label: "Palm Rules", icon: Hand },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

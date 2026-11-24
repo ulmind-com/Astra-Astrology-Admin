@@ -5,6 +5,10 @@ import { endpoints } from "@/lib/api/endpoints";
 import type {
   Address,
   FaceRule,
+  PalmRule,
+  PalmRuleCreateInput,
+  PalmRuleUpdateInput,
+  PalmRulesMeta,
   ReviewPage,
   Review,
   AvailabilityWindow,
@@ -1008,6 +1012,40 @@ export const faceReadingApi = {
       reviewed?: boolean;
     },
   ) => api.patch<FaceRule>(endpoints.faceReading.rule(id), body),
+};
+
+// ------------------------------------------------------------ palm reading
+export const palmReadingApi = {
+  /** Palm reading rules catalog for admin review, editing and calibration. */
+  rules: (params?: {
+    feature?: string;
+    area?: string;
+    enabled?: boolean;
+    reviewed?: boolean;
+    search?: string;
+  }) => api.get<PalmRule[]>(endpoints.palmReading.rules, { query: params }),
+
+  rule: (id: string) =>
+    api.get<PalmRule>(endpoints.palmReading.rule(id)),
+
+  meta: () =>
+    api.get<PalmRulesMeta>(endpoints.palmReading.meta),
+
+  createRule: (body: PalmRuleCreateInput) =>
+    api.post<PalmRule>(endpoints.palmReading.rules, body),
+
+  updateRule: (id: string, body: PalmRuleUpdateInput) =>
+    api.patch<PalmRule>(endpoints.palmReading.rule(id), body),
+
+  deleteRule: (id: string) =>
+    api.delete<{ id: string; deleted: boolean }>(endpoints.palmReading.rule(id)),
+
+  seedRules: (force: boolean = false) =>
+    api.post<{ created: number; updated: number; skipped: number }>(
+      endpoints.palmReading.seed,
+      undefined,
+      { query: { force } },
+    ),
 };
 
 // ------------------------------------------------------------ AI Astrologer Hub
