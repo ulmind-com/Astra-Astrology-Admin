@@ -220,6 +220,8 @@ export type PlatformSettings = S["PlatformSettingsOut"] & {
   annual_horoscope_enabled?: boolean;
   kundli_coins?: number;
   kundli_enabled?: boolean;
+  kundli_pdf_coins?: number;
+  kundli_pdf_enabled?: boolean;
   kundli_matching_coins?: number;
   kundli_matching_enabled?: boolean;
   kp_calculator_coins?: number;
@@ -256,6 +258,8 @@ export interface FeaturePricingUpdate {
   annual_horoscope_enabled?: boolean;
   kundli_coins?: number;
   kundli_enabled?: boolean;
+  kundli_pdf_coins?: number;
+  kundli_pdf_enabled?: boolean;
   kundli_matching_coins?: number;
   kundli_matching_enabled?: boolean;
   kp_calculator_coins?: number;
