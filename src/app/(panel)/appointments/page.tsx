@@ -352,6 +352,10 @@ function AppointmentHero({
 
   const upcomingCount = (bookings ?? []).filter(isUpcoming).length;
   const todayCount = (bookings ?? []).filter((a) => isSameDay(a.starts_at)).length;
+  const activeNowBookings = (bookings ?? []).filter((a) => {
+    const now = Date.now();
+    return a.status === "booked" && new Date(a.starts_at).getTime() <= now && new Date(a.ends_at).getTime() >= now;
+  });
   const windowsCount = (windows ?? []).length;
   const isEnabled = card?.enabled ?? false;
 
@@ -422,6 +426,22 @@ function AppointmentHero({
                   <span className="size-2 rounded-full bg-slate-400" />
                   Calendar Paused
                 </span>
+              )}
+
+              {activeNowBookings.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onSelectTab?.("ledger")}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700 border border-rose-200 hover:bg-rose-100 transition-colors cursor-pointer"
+                >
+                  <span className="relative flex size-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
+                    <span className="relative inline-flex size-2 rounded-full bg-rose-500" />
+                  </span>
+                  <span>
+                    {activeNowBookings.length} Live Session{activeNowBookings.length > 1 ? "s" : ""} In Progress
+                  </span>
+                </button>
               )}
 
               {/* Brahma Pause Trigger Button */}

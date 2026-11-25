@@ -18,6 +18,7 @@ import {
   Coins,
   Copy,
   CreditCard,
+  Download,
   ExternalLink,
   Eye,
   Filter,
@@ -1701,6 +1702,72 @@ export default function EarningsPage() {
 
   const pendingPayoutsCount = payoutsList.filter((p) => p.status === "pending").length;
 
+  const handleExportPayoutsCsv = () => {
+    const targetRows = payoutsList.filter((p) =>
+      adminPayoutFilter === "all" ? p.status === "pending" : true
+    );
+    if (targetRows.length === 0) {
+      toast.info("No pending or matching payout requests available to export.");
+      return;
+    }
+
+    const csvCell = (val: unknown) => {
+      const str = String(val ?? "");
+      const safe = /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
+      return `"${safe.replace(/"/g, '""')}"`;
+    };
+
+    const headers = [
+      "Payout ID",
+      "Beneficiary Name",
+      "Beneficiary Type",
+      "Payout Method",
+      "Account Holder",
+      "Bank Name",
+      "Account / Masked",
+      "IFSC",
+      "UPI ID",
+      "Net Payable (INR)",
+      "Status",
+      "UTR Reference",
+      "Requested At",
+    ];
+
+    const lines = [
+      headers.map(csvCell).join(","),
+      ...targetRows.map((p) =>
+        [
+          p.id,
+          p.beneficiary_name || p.astrologer_name || "Specialist",
+          p.beneficiary_type || "astrologer",
+          p.payout_method,
+          p.account_holder_name || "",
+          p.bank_name || "",
+          p.account_number_masked || (p.account_number_last4 ? `XX${p.account_number_last4}` : ""),
+          p.ifsc || "",
+          p.upi_id || "",
+          ((p.amount_paise || 0) / 100).toFixed(2),
+          p.status,
+          p.utr_number || "",
+          p.requested_at || "",
+        ]
+          .map(csvCell)
+          .join(",")
+      ),
+    ];
+
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `DivinLink_Bank_Payouts_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${targetRows.length} payout record(s) to Bank CSV.`);
+  };
+
   return (
     <div className="space-y-6">
       {/* ── 1. TOP LIVE REVENUE ENGINE HUD STRIP ── */}
@@ -2270,7 +2337,7 @@ export default function EarningsPage() {
           </div>
 
           {/* Status Filters Bar */}
-          <div className="flex items-center justify-between gap-3 px-1">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-1">
             <div className="flex items-center gap-1.5">
               {[
                 { id: "all", label: "All Requests" },
@@ -2292,6 +2359,14 @@ export default function EarningsPage() {
                 </button>
               ))}
             </div>
+            <button
+              type="button"
+              onClick={handleExportPayoutsCsv}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition-colors shadow-xs cursor-pointer"
+            >
+              <Download className="size-3.5" />
+              <span>Export {adminPayoutFilter === "all" ? "Pending " : ""}Payouts (Bank CSV)</span>
+            </button>
           </div>
 
           {/* Payouts Table */}

@@ -229,6 +229,7 @@ export const endpoints = {
         `/admin/courses/${courseId}/enrollments/${enrollmentId}/validity`,
       updateEnrollmentValidityGlobal: (enrollmentId: string) =>
         `/admin/courses/enrollments/${enrollmentId}/validity`,
+      reconcileCertificates: "/admin/courses/reconcile-certificates",
       questions: "/admin/courses/questions",
       videoPreview: (videoId: string) => `/admin/courses/preview-token/${videoId}`,
       answerQuestion: (questionId: string) => `/admin/courses/questions/${questionId}/answers`,

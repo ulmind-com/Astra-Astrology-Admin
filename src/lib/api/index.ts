@@ -1702,6 +1702,13 @@ export const courseAdminApi = {
       endpoints.admin.courses.updateEnrollmentValidityGlobal(enrollmentId),
       body
     ),
+
+  reconcileCertificates: () =>
+    api.post<{
+      total_enrollments_checked?: number;
+      completed_enrollments?: number;
+      certificates_reconciled_and_updated?: number;
+    }>(endpoints.admin.courses.reconcileCertificates, {}),
 };
 
 // ------------------------------------------------------------------- Purohit Types & APIs

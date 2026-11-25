@@ -14,6 +14,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  ShieldCheck,
   Trash2,
   UploadCloud,
   Users,
@@ -105,6 +106,7 @@ export default function CoursesAdminPage() {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingCourse, setEditingCourse] = React.useState<CourseAdminItem | null>(null);
   const [deletingCourseId, setDeletingCourseId] = React.useState<string | null>(null);
+  const [reconcileConfirmOpen, setReconcileConfirmOpen] = React.useState(false);
 
   // Form state
   const [formData, setFormData] = React.useState<CourseAdminInput>({
@@ -225,6 +227,22 @@ export default function CoursesAdminPage() {
     },
     onError: (err: any) => {
       toast.error(err?.message || "Failed to delete course");
+    },
+  });
+
+  const reconcileCertificatesMutation = useMutation({
+    mutationFn: () => courseAdminApi.reconcileCertificates(),
+    onSuccess: (res) => {
+      setReconcileConfirmOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["admin-courses"] });
+      const updated = res?.certificates_reconciled_and_updated ?? 0;
+      const completed = res?.completed_enrollments ?? 0;
+      toast.success(
+        `Certificates reconciled: ${updated} issued/synced across ${completed} completed enrollments.`
+      );
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to reconcile course certificates");
     },
   });
 
@@ -352,6 +370,16 @@ export default function CoursesAdminPage() {
                 গুরুকুল জিজ্ঞাসা (Q&A)
               </Button>
             </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setReconcileConfirmOpen(true)}
+              disabled={reconcileCertificatesMutation.isPending}
+              className="gap-1.5 border-indigo-500/30 text-indigo-600 hover:text-indigo-500 hover:bg-indigo-500/10"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Reconcile Certificates
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -1039,6 +1067,17 @@ export default function CoursesAdminPage() {
         confirmLabel="Delete Course"
         tone="danger"
         loading={deleteMutation.isPending}
+      />
+
+      {/* Reconcile Certificates Confirmation Modal */}
+      <ConfirmModal
+        open={reconcileConfirmOpen}
+        onClose={() => setReconcileConfirmOpen(false)}
+        onConfirm={() => reconcileCertificatesMutation.mutate()}
+        title="Reconcile Course Certificates"
+        description="This scans all 100% completed enrollments, mints any missing certificate IDs, and re-signs cryptographic verification hashes with DivinLink authority."
+        confirmLabel="Reconcile All Certificates"
+        loading={reconcileCertificatesMutation.isPending}
       />
     </div>
   );

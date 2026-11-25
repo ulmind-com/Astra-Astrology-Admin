@@ -46,6 +46,23 @@ function formatINR(n: number) {
   return `₹${n.toLocaleString("en-IN")}`;
 }
 
+function formatLocalDateInput(isoOrDate?: string | null): string {
+  if (!isoOrDate) return "";
+  const d = new Date(isoOrDate);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function normalizeCouponDateBoundary(dateStr: string, boundary: "start" | "end"): string | undefined {
+  const trimmed = dateStr.trim();
+  if (!trimmed) return undefined;
+  const suffix = boundary === "end" ? "T23:59:59.999" : "T00:00:00.000";
+  const parsed = new Date(`${trimmed}${suffix}`);
+  if (Number.isNaN(parsed.getTime())) return undefined;
+  return parsed.toISOString();
+}
+
 const DEFAULT_FORM_DATA: ShopCouponInput = {
   code: "",
   title: "",
@@ -190,8 +207,8 @@ export default function CouponsPage() {
       per_user_limit: coupon.per_user_limit,
       first_order_only: coupon.first_order_only,
       is_highlighted: coupon.is_highlighted,
-      start_date: coupon.start_date ? new Date(coupon.start_date).toISOString().slice(0, 10) : "",
-      expiry_date: coupon.expiry_date ? new Date(coupon.expiry_date).toISOString().slice(0, 10) : "",
+      start_date: formatLocalDateInput(coupon.start_date),
+      expiry_date: formatLocalDateInput(coupon.expiry_date),
       is_active: coupon.is_active,
     });
     setModalOpen(true);
@@ -212,6 +229,14 @@ export default function CouponsPage() {
       return;
     }
 
+    const normalizedStart = formData.start_date ? normalizeCouponDateBoundary(formData.start_date, "start") : undefined;
+    const normalizedExpiry = formData.expiry_date ? normalizeCouponDateBoundary(formData.expiry_date, "end") : undefined;
+
+    if (normalizedStart && normalizedExpiry && new Date(normalizedExpiry) <= new Date(normalizedStart)) {
+      toast.error("Expiry date must be on or after the start date");
+      return;
+    }
+
     const payload: ShopCouponInput = {
       ...formData,
       code: formData.code?.trim().toUpperCase(),
@@ -222,8 +247,8 @@ export default function CouponsPage() {
       max_discount_amount: formData.max_discount_amount ? Number(formData.max_discount_amount) : undefined,
       usage_limit: formData.usage_limit ? Number(formData.usage_limit) : undefined,
       per_user_limit: Number(formData.per_user_limit || 1),
-      start_date: formData.start_date ? new Date(formData.start_date).toISOString() : undefined,
-      expiry_date: formData.expiry_date ? new Date(formData.expiry_date).toISOString() : undefined,
+      start_date: normalizedStart,
+      expiry_date: normalizedExpiry,
     };
 
     saveMutation.mutate(payload);
