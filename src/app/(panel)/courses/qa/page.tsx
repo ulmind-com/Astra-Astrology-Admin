@@ -412,44 +412,44 @@ export default function GurukulQAPage() {
           {questions.map((q: AdminCourseQuestion) => (
             <div key={q.id} className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 space-y-4 shadow-xs hover:border-amber-400 dark:hover:border-amber-500/80 transition-all">
                 {/* Top Row: Course & Video Lecture Context */}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className="rounded-lg bg-surface-muted px-2.5 py-1 font-semibold text-foreground flex items-center gap-1.5 border border-border">
+                    <span className="rounded-xl bg-slate-100 dark:bg-slate-800 px-3 py-1 font-bold text-slate-900 dark:text-white flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
                       <GraduationCap className="h-3.5 w-3.5 text-amber-600" />
                       {q.course_title}
                     </span>
 
-                    <span className="rounded-lg bg-amber-500/10 px-2.5 py-1 font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-1.5 border border-amber-500/20">
+                    <span className="rounded-xl bg-amber-500/10 px-3 py-1 font-bold text-amber-700 dark:text-amber-300 flex items-center gap-1.5 border border-amber-500/25">
                       <PlayCircle className="h-3.5 w-3.5" />
                       {q.section_title} • {q.lesson_title}
                     </span>
 
                     {/* Timestamp Tag */}
                     {q.timestamp_seconds > 0 ? (
-                      <span className="rounded-lg bg-emerald-500/10 px-2 py-1 font-mono font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1 border border-emerald-500/20">
+                      <span className="rounded-xl bg-emerald-500/10 px-2.5 py-1 font-mono font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1 border border-emerald-500/25">
                         <Clock className="h-3 w-3" />
                         <span>ভিডিও সময়: {q.timestamp_formatted}</span>
                       </span>
                     ) : (
-                      <span className="text-[11px] text-muted-foreground italic">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 italic">
                         (সাধারণ জিজ্ঞাসা)
                       </span>
                     )}
 
                     {q.has_official_answer && (
-                      <span className="rounded-full bg-emerald-600/10 text-emerald-600 px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 border border-emerald-600/20">
+                      <span className="rounded-full bg-emerald-600/15 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 text-[10px] font-black flex items-center gap-1 border border-emerald-600/30">
                         <ShieldCheck className="h-3 w-3" /> আচার্য উত্তর প্রদত্ত
                       </span>
                     )}
 
                     {q.is_resolved && (
-                      <span className="rounded-full bg-blue-500/10 text-blue-600 px-2 py-0.5 text-[10px] font-bold">
+                      <span className="rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-300 px-2.5 py-0.5 text-[10px] font-bold border border-blue-500/30">
                         ✓ সমাধান হয়েছে
                       </span>
                     )}
 
                     {q.is_hidden && (
-                      <span className="rounded-full bg-danger/10 text-danger px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 border border-danger/20">
+                      <span className="rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 px-2.5 py-0.5 text-[10px] font-bold flex items-center gap-1 border border-rose-500/30">
                         <EyeOff className="h-3 w-3" /> লুকানো / স্প্যাম
                       </span>
                     )}
@@ -466,7 +466,7 @@ export default function GurukulQAPage() {
                           isHidden: !q.is_hidden,
                         })
                       }
-                      className={`p-1.5 h-8 w-8 ${q.is_hidden ? "text-danger bg-danger/10" : "text-muted-foreground hover:text-foreground"}`}
+                      className={`p-1.5 h-8 w-8 rounded-xl ${q.is_hidden ? "text-rose-600 bg-rose-500/10" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                       title={q.is_hidden ? "প্রশ্ন পুনরায় প্রকাশ করুন (Unhide)" : "প্রশ্ন লুকিয়ে রাখুন (Hide/Spam)"}
                     >
                       {q.is_hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -480,7 +480,7 @@ export default function GurukulQAPage() {
                           isPinned: !q.is_pinned,
                         })
                       }
-                      className={`p-1.5 h-8 w-8 ${q.is_pinned ? "text-amber-600" : "text-muted-foreground"}`}
+                      className={`p-1.5 h-8 w-8 rounded-xl ${q.is_pinned ? "text-amber-600 bg-amber-500/10" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                       title={q.is_pinned ? "Unpin question" : "Pin question to top"}
                     >
                       <Pin className="h-3.5 w-3.5" />
@@ -490,7 +490,7 @@ export default function GurukulQAPage() {
                       size="sm"
                       variant="ghost"
                       onClick={() => setDeletingQuestionId(q.id)}
-                      className="p-1.5 h-8 w-8 text-danger hover:bg-danger/10"
+                      className="p-1.5 h-8 w-8 rounded-xl text-rose-600 hover:bg-rose-500/10"
                       title="Delete question"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -501,64 +501,64 @@ export default function GurukulQAPage() {
                 {/* Middle: Student Details Box & Question Content */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   {/* Student Profile Card */}
-                  <div className="md:col-span-1 rounded-xl bg-surface-muted/50 p-3.5 border border-border/80 space-y-2 text-xs">
-                    <p className="font-bold text-foreground flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <div className="md:col-span-1 rounded-2xl bg-slate-50 dark:bg-slate-950/60 p-4 border border-slate-200 dark:border-slate-800 space-y-2.5 text-xs shadow-2xs">
+                    <p className="font-bold flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       <User className="h-3.5 w-3.5 text-amber-600" /> ছাত্রের বিবরণ (Student)
                     </p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                       <Avatar
                         src={q.user_avatar}
                         name={q.user_name}
-                        className="h-8 w-8 text-xs"
+                        className="h-8 w-8 text-xs font-bold"
                       />
                       <div>
-                        <p className="font-bold text-foreground">{q.user_name}</p>
-                        <span className="text-[10px] text-muted-foreground">
+                        <p className="font-bold text-slate-900 dark:text-white">{q.user_name}</p>
+                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                           {q.student_enrolled_at ? "এনরোল্ড স্টুডেন্ট" : "ভিজিটর"}
                         </span>
                       </div>
                     </div>
 
                     {q.user_email && (
-                      <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 truncate">
-                        <Mail className="h-3 w-3 shrink-0" />
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 flex items-center gap-1.5 truncate">
+                        <Mail className="h-3 w-3 shrink-0 text-slate-400" />
                         <span className="truncate">{q.user_email}</span>
                       </p>
                     )}
 
                     {q.user_phone && (
-                      <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                        <Phone className="h-3 w-3 shrink-0" />
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                        <Phone className="h-3 w-3 shrink-0 text-slate-400" />
                         <span>{q.user_phone}</span>
                       </p>
                     )}
 
                     {q.student_progress_percent !== undefined && (
-                      <div className="pt-1.5 border-t border-border/50">
-                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                      <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
                           <span>কোর্স অগ্রগতি:</span>
-                          <span className="font-bold text-foreground">{q.student_progress_percent}%</span>
+                          <span className="font-black text-slate-900 dark:text-white">{q.student_progress_percent}%</span>
                         </div>
                       </div>
                     )}
                   </div>
 
                   {/* Question Content */}
-                  <div className="md:col-span-3 space-y-2">
-                    <h3 className="text-base font-bold text-foreground leading-snug">
+                  <div className="md:col-span-3 space-y-2.5">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
                       {q.title}
                     </h3>
-                    <p className="text-xs text-muted-foreground whitespace-pre-line leading-relaxed">
+                    <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed">
                       {q.content}
                     </p>
 
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
-                      <span className="flex items-center gap-1">
-                        <ThumbsUp className="h-3.5 w-3.5 text-amber-600" /> {q.upvote_count} আপভোট
+                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                      <span className="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
+                        <ThumbsUp className="h-3.5 w-3.5" /> {q.upvote_count} আপভোট
                       </span>
                       <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <MessageSquare className="h-3.5 w-3.5" /> {q.answers?.length || 0} উত্তর
+                      <span className="flex items-center gap-1 font-semibold">
+                        <MessageSquare className="h-3.5 w-3.5 text-slate-400" /> {q.answers?.length || 0} উত্তর
                       </span>
                       <span>•</span>
                       <span>
@@ -574,8 +574,8 @@ export default function GurukulQAPage() {
 
                 {/* Answers List */}
                 {q.answers && q.answers.length > 0 && (
-                  <div className="border-t border-border/60 pt-3 space-y-2.5">
-                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <div className="border-t border-slate-200 dark:border-slate-800 pt-3 space-y-2.5">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                       <MessageSquare className="h-3.5 w-3.5 text-amber-600" />
                       পূর্ববর্তী উত্তরসমূহ ({q.answers.length}):
                     </p>
@@ -583,10 +583,10 @@ export default function GurukulQAPage() {
                       {q.answers.map((ans: AdminCourseQuestionAnswer) => (
                         <div
                           key={ans.id}
-                          className={`rounded-xl p-3 text-xs space-y-1.5 ${
+                          className={`rounded-2xl p-3.5 text-xs space-y-2 ${
                             ans.is_official
-                              ? "border-2 border-emerald-500/30 bg-emerald-500/5 shadow-sm"
-                              : "border border-border/60 bg-surface-muted/30"
+                              ? "border-2 border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-950/30 text-emerald-950 dark:text-emerald-100 shadow-2xs"
+                              : "border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 text-slate-800 dark:text-slate-200"
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -594,15 +594,15 @@ export default function GurukulQAPage() {
                               <Avatar
                                 src={ans.user_avatar}
                                 name={ans.user_name}
-                                className="h-5 w-5 text-[10px]"
+                                className="h-5 w-5 text-[10px] font-bold"
                               />
-                              <span className="font-bold text-foreground">{ans.user_name}</span>
+                              <span className="font-bold text-slate-900 dark:text-white">{ans.user_name}</span>
                               {ans.is_official && (
-                                <span className="rounded bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.5 flex items-center gap-1 uppercase tracking-wider">
+                                <span className="rounded-lg bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 flex items-center gap-1 uppercase tracking-wider shadow-2xs">
                                   <ShieldCheck className="h-2.5 w-2.5" /> আচার্য উত্তর
                                 </span>
                               )}
-                              <span className="text-[10px] text-muted-foreground">
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400">
                                 {new Date(ans.created_at).toLocaleDateString("bn-IN", {
                                   dateStyle: "medium",
                                 })}
@@ -617,13 +617,13 @@ export default function GurukulQAPage() {
                                   answerId: ans.id,
                                 })
                               }
-                              className="text-muted-foreground hover:text-danger p-1"
+                              className="text-slate-400 hover:text-rose-600 p-1 transition-colors cursor-pointer"
                               title="Delete reply"
                             >
                               <Trash2 className="h-3 w-3" />
                             </button>
                           </div>
-                          <p className="text-foreground whitespace-pre-line leading-relaxed pl-7">
+                          <p className="whitespace-pre-line leading-relaxed pl-7">
                             {ans.content}
                           </p>
                         </div>
@@ -633,20 +633,20 @@ export default function GurukulQAPage() {
                 )}
 
                 {/* Acharya Reply Accordion */}
-                <div className="border-t border-border/60 pt-3">
+                <div className="border-t border-slate-200 dark:border-slate-800 pt-3">
                   {replyingQuestionId === q.id ? (
-                    <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 space-y-3 animate-in fade-in-50">
+                    <div className="rounded-2xl border border-amber-400/80 dark:border-amber-700/60 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent dark:from-amber-950/30 p-4 space-y-3 animate-in fade-in-50">
                       <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                        <p className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                           <ShieldCheck className="h-4 w-4 text-emerald-600" />
                           আচার্য গুরু হিসেবে সরাসরি উত্তর লিখুন (Official Answer)
                         </p>
-                        <label className="flex items-center gap-2 text-xs cursor-pointer font-semibold text-foreground">
+                        <label className="flex items-center gap-2 text-xs cursor-pointer font-semibold text-slate-700 dark:text-slate-300">
                           <input
                             type="checkbox"
                             checked={markResolvedOnReply}
                             onChange={(e) => setMarkResolvedOnReply(e.target.checked)}
-                            className="rounded border-border text-amber-600 focus:ring-amber-500"
+                            className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
                           />
                           <span>উত্তরের পর প্রশ্নটি "সমাধান (Resolved)" হিসেবে চিহ্নিত করুন</span>
                         </label>
@@ -657,6 +657,7 @@ export default function GurukulQAPage() {
                         value={replyContent}
                         onChange={(e) => setReplyContent(e.target.value)}
                         placeholder="শাস্ত্রীয় প্রমাণ, লগ্ন ও নক্ষত্রের ফলাফল অনুযায়ী ছাত্রের প্রশ্নটির বিশদ ও সঠিক উত্তর লিখুন..."
+                        className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
                       />
 
                       <div className="flex justify-end gap-2">
@@ -668,6 +669,7 @@ export default function GurukulQAPage() {
                             setReplyContent("");
                           }}
                           disabled={replyMutation.isPending}
+                          className="rounded-xl"
                         >
                           বাতিল
                         </Button>
@@ -675,7 +677,7 @@ export default function GurukulQAPage() {
                           size="sm"
                           onClick={() => replyMutation.mutate(q.id)}
                           disabled={replyMutation.isPending || !replyContent.trim()}
-                          className="bg-amber-600 hover:bg-amber-700 text-white gap-1.5 text-xs"
+                          className="bg-amber-600 hover:bg-amber-700 text-white gap-1.5 text-xs rounded-xl shadow-xs"
                         >
                           <Send className="h-3.5 w-3.5" />
                           <span>{replyMutation.isPending ? "পাঠানো হচ্ছে..." : "আচার্য উত্তর পোস্ট করুন"}</span>
@@ -691,7 +693,7 @@ export default function GurukulQAPage() {
                           setReplyingQuestionId(q.id);
                           setReplyContent("");
                         }}
-                        className="gap-1.5 text-xs bg-surface hover:bg-surface-muted text-amber-600 border-amber-500/30"
+                        className="gap-1.5 text-xs bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-amber-700 dark:text-amber-300 border-amber-500/40 rounded-xl font-bold cursor-pointer"
                       >
                         <Send className="h-3.5 w-3.5" />
                         <span>উত্তর দিন / Reply to Student</span>
@@ -707,7 +709,7 @@ export default function GurukulQAPage() {
                             isResolved: !q.is_resolved,
                           })
                         }
-                        className={`text-xs gap-1 ${q.is_resolved ? "text-blue-600" : "text-muted-foreground"}`}
+                        className={`text-xs gap-1 font-semibold rounded-xl ${q.is_resolved ? "text-blue-600 dark:text-blue-400" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         <span>{q.is_resolved ? "Mark Unresolved" : "Mark as Resolved"}</span>

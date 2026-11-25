@@ -295,14 +295,14 @@ export default function ShopCMSPage() {
       />
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-stone-200 dark:border-stone-800 pb-2">
+      <div className="inline-flex rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 gap-1.5 shadow-xs overflow-x-auto max-w-full">
         <button
           type="button"
           onClick={() => setActiveTab("hero_banners")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === "hero_banners"
-              ? "bg-amber-600 text-white shadow-xs"
-              : "text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-900"
+              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >
           <Layers className="size-4" />
@@ -311,10 +311,10 @@ export default function ShopCMSPage() {
         <button
           type="button"
           onClick={() => setActiveTab("announcement")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === "announcement"
-              ? "bg-amber-600 text-white shadow-xs"
-              : "text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-900"
+              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >
           <Sparkles className="size-4" />
@@ -323,10 +323,10 @@ export default function ShopCMSPage() {
         <button
           type="button"
           onClick={() => setActiveTab("policies")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === "policies"
-              ? "bg-amber-600 text-white shadow-xs"
-              : "text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-900"
+              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >
           <ShieldCheck className="size-4 text-emerald-400" />
@@ -336,10 +336,10 @@ export default function ShopCMSPage() {
         <button
           type="button"
           onClick={() => setActiveTab("invoice_gst")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === "invoice_gst"
-              ? "bg-amber-600 text-white shadow-xs"
-              : "text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-900"
+              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >
           <FileText className="size-4 text-amber-500" />
