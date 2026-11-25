@@ -60,10 +60,10 @@ export function DivyaParamarshaModal({
       width: 240,
       margin: 1,
       color: {
-        dark: "#1A1306",
-        light: "#FAF5E9",
+        dark: "#1d1a1c",
+        light: "#ffffff",
       },
-      errorCorrectionLevel: "M",
+      errorCorrectionLevel: "H",
     })
       .then((url) => setQrDataUrl(url))
       .catch(() => {});
@@ -388,11 +388,11 @@ export function DivyaParamarshaModal({
               {/* 3. Unique Authenticity QR Code */}
               <div className="flex flex-col items-center sm:items-end justify-center text-center sm:text-right space-y-1">
                 {qrDataUrl ? (
-                  <div className="p-1 rounded-xl bg-[#FAF5E9] border border-amber-500/60 shadow-md">
+                  <div className="p-1.5 rounded-xl bg-white border border-stone-200 shadow-xs">
                     <img
                       src={qrDataUrl}
                       alt="Astra Authenticity Verification QR Code"
-                      className="size-16 sm:size-18 block rounded-lg"
+                      className="size-16 sm:size-18 block rounded-sm"
                     />
                   </div>
                 ) : (
