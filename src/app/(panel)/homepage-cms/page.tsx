@@ -38,11 +38,67 @@ import {
   LoadingBlock,
   Switch,
 } from "@/components/ui";
-import { cmsAdminApi, type HomePageCMSData, type HeroSlideConfig } from "@/lib/api";
+import {
+  cmsAdminApi,
+  type HomePageCMSData,
+  type HeroSlideConfig,
+  type CinematicHeroSlideConfig,
+} from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { useRequireAuth } from "@/providers/auth-provider";
 
-type ActiveTab = "slides" | "hero" | "chakra" | "cards" | "stats" | "services" | "cta";
+type ActiveTab = "cinematic" | "slides" | "hero" | "chakra" | "cards" | "stats" | "services" | "cta";
+
+const DEFAULT_CINEMATIC_SLIDES: CinematicHeroSlideConfig[] = [
+  {
+    id: "welcome",
+    photo: "/images/home-cinematic/hero-1.webp",
+    position: "center 62%",
+    thumb: "/images/home-cinematic/rail-1.webp",
+    layout: "one",
+    title_en: "WELCOME TO DIVINLINK",
+    title_bn: "ডিভাইনলিংকে স্বাগতম",
+    title_hi: "डिवाइनलिंक में स्वागत",
+    heading_en: "Discover DivinLink",
+    heading_bn: "ডিভাইনলিংক আবিষ্কার করুন",
+    heading_hi: "डिवाइनलिंक को जानें",
+    description_en: "Verified Vedic astrologers, free kundli and daily guidance for you and your family",
+    description_bn: "যাচাই করা বৈদিক জ্যোতিষী, ফ্রি কুণ্ডলী ও প্রতিদিনের দিশা, আপনার ও আপনার পরিবারের জন্য",
+    description_hi: "सत्यापित वैदिक ज्योतिषी, मुफ़्त कुंडली और रोज़ का मार्गदर्शन, आपके और आपके परिवार के लिए",
+  },
+  {
+    id: "guide",
+    photo: "/images/home-cinematic/hero-2.webp",
+    position: "center 55%",
+    thumb: "/images/home-cinematic/rail-2.webp",
+    layout: "one",
+    title_en: "FIND YOUR GUIDE",
+    title_bn: "আপনার গুরু খুঁজুন",
+    title_hi: "अपना गुरु खोजें",
+    heading_en: "Talk to experts",
+    heading_bn: "বিশেষজ্ঞের সঙ্গে কথা বলুন",
+    heading_hi: "विशेषज्ञों से बात करें",
+    description_en: "Chat or call astrologers for love, career, marriage and health questions",
+    description_bn: "প্রেম, কেরিয়ার, বিবাহ ও স্বাস্থ্যের প্রশ্নে জ্যোতিষীর সঙ্গে চ্যাট বা কল করুন",
+    description_hi: "प्रेम, करियर, विवाह और स्वास्थ्य के सवालों पर ज्योतिषी से चैट या कॉल करें",
+  },
+  {
+    id: "stars",
+    photo: "/images/home-cinematic/hero-3.webp",
+    position: "center 40%",
+    thumb: "/images/home-cinematic/rail-3.webp",
+    layout: "two",
+    title_en: "EXPLORE\nTHE STARS",
+    title_bn: "নক্ষত্রের\nসন্ধানে",
+    title_hi: "सितारों को\nजानें",
+    heading_en: "Read the stars",
+    heading_bn: "নক্ষত্র পড়ুন",
+    heading_hi: "सितारों को पढ़ें",
+    description_en: "Explore your kundli, panchang and nakshatra through the eyes of Vedic tradition",
+    description_bn: "বৈদিক ঐতিহ্যের চোখে আপনার কুণ্ডলী, পঞ্জিকা ও নক্ষত্র জানুন",
+    description_hi: "वैदिक परंपरा की दृष्टि से अपनी कुंडली, पंचांग और नक्षत्र जानें",
+  },
+];
 
 const DEFAULT_SLIDES: HeroSlideConfig[] = [
   {
@@ -126,6 +182,7 @@ const DEFAULT_SLIDES: HeroSlideConfig[] = [
 ];
 
 const DEFAULT_CMS_DATA: HomePageCMSData = {
+  cinematic_hero_slides: DEFAULT_CINEMATIC_SLIDES,
   hero_slides: DEFAULT_SLIDES,
   hero_eyebrow: "Explore the Horoscope",
   hero_title_line1: "WELCOME TO THE",
@@ -176,11 +233,16 @@ export default function HomepageCMSPage() {
   const { ready } = useRequireAuth({ roles: ["admin", "super_admin"], signInPath: "/login" });
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = React.useState<ActiveTab>("hero");
+  const [activeTab, setActiveTab] = React.useState<ActiveTab>("cinematic");
   const [formData, setFormData] = React.useState<HomePageCMSData>(DEFAULT_CMS_DATA);
   const [isDirty, setIsDirty] = React.useState(false);
   const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const cinematicFileInputRef = React.useRef<HTMLInputElement>(null);
+  const [cinematicUploadTarget, setCinematicUploadTarget] = React.useState<{
+    index: number;
+    field: "photo" | "thumb";
+  } | null>(null);
 
   const { data: serverData, isLoading, error } = useQuery({
     queryKey: ["admin", "cms", "homepage"],
@@ -192,9 +254,91 @@ export default function HomepageCMSPage() {
   // Sync formData with serverData once fetched
   React.useEffect(() => {
     if (serverData) {
-      setFormData(serverData);
+      setFormData({
+        ...serverData,
+        cinematic_hero_slides:
+          serverData.cinematic_hero_slides && serverData.cinematic_hero_slides.length > 0
+            ? serverData.cinematic_hero_slides
+            : DEFAULT_CINEMATIC_SLIDES,
+      });
     }
   }, [serverData]);
+
+  const updateCinematicSlide = <K extends keyof CinematicHeroSlideConfig>(
+    index: number,
+    field: K,
+    value: CinematicHeroSlideConfig[K],
+  ) => {
+    setFormData((prev) => {
+      if (!prev) return prev;
+      const slides = [...(prev.cinematic_hero_slides || DEFAULT_CINEMATIC_SLIDES)];
+      if (slides[index]) {
+        slides[index] = { ...slides[index], [field]: value };
+      }
+      return { ...prev, cinematic_hero_slides: slides };
+    });
+    setIsDirty(true);
+  };
+
+  const addCinematicSlide = () => {
+    setFormData((prev) => {
+      if (!prev) return prev;
+      const slides = [...(prev.cinematic_hero_slides || DEFAULT_CINEMATIC_SLIDES)];
+      const newSlide: CinematicHeroSlideConfig = {
+        id: `slide-${Date.now()}`,
+        photo: "/images/home-cinematic/hero-1.webp",
+        position: "center 50%",
+        thumb: "/images/home-cinematic/rail-1.webp",
+        layout: "one",
+        title_en: "NEW HEADLINE",
+        title_bn: "নতুন শিরোনাম",
+        title_hi: "नई शीर्षक",
+        heading_en: "Vedic Wisdom",
+        heading_bn: "বৈদিক জ্ঞান",
+        heading_hi: "वैदिक ज्ञान",
+        description_en: "Explore ancient astrology remedies and guidance tailored for you.",
+        description_bn: "আপনার জন্য তৈরি প্রাচীন বৈদিক প্রতিকার এবং সঠিক দিশা জানুন।",
+        description_hi: "अपने लिए प्राचीन वैदिक ज्योतिषीय उपाय और मार्गदर्शन प्राप्त करें।",
+      };
+      return { ...prev, cinematic_hero_slides: [...slides, newSlide] };
+    });
+    setIsDirty(true);
+  };
+
+  const removeCinematicSlide = (index: number) => {
+    setFormData((prev) => {
+      if (!prev) return prev;
+      const slides = [...(prev.cinematic_hero_slides || DEFAULT_CINEMATIC_SLIDES)];
+      slides.splice(index, 1);
+      return { ...prev, cinematic_hero_slides: slides };
+    });
+    setIsDirty(true);
+  };
+
+  const handleCinematicFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !cinematicUploadTarget) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file (PNG, JPG, WebP, SVG).");
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      toast.loading("Uploading slide image to media server...", { id: "uploading-cinematic-img" });
+      const res = await cmsAdminApi.uploadImage(file);
+      updateCinematicSlide(cinematicUploadTarget.index, cinematicUploadTarget.field, res.url);
+      toast.success("Slide image uploaded successfully!", { id: "uploading-cinematic-img" });
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? err.message : "Failed to upload slide image.";
+      toast.error(msg, { id: "uploading-cinematic-img" });
+    } finally {
+      setIsUploading(false);
+      setCinematicUploadTarget(null);
+      if (cinematicFileInputRef.current) cinematicFileInputRef.current.value = "";
+    }
+  };
 
   const updateField = <K extends keyof HomePageCMSData>(key: K, value: HomePageCMSData[K]) => {
     setFormData((prev) => {
@@ -408,7 +552,8 @@ export default function HomepageCMSPage() {
       {/* Tabs Bar */}
       <div className="mb-6 inline-flex rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 gap-1.5 shadow-xs overflow-x-auto max-w-full">
         {[
-          { id: "slides", label: "Hero Banners / Slides", icon: Sparkles },
+          { id: "cinematic", label: "Cinematic Hero Slides", icon: Sparkles },
+          { id: "slides", label: "Spotlight Banners", icon: Layers },
           { id: "hero", label: "Hero Typography", icon: Sliders },
           { id: "chakra", label: "Celestial Chakra Wheel", icon: RotateCw },
           { id: "cards", label: "2x2 Feature Cards", icon: Layers },
@@ -434,6 +579,270 @@ export default function HomepageCMSPage() {
           );
         })}
       </div>
+
+      {/* Hidden file input for cinematic slide image uploads */}
+      <input
+        type="file"
+        ref={cinematicFileInputRef}
+        accept="image/*"
+        onChange={handleCinematicFileChange}
+        className="hidden"
+      />
+
+      {/* ────────────────────────────────────────── TAB: CINEMATIC HERO SLIDES */}
+      {activeTab === "cinematic" && (
+        <div className="grid gap-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-foreground">
+                Cinematic Hero Slides ({formData.cinematic_hero_slides?.length || DEFAULT_CINEMATIC_SLIDES.length})
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Topmost full-bleed interactive 100vh hero slides. Edit titles (Bengali, English, Hindi), background imagery, and side rail details live.
+              </p>
+            </div>
+            <Button size="sm" onClick={addCinematicSlide} className="text-xs">
+              + Add Cinematic Slide
+            </Button>
+          </div>
+
+          <div className="space-y-6">
+            {(formData.cinematic_hero_slides || DEFAULT_CINEMATIC_SLIDES).map((slide, idx) => (
+              <Card key={slide.id || idx} className="overflow-hidden border border-border/70">
+                <CardHeader className="bg-muted/40 py-3.5 px-4 flex flex-row items-center justify-between border-b border-border/50">
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-7 items-center justify-center rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-xs">
+                      {idx + 1}
+                    </span>
+                    <div>
+                      <div className="font-bold text-sm text-foreground flex items-center gap-2">
+                        <span>{slide.title_bn || slide.title_en}</span>
+                        <span className="text-xs text-muted-foreground font-normal">({slide.title_en})</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground font-mono">ID: {slide.id || `slide-${idx + 1}`}</div>
+                    </div>
+                  </div>
+                  {(formData.cinematic_hero_slides || DEFAULT_CINEMATIC_SLIDES).length > 1 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeCinematicSlide(idx)}
+                      className="h-7 text-xs text-destructive hover:bg-destructive/10"
+                    >
+                      Delete Slide
+                    </Button>
+                  )}
+                </CardHeader>
+                <CardBody className="p-5 space-y-5">
+                  {/* Background & Thumbnail imagery */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+                    <div className="space-y-3">
+                      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Background Image (Hero Slide)
+                      </div>
+                      {slide.photo && (
+                        <div className="relative w-full h-36 rounded-lg overflow-hidden border border-border bg-black/10">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={slide.photo}
+                            alt="Background preview"
+                            className="w-full h-full object-cover"
+                            style={{ objectPosition: slide.position || "center center" }}
+                          />
+                        </div>
+                      )}
+                      <Field label="Background Image URL" hint="Direct link or upload a high-res image">
+                        <div className="flex gap-2">
+                          <Input
+                            value={slide.photo}
+                            onChange={(e) => updateCinematicSlide(idx, "photo", e.target.value)}
+                            placeholder="/images/home-cinematic/hero-1.webp"
+                            className="font-mono text-xs"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={isUploading}
+                            onClick={() => {
+                              setCinematicUploadTarget({ index: idx, field: "photo" });
+                              cinematicFileInputRef.current?.click();
+                            }}
+                            className="shrink-0 text-xs"
+                          >
+                            <Upload className="size-3.5 mr-1.5" />
+                            Upload
+                          </Button>
+                        </div>
+                      </Field>
+                      <Field label="Background Position" hint="CSS object-position (e.g. center 62%)">
+                        <Input
+                          value={slide.position || "center 50%"}
+                          onChange={(e) => updateCinematicSlide(idx, "position", e.target.value)}
+                          placeholder="center 62%"
+                          className="font-mono text-xs"
+                        />
+                      </Field>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Rail Thumbnail Image
+                      </div>
+                      {slide.thumb && (
+                        <div className="relative size-36 rounded-full overflow-hidden border-2 border-amber-400 mx-auto shadow-md">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={slide.thumb}
+                            alt="Thumbnail preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <Field label="Thumbnail URL" hint="Direct link or upload a circular thumbnail">
+                        <div className="flex gap-2">
+                          <Input
+                            value={slide.thumb || ""}
+                            onChange={(e) => updateCinematicSlide(idx, "thumb", e.target.value)}
+                            placeholder="/images/home-cinematic/rail-1.webp"
+                            className="font-mono text-xs"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={isUploading}
+                            onClick={() => {
+                              setCinematicUploadTarget({ index: idx, field: "thumb" });
+                              cinematicFileInputRef.current?.click();
+                            }}
+                            className="shrink-0 text-xs"
+                          >
+                            <Upload className="size-3.5 mr-1.5" />
+                            Upload
+                          </Button>
+                        </div>
+                      </Field>
+                      <Field label="Layout Style" hint="One line (8.25vw) or two stacked lines (9.6vw)">
+                        <select
+                          value={slide.layout || "one"}
+                          onChange={(e) => updateCinematicSlide(idx, "layout", e.target.value as "one" | "two")}
+                          className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                          <option value="one">Single Line (one)</option>
+                          <option value="two">Two Stacked Lines (two)</option>
+                        </select>
+                      </Field>
+                    </div>
+                  </div>
+
+                  {/* Multilingual Titles */}
+                  <div className="space-y-3 pt-2">
+                    <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      Hero Slide Titles (Headline Text)
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Field label="Bengali Title (বাংলা)" hint="Separate lines by Enter for stacked layout">
+                        <textarea
+                          rows={2}
+                          value={slide.title_bn}
+                          onChange={(e) => updateCinematicSlide(idx, "title_bn", e.target.value)}
+                          placeholder="ডিভাইনলিংকে স্বাগতম"
+                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        />
+                      </Field>
+                      <Field label="English Title" hint="Separate lines by Enter for stacked layout">
+                        <textarea
+                          rows={2}
+                          value={slide.title_en}
+                          onChange={(e) => updateCinematicSlide(idx, "title_en", e.target.value)}
+                          placeholder="WELCOME TO DIVINLINK"
+                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        />
+                      </Field>
+                      <Field label="Hindi Title (हिन्दी)" hint="Separate lines by Enter for stacked layout">
+                        <textarea
+                          rows={2}
+                          value={slide.title_hi}
+                          onChange={(e) => updateCinematicSlide(idx, "title_hi", e.target.value)}
+                          placeholder="डिवाइनलिंक में स्वागत"
+                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        />
+                      </Field>
+                    </div>
+                  </div>
+
+                  {/* Side Rail Headings & Descriptions */}
+                  <div className="space-y-3 pt-2">
+                    <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      Side Rail Details & Captions
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Field label="Bengali Subheading">
+                        <Input
+                          value={slide.heading_bn || ""}
+                          onChange={(e) => updateCinematicSlide(idx, "heading_bn", e.target.value)}
+                          placeholder="ডিভাইনলিংক আবিষ্কার করুন"
+                        />
+                      </Field>
+                      <Field label="English Subheading">
+                        <Input
+                          value={slide.heading_en || ""}
+                          onChange={(e) => updateCinematicSlide(idx, "heading_en", e.target.value)}
+                          placeholder="Discover DivinLink"
+                        />
+                      </Field>
+                      <Field label="Hindi Subheading">
+                        <Input
+                          value={slide.heading_hi || ""}
+                          onChange={(e) => updateCinematicSlide(idx, "heading_hi", e.target.value)}
+                          placeholder="डिवाइनलिंक को जानें"
+                        />
+                      </Field>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Field label="Bengali Description">
+                        <textarea
+                          rows={2}
+                          value={slide.description_bn || ""}
+                          onChange={(e) => updateCinematicSlide(idx, "description_bn", e.target.value)}
+                          placeholder="যাচাই করা বৈদিক জ্যোতিষী..."
+                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        />
+                      </Field>
+                      <Field label="English Description">
+                        <textarea
+                          rows={2}
+                          value={slide.description_en || ""}
+                          onChange={(e) => updateCinematicSlide(idx, "description_en", e.target.value)}
+                          placeholder="Verified Vedic astrologers..."
+                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        />
+                      </Field>
+                      <Field label="Hindi Description">
+                        <textarea
+                          rows={2}
+                          value={slide.description_hi || ""}
+                          onChange={(e) => updateCinematicSlide(idx, "description_hi", e.target.value)}
+                          placeholder="सत्यापित वैदिक ज्योतिषी..."
+                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button size="sm" onClick={addCinematicSlide} variant="outline" className="text-xs">
+              + Add Cinematic Slide
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* ────────────────────────────────────────── TAB 0: HERO BANNERS & SLIDES */}
       {activeTab === "slides" && (

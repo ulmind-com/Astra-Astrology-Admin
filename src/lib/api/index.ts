@@ -1143,6 +1143,23 @@ export interface TrustStatConfig {
   label: string;
 }
 
+export interface CinematicHeroSlideConfig {
+  id?: string;
+  photo: string;
+  position?: string;
+  thumb?: string;
+  layout?: "one" | "two";
+  title_en: string;
+  title_bn: string;
+  title_hi: string;
+  heading_en?: string;
+  heading_bn?: string;
+  heading_hi?: string;
+  description_en?: string;
+  description_bn?: string;
+  description_hi?: string;
+}
+
 export interface HeroSlideConfig {
   id?: string;
   title: string;
@@ -1158,6 +1175,7 @@ export interface HeroSlideConfig {
 }
 
 export interface HomePageCMSData {
+  cinematic_hero_slides?: CinematicHeroSlideConfig[];
   hero_slides?: HeroSlideConfig[];
   hero_eyebrow: string;
   hero_title_line1: string;
