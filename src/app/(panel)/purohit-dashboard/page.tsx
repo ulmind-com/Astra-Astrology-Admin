@@ -499,8 +499,27 @@ export default function PurohitDashboardPage() {
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* 4. PUJA CATALOG PREVIEW & QUICK ACTIONS                       */}
+      {/* 4. EARNINGS & PUJA CATALOG QUICK ACTIONS                      */}
       {/* ------------------------------------------------------------- */}
+      <Card className="border border-emerald-200/80 bg-emerald-50/40 dark:bg-emerald-950/20">
+        <CardBody className="p-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h4 className="font-bold text-sm text-stone-900 dark:text-white flex items-center gap-2">
+              <Coins className="size-4 text-emerald-600" />
+              <span>দক্ষিণা আয় ও ব্যাংক পেআউট ডেস্ক (Earnings &amp; Payouts)</span>
+            </h4>
+            <p className="text-xs text-stone-600 dark:text-stone-400 mt-0.5">
+              সম্পন্ন পূজার মোট দক্ষিণা, ব্যাংক অ্যাকাউন্ট / UPI QR আপডেট এবং পেআউট রিকোয়েস্ট পরিচালনা করুন।
+            </p>
+          </div>
+          <Link href="/earnings">
+            <Button variant="primary" size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs">
+              আয় ও পেআউট দেখুন →
+            </Button>
+          </Link>
+        </CardBody>
+      </Card>
+
       <Card className="border border-stone-200 dark:border-stone-800">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>

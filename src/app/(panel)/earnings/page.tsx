@@ -103,9 +103,9 @@ function getModeBadge(mode: ConsultationMode) {
 
 export default function EarningsPage() {
   const { user } = useAuth();
-  const isAstrologer = user?.role === "astrologer";
+  const isAstrologer = user?.role === "astrologer" || user?.role === "purohit";
   const { ready } = useRequireAuth({
-    roles: ["astrologer", "admin", "super_admin"],
+    roles: ["astrologer", "purohit", "admin", "super_admin"],
     signInPath: "/login",
   });
 

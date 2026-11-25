@@ -64,6 +64,7 @@ const PUROHIT_NAV: NavItem[] = [
   { href: "/purohit-dashboard/pujas", label: "My Puja Catalog", icon: BookOpen },
   { href: "/purohit-dashboard/availability", label: "Auspicious Slots & Schedule", icon: Calendar },
   { href: "/purohit-dashboard/bookings", label: "Live Puja Bookings", icon: CalendarDays },
+  { href: "/earnings", label: "Earnings & Payouts", icon: TrendingUp },
   { href: "/me/password", label: "Password", icon: Lock },
 ];
 
