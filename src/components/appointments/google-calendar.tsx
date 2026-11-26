@@ -123,6 +123,8 @@ export function GoogleCalendarSuite({
 }: GoogleCalendarProps) {
   const [currentDate, setCurrentDate] = React.useState<Date>(() => new Date());
   const [view, setView] = React.useState<CalendarViewType>("week");
+  const [showMuhurat, setShowMuhurat] = React.useState<boolean>(false);
+  const [googleSyncModalOpen, setGoogleSyncModalOpen] = React.useState<boolean>(false);
   const [panchangGuideOpen, setPanchangGuideOpen] = React.useState(false);
   const currentDayKaalTimes = React.useMemo(() => getPanchangKaalTimes(currentDate), [currentDate]);
 
@@ -537,7 +539,7 @@ export function GoogleCalendarSuite({
           </div>
 
           {/* View selector buttons */}
-          <div className="inline-flex items-center rounded-2xl border border-slate-200 bg-slate-100/80 p-1 shadow-2xs text-xs font-bold">
+          <div className="inline-flex items-center rounded-2xl border border-stone-200 bg-stone-100/80 p-1 shadow-2xs text-xs font-bold">
             {(["week", "month", "day", "agenda"] as CalendarViewType[]).map((v) => (
               <button
                 key={v}
@@ -546,8 +548,8 @@ export function GoogleCalendarSuite({
                 className={cn(
                   "rounded-xl px-3 py-1.5 capitalize transition-all cursor-pointer",
                   view === v
-                    ? "bg-white text-slate-900 shadow-xs ring-1 ring-slate-900/5 font-extrabold"
-                    : "text-slate-600 hover:text-slate-900",
+                    ? "bg-white text-stone-900 shadow-xs ring-1 ring-stone-900/5 font-extrabold"
+                    : "text-stone-600 hover:text-stone-900",
                 )}
               >
                 {v}
@@ -555,278 +557,135 @@ export function GoogleCalendarSuite({
             ))}
           </div>
 
+          {/* Vedic Muhurat Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setShowMuhurat(!showMuhurat)}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-2xl border px-3 py-1.5 text-xs font-bold transition-all cursor-pointer shadow-2xs",
+              showMuhurat
+                ? "border-amber-400 bg-amber-50 text-amber-950 shadow-amber-500/10"
+                : "border-stone-200 bg-white text-stone-600 hover:text-stone-900 hover:bg-stone-50"
+            )}
+            title="Toggle Vedic Panchang and Rahu Kaal timing overlay on calendar"
+          >
+            <Sparkles className={cn("size-3.5", showMuhurat ? "text-amber-600 fill-amber-500/30" : "text-stone-400")} />
+            <span>মুহূর্ত ও রাহুকাল</span>
+            <span className={cn(
+              "text-[10px] px-1.5 py-0.2 rounded-full font-extrabold",
+              showMuhurat ? "bg-amber-200 text-amber-950" : "bg-stone-100 text-stone-500"
+            )}>
+              {showMuhurat ? "ON" : "OFF"}
+            </span>
+          </button>
+
+          {/* Google Calendar 2-Way Sync Pill */}
+          <button
+            type="button"
+            onClick={() => setGoogleSyncModalOpen(true)}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-2xl border px-3 py-1.5 text-xs font-bold transition-all cursor-pointer shadow-2xs",
+              googleSync?.connected
+                ? "border-emerald-300 bg-emerald-50 text-emerald-950 hover:bg-emerald-100/70"
+                : "border-stone-200 bg-white text-stone-600 hover:text-stone-900 hover:bg-stone-50"
+            )}
+            title={googleSync?.connected ? "Google Calendar 2-Way Sync Active" : "Connect Google Calendar"}
+          >
+            <GoogleIcon className="size-3.5" />
+            {googleSync?.connected ? (
+              <span className="flex items-center gap-1">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Google Sync</span>
+              </span>
+            ) : (
+              <span>Google Sync</span>
+            )}
+          </button>
+
           {/* Quick Active Slots Manager Button */}
           {onRemoveWindow && (
             <button
               type="button"
               onClick={() => setManageSlotsModalOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-2xl border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-800 hover:bg-sky-100 transition-all cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-1.5 rounded-2xl border border-amber-200/90 bg-amber-50/80 px-3 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-100 transition-all cursor-pointer shadow-2xs"
               title="Manage and delete active consultation slots"
             >
-              <Clock className="size-3.5 text-sky-600" />
-              <span>Active Slots ({windows.length})</span>
+              <Clock className="size-3.5 text-amber-600" />
+              <span>স্লট ({windows.length})</span>
             </button>
           )}
-        </div>
-      </div>
 
-      {/* 2.4 Google Calendar 2-Way Bidirectional Sync HUD Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-2.5 bg-gradient-to-r from-indigo-50/80 via-purple-50/50 to-sky-50/60 border-b border-slate-100 text-xs font-semibold">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center gap-1.5 shrink-0">
-            <GoogleIcon className="size-4" />
-            <span className="font-extrabold text-slate-800 text-[11px] tracking-wide uppercase">
-              দ্বিমুখী গুগল ক্যালেন্ডার সিঙ্ক (2-Way Sync):
-            </span>
-          </div>
-
-          {googleSync?.connected ? (
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100/90 border border-emerald-300 px-2.5 py-0.5 text-[11px] font-bold text-emerald-950">
-                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>সংযুক্ত: {googleSync.email || "Primary Calendar"}</span>
-              </span>
-
-              <span className="inline-flex items-center gap-1 rounded-full bg-purple-100/90 border border-purple-300 px-2.5 py-0.5 text-[11px] font-bold text-purple-900">
-                <span>🛡️ {googleSync.busy_count}টি বাহ্যিক ইভেন্ট আস্ট্রা স্লটে সুরক্ষিত (Blocked)</span>
-              </span>
-
-              {googleSync.last_synced_at && (
-                <span className="text-[10px] text-slate-500 font-medium hidden md:inline">
-                  সর্বশেষ সিঙ্ক: {new Date(googleSync.last_synced_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              )}
-            </div>
-          ) : (
-            <span className="text-[11px] text-slate-600 font-medium">
-              ব্যক্তিগত ডক্টর বা ফ্যামিলি অ্যাপয়েন্টমেন্টের সময় স্বয়ংক্রিয়ভাবে আস্ট্রার বুকিং বন্ধ রাখতে গুগল ক্যালেন্ডার যুক্ত করুন।
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          {googleSync?.connected ? (
-            <>
-              <button
-                type="button"
-                onClick={() => syncGoogleMutation.mutate()}
-                disabled={syncGoogleMutation.isPending}
-                className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-indigo-700 hover:bg-indigo-50 hover:text-indigo-900 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
-                title="Refresh busy periods from Google Calendar now"
-              >
-                <RefreshCw className={cn("size-3 text-indigo-600", syncGoogleMutation.isPending && "animate-spin")} />
-                <span>{syncGoogleMutation.isPending ? "সিঙ্ক হচ্ছে..." : "এখনই সিঙ্ক করুন (Sync)"}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (confirm("Are you sure you want to disconnect Google Calendar sync? External events will no longer block bookings.")) {
-                    disconnectGoogleMutation.mutate();
-                  }
-                }}
-                disabled={disconnectGoogleMutation.isPending}
-                className="flex items-center gap-1 rounded-xl bg-white border border-rose-200 px-2 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
-                title="Disconnect Google Calendar"
-              >
-                <span>সংযোগ বিচ্ছিন্ন (Disconnect)</span>
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={handleConnectGoogle}
-              disabled={isConnectingGoogle}
-              className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:border-slate-400 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
-            >
-              <GoogleIcon className="size-3.5" />
-              <span>{isConnectingGoogle ? "সংযোগ স্থাপন হচ্ছে..." : "গুগল ক্যালেন্ডার যুক্ত করুন"}</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* 2.5 Panchang & Rahu Kaal Shield Real-time HUD Strip */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-2.5 bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-emerald-500/10 border-b border-slate-100 text-xs font-semibold select-none">
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-1.5 text-slate-800 mr-1">
-            <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-extrabold uppercase text-[10px] tracking-wider text-slate-700">বৈদিক পঞ্চাঙ্গ ও রাহুকাল শিল্ড:</span>
-          </div>
-
-          {/* Today's Rahu Kaal Alert */}
-          <div className="flex items-center gap-1.5 rounded-xl bg-rose-100/90 border border-rose-300/80 px-2.5 py-1 text-rose-900 text-[11px] font-extrabold shadow-2xs">
-            <ShieldAlert className="size-3.5 text-rose-600 shrink-0" />
-            <span>রাহুকাল (Rahu Kaal): {currentDayKaalTimes.rahuKaal.formatted}</span>
-          </div>
-
-          {/* Today's Abhijit Muhurat */}
-          <div className="flex items-center gap-1.5 rounded-xl bg-emerald-100/90 border border-emerald-300/80 px-2.5 py-1 text-emerald-950 text-[11px] font-extrabold shadow-2xs">
-            <Sparkles className="size-3.5 text-emerald-600 shrink-0" />
-            <span>অভিজিৎ মুহূর্ত (Abhijit): {currentDayKaalTimes.abhijit.formatted}</span>
-          </div>
-
-          {/* Yamaghanta & Gulika indicators */}
-          <div className="hidden lg:flex items-center gap-1.5 rounded-xl bg-amber-100/90 border border-amber-300/80 px-2.5 py-1 text-amber-950 text-[11px] font-extrabold shadow-2xs">
-            <AlertTriangle className="size-3.5 text-amber-600 shrink-0" />
-            <span>যমঘণ্ট: {currentDayKaalTimes.yamaghanta.formatted}</span>
-          </div>
-          <div className="hidden xl:flex items-center gap-1.5 rounded-xl bg-amber-50 border border-amber-200 px-2.5 py-1 text-amber-900 text-[11px] font-bold shadow-2xs">
-            <Clock className="size-3.5 text-amber-600 shrink-0" />
-            <span>গুলিকা: {currentDayKaalTimes.gulika.formatted}</span>
-          </div>
-        </div>
-
-        {/* Legend & Tatkal Surge triggers */}
-        <div className="flex items-center gap-2">
+          {/* Primary CTA: Open Available Slot */}
           <button
             type="button"
-            onClick={() => setSurgeModalOpen(true)}
-            className={cn(
-              "flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer shadow-2xs",
-              auspiciousTransit?.is_tatkal_surge_active
-                ? "bg-amber-500 text-white hover:bg-amber-600 border border-amber-600 shadow-amber-500/20"
-                : "bg-white border border-amber-300 text-amber-900 hover:bg-amber-50"
-            )}
-            title="Auspicious Day Tatkal Dynamic Surge Pricing"
+            onClick={() =>
+              setQuickSlotModal({
+                isOpen: true,
+                date: currentDate,
+                startHour: 18,
+                startMinute: 0,
+                endHour: 21,
+                endMinute: 0,
+              })
+            }
+            className="inline-flex items-center gap-1.5 rounded-2xl bg-gradient-to-r from-[#d97b0b] via-[#f39419] to-[#ea580c] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:opacity-95 transition-all cursor-pointer"
           >
-            <Zap className={cn("size-3.5", auspiciousTransit?.is_tatkal_surge_active ? "fill-white text-white" : "fill-amber-600 text-amber-600")} />
-            <span>
-              {auspiciousTransit?.is_tatkal_surge_active
-                ? `তৎকাল সক্রিয় (${auspiciousTransit.active_tatkal_multiplier || 1.5}x)`
-                : "তৎকাল ডায়নামিক সার্জ (Tatkal Surge)"}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setPanchangGuideOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-sky-700 hover:text-sky-900 hover:bg-sky-50 transition-all cursor-pointer shadow-2xs"
-          >
-            <Compass className="size-3.5 text-sky-600" />
-            <span>পঞ্চাঙ্গ নির্দেশিকা (Panchang Legend)</span>
+            <Plus className="size-3.5 stroke-[2.5]" />
+            <span>+ স্লট খুলুন</span>
           </button>
         </div>
       </div>
 
-      {/* 2.6 Auspicious Day Vedic Transit Surge Ribbon */}
-      {auspiciousTransit && (
-        <div
-          className={cn(
-            "flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-2.5 border-b text-xs transition-all select-none",
-            auspiciousTransit.is_auspicious_transit_day
-              ? "bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border-amber-300/80"
-              : "bg-slate-50/70 border-slate-100"
-          )}
-        >
+      {/* Slim Vedic Muhurat Strip (Only visible when showMuhurat is ON) */}
+      {showMuhurat && (
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-2 bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-emerald-500/10 border-b border-stone-200/70 text-xs font-semibold animate-in fade-in duration-200">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            {auspiciousTransit.is_auspicious_transit_day ? (
-              <>
-                <div className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 px-2.5 py-1 text-white shadow-xs">
-                  <Flame className="size-3.5 text-yellow-200 animate-pulse shrink-0" />
-                  <span className="font-black text-[11px] tracking-wide uppercase">
-                    {auspiciousTransit.badge_label || "শুভ তিথি ট্রানজিট"}
-                  </span>
-                </div>
-
-                <span className="font-extrabold text-amber-950 text-xs">
-                  {auspiciousTransit.primary_event}
-                </span>
-
-                <span className="rounded-full bg-amber-200/90 border border-amber-400 px-2.5 py-0.5 text-[10px] font-black text-amber-950 shadow-2xs">
-                  🔥 {auspiciousTransit.remedial_demand_surge || "১০x প্রতিকার চাহিদা"}
-                </span>
-
-                {/* Recommended Remedies Pills */}
-                {auspiciousTransit.recommended_remedies?.slice(0, 3).map((remedy, idx) => (
-                  <span
-                    key={idx}
-                    className="hidden lg:inline-flex items-center gap-1 rounded-full bg-white/90 border border-amber-300 px-2.5 py-0.5 text-[10px] font-bold text-amber-900 shadow-2xs"
-                  >
-                    ✨ {remedy}
-                  </span>
-                ))}
-              </>
-            ) : (
-              <div className="flex items-center gap-2 text-slate-600 text-[11px]">
-                <Clock className="size-3.5 text-slate-400" />
-                <span className="font-bold">
-                  তারিখ: {currentDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
-                </span>
-                <span className="text-slate-400">·</span>
-                <span>সাধারণ তিথি — যে কোনো সময় ১-ক্লিকে তৎকাল ডায়নামিক সার্জ চালু করতে পারেন</span>
-              </div>
-            )}
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+              <Compass className="size-3.5 text-amber-600" />
+              <span>বৈদিক পঞ্চাঙ্গ ও রাহুকাল:</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-xl bg-rose-100/90 border border-rose-300 px-2.5 py-0.5 text-[11px] font-extrabold text-rose-900 shadow-2xs">
+              <ShieldAlert className="size-3 text-rose-600" />
+              <span>রাহুকাল: {currentDayKaalTimes.rahuKaal.formatted}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-100/90 border border-emerald-300 px-2.5 py-0.5 text-[11px] font-extrabold text-emerald-950 shadow-2xs">
+              <Sparkles className="size-3 text-emerald-600" />
+              <span>অভিজিৎ মুহূর্ত: {currentDayKaalTimes.abhijit.formatted}</span>
+            </span>
+            <span className="hidden lg:inline-flex items-center gap-1.5 rounded-xl bg-amber-100/90 border border-amber-300 px-2.5 py-0.5 text-[11px] font-bold text-amber-950 shadow-2xs">
+              <AlertTriangle className="size-3 text-amber-600" />
+              <span>যমঘণ্ট: {currentDayKaalTimes.yamaghanta.formatted}</span>
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
-            {auspiciousTransit.is_tatkal_surge_active ? (
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-100 border border-emerald-300 px-2.5 py-1 text-[11px] font-extrabold text-emerald-950 shadow-2xs">
-                  <Zap className="size-3 text-emerald-600 fill-emerald-600" />
-                  <span>
-                    তৎকাল সার্জ সক্রিয় ({auspiciousTransit.active_tatkal_multiplier || 1.5}x) · {auspiciousTransit.active_tatkal_windows_count}টি স্লট লাইভ
-                  </span>
-                </span>
+            <button
+              type="button"
+              onClick={() => setSurgeModalOpen(true)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer shadow-2xs",
+                auspiciousTransit?.is_tatkal_surge_active
+                  ? "bg-amber-500 text-white hover:bg-amber-600 border border-amber-600 shadow-amber-500/20"
+                  : "bg-white border border-amber-300 text-amber-900 hover:bg-amber-50"
+              )}
+              title="Auspicious Day Tatkal Dynamic Surge Pricing"
+            >
+              <Zap className={cn("size-3.5", auspiciousTransit?.is_tatkal_surge_active ? "fill-white text-white" : "fill-amber-600 text-amber-600")} />
+              <span>
+                {auspiciousTransit?.is_tatkal_surge_active
+                  ? `তৎকাল সক্রিয় (${auspiciousTransit.active_tatkal_multiplier || 1.5}x)`
+                  : "তৎকাল সার্জ"}
+              </span>
+            </button>
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={deactivateSurgeMutation.isPending}
-                  onClick={() => deactivateSurgeMutation.mutate()}
-                  className="h-7 text-[11px] font-bold text-rose-700 border-rose-300 hover:bg-rose-50 hover:text-rose-900 transition-all cursor-pointer shadow-2xs"
-                >
-                  {deactivateSurgeMutation.isPending ? "বাতিল হচ্ছে..." : "স্বাভাবিক ফি-তে ফিরুন"}
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5">
-                <Button
-                  size="sm"
-                  disabled={activateSurgeMutation.isPending}
-                  onClick={() =>
-                    activateSurgeMutation.mutate({
-                      multiplier: 1.5,
-                      customTitle: `${auspiciousTransit.badge_label || "শুভ তিথি"} তৎকাল (1.5x)`,
-                    })
-                  }
-                  className="h-7 bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-extrabold text-[11px] shadow-xs cursor-pointer"
-                >
-                  <Zap className="size-3 mr-1 fill-white" />
-                  <span>
-                    {activateSurgeMutation.isPending
-                      ? "চালু হচ্ছে..."
-                      : "১-ক্লিকে তৎকাল সার্জ (১.৫x)"}
-                  </span>
-                </Button>
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={activateSurgeMutation.isPending}
-                  onClick={() =>
-                    activateSurgeMutation.mutate({
-                      multiplier: 2.0,
-                      customTitle: `${auspiciousTransit.badge_label || "মহাযোগ"} VIP তৎকাল (2.0x)`,
-                    })
-                  }
-                  className="h-7 border-amber-400 bg-amber-50 hover:bg-amber-100 text-amber-950 font-extrabold text-[11px] shadow-2xs cursor-pointer"
-                  title="মহাযোগ বা বিশেষ অমাবস্যা/গ্রহণে ২x তৎকাল ফি"
-                >
-                  <span>২.০x সার্জ</span>
-                </Button>
-
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setSurgeModalOpen(true)}
-                  className="h-7 text-amber-900 hover:bg-amber-100/60 text-[11px] font-bold cursor-pointer"
-                  title="কাস্টমাইজ করুন"
-                >
-                  <span>কাস্টম...</span>
-                </Button>
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => setPanchangGuideOpen(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-white border border-stone-200 px-2.5 py-1 text-[11px] font-bold text-amber-800 hover:text-amber-950 hover:bg-amber-50 transition-all cursor-pointer shadow-2xs"
+            >
+              <Compass className="size-3.5 text-amber-600" />
+              <span>পঞ্চাঙ্গ নির্দেশিকা (Legend)</span>
+            </button>
           </div>
         </div>
       )}
@@ -843,6 +702,7 @@ export function GoogleCalendarSuite({
           getGoogleCalendarUrl={getGoogleCalendarUrl}
           onDeleteWindow={(w) => setDeleteTargetWindow(w)}
           busyIntervals={googleSync?.busy_intervals ?? []}
+          showMuhurat={showMuhurat}
         />
       )}
 
@@ -875,6 +735,7 @@ export function GoogleCalendarSuite({
           getGoogleCalendarUrl={getGoogleCalendarUrl}
           onDeleteWindow={(w) => setDeleteTargetWindow(w)}
           busyIntervals={googleSync?.busy_intervals ?? []}
+          showMuhurat={showMuhurat}
         />
       )}
 
@@ -901,14 +762,31 @@ export function GoogleCalendarSuite({
         description={`Set open booking hours for ${quickSlotModal.date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}.`}
       >
         <div className="space-y-5 pt-2">
-          <div className="rounded-2xl border border-sky-200/70 bg-sky-50/50 p-4 space-y-2 text-xs text-sky-950">
-            <div className="flex items-center gap-2 font-bold text-sky-900">
-              <Sparkles className="size-4 text-sky-600" />
-              <span>Fast Calendar Slot Activation</span>
+          <div className="rounded-2xl border border-amber-200/70 bg-amber-50/50 p-4 space-y-2 text-xs text-amber-950">
+            <div className="flex items-center gap-2 font-bold text-amber-900">
+              <Sparkles className="size-4 text-amber-600" />
+              <span>পরামর্শের স্লট উন্মুক্ত করুন (Open Availability Window)</span>
             </div>
-            <p className="text-slate-600 leading-relaxed">
-              Opening this window permits clients to reserve 15, 30, or 60-minute consultations with you during this timeframe.
+            <p className="text-stone-600 leading-relaxed">
+              এই সময়টিতে ভক্ত/ক্লায়েন্টরা আপনার সাথে ১৫, ৩০ বা ৬০ মিনিটের অডিও, ভিডিও অথবা চ্যাট পরামর্শ বুক করতে পারবেন।
             </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-stone-700">তারিখ (Consultation Date)</label>
+            <input
+              type="date"
+              value={formatDateKey(quickSlotModal.date)}
+              min={formatDateKey(new Date())}
+              onChange={(e) => {
+                const parts = e.target.value.split("-");
+                if (parts.length === 3) {
+                  const newD = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                  setQuickSlotModal((prev) => ({ ...prev, date: newD }));
+                }
+              }}
+              className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -1495,6 +1373,96 @@ export function GoogleCalendarSuite({
           </div>
         </Modal>
       )}
+
+      {/* 5. Google Calendar 2-Way Sync Modal */}
+      <Modal
+        open={googleSyncModalOpen}
+        onClose={() => setGoogleSyncModalOpen(false)}
+        title="গুগল ক্যালেন্ডার ২-মুখী সিঙ্ক (Google Calendar 2-Way Sync)"
+        description="Connect your Google Calendar so that personal doctor, family, or business events automatically shield and block Astra consultation slots."
+        footer={
+          <div className="flex items-center justify-between w-full">
+            {googleSync?.connected ? (
+              <Button
+                variant="outline"
+                disabled={disconnectGoogleMutation.isPending}
+                onClick={() => {
+                  if (confirm("Are you sure you want to disconnect Google Calendar sync? External events will no longer block bookings.")) {
+                    disconnectGoogleMutation.mutate();
+                    setGoogleSyncModalOpen(false);
+                  }
+                }}
+                className="text-rose-600 border-rose-300 hover:bg-rose-50 font-bold text-xs"
+              >
+                {disconnectGoogleMutation.isPending ? "Disconnecting..." : "সংযোগ বিচ্ছিন্ন (Disconnect)"}
+              </Button>
+            ) : (
+              <div />
+            )}
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" onClick={() => setGoogleSyncModalOpen(false)}>
+                Close
+              </Button>
+              {googleSync?.connected ? (
+                <Button
+                  loading={syncGoogleMutation.isPending}
+                  onClick={() => syncGoogleMutation.mutate()}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs"
+                >
+                  <RefreshCw className={cn("size-3.5 mr-1.5", syncGoogleMutation.isPending && "animate-spin")} />
+                  এখনই সিঙ্ক করুন (Sync Now)
+                </Button>
+              ) : (
+                <Button
+                  loading={isConnectingGoogle}
+                  onClick={handleConnectGoogle}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs"
+                >
+                  <GoogleIcon className="size-3.5 mr-1.5" />
+                  গুগল ক্যালেন্ডার যুক্ত করুন
+                </Button>
+              )}
+            </div>
+          </div>
+        }
+      >
+        <div className="space-y-4 pt-2">
+          {googleSync?.connected ? (
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 space-y-2">
+                <div className="flex items-center gap-2 font-bold text-emerald-950 text-sm">
+                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>সক্রিয় ও সমন্বিত (Active & Synchronized)</span>
+                </div>
+                <p className="text-xs text-emerald-900 font-medium">
+                  অ্যাকাউন্ট: <span className="font-bold">{googleSync.email || "Primary Calendar"}</span>
+                </p>
+                <p className="text-xs text-emerald-800">
+                  🛡️ <span className="font-bold">{googleSync.busy_count}টি বাহ্যিক ইভেন্ট</span> বর্তমানে আস্ট্রা স্লটে সুরক্ষিত (Blocked) রয়েছে।
+                </p>
+                {googleSync.last_synced_at && (
+                  <p className="text-[11px] text-emerald-700 font-medium">
+                    সর্বশেষ সিঙ্ক: {new Date(googleSync.last_synced_at).toLocaleString()}
+                  </p>
+                )}
+              </div>
+              <p className="text-xs text-stone-500 leading-relaxed">
+                আপনার গুগল ক্যালেন্ডারে থাকা যেকোনো ব্যস্ত (Busy) ইভেন্টের সময় ক্লায়েন্টরা কোনো নতুন অ্যাপয়েন্টমেন্ট বুক করতে পারবেন না।
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-stone-200 bg-stone-50/80 p-5 space-y-3 text-center">
+              <div className="size-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
+                <GoogleIcon className="size-6" />
+              </div>
+              <h3 className="font-bold text-sm text-stone-900">ডাবল বুকিং স্বয়ংক্রিয়ভাবে বন্ধ রাখুন</h3>
+              <p className="text-xs text-stone-500 max-w-sm mx-auto leading-relaxed">
+                আপনার ব্যক্তিগত গুগল ক্যালেন্ডার যুক্ত করলে ডাক্তার অ্যাপয়েন্টমেন্ট বা পারিবারিক ব্যক্তিগত কাজের সময় আস্ট্রার বুকিং স্বয়ংক্রিয়ভাবে ব্লক হয়ে যাবে।
+              </p>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }
@@ -1512,6 +1480,7 @@ function WeekCalendarView({
   getGoogleCalendarUrl,
   onDeleteWindow,
   busyIntervals = [],
+  showMuhurat = false,
 }: {
   weekDays: Date[];
   bookings: Appointment[];
@@ -1522,6 +1491,7 @@ function WeekCalendarView({
   getGoogleCalendarUrl: (a: Appointment) => string;
   onDeleteWindow?: (w: { id: string; starts_at: string; ends_at: string; day: string }) => void;
   busyIntervals?: Array<{ starts_at: string; ends_at: string; title: string; source: string; is_external: boolean }>;
+  showMuhurat?: boolean;
 }) {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -1649,62 +1619,73 @@ function WeekCalendarView({
             >
               {/* Hour horizontal grid lines & click handler with Panchang & Rahu Kaal Shield */}
               {HOURS.map((h) => {
-                const pBadge = getHourPanchangBadge(colDate, h);
+                const pBadge = showMuhurat ? getHourPanchangBadge(colDate, h) : null;
                 return (
                   <div
                     key={h}
                     onClick={() => onSlotClick(colDate, h)}
                     style={{ height: `${HOUR_HEIGHT}px` }}
                     className={cn(
-                      "border-b border-slate-100/90 cursor-pointer transition-colors relative group/cell",
-                      pBadge.type === "rahu_kaal"
+                      "border-b border-stone-200/50 cursor-pointer transition-colors relative group/cell",
+                      showMuhurat && pBadge?.type === "rahu_kaal"
                         ? "bg-rose-50/20 hover:bg-rose-100/35 border-l-2 border-l-rose-500"
-                        : pBadge.type === "yamaghanta" || pBadge.type === "gulika"
+                        : showMuhurat && (pBadge?.type === "yamaghanta" || pBadge?.type === "gulika")
                         ? "bg-amber-50/20 hover:bg-amber-100/30 border-l-2 border-l-amber-400"
-                        : pBadge.type === "abhijit"
+                        : showMuhurat && pBadge?.type === "abhijit"
                         ? "bg-emerald-50/30 hover:bg-emerald-100/40 border-l-2 border-l-emerald-500"
-                        : pBadge.type === "amrit"
+                        : showMuhurat && pBadge?.type === "amrit"
                         ? "bg-amber-50/30 hover:bg-amber-100/40 border-l-2 border-l-amber-500"
-                        : "hover:bg-sky-50/30",
+                        : "hover:bg-amber-50/30",
                     )}
-                    title={`[${pBadge.badgeBn}] Click to open availability at ${h}:00 on ${dateKey}`}
+                    title={
+                      pBadge
+                        ? `[${pBadge.badgeBn}] Click to open availability at ${h}:00 on ${dateKey}`
+                        : `Click to open availability at ${h}:00 on ${dateKey}`
+                    }
                   >
-                    {/* Floating mini badge for auspicious / inauspicious hours */}
-                    {pBadge.type === "rahu_kaal" && (
+                    {/* Hover hint when clean */}
+                    {!showMuhurat && (
+                      <span className="opacity-0 group-hover/cell:opacity-100 absolute inset-0 flex items-center justify-center text-[10px] font-bold text-amber-700/80 bg-amber-50/30 transition-opacity pointer-events-none">
+                        + স্লট খুলুন
+                      </span>
+                    )}
+
+                    {/* Floating mini badge for auspicious / inauspicious hours ONLY when showMuhurat is ON */}
+                    {showMuhurat && pBadge?.type === "rahu_kaal" && (
                       <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-rose-100/95 border border-rose-300 px-1 py-0.2 text-[8.5px] font-black text-rose-900 shadow-2xs pointer-events-none">
                         <ShieldAlert className="size-2.5 text-rose-600" />
                         <span>রাহুকাল</span>
                       </span>
                     )}
 
-                    {pBadge.type === "yamaghanta" && (
+                    {showMuhurat && pBadge?.type === "yamaghanta" && (
                       <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-amber-100/90 border border-amber-300 px-1 py-0.2 text-[8.5px] font-bold text-amber-900 shadow-2xs pointer-events-none">
                         <AlertTriangle className="size-2.5 text-amber-600" />
                         <span>যমঘণ্ট</span>
                       </span>
                     )}
 
-                    {pBadge.type === "gulika" && (
+                    {showMuhurat && pBadge?.type === "gulika" && (
                       <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-amber-50/90 border border-amber-200 px-1 py-0.2 text-[8.5px] font-bold text-amber-800 shadow-2xs pointer-events-none">
                         <span>গুলিকা</span>
                       </span>
                     )}
 
-                    {pBadge.type === "abhijit" && (
+                    {showMuhurat && pBadge?.type === "abhijit" && (
                       <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-emerald-100/95 border border-emerald-300 px-1.5 py-0.2 text-[8.5px] font-black text-emerald-950 shadow-2xs pointer-events-none">
                         <Sparkles className="size-2.5 text-emerald-600" />
                         <span>অভিজিৎ</span>
                       </span>
                     )}
 
-                    {pBadge.type === "amrit" && (
+                    {showMuhurat && pBadge?.type === "amrit" && (
                       <span className="absolute top-1 right-1.5 flex items-center gap-0.5 rounded-md bg-amber-100/95 border border-amber-300 px-1.5 py-0.2 text-[8.5px] font-black text-amber-950 shadow-2xs pointer-events-none">
                         <Sparkles className="size-2.5 text-amber-600" />
                         <span>অমৃত</span>
                       </span>
                     )}
 
-                    {pBadge.type === "shubh" && (
+                    {showMuhurat && pBadge?.type === "shubh" && (
                       <span className="absolute top-1 right-1.5 hidden group-hover/cell:flex items-center gap-0.5 rounded-md bg-teal-100/90 border border-teal-200 px-1 py-0.2 text-[8.5px] font-extrabold text-teal-800 shadow-2xs pointer-events-none">
                         <span>🌿 {pBadge.shortTagBn}</span>
                       </span>
@@ -2040,6 +2021,7 @@ function DayCalendarView({
   getGoogleCalendarUrl,
   onDeleteWindow,
   busyIntervals = [],
+  showMuhurat = false,
 }: {
   date: Date;
   bookings: Appointment[];
@@ -2062,6 +2044,7 @@ function DayCalendarView({
   getGoogleCalendarUrl: (a: Appointment) => string;
   onDeleteWindow?: (w: { id: string; starts_at: string; ends_at: string; day: string }) => void;
   busyIntervals?: Array<{ starts_at: string; ends_at: string; title: string; source: string; is_external: boolean }>;
+  showMuhurat?: boolean;
 }) {
   const dateKey = formatDateKey(date);
   const isToday = dateKey === formatDateKey(now);
@@ -2209,7 +2192,7 @@ function DayCalendarView({
           const hourEnd = new Date(date);
           hourEnd.setHours(h + 1, 0, 0, 0);
 
-          const pBadge = getHourPanchangBadge(date, h);
+          const pBadge = showMuhurat ? getHourPanchangBadge(date, h) : null;
 
           const slotBookings = dayBookings.filter((b) => {
             const s = new Date(b.starts_at);
@@ -2234,64 +2217,64 @@ function DayCalendarView({
               className={cn(
                 "rounded-2xl border p-4 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4",
                 slotBookings.length > 0
-                  ? "bg-white border-sky-300 shadow-sm"
+                  ? "bg-white border-amber-300 shadow-sm"
                   : isWindowActive
-                  ? "bg-sky-50/40 border-sky-200"
-                  : pBadge.type === "rahu_kaal"
+                  ? "bg-amber-50/40 border-amber-200"
+                  : showMuhurat && pBadge?.type === "rahu_kaal"
                   ? "bg-rose-50/20 border-rose-200/80 hover:bg-rose-50/40"
-                  : pBadge.type === "abhijit" || pBadge.type === "amrit"
+                  : showMuhurat && (pBadge?.type === "abhijit" || pBadge?.type === "amrit")
                   ? "bg-emerald-50/20 border-emerald-200/80 hover:bg-emerald-50/40"
-                  : "bg-slate-50/30 border-slate-200/70 hover:bg-slate-50",
+                  : "bg-white border-stone-200/70 hover:bg-stone-50",
               )}
             >
               <div className="flex flex-wrap items-center gap-2.5">
-                <span className="font-display text-sm font-bold text-slate-700 min-w-[70px]">
+                <span className="font-display text-sm font-bold text-stone-700 min-w-[70px]">
                   {formatTime(hourStart)}
                 </span>
 
                 {isWindowActive && (
-                  <span className="rounded-full bg-sky-100 text-sky-800 px-2.5 py-0.5 text-[10px] font-bold">
-                    Open Window
+                  <span className="rounded-full bg-amber-100 text-amber-900 px-2.5 py-0.5 text-[10px] font-bold">
+                    উন্মুক্ত স্লট (Open)
                   </span>
                 )}
 
-                {/* Panchang & Rahu Kaal Badge for this hour */}
-                {pBadge.type === "rahu_kaal" && (
+                {/* Panchang & Rahu Kaal Badge for this hour ONLY when showMuhurat is ON */}
+                {showMuhurat && pBadge?.type === "rahu_kaal" && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 border border-rose-300 text-rose-900 px-2.5 py-0.5 text-[11px] font-black shadow-2xs">
                     <ShieldAlert className="size-3 text-rose-600" />
                     <span>{pBadge.badgeBn}</span>
                   </span>
                 )}
 
-                {pBadge.type === "yamaghanta" && (
+                {showMuhurat && pBadge?.type === "yamaghanta" && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 px-2.5 py-0.5 text-[11px] font-extrabold shadow-2xs">
                     <AlertTriangle className="size-3 text-amber-600" />
                     <span>{pBadge.badgeBn}</span>
                   </span>
                 )}
 
-                {pBadge.type === "gulika" && (
+                {showMuhurat && pBadge?.type === "gulika" && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900 px-2.5 py-0.5 text-[11px] font-bold shadow-2xs">
                     <Clock className="size-3 text-amber-600" />
                     <span>{pBadge.badgeBn}</span>
                   </span>
                 )}
 
-                {pBadge.type === "abhijit" && (
+                {showMuhurat && pBadge?.type === "abhijit" && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-950 px-2.5 py-0.5 text-[11px] font-black shadow-2xs">
                     <Sparkles className="size-3 text-emerald-600" />
                     <span>{pBadge.badgeBn}</span>
                   </span>
                 )}
 
-                {pBadge.type === "amrit" && (
+                {showMuhurat && pBadge?.type === "amrit" && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 text-amber-950 px-2.5 py-0.5 text-[11px] font-black shadow-2xs">
                     <Sparkles className="size-3 text-amber-600" />
                     <span>{pBadge.badgeBn}</span>
                   </span>
                 )}
 
-                {pBadge.type === "shubh" && (
+                {showMuhurat && pBadge?.type === "shubh" && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-teal-100 border border-teal-200 text-teal-900 px-2.5 py-0.5 text-[11px] font-bold shadow-2xs">
                     <span>🌿 {pBadge.badgeBn}</span>
                   </span>

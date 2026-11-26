@@ -130,12 +130,13 @@ function dayRelative(iso: string): string {
 }
 
 type ScheduleTab = "upcoming" | "today" | "all" | "past";
-type AppointmentPortalTab = "calendar" | "rates_windows" | "vip_private" | "ledger";
+type AppointmentPortalTab = "calendar" | "bookings" | "settings";
 
 export default function AppointmentsPage() {
   const { user } = useAuth();
   const isAstrologer = user?.role === "astrologer";
   const [activeTab, setActiveTab] = React.useState<AppointmentPortalTab>("calendar");
+  const [settingsSubTab, setSettingsSubTab] = React.useState<"fees_hours" | "vip" | "blacklist">("fees_hours");
   const queryClient = useQueryClient();
 
   // Listen for Google Calendar OAuth Callback
@@ -167,15 +168,18 @@ export default function AppointmentsPage() {
     }
   }, [queryClient]);
 
+  const { data: bookings } = useQuery({ queryKey: SCHEDULE_KEY, queryFn: () => appointmentApi.schedule(false) });
+  const upcomingCount = (bookings ?? []).filter(isUpcoming).length;
+
   if (!isAstrologer) {
     return (
       <div className="space-y-6">
-        <div className="rounded-3xl border border-slate-200/90 bg-white p-8 shadow-sm">
+        <div className="rounded-3xl border border-stone-200/90 bg-white p-8 shadow-sm">
           <div className="flex items-center gap-3 text-amber-600">
             <Info className="size-6" />
-            <h2 className="font-display text-lg font-bold text-slate-900">Astrologer Portal Only</h2>
+            <h2 className="font-display text-lg font-bold text-stone-900">Astrologer Portal Only</h2>
           </div>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-stone-500">
             Consultation scheduling and appointment slots are only configured for certified astrologer profiles.
           </p>
         </div>
@@ -191,8 +195,8 @@ export default function AppointmentsPage() {
         onSelectTab={(tab) => setActiveTab(tab)}
       />
 
-      {/* Top Level Navigation Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-2 bg-slate-100/80 rounded-2xl border border-slate-200">
+      {/* Top Level Navigation Tabs (Streamlined 3 Core Views) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-2 bg-stone-100/80 rounded-2xl border border-stone-200/80">
         <div className="flex flex-wrap items-center gap-1.5">
           <button
             type="button"
@@ -200,104 +204,144 @@ export default function AppointmentsPage() {
             className={cn(
               "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer",
               activeTab === "calendar"
-                ? "bg-white text-slate-900 shadow-sm font-extrabold ring-1 ring-slate-900/5"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                ? "bg-white text-stone-900 shadow-xs font-extrabold ring-1 ring-stone-900/5"
+                : "text-stone-600 hover:text-stone-900 hover:bg-white/60"
             )}
           >
-            <Calendar className="size-4 text-sky-600" />
-            <span>Interactive Google Calendar</span>
-            <span className="rounded-full bg-sky-100 text-sky-800 text-[10px] px-2 py-0.2 font-black">
-              Week/Month
+            <Calendar className="size-4 text-amber-600" />
+            <span>ক্যালেন্ডার ও স্লট (Calendar & Slots)</span>
+            <span className="rounded-full bg-amber-100 text-amber-900 text-[10px] px-2 py-0.2 font-black">
+              সপ্তাহ/মাস
             </span>
           </button>
 
           <button
             type="button"
-            onClick={() => setActiveTab("rates_windows")}
+            onClick={() => setActiveTab("bookings")}
             className={cn(
               "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer",
-              activeTab === "rates_windows"
-                ? "bg-white text-slate-900 shadow-sm font-extrabold ring-1 ring-slate-900/5"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+              activeTab === "bookings"
+                ? "bg-white text-stone-900 shadow-xs font-extrabold ring-1 ring-stone-900/5"
+                : "text-stone-600 hover:text-stone-900 hover:bg-white/60"
             )}
           >
-            <Clock className="size-4 text-amber-600" />
-            <span>Fee Engine & Availability Windows</span>
+            <CalendarCheck className="size-4 text-emerald-600" />
+            <span>বুক করা অ্যাপয়েন্টমেন্ট (Bookings)</span>
+            {upcomingCount > 0 && (
+              <span className="rounded-full bg-emerald-500 text-white text-[10px] px-2 py-0.2 font-black">
+                {upcomingCount}
+              </span>
+            )}
           </button>
 
           <button
             type="button"
-            onClick={() => setActiveTab("vip_private")}
+            onClick={() => setActiveTab("settings")}
             className={cn(
               "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer",
-              activeTab === "vip_private"
-                ? "bg-white text-slate-900 shadow-sm font-extrabold ring-1 ring-slate-900/5"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+              activeTab === "settings"
+                ? "bg-white text-stone-900 shadow-xs font-extrabold ring-1 ring-stone-900/5"
+                : "text-stone-600 hover:text-stone-900 hover:bg-white/60"
             )}
           >
-            <Zap className="size-4 text-amber-500 fill-amber-500/20" />
-            <span>VIP Tatkal & Private Links</span>
-            <span className="rounded-full bg-amber-100 text-amber-800 text-[10px] px-2 py-0.2 font-black">
-              VIP / জরুরি
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("ledger")}
-            className={cn(
-              "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer",
-              activeTab === "ledger"
-                ? "bg-white text-slate-900 shadow-sm font-extrabold ring-1 ring-slate-900/5"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-            )}
-          >
-            <FileText className="size-4 text-emerald-600" />
-            <span>Client Dossier & Ledger</span>
+            <Clock className="size-4 text-indigo-600" />
+            <span>ফি, প্রাপ্যতা ও সেটিংস (Rates & Settings)</span>
           </button>
         </div>
 
-        <p className="text-xs text-slate-500 font-medium px-2 hidden md:block">
+        <p className="text-xs text-stone-500 font-medium px-2 hidden md:block">
           {activeTab === "calendar"
-            ? "📅 Google Calendar time-grid with live needle, week/month views & 1-click slot creation."
-            : activeTab === "rates_windows"
-            ? "⚙️ Set consultation fees, grace periods, and open hours."
-            : activeTab === "vip_private"
-            ? "⚡ Emergency Tatkal slots at premium rates & secret passcode-protected VIP booking links."
-            : "📋 Complete booking records, prescriptions, and escrow details."}
+            ? "📅 Google Calendar time-grid with live needle, week/month views & 1-click slot activation."
+            : activeTab === "bookings"
+            ? "📋 Confirmed client bookings, pre-flight birth chart dossiers & 1-click chamber launch."
+            : "⚙️ Set consultation fees, regular open hours, VIP links & abuse screening shield."}
         </p>
       </div>
 
       {/* 1. INTERACTIVE GOOGLE CALENDAR (PRIMARY TAB) */}
       {activeTab === "calendar" && (
         <div className="space-y-6">
-          <Schedule initialDisplayMode="calendar" />
+          <Schedule initialDisplayMode="calendar" hideSelector={true} />
         </div>
       )}
 
-      {/* 2. RATES & AVAILABILITY ENGINE TAB */}
-      {activeTab === "rates_windows" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-5 xl:col-span-5 space-y-6">
-            <PriceCard />
-          </div>
-          <div className="lg:col-span-7 xl:col-span-7 space-y-6">
-            <OpenHours />
-          </div>
-        </div>
-      )}
-
-      {/* 3. VIP TATKAL & PRIVATE LINKS TAB */}
-      {activeTab === "vip_private" && (
+      {/* 2. BOOKED CONSULTATIONS / CLIENT DOSSIERS TAB */}
+      {activeTab === "bookings" && (
         <div className="space-y-6">
-          <VipTatkalAndPrivateManager />
+          <Schedule initialDisplayMode="list" hideSelector={true} />
         </div>
       )}
 
-      {/* 4. BOOKINGS LEDGER TAB */}
-      {activeTab === "ledger" && (
+      {/* 3. RATES, AVAILABILITY & SECURITY SETTINGS TAB */}
+      {activeTab === "settings" && (
         <div className="space-y-6">
-          <Schedule initialDisplayMode="list" />
+          {/* Sub Navigation Bar for Settings */}
+          <div className="flex flex-wrap items-center gap-2 border-b border-stone-200/80 pb-3">
+            <button
+              type="button"
+              onClick={() => setSettingsSubTab("fees_hours")}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer",
+                settingsSubTab === "fees_hours"
+                  ? "bg-stone-900 text-white shadow-xs"
+                  : "bg-white border border-stone-200 text-stone-700 hover:bg-stone-50"
+              )}
+            >
+              <Clock className="size-3.5 text-amber-500" />
+              <span>কনসাল্টেশন ফি ও সাপ্তাহিক সময় (Fees & Regular Hours)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSettingsSubTab("vip")}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer",
+                settingsSubTab === "vip"
+                  ? "bg-stone-900 text-white shadow-xs"
+                  : "bg-white border border-stone-200 text-stone-700 hover:bg-stone-50"
+              )}
+            >
+              <Zap className="size-3.5 text-amber-500" />
+              <span>VIP তৎকাল ও প্রাইভেট পাসকোড লিংক (VIP Links)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSettingsSubTab("blacklist")}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer",
+                settingsSubTab === "blacklist"
+                  ? "bg-stone-900 text-white shadow-xs"
+                  : "bg-white border border-stone-200 text-stone-700 hover:bg-stone-50"
+              )}
+            >
+              <ShieldAlert className="size-3.5 text-rose-500" />
+              <span>নিরাপত্তা ও ব্লকড ক্লায়েন্ট শিল্ড (Safety Shield)</span>
+            </button>
+          </div>
+
+          {settingsSubTab === "fees_hours" && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              <div className="lg:col-span-5 xl:col-span-5 space-y-6">
+                <PriceCard />
+              </div>
+              <div className="lg:col-span-7 xl:col-span-7 space-y-6">
+                <OpenHours />
+              </div>
+            </div>
+          )}
+
+          {settingsSubTab === "vip" && (
+            <div className="space-y-6">
+              <VipTatkalAndPrivateManager />
+            </div>
+          )}
+
+          {settingsSubTab === "blacklist" && (
+            <div className="space-y-6">
+              <Schedule initialDisplayMode="blacklist" hideSelector={true} />
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -400,38 +444,38 @@ function AppointmentHero({
         </div>
       )}
 
-      <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-amber-50/25 to-white p-6 sm:p-8 shadow-[0_16px_40px_rgba(20,25,45,0.04)]">
+      <div className="relative overflow-hidden rounded-3xl border border-stone-200/90 bg-gradient-to-br from-white via-[#fdf0e7]/40 to-white p-6 sm:p-8 shadow-[0_16px_40px_rgba(20,25,45,0.04)]">
         {/* Background celestial glow decoration */}
         <div className="pointer-events-none absolute -right-16 -top-16 size-72 rounded-full bg-gradient-to-br from-amber-300/20 via-orange-300/10 to-transparent blur-3xl" />
         <div className="pointer-events-none absolute -left-16 -bottom-16 size-60 rounded-full bg-gradient-to-tr from-amber-200/20 to-transparent blur-2xl" />
 
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-xl">
+          <div className="space-y-2.5 max-w-xl">
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100/80 px-3 py-1 text-xs font-bold text-amber-900 border border-amber-300/60 shadow-xs">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100/90 px-3 py-1 text-xs font-bold text-amber-950 border border-amber-300/70 shadow-xs">
                 <Sparkles className="size-3.5 text-amber-600 fill-amber-600" />
-                <span>Astrologer Appointment Hub</span>
+                <span>DivinLink Sanctuary • চেম্বার হাব</span>
               </span>
 
               {isEnabled ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-200">
                   <span className="relative flex size-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
                   </span>
-                  Calendar Live & Bookable
+                  ক্যালেন্ডার লাইভ ও বুকিংযোগ্য
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 border border-slate-200">
-                  <span className="size-2 rounded-full bg-slate-400" />
-                  Calendar Paused
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-600 border border-stone-200">
+                  <span className="size-2 rounded-full bg-stone-400" />
+                  ক্যালেন্ডার সাময়িক স্থগিত
                 </span>
               )}
 
               {activeNowBookings.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => onSelectTab?.("ledger")}
+                  onClick={() => onSelectTab?.("bookings")}
                   className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700 border border-rose-200 hover:bg-rose-100 transition-colors cursor-pointer"
                 >
                   <span className="relative flex size-2">
@@ -439,7 +483,7 @@ function AppointmentHero({
                     <span className="relative inline-flex size-2 rounded-full bg-rose-500" />
                   </span>
                   <span>
-                    {activeNowBookings.length} Live Session{activeNowBookings.length > 1 ? "s" : ""} In Progress
+                    {activeNowBookings.length}টি লাইভ সেশন চলমান
                   </span>
                 </button>
               )}
@@ -449,64 +493,87 @@ function AppointmentHero({
                 <button
                   type="button"
                   onClick={() => setOpenPauseModal(true)}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 px-3 py-1 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 px-3 py-1 text-xs font-bold transition-all cursor-pointer shadow-2xs"
                   title="Pause consultations due to emergency"
                 >
-                  <span>🕊️ Brahma Pause (জরুরি বিরতি)</span>
+                  <span>🕊️ জরুরি বিরতি (Brahma Pause)</span>
                 </button>
               ) : (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 text-purple-900 border border-purple-300 px-3 py-1 text-xs font-bold shadow-2xs">
-                  <span>🕊️ On Pause</span>
+                  <span>🕊️ বিরতি চলছে</span>
                 </span>
               )}
             </div>
 
-            <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-              Appointments & Consultation Manager
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">
-              Set your consultation fees, open custom time windows, and manage all your incoming client bookings from one place.
-            </p>
+            <div>
+              <h1 className="font-serif text-2xl sm:text-3xl font-black tracking-tight text-stone-900">
+                অ্যাপয়েন্টমেন্ট ও কনসাল্টেশন চেম্বার
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-stone-600 leading-relaxed font-medium">
+                আপনার উন্মুক্ত স্লট পরিচালনা করুন, নতুন কনসাল্টেশন সময় যোগ করুন এবং বুক করা ক্লায়েন্টের সাথে চেম্বারে সরাসরি যুক্ত হন।
+              </p>
+            </div>
+
+            {/* Quick Action Button */}
+            <div className="pt-1 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => onSelectTab?.("calendar")}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#d97b0b] via-[#f39419] to-[#ea580c] px-4 py-2 text-xs font-bold text-white shadow-xs hover:opacity-95 transition-all cursor-pointer"
+              >
+                <Plus className="size-4 stroke-[2.5]" />
+                <span>+ নতুন স্লট খুলুন (+ Open Slot)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onSelectTab?.("bookings")}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-xs font-bold text-stone-700 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer shadow-2xs"
+              >
+                <CalendarCheck className="size-4 text-emerald-600" />
+                <span>বুকিং তালিকা দেখুন ({upcomingCount})</span>
+              </button>
+            </div>
           </div>
 
           {/* Quick KPI Stat Pills */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 shrink-0">
             <div
-              onClick={() => onSelectTab?.("rates_windows")}
-              className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px] cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all"
+              onClick={() => onSelectTab?.("bookings")}
+              className="rounded-2xl border border-stone-200/90 bg-white/95 backdrop-blur-md p-4 shadow-2xs text-center space-y-1 min-w-[120px] cursor-pointer hover:border-amber-400 hover:shadow-xs transition-all"
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rate / Min</p>
-              <p className="font-display text-lg sm:text-xl font-black text-amber-600">
-                ₹{perMinuteRate}
+              <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400">আসন্ন সেশন</p>
+              <p className="font-display text-xl sm:text-2xl font-black text-stone-900">
+                {upcomingCount}
               </p>
-              <p className="text-[10px] font-semibold text-slate-400">
-                ₹{card ? card.price_paise / 100 : 0} / {card?.block_minutes ?? 30}m
+              <p className="text-[10px] font-semibold text-emerald-600">
+                {todayCount}টি আজ নির্ধারিত
               </p>
             </div>
 
             <div
               onClick={() => onSelectTab?.("calendar")}
-              className="rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px] cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all"
+              className="rounded-2xl border border-stone-200/90 bg-white/95 backdrop-blur-md p-4 shadow-2xs text-center space-y-1 min-w-[120px] cursor-pointer hover:border-amber-400 hover:shadow-xs transition-all"
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Upcoming</p>
-              <p className="font-display text-lg sm:text-xl font-black text-slate-900">
-                {upcomingCount}
+              <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400">উন্মুক্ত স্লট</p>
+              <p className="font-display text-xl sm:text-2xl font-black text-amber-600">
+                {windowsCount}
               </p>
-              <p className="text-[10px] font-semibold text-emerald-600">
-                {todayCount} scheduled today
+              <p className="text-[10px] font-semibold text-stone-500">
+                সরাসরি বুকিং চালু
               </p>
             </div>
 
             <div
-              onClick={() => onSelectTab?.("rates_windows")}
-              className="col-span-2 sm:col-span-1 rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3.5 shadow-xs text-center space-y-1 min-w-[110px] cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all"
+              onClick={() => onSelectTab?.("settings")}
+              className="col-span-2 sm:col-span-1 rounded-2xl border border-stone-200/90 bg-white/95 backdrop-blur-md p-4 shadow-2xs text-center space-y-1 min-w-[120px] cursor-pointer hover:border-amber-400 hover:shadow-xs transition-all"
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Open Slots</p>
-              <p className="font-display text-lg sm:text-xl font-black text-slate-900">
-                {windowsCount}
+              <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400">কনসাল্টেশন ফি</p>
+              <p className="font-display text-xl sm:text-2xl font-black text-stone-900">
+                ₹{perMinuteRate}<span className="text-xs text-stone-400 font-semibold">/মিনিট</span>
               </p>
-              <p className="text-[10px] font-semibold text-slate-400">
-                Available windows
+              <p className="text-[10px] font-semibold text-stone-500">
+                ₹{card ? card.price_paise / 100 : 0} / {card?.block_minutes ?? 30}m
               </p>
             </div>
           </div>
@@ -1393,12 +1460,18 @@ function OpenHours() {
 /* --------------------------------------------------------------- schedule */
 function Schedule({
   initialDisplayMode = "calendar",
+  hideSelector = false,
 }: {
   initialDisplayMode?: "calendar" | "list" | "blacklist";
+  hideSelector?: boolean;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [displayMode, setDisplayMode] = React.useState<"calendar" | "list" | "blacklist">(initialDisplayMode);
+
+  React.useEffect(() => {
+    setDisplayMode(initialDisplayMode);
+  }, [initialDisplayMode]);
   const [tab, setTab] = React.useState<ScheduleTab>("upcoming");
   const [cancelTargetId, setCancelTargetId] = React.useState<string | null>(null);
   const [completeTargetAppointment, setCompleteTargetAppointment] = React.useState<Appointment | null>(null);
@@ -1735,60 +1808,62 @@ function Schedule({
 
   return (
     <div className="space-y-6">
-      {/* Top View Selector Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-3xl border border-slate-200/90 bg-white shadow-xs">
-        <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => setDisplayMode("calendar")}
-            className={cn(
-              "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
-              displayMode === "calendar"
-                ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-            )}
-          >
-            <Calendar className="size-4 text-sky-400" />
-            <span>Google Calendar Schedule</span>
-          </button>
+      {/* Top View Selector Bar (Only shown if hideSelector is false) */}
+      {!hideSelector && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-3xl border border-stone-200/90 bg-white shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setDisplayMode("calendar")}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
+                displayMode === "calendar"
+                  ? "bg-stone-900 text-white border-stone-900 shadow-md ring-2 ring-stone-900/10"
+                  : "bg-white text-stone-700 border-stone-200 hover:bg-stone-50"
+              )}
+            >
+              <Calendar className="size-4 text-amber-500" />
+              <span>Google Calendar Schedule</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setDisplayMode("list")}
-            className={cn(
-              "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
-              displayMode === "list"
-                ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-            )}
-          >
-            <FileText className="size-4 text-amber-400" />
-            <span>Bookings Ledger ({allBookings.length})</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setDisplayMode("list")}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
+                displayMode === "list"
+                  ? "bg-stone-900 text-white border-stone-900 shadow-md ring-2 ring-stone-900/10"
+                  : "bg-white text-stone-700 border-stone-200 hover:bg-stone-50"
+              )}
+            >
+              <FileText className="size-4 text-emerald-500" />
+              <span>Bookings Ledger ({allBookings.length})</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setDisplayMode("blacklist")}
-            className={cn(
-              "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
-              displayMode === "blacklist"
-                ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-            )}
-          >
-            <ShieldAlert className="size-4 text-rose-500" />
-            <span>Blacklist Shield ({blacklist?.length ?? 0})</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setDisplayMode("blacklist")}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
+                displayMode === "blacklist"
+                  ? "bg-stone-900 text-white border-stone-900 shadow-md ring-2 ring-stone-900/10"
+                  : "bg-white text-stone-700 border-stone-200 hover:bg-stone-50"
+              )}
+            >
+              <ShieldAlert className="size-4 text-rose-500" />
+              <span>Blacklist Shield ({blacklist?.length ?? 0})</span>
+            </button>
+          </div>
+
+          <p className="text-xs text-stone-500 font-medium hidden sm:block">
+            {displayMode === "calendar"
+              ? "📅 Interactive Google Calendar view with live time indicator and 1-click slot activation."
+              : displayMode === "blacklist"
+              ? "🛡️ Screening & Abuse Shield: Manage blocked clients and review safety incident flags."
+              : "📋 Full chronological table of client bookings, prescriptions, and cancellation status."}
+          </p>
         </div>
-
-        <p className="text-xs text-slate-500 font-medium hidden sm:block">
-          {displayMode === "calendar"
-            ? "📅 Interactive Google Calendar view with live time indicator and 1-click slot activation."
-            : displayMode === "blacklist"
-            ? "🛡️ Screening & Abuse Shield: Manage blocked clients and review safety incident flags."
-            : "📋 Full chronological table of client bookings, prescriptions, and cancellation status."}
-        </p>
-      </div>
+      )}
 
       {/* 1. GOOGLE CALENDAR SUITE (Default Hero Experience) */}
       {displayMode === "calendar" && (
