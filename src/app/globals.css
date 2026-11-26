@@ -3,114 +3,177 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ==========================================================================
-   Astra Astrology — Calm Glow
+   DivinLink Astrologer & Admin Sanctuary — Calm Celestial Glow
 
-   Warm, bright and friendly: cream pages, white cards, a sunny yellow for the
-   one action that matters on each screen, and warm near-black ink. Depth comes
-   from faint borders and a soft glow under the primary button, never from
-   heavy shadows.
-
-   One theme only. There is no dark mode: the brand *is* the warm light
-   surface, and a dark variant would be a different product.
+   Warm, sacred and elegant: cream pages, pristine white cards, warm peach-amber
+   accents, and warm near-black ink. Depth comes from subtle warm borders and
+   sacred golden aura, perfectly harmonized with DivinLink (divinlink.com).
    ========================================================================== */
 
 @theme {
-  /* --- brand: the sunny yellow ----------------------------------------
-     Pale at the low end for tints and chips, deepening into an olive that is
-     readable as text on white. #f7ee7a is the brand fill; anything below 500
-     is far too light to put words in. */
-  --color-brand-50: #fffdf0;
-  --color-brand-100: #fefbd4;
-  --color-brand-200: #fcf6ad;
-  --color-brand-300: #f7ee7a;
-  --color-brand-400: #f2e54a;
-  --color-brand-500: #ddcd21;
-  --color-brand-600: #b4a616;
-  --color-brand-700: #867c12;
-  --color-brand-800: #5a5310;
-  --color-brand-900: #3a350c;
-  --color-brand-950: #1c1304;
+  /* --- brand: peach-orange saffron accent ----------------------------- */
+  --color-brand-50: #fff6ef;
+  --color-brand-100: #fdeee3;
+  --color-brand-200: #fbdcc8;
+  --color-brand-300: #f7c9a8;
+  --color-brand-400: #f5ad6a;
+  --color-brand-500: #f39419;
+  --color-brand-600: #d97b0b;
+  --color-brand-700: #a95c0c;
+  --color-brand-800: #7a4410;
+  --color-brand-900: #4c2b0c;
+  --color-brand-950: #1d1a1c;
 
-  /* --- gold: ratings and anything celestial ---------------------------
-     Kept apart from the brand yellow so a star does not read as a button.
-     Warmer and darker, so it still shows on a cream page. */
+  /* --- gold: ratings, sacred emblems and celestial badges ------------- */
   --color-gold-50: #fff9ed;
   --color-gold-100: #fef0d2;
   --color-gold-200: #fcdfa4;
   --color-gold-300: #f8c76b;
-  --color-gold-400: #f3ab35;
+  --color-gold-400: #f7c325;
   --color-gold-500: #e08c12;
   --color-gold-600: #bd6c0c;
   --color-gold-700: #964f0f;
   --color-gold-800: #7a3f12;
   --color-gold-900: #653512;
 
-  /* --- ink: the warm near-blacks the spec names ----------------------- */
-  --color-ink-500: #6b5f4d;
-  --color-ink-600: #4a4034;
-  --color-ink-700: #2b2217;
-  --color-ink-800: #1a1a1a;
-  --color-ink-900: #1a1208;
-  --color-ink-950: #1c1304;
+  /* --- ink: warm mauve near-blacks ------------------------------------ */
+  --color-ink-500: #8a7f83;
+  --color-ink-600: #5c5156;
+  --color-ink-700: #3a3236;
+  --color-ink-800: #262124;
+  --color-ink-900: #1d1a1c;
+  --color-ink-950: #141113;
 
-  /* --- night: the video stage, and only that ---------------------------
-     A call fills the screen with someone's face, and every video product
-     puts that on black. It is the one place this warm, light system gives
-     way to something darker. */
+  /* --- night: sacred obsidian video call stage ------------------------ */
   --color-night-800: #241f18;
   --color-night-900: #16120c;
   --color-night-950: #0d0a06;
 
-  /* --- cream: page and promotional surfaces --------------------------- */
-  --color-cream-50: #fffefa;
-  --color-cream-100: #fffdf2;
-  --color-cream-200: #fff8d9;
-  --color-cream-300: #fdf1c2;
+  /* --- cream: page and sacred promotional surfaces -------------------- */
+  --color-cream-50: #ffffff;
+  --color-cream-100: #fdf0e7;
+  --color-cream-200: #fff8f3;
+  --color-cream-300: #fbe7da;
 
-  /* Poppins throughout. The design calls for a numeral-friendly companion
-     ("PoppinsNum") for prices and metrics; Poppins ships tabular figures, so
-     `.tabular-nums` does that job rather than a second webfont. */
-  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  /* --- DivinLink palette remap: Warm mauve ink & Peach Amber --------- */
+  --color-amber-50: #fff7f0;
+  --color-amber-100: #feecdf;
+  --color-amber-200: #fcd9bf;
+  --color-amber-300: #f9bf8e;
+  --color-amber-400: #f6a650;
+  --color-amber-500: #f39419;
+  --color-amber-600: #d97b0b;
+  --color-amber-700: #b0610c;
+  --color-amber-800: #8c4c12;
+  --color-amber-900: #723f13;
+  --color-amber-950: #401f07;
+
+  --color-stone-50: #fbf6f3;
+  --color-stone-100: #f5ece8;
+  --color-stone-200: #eadcd6;
+  --color-stone-300: #d8c7c2;
+  --color-stone-400: #ab9b9d;
+  --color-stone-500: #8a7f83;
+  --color-stone-600: #5c5156;
+  --color-stone-700: #463c41;
+  --color-stone-800: #2f282c;
+  --color-stone-900: #1d1a1c;
+  --color-stone-950: #121011;
+
+  --color-slate-50: #fbf6f3;
+  --color-slate-100: #f5ece8;
+  --color-slate-200: #eadcd6;
+  --color-slate-300: #d8c7c2;
+  --color-slate-400: #ab9b9d;
+  --color-slate-500: #8a7f83;
+  --color-slate-600: #5c5156;
+  --color-slate-700: #463c41;
+  --color-slate-800: #2f282c;
+  --color-slate-900: #1d1a1c;
+  --color-slate-950: #121011;
+
+  --color-neutral-50: #fbf6f3;
+  --color-neutral-100: #f5ece8;
+  --color-neutral-200: #eadcd6;
+  --color-neutral-300: #d8c7c2;
+  --color-neutral-400: #ab9b9d;
+  --color-neutral-500: #8a7f83;
+  --color-neutral-600: #5c5156;
+  --color-neutral-700: #463c41;
+  --color-neutral-800: #2f282c;
+  --color-neutral-900: #1d1a1c;
+  --color-neutral-950: #121011;
+
+  --color-gray-50: #fbf6f3;
+  --color-gray-100: #f5ece8;
+  --color-gray-200: #eadcd6;
+  --color-gray-300: #d8c7c2;
+  --color-gray-400: #ab9b9d;
+  --color-gray-500: #8a7f83;
+  --color-gray-600: #5c5156;
+  --color-gray-700: #463c41;
+  --color-gray-800: #2f282c;
+  --color-gray-900: #1d1a1c;
+  --color-gray-950: #121011;
+
+  --color-zinc-50: #fbf6f3;
+  --color-zinc-100: #f5ece8;
+  --color-zinc-200: #eadcd6;
+  --color-zinc-300: #d8c7c2;
+  --color-zinc-400: #ab9b9d;
+  --color-zinc-500: #8a7f83;
+  --color-zinc-600: #5c5156;
+  --color-zinc-700: #463c41;
+  --color-zinc-800: #2f282c;
+  --color-zinc-900: #1d1a1c;
+  --color-zinc-950: #121011;
+
+  --color-rose-500: #ff4d5e;
+  --color-rose-600: #e63a4c;
+
+  /* Typography scale */
+  --font-sans: var(--font-urbanist), var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-gilda), var(--font-cinzel), var(--font-cormorant), Georgia, serif;
+  --font-serif-display: var(--font-cormorant), var(--font-cinzel), Georgia, serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  --radius-card: 28px;
-  --radius-modal: 32px;
+  --radius-card: 24px;
+  --radius-modal: 28px;
 
-  /* DealDeck 3D depth shadows */
-  --shadow-soft: 0 4px 12px rgba(20, 25, 45, 0.03);
-  --shadow-lift: 0 10px 30px rgba(20, 25, 45, 0.05), 0 1px 3px rgba(20, 25, 45, 0.02);
-  --shadow-glow: 0 12px 32px -8px rgba(245, 158, 11, 0.45);
+  /* Soft and warm shadows */
+  --shadow-soft: 0 1px 2px rgb(110 60 50 / 0.05), 0 12px 30px -14px rgb(110 60 50 / 0.15);
+  --shadow-lift: 0 2px 6px rgb(110 60 50 / 0.06), 0 24px 46px -16px rgb(110 60 50 / 0.22);
+  --shadow-glow: 0 12px 28px -12px rgb(243 148 25 / 0.65), 0 2px 6px rgb(29 26 28 / 0.08);
 }
 
 /* --------------------------------------------------------------------------
-   Semantic surfaces: DealDeck Ultra-Premium 3D palette
+   Semantic surfaces: DivinLink Sacred Light Sanctuary
    -------------------------------------------------------------------------- */
 :root {
   color-scheme: light;
 
-  --background: #EEF1F8;
+  --background: #fdf0e7;
   --surface: #ffffff;
-  --surface-muted: #F8FAFD;
+  --surface-muted: #fbf3ee;
   --surface-raised: #ffffff;
   --surface-solid: #ffffff;
 
-  --border: rgba(226, 232, 240, 0.9);
-  --border-strong: rgba(203, 213, 225, 0.95);
+  --border: rgb(29 26 28 / 0.08);
+  --border-strong: rgb(29 26 28 / 0.16);
 
-  --foreground: #0F172A;
-  --muted-foreground: #64748B;
-  --ring: #F59E0B;
+  --foreground: #1d1a1c;
+  --muted-foreground: #5c5156;
+  --ring: #f39419;
 
   /* Status */
-  --success: #10B981;
-  --success-surface: rgba(16, 185, 129, 0.12);
-  --danger: #EF4444;
-  --danger-surface: rgba(239, 68, 68, 0.1);
-  --warning: #F59E0B;
-  --warning-surface: rgba(245, 158, 11, 0.14);
-  --info: #D97706;
-  --info-surface: rgba(245, 158, 11, 0.12);
+  --success: #1f8a43;
+  --success-surface: rgb(44 180 89 / 0.14);
+  --danger: #c94b4b;
+  --danger-surface: rgb(201 75 75 / 0.1);
+  --warning: #d97b0b;
+  --warning-surface: rgb(243 148 25 / 0.16);
+  --info: #b0610c;
+  --info-surface: rgb(243 148 25 / 0.12);
 }
 
 @theme inline {
@@ -152,17 +215,14 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Confident and tight, as the type scale asks. The negative tracking is
-     what gives the headlines their editorial feel; it is set per size because
-     a single value would be far too tight on the small ones. */
   h1 {
-    letter-spacing: -0.035em;
-    font-weight: 600;
+    letter-spacing: -0.025em;
+    font-weight: 700;
   }
 
   h2 {
-    letter-spacing: -0.03em;
-    font-weight: 600;
+    letter-spacing: -0.02em;
+    font-weight: 700;
   }
 
   h3 {
@@ -170,7 +230,6 @@
     font-weight: 600;
   }
 
-  /* Prices, balances and counts line up column by column. */
   .tabular-nums,
   table {
     font-variant-numeric: tabular-nums;
@@ -182,18 +241,17 @@
   }
 
   ::selection {
-    background-color: var(--color-brand-300);
-    color: var(--color-ink-950);
+    background-color: #fbdcc8;
+    color: #1d1a1c;
   }
 
-  /* Scrollbars, warm rather than grey. */
   * {
-    scrollbar-color: rgb(26 18 8 / 0.2) transparent;
+    scrollbar-color: rgb(29 26 28 / 0.2) transparent;
   }
 
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
   }
 
   ::-webkit-scrollbar-track {
@@ -201,51 +259,48 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: rgb(26 18 8 / 0.16);
+    background-color: rgb(29 26 28 / 0.15);
     border: 2px solid transparent;
     border-radius: 999px;
     background-clip: padding-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: rgb(26 18 8 / 0.28);
+    background-color: rgb(29 26 28 / 0.28);
   }
 }
 
 @layer utilities {
-  /* The standard card: white, a faint border doing the structural work, and
-     only the gentlest lift. Cards are deliberately flat here — the hierarchy
-     is meant to come from the type, not from stacked shadows. */
   .card-surface {
     background-color: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
-    box-shadow: 0 10px 30px rgba(20, 25, 45, 0.04), 0 1px 3px rgba(20, 25, 45, 0.02);
+    box-shadow: 0 4px 20px -2px rgba(110, 60, 50, 0.05);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .card-surface:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 18px 38px rgba(20, 25, 45, 0.08), 0 2px 6px rgba(20, 25, 45, 0.03);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px -4px rgba(110, 60, 50, 0.09);
   }
 
   .card-3d {
     background: #ffffff;
-    border: 1px solid rgba(226, 232, 240, 0.85);
-    border-radius: 28px;
-    box-shadow: 0 10px 30px rgba(20, 25, 45, 0.04), 0 1px 3px rgba(20, 25, 45, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    box-shadow: 0 4px 20px -2px rgba(110, 60, 50, 0.05);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
   }
 
   .card-3d:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 42px rgba(20, 25, 45, 0.09), 0 2px 6px rgba(20, 25, 45, 0.03);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px -4px rgba(110, 60, 50, 0.09);
   }
 
   .card-hero-3d {
-    background: linear-gradient(135deg, #B45309 0%, #D97706 50%, #F59E0B 100%);
-    border-radius: 28px;
+    background: linear-gradient(135deg, #b0610c 0%, #d97b0b 50%, #f39419 100%);
+    border-radius: 24px;
     color: #ffffff;
     box-shadow: 0 16px 36px -8px rgba(217, 119, 6, 0.45);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -254,80 +309,58 @@
   }
 
   .card-hero-3d:hover {
-    transform: translateY(-4px);
+    transform: translateY(-3px);
     box-shadow: 0 22px 45px -8px rgba(217, 119, 6, 0.55);
   }
 
-  /* A card that should catch the eye: the warm promotional surface. */
   .card-glow {
     background-color: var(--surface-raised);
-    border-color: rgba(245, 158, 11, 0.5);
+    border-color: rgba(243, 148, 25, 0.45);
     box-shadow: var(--shadow-glow);
   }
 
-  /* The primary action, and nothing else. Yellow fill, dark text, full pill,
-     and the one glow in the system under it. */
   .btn-cosmic {
-    background-color: var(--color-brand-300);
-    color: var(--color-brand-950);
+    background: linear-gradient(135deg, #d97b0b 0%, #f39419 100%);
+    color: #ffffff;
     box-shadow: var(--shadow-glow);
   }
 
   .btn-cosmic:hover:not(:disabled) {
-    background-color: var(--color-brand-400);
-    box-shadow: 0 12px 34px -12px rgb(242 229 74 / 1), 0 2px 6px rgb(26 18 8 / 0.1);
+    background: linear-gradient(135deg, #b0610c 0%, #d97b0b 100%);
+    box-shadow: 0 12px 34px -10px rgba(243, 148, 25, 0.8), 0 2px 6px rgb(29 26 28 / 0.1);
   }
 
-  /* A warm promotional band, used where the old design had a night sky. */
   .bg-cosmos {
     background-color: var(--color-cream-200);
     background-image:
-      radial-gradient(900px 420px at 12% -10%, rgb(247 238 122 / 0.75), transparent 62%),
-      radial-gradient(700px 360px at 88% 0%, rgb(242 229 74 / 0.5), transparent 60%),
-      radial-gradient(600px 400px at 50% 112%, rgb(253 241 194 / 0.9), transparent 62%);
+      radial-gradient(900px 420px at 12% -10%, rgb(243 148 25 / 0.15), transparent 62%),
+      radial-gradient(700px 360px at 88% 0%, rgb(249 191 142 / 0.2), transparent 60%),
+      radial-gradient(600px 400px at 50% 112%, rgb(253 240 231 / 0.9), transparent 62%);
   }
 
-  /* Kept as a no-op so markup that still asks for a starfield simply gets
-     nothing, rather than every page needing an edit to remove it. */
   .bg-stars::before {
     content: none;
   }
 
-  /* Soft sunny blobs, the warm counterpart to the old planets. Decorative
-     only, and always aria-hidden where they are used. */
-  .orb {
-    border-radius: 9999px;
-    background-image: radial-gradient(
-      circle at 32% 28%,
-      rgb(255 253 240 / 0.95),
-      rgb(247 238 122 / 0.9) 45%,
-      rgb(242 229 74 / 0.75)
-    );
-    filter: blur(0.5px);
-  }
-
-  .orb-gold {
-    background-image: radial-gradient(
-      circle at 32% 28%,
-      rgb(254 240 210 / 0.95),
-      rgb(248 199 107 / 0.9) 48%,
-      rgb(243 171 53 / 0.8)
-    );
-  }
-
-  /* A soft yellow disc behind an icon. */
   .medallion {
-    background-color: var(--color-brand-300);
-    color: var(--color-brand-950);
-    border: 1px solid rgb(26 18 8 / 0.06);
-    box-shadow: 0 6px 18px -10px rgb(242 229 74 / 0.9);
+    background: linear-gradient(135deg, #feecdf 0%, #fcd9bf 100%);
+    color: #b0610c;
+    border: 1px solid rgb(217 123 11 / 0.15);
+    box-shadow: 0 6px 18px -10px rgba(243, 148, 25, 0.5);
+  }
+
+  .medallion-gold {
+    background: linear-gradient(135deg, #fef0d2 0%, #fcdfa4 100%);
+    color: #964f0f;
+    border: 1px solid rgb(224 140 18 / 0.2);
+    box-shadow: 0 6px 18px -10px rgba(224, 140, 18, 0.6);
   }
 
   .nav-active {
-    background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%) !important;
+    background: linear-gradient(135deg, #d97b0b 0%, #f39419 60%, #ea580c 100%) !important;
     color: #ffffff !important;
     font-weight: 700;
-    box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+    box-shadow: 0 8px 24px -4px rgba(217, 123, 11, 0.45);
     border-radius: 16px;
   }
 
@@ -335,61 +368,32 @@
     color: #ffffff !important;
   }
 
-  /* The warmer medallion, for anything celestial rather than commercial. */
-  .medallion-gold {
-    background-color: var(--color-gold-300);
-    color: var(--color-gold-900);
-    box-shadow: 0 6px 18px -10px rgb(243 171 53 / 0.9);
-  }
-
-  /* A quiet hairline, used where sections meet. */
-  .hairline {
-    background-image: linear-gradient(
-      90deg,
-      transparent,
-      rgb(26 18 8 / 0.1) 20%,
-      rgb(26 18 8 / 0.14) 50%,
-      rgb(26 18 8 / 0.1) 80%,
-      transparent
-    );
-  }
-
-  /* Headline emphasis. On a light page this is a colour shift, not a glow —
-     a literal glow would simply look like a printing error. */
   .text-gradient-brand {
     background-image: linear-gradient(
       100deg,
-      var(--color-ink-900),
-      var(--color-gold-600) 45%,
-      var(--color-brand-600)
+      #1d1a1c,
+      #b0610c 45%,
+      #f39419
     );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
-  /* The old dark theme lit text up; here the same emphasis is a warm
-     highlight behind it. */
-  .glow-text {
-    text-shadow: none;
-  }
-
   .font-display {
     font-family: var(--font-display);
   }
 
-  /* Premium serif, for the auth screen's wordmark and hero heading only. */
   .font-serif-display {
-    font-family: var(--font-cormorant), ui-serif, Georgia, serif;
+    font-family: var(--font-serif-display);
   }
 
-  /* Skeletons and "loading" states. */
   .shimmer {
     background: linear-gradient(
       90deg,
-      rgb(26 18 8 / 0.04) 25%,
-      rgb(26 18 8 / 0.09) 37%,
-      rgb(26 18 8 / 0.04) 63%
+      rgb(29 26 28 / 0.04) 25%,
+      rgb(29 26 28 / 0.09) 37%,
+      rgb(29 26 28 / 0.04) 63%
     );
     background-size: 400% 100%;
     animation: shimmer 1.4s ease-in-out infinite;
@@ -398,52 +402,6 @@
   @keyframes shimmer {
     0% { background-position: 100% 50%; }
     100% { background-position: 0 50%; }
-  }
-
-  @keyframes float-slow {
-    0%, 100% { transform: translateY(0) }
-    50% { transform: translateY(-18px) }
-  }
-
-  .animate-float-slow {
-    animation: float-slow 11s ease-in-out infinite;
-  }
-
-  .bubble-float-1 {
-    animation: float-slow 6s ease-in-out infinite;
-  }
-
-  .bubble-float-2 {
-    animation: float-slow 8s ease-in-out infinite 1s;
-  }
-
-  .bubble-float-3 {
-    animation: float-slow 7s ease-in-out infinite 2s;
-  }
-
-  .bubble-float-4 {
-    animation: float-slow 9s ease-in-out infinite 1.5s;
-  }
-
-  .glass-tooltip {
-    background: rgba(17, 19, 25, 0.95);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  }
-
-  @keyframes marquee {
-    0% { transform: translateX(0%); }
-    100% { transform: translateX(-50%); }
-  }
-
-  .animate-marquee {
-    display: flex;
-    width: max-content;
-    animation: marquee 35s linear infinite;
-  }
-  .animate-marquee:hover {
-    animation-play-state: paused;
   }
 }
 
@@ -457,7 +415,7 @@
   }
 }
 
-/* Hide Next.js dev indicator badge (N 1 Insight button) */
+/* Hide Next.js dev indicator badge */
 nextjs-portal,
 #nextjs-dev-indicator,
 [data-nextjs-toast-wrapper],
@@ -472,56 +430,50 @@ button[data-nextjs-toast-wrapper] {
 }
 
 /* ==========================================================================
-   DARK MODE — full inversion
-
-   The app paints its surfaces and text with hardcoded Tailwind `slate` / white
-   utilities and a few literal hex values rather than the semantic tokens, so a
-   dark theme cannot be done by flipping `:root` alone. Here we (1) flip the
-   semantic variables for the components that do use them, and (2) remap every
-   slate / white / page utility the UI actually uses, scoped under `html.dark`
-   so the override wins on specificity. The warm amber / orange brand accents
-   (#D97706, #F59E0B, #B45309 …) are intentionally left untouched — they stay
-   the brand colour in both themes.
+   SACRED OBSIDIAN NIGHT MODE (DivinLink Dark)
    ========================================================================== */
 
 html.dark {
   color-scheme: dark;
 
-  --background: #0a0e17;
-  --surface: #141b2d;
-  --surface-muted: #1b2338;
-  --surface-raised: #141b2d;
-  --surface-solid: #141b2d;
+  --background: #141113;
+  --surface: #1d1a1c;
+  --surface-muted: #262124;
+  --surface-raised: #1d1a1c;
+  --surface-solid: #1d1a1c;
 
-  --border: rgba(148, 163, 184, 0.14);
-  --border-strong: rgba(148, 163, 184, 0.24);
+  --border: rgba(243, 148, 25, 0.12);
+  --border-strong: rgba(243, 148, 25, 0.22);
 
-  --foreground: #f8fafc;
-  --muted-foreground: #8891a6;
-  --ring: #F59E0B;
+  --foreground: #fdf0e7;
+  --muted-foreground: #a89da2;
+  --ring: #f39419;
 
-  --success-surface: rgba(16, 185, 129, 0.18);
-  --danger-surface: rgba(239, 68, 68, 0.18);
-  --warning-surface: rgba(245, 158, 11, 0.2);
-  --info-surface: rgba(245, 158, 11, 0.18);
+  --success-surface: rgba(31, 138, 67, 0.2);
+  --danger-surface: rgba(201, 75, 75, 0.2);
+  --warning-surface: rgba(243, 148, 25, 0.2);
+  --info-surface: rgba(243, 148, 25, 0.18);
 }
 
-/* Dark surface scale reused below */
+/* Dark surface scale */
 html.dark {
-  --d-page: #0a0e17;
-  --d-surface: #141b2d;
-  --d-raised: #1b2338;
-  --d-raised-2: #232d45;
-  --d-border: rgba(148, 163, 184, 0.14);
+  --d-page: #141113;
+  --d-surface: #1d1a1c;
+  --d-raised: #262124;
+  --d-raised-2: #332b30;
+  --d-border: rgba(243, 148, 25, 0.12);
 }
 
 /* --- page + solid surfaces ------------------------------------------- */
 html.dark .bg-white { background-color: var(--d-surface) !important; }
-html.dark .bg-\[\#EEF1F8\] { background-color: var(--d-page) !important; }
+html.dark .bg-\[\#EEF1F8\],
+html.dark .bg-\[\#fdf0e7\],
+html.dark .bg-\[\#fff8f3\],
+html.dark .bg-\[\#FFF8F3\] { background-color: var(--d-page) !important; }
 html.dark .bg-\[\#D7DBE7\],
 html.dark .bg-\[\#CBD2E1\] { background-color: var(--d-raised-2) !important; }
 
-/* --- slate backgrounds (light greys) --------------------------------- */
+/* --- slate backgrounds remapped to warm dark obsidian ---------------- */
 html.dark .bg-slate-50,
 html.dark .bg-slate-50\/10,
 html.dark .bg-slate-50\/20,
@@ -530,53 +482,7 @@ html.dark .bg-slate-50\/40,
 html.dark .bg-slate-50\/50,
 html.dark .bg-slate-50\/60,
 html.dark .bg-slate-50\/70,
-html.dark .bg-slate-50\/80 { background-color: rgba(27, 35, 56, 0.7) !important; }
-
-/* --- tinted light pastels in dark mode (prevent muddy opaque wash) ---- */
-html.dark .bg-amber-50,
-html.dark .bg-amber-50\/20,
-html.dark .bg-amber-50\/30,
-html.dark .bg-amber-50\/40,
-html.dark .bg-amber-50\/50,
-html.dark .bg-amber-50\/60,
-html.dark .bg-amber-50\/70,
-html.dark .bg-amber-50\/80 { background-color: rgba(120, 53, 15, 0.25) !important; }
-
-html.dark .bg-sky-50,
-html.dark .bg-sky-50\/20,
-html.dark .bg-sky-50\/30,
-html.dark .bg-sky-50\/40,
-html.dark .bg-sky-50\/50,
-html.dark .bg-sky-50\/60,
-html.dark .bg-sky-50\/70,
-html.dark .bg-sky-50\/80 { background-color: rgba(12, 74, 110, 0.25) !important; }
-
-html.dark .bg-indigo-50,
-html.dark .bg-indigo-50\/20,
-html.dark .bg-indigo-50\/30,
-html.dark .bg-indigo-50\/40,
-html.dark .bg-indigo-50\/50,
-html.dark .bg-indigo-50\/60,
-html.dark .bg-indigo-50\/70,
-html.dark .bg-indigo-50\/80 { background-color: rgba(49, 46, 129, 0.25) !important; }
-
-html.dark .bg-emerald-50,
-html.dark .bg-emerald-50\/20,
-html.dark .bg-emerald-50\/30,
-html.dark .bg-emerald-50\/40,
-html.dark .bg-emerald-50\/50,
-html.dark .bg-emerald-50\/60,
-html.dark .bg-emerald-50\/70,
-html.dark .bg-emerald-50\/80 { background-color: rgba(6, 78, 59, 0.25) !important; }
-
-html.dark .bg-rose-50,
-html.dark .bg-rose-50\/20,
-html.dark .bg-rose-50\/30,
-html.dark .bg-rose-50\/40,
-html.dark .bg-rose-50\/50,
-html.dark .bg-rose-50\/60,
-html.dark .bg-rose-50\/70,
-html.dark .bg-rose-50\/80 { background-color: rgba(136, 19, 55, 0.25) !important; }
+html.dark .bg-slate-50\/80 { background-color: rgba(38, 33, 36, 0.8) !important; }
 
 html.dark .bg-slate-100,
 html.dark .bg-slate-100\/70,
@@ -588,21 +494,58 @@ html.dark .bg-slate-200\/60,
 html.dark .bg-slate-200\/70,
 html.dark .bg-slate-200\/80 { background-color: var(--d-raised-2) !important; }
 
-html.dark .bg-slate-300 { background-color: #2c3750 !important; }
-html.dark .bg-slate-400 { background-color: #3a465f !important; }
+html.dark .bg-slate-300 { background-color: #3d343a !important; }
+html.dark .bg-slate-400 { background-color: #4c4248 !important; }
 
-/* --- slate text (dark inks) → light inks ----------------------------- */
-html.dark .text-slate-900 { color: #f8fafc !important; }
-html.dark .text-slate-800 { color: #e8edf5 !important; }
-html.dark .text-slate-700 { color: #d4dbe8 !important; }
-html.dark .text-slate-600 { color: #aeb8c9 !important; }
-html.dark .text-slate-500 { color: #9aa5b8 !important; }
-html.dark .text-slate-400 { color: #8891a6 !important; }
-html.dark .text-slate-300 { color: #727d94 !important; }
+/* --- tinted pastels in dark mode (amber, sky, emerald, rose) --------- */
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/20,
+html.dark .bg-amber-50\/30,
+html.dark .bg-amber-50\/40,
+html.dark .bg-amber-50\/50,
+html.dark .bg-amber-50\/60,
+html.dark .bg-amber-50\/70,
+html.dark .bg-amber-50\/80 { background-color: rgba(217, 123, 11, 0.16) !important; }
 
-html.dark .placeholder-slate-400::placeholder { color: #64748b !important; }
+html.dark .bg-sky-50,
+html.dark .bg-sky-50\/20,
+html.dark .bg-sky-50\/30,
+html.dark .bg-sky-50\/40,
+html.dark .bg-sky-50\/50,
+html.dark .bg-sky-50\/60,
+html.dark .bg-sky-50\/70,
+html.dark .bg-sky-50\/80 { background-color: rgba(47, 111, 143, 0.2) !important; }
 
-/* --- borders / rings / dividers -------------------------------------- */
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-50\/20,
+html.dark .bg-emerald-50\/30,
+html.dark .bg-emerald-50\/40,
+html.dark .bg-emerald-50\/50,
+html.dark .bg-emerald-50\/60,
+html.dark .bg-emerald-50\/70,
+html.dark .bg-emerald-50\/80 { background-color: rgba(31, 138, 67, 0.2) !important; }
+
+html.dark .bg-rose-50,
+html.dark .bg-rose-50\/20,
+html.dark .bg-rose-50\/30,
+html.dark .bg-rose-50\/40,
+html.dark .bg-rose-50\/50,
+html.dark .bg-rose-50\/60,
+html.dark .bg-rose-50\/70,
+html.dark .bg-rose-50\/80 { background-color: rgba(201, 75, 75, 0.2) !important; }
+
+/* --- typography in dark mode ---------------------------------------- */
+html.dark .text-slate-900 { color: #fdf0e7 !important; }
+html.dark .text-slate-800 { color: #f5ece8 !important; }
+html.dark .text-slate-700 { color: #eadcd6 !important; }
+html.dark .text-slate-600 { color: #d8c7c2 !important; }
+html.dark .text-slate-500 { color: #a89da2 !important; }
+html.dark .text-slate-400 { color: #8a7f83 !important; }
+html.dark .text-slate-300 { color: #6b6065 !important; }
+
+html.dark .placeholder-slate-400::placeholder { color: #8a7f83 !important; }
+
+/* --- borders and dividers in dark mode ------------------------------- */
 html.dark .border-slate-100,
 html.dark .border-slate-100\/90,
 html.dark .border-slate-200,
@@ -614,18 +557,16 @@ html.dark .border-slate-300 { border-color: var(--d-border) !important; }
 html.dark .ring-slate-100 { --tw-ring-color: var(--d-border) !important; }
 html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: var(--d-border) !important; }
 
-/* --- card utilities that bake in white ------------------------------- */
+/* --- card utilities in dark mode ------------------------------------ */
 html.dark .card-3d {
   background: var(--d-surface) !important;
   border-color: var(--d-border) !important;
 }
 
-/* --- already-dark cards / tooltips: lift slightly off the dark page --- */
-html.dark .bg-slate-900 { background-color: #1c2740 !important; }
-html.dark .bg-slate-800 { background-color: #242f49 !important; }
+html.dark .bg-slate-900 { background-color: #262124 !important; }
+html.dark .bg-slate-800 { background-color: #332b30 !important; }
 
-/* Keep the warm sunny selection readable in dark too */
 html.dark ::selection {
-  background-color: var(--color-brand-400);
-  color: var(--color-ink-950);
+  background-color: #b0610c;
+  color: #fdf0e7;
 }

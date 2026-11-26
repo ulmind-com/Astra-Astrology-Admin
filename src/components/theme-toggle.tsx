@@ -30,10 +30,10 @@ export function ThemeToggle({ className }: { className?: string }) {
         toggleTheme();
       }}
       className={cn(
-        "relative inline-flex h-11 w-[72px] shrink-0 cursor-pointer items-center rounded-full border p-1 transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F59E0B]",
+        "relative inline-flex h-11 w-[72px] shrink-0 cursor-pointer items-center rounded-full border p-1 transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f39419]",
         isDark
-          ? "border-slate-700 bg-gradient-to-r from-[#1E293B] to-[#0F172A] shadow-[inset_0_1px_3px_rgba(0,0,0,0.6)]"
-          : "border-slate-200 bg-gradient-to-r from-[#FEF3C7] to-[#FDE68A] shadow-[inset_0_1px_3px_rgba(217,119,6,0.15)]",
+          ? "border-amber-500/30 bg-gradient-to-r from-[#2a1d24] to-[#141113] shadow-[inset_0_1px_3px_rgba(0,0,0,0.6)]"
+          : "border-amber-200/80 bg-gradient-to-r from-[#feecdf] to-[#fcd9bf] shadow-[inset_0_1px_3px_rgba(217,119,6,0.15)]",
         className
       )}
     >
@@ -41,13 +41,13 @@ export function ThemeToggle({ className }: { className?: string }) {
       <Sun
         className={cn(
           "absolute left-2.5 size-4 transition-opacity duration-300",
-          isDark ? "text-amber-500/40 opacity-60" : "opacity-0"
+          isDark ? "text-amber-400/50 opacity-60" : "opacity-0"
         )}
       />
       <Moon
         className={cn(
           "absolute right-2.5 size-4 transition-opacity duration-300",
-          isDark ? "opacity-0" : "text-slate-400/50 opacity-60"
+          isDark ? "opacity-0" : "text-amber-700/50 opacity-60"
         )}
       />
 
@@ -56,14 +56,14 @@ export function ThemeToggle({ className }: { className?: string }) {
         className={cn(
           "relative z-10 flex size-9 items-center justify-center rounded-full shadow-lg transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
           isDark
-            ? "translate-x-[28px] bg-gradient-to-br from-[#334155] to-[#0F172A]"
-            : "translate-x-0 bg-gradient-to-br from-white to-[#FEF9E7]"
+            ? "translate-x-[28px] bg-gradient-to-br from-[#3d2f36] to-[#1d1a1c] border border-amber-500/20"
+            : "translate-x-0 bg-gradient-to-br from-white to-[#fff8f3] shadow-md border border-amber-900/5"
         )}
       >
         {isDark ? (
-          <Moon className="size-4 text-amber-200" />
+          <Moon className="size-4 text-amber-300" />
         ) : (
-          <Sun className="size-4 text-[#D97706]" />
+          <Sun className="size-4 text-[#d97b0b]" />
         )}
       </span>
     </button>

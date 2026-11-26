@@ -275,17 +275,17 @@ export default function AstrologerPanelPage() {
     <div className="space-y-8 pb-24">
       {/* ------------------------------------------------ PASSWORD REMINDER */}
       {profile.must_change_password && (
-        <div className="relative overflow-hidden rounded-3xl border border-amber-300 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/5 p-5 shadow-sm">
+        <div className="relative overflow-hidden rounded-3xl border border-amber-300/80 bg-gradient-to-r from-amber-500/10 via-orange-500/8 to-amber-500/5 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-amber-950/20 p-5 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-xs">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-600 to-amber-500 text-white shadow-xs">
                 <Lock className="size-5" />
               </div>
               <div className="space-y-0.5">
-                <h3 className="font-display text-sm font-bold text-amber-950">
+                <h3 className="font-display text-sm font-bold text-amber-950 dark:text-amber-100">
                   Temporary Onboarding Password Active
                 </h3>
-                <p className="text-xs text-amber-800">
+                <p className="text-xs text-amber-800 dark:text-amber-300">
                   Please configure a private master password known only to you.
                 </p>
               </div>
@@ -293,7 +293,7 @@ export default function AstrologerPanelPage() {
             <Link href="/me/password">
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-amber-700 transition-all cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#d97b0b] to-[#f39419] px-4 py-2 text-xs font-bold text-white shadow-xs hover:from-amber-600 hover:to-amber-500 transition-all cursor-pointer"
               >
                 <KeyRoundIcon className="size-3.5" />
                 <span>Change Password Now</span>
@@ -304,9 +304,9 @@ export default function AstrologerPanelPage() {
       )}
 
       {/* ------------------------------------------------ TOP COVER & PROFILE STAGE */}
-      <div className="relative rounded-3xl border border-slate-200/90 bg-white shadow-[0_20px_50px_rgba(20,25,45,0.05)] overflow-hidden">
+      <div className="relative rounded-3xl border border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1d1a1c] shadow-[0_20px_50px_rgba(110,60,50,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden">
         {/* Banner Cover Area */}
-        <div className="relative h-48 sm:h-64 w-full bg-gradient-to-br from-indigo-950 via-[#1A102F] to-[#2D1606] overflow-hidden group">
+        <div className="relative h-48 sm:h-64 w-full bg-gradient-to-tr from-[#2d1606] via-[#3d1808] to-[#1d1a1c] overflow-hidden group">
           {profile.banner_image_url ? (
             <Image
               src={profile.banner_image_url}
@@ -317,15 +317,15 @@ export default function AstrologerPanelPage() {
               unoptimized
             />
           ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-tr from-[#0F172A] via-[#1E1B4B] to-[#451A03]">
-              <div className="size-16 rounded-full bg-white/5 backdrop-blur-md flex items-center justify-center border border-white/10 mb-2">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-tr from-[#2d1606] via-[#3d1808] to-[#1d1a1c]">
+              <div className="size-16 rounded-full bg-amber-500/10 backdrop-blur-md flex items-center justify-center border border-amber-400/20 mb-2 shadow-[0_0_30px_rgba(243,148,25,0.2)]">
                 <Sparkles className="size-8 text-amber-400" />
               </div>
               <span className="rounded-full bg-amber-500/20 px-3.5 py-1 text-xs font-bold text-amber-300 border border-amber-500/30">
-                Default Celestial Cosmic Banner
+                DivinLink Sacred Cosmic Banner
               </span>
-              <p className="mt-1 text-xs text-slate-300">
-                Upload a custom 1200×480 banner to personalize your profile appearance.
+              <p className="mt-1 text-xs text-amber-100/70">
+                Upload a custom 1200×480 banner to personalize your sanctuary profile.
               </p>
             </div>
           )}
@@ -374,8 +374,8 @@ export default function AstrologerPanelPage() {
           </div>
         </div>
 
-        {/* Profile Details & Photo Bar - Sitting cleanly on high-contrast white surface */}
-        <div className="relative px-6 sm:px-8 pb-6 pt-3 bg-white">
+        {/* Profile Details & Photo Bar - Sitting cleanly on high-contrast surface */}
+        <div className="relative px-6 sm:px-8 pb-6 pt-3 bg-white dark:bg-[#1d1a1c]">
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
             {/* Left: Avatar overlapping banner + Clean Text Info below */}
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
@@ -385,14 +385,14 @@ export default function AstrologerPanelPage() {
                   src={profile.profile_image_url}
                   name={profile.display_name}
                   size="xl"
-                  className="size-28 sm:size-32 rounded-3xl ring-4 ring-white shadow-xl bg-white object-cover"
+                  className="size-28 sm:size-32 rounded-3xl ring-4 ring-white dark:ring-[#1d1a1c] shadow-xl bg-white dark:bg-[#1d1a1c] object-cover"
                 />
 
                 {/* Live Online Badge on Avatar */}
                 <span
                   className={cn(
-                    "absolute bottom-1 right-1 flex size-5 items-center justify-center rounded-full ring-2 ring-white shadow-sm",
-                    isOnline ? "bg-emerald-500" : "bg-slate-400"
+                    "absolute bottom-1 right-1 flex size-5 items-center justify-center rounded-full ring-2 ring-white dark:ring-[#1d1a1c] shadow-sm",
+                    isOnline ? "bg-emerald-500" : "bg-stone-400"
                   )}
                   title={isOnline ? "You are online" : "You are offline"}
                 >
@@ -421,10 +421,10 @@ export default function AstrologerPanelPage() {
                 </button>
               </div>
 
-              {/* Text Information - 100% CRISP, HIGH CONTRAST & READABLE ON WHITE */}
+              {/* Text Information - 100% CRISP, HIGH CONTRAST & READABLE */}
               <div className="space-y-2 pt-1">
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
-                  <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-slate-900 leading-tight">
+                  <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-stone-900 dark:text-stone-100 leading-tight">
                     {profile.display_name}
                   </h1>
                   <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-white shadow-xs">
@@ -432,12 +432,12 @@ export default function AstrologerPanelPage() {
                     Verified Specialist
                   </span>
                   {profile.availability.is_busy ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-bold text-rose-700 border border-rose-200">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 dark:bg-rose-950/40 px-2.5 py-0.5 text-xs font-bold text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
                       <span className="size-1.5 rounded-full bg-rose-500" />
                       In Consultation
                     </span>
                   ) : isOnline ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                       <span className="relative flex size-2">
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                         <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
@@ -445,13 +445,13 @@ export default function AstrologerPanelPage() {
                       Available Now
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600 border border-slate-200">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 dark:bg-stone-800 px-2.5 py-0.5 text-xs font-bold text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700">
                       Offline
                     </span>
                   )}
                 </div>
 
-                <p className="text-sm font-bold text-slate-600">
+                <p className="text-sm font-semibold text-stone-600 dark:text-stone-300">
                   {profile.tagline || "Astrology & Horoscope Consultant"}
                 </p>
 
@@ -459,7 +459,7 @@ export default function AstrologerPanelPage() {
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1 text-xs">
                   <Link
                     href="/reviews"
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 border border-amber-200/80 px-2.5 py-1 font-bold text-amber-800 hover:bg-amber-100 transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 px-2.5 py-1 font-bold text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
                   >
                     <Star className="size-3.5 fill-amber-500 text-amber-500" />
                     <span>
@@ -467,22 +467,22 @@ export default function AstrologerPanelPage() {
                     </span>
                   </Link>
 
-                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-rose-50 border border-rose-200/80 px-2.5 py-1 font-bold text-rose-800">
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-800/60 px-2.5 py-1 font-bold text-rose-800 dark:text-rose-200">
                     <Heart className="size-3.5 fill-rose-500 text-rose-500" />
                     <span>{profile.followers_count ?? 0} Client Favorites</span>
                   </span>
 
-                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100/90 border border-slate-200/80 px-2.5 py-1 font-bold text-slate-700">
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-stone-100/90 dark:bg-stone-800/90 border border-stone-200/80 dark:border-stone-700 px-2.5 py-1 font-bold text-stone-700 dark:text-stone-300">
                     <Award className="size-3.5 text-amber-600" />
                     <span>{profile.experience_years} Years Experience</span>
                   </span>
 
-                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100/90 border border-slate-200/80 px-2.5 py-1 font-bold text-slate-700">
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-stone-100/90 dark:bg-stone-800/90 border border-stone-200/80 dark:border-stone-700 px-2.5 py-1 font-bold text-stone-700 dark:text-stone-300">
                     <Globe className="size-3.5 text-sky-600" />
                     <span>{profile.languages.slice(0, 3).join(", ") || "Languages not set"}</span>
                   </span>
 
-                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100/90 border border-slate-200/80 px-2.5 py-1 font-bold text-slate-700">
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-stone-100/90 dark:bg-stone-800/90 border border-stone-200/80 dark:border-stone-700 px-2.5 py-1 font-bold text-stone-700 dark:text-stone-300">
                     <Clock className="size-3.5 text-indigo-600" />
                     <span>Consultation by Appointment</span>
                   </span>
@@ -496,7 +496,7 @@ export default function AstrologerPanelPage() {
                 type="button"
                 onClick={() => photoRef.current?.click()}
                 disabled={uploadingPhoto}
-                className="flex items-center gap-1.5 rounded-2xl border border-slate-200/90 bg-white px-4 py-2 text-xs font-bold text-slate-800 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-all cursor-pointer shadow-xs"
+                className="flex items-center gap-1.5 rounded-2xl border border-stone-200/90 dark:border-stone-700 bg-white dark:bg-[#1d1a1c] px-4 py-2 text-xs font-bold text-stone-800 dark:text-stone-200 hover:bg-amber-50 dark:hover:bg-stone-800 hover:text-amber-700 hover:border-amber-300 transition-all cursor-pointer shadow-xs"
               >
                 <Camera className="size-4 text-amber-600" />
                 <span>{uploadingPhoto ? "Uploading..." : "Change Photo"}</span>
@@ -507,7 +507,7 @@ export default function AstrologerPanelPage() {
                   type="button"
                   onClick={removePhoto}
                   disabled={uploadingPhoto}
-                  className="flex size-9 items-center justify-center rounded-2xl border border-slate-200/80 bg-white text-slate-400 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all cursor-pointer shadow-xs"
+                  className="flex size-9 items-center justify-center rounded-2xl border border-stone-200/80 dark:border-stone-700 bg-white dark:bg-[#1d1a1c] text-stone-400 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all cursor-pointer shadow-xs"
                   title="Remove profile picture"
                 >
                   <Trash2 className="size-4" />
@@ -521,22 +521,22 @@ export default function AstrologerPanelPage() {
       {/* ------------------------------------------------ REVIEWS & FEEDBACK + CLIENT FAVORITES QUICK GLANCE */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Rating & Feedback Card */}
-        <div className="relative overflow-hidden rounded-3xl border border-amber-200/80 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-amber-500/10 p-5 shadow-xs">
+        <div className="relative overflow-hidden rounded-3xl border border-amber-200/80 dark:border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-amber-500/10 dark:from-amber-950/30 dark:via-orange-950/20 dark:to-amber-950/30 p-5 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-xs">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-600 to-amber-500 text-white shadow-xs">
                 <Star className="size-5 fill-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-display text-sm font-bold text-slate-900">
+                  <h3 className="font-display text-sm font-bold text-stone-900 dark:text-stone-100">
                     Client Rating & Feedback
                   </h3>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 px-2 py-0.5 text-[10px] font-black text-amber-900">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-2 py-0.5 text-[10px] font-black text-amber-900 dark:text-amber-200">
                     ★ {profile.rating?.count ? profile.rating.average.toFixed(1) : "0.0"}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
                   {profile.rating?.count ?? 0} verified client {profile.rating?.count === 1 ? "review" : "reviews"} across chat, calls, and appointments.
                 </p>
               </div>
@@ -544,7 +544,7 @@ export default function AstrologerPanelPage() {
             <Link href="/reviews">
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] px-4 py-2.5 text-xs font-bold text-white shadow-md hover:from-amber-600 hover:to-amber-500 hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#d97b0b] to-[#f39419] px-4 py-2.5 text-xs font-bold text-white shadow-md hover:from-amber-600 hover:to-amber-500 hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
               >
                 <span>All Reviews →</span>
               </button>
@@ -553,7 +553,7 @@ export default function AstrologerPanelPage() {
         </div>
 
         {/* Sacred Client Favorites Card */}
-        <div className="relative overflow-hidden rounded-3xl border border-rose-200/80 bg-gradient-to-r from-rose-500/10 via-pink-500/5 to-rose-500/10 p-5 shadow-xs">
+        <div className="relative overflow-hidden rounded-3xl border border-rose-200/80 dark:border-rose-500/20 bg-gradient-to-r from-rose-500/10 via-pink-500/5 to-rose-500/10 dark:from-rose-950/30 dark:via-pink-950/20 dark:to-rose-950/30 p-5 shadow-xs">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
               <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white shadow-xs">
@@ -561,14 +561,14 @@ export default function AstrologerPanelPage() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-display text-sm font-bold text-slate-900">
+                  <h3 className="font-display text-sm font-bold text-stone-900 dark:text-stone-100">
                     Client Favorites & Devotion
                   </h3>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 border border-rose-300 px-2 py-0.5 text-[10px] font-black text-rose-900">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-700 px-2 py-0.5 text-[10px] font-black text-rose-900 dark:text-rose-200">
                     ❤️ {profile.followers_count ?? 0} Clients
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
                   {profile.followers_count ?? 0} {profile.followers_count === 1 ? "user has" : "users have"} saved your profile to sacred favorites.
                 </p>
               </div>
@@ -578,18 +578,18 @@ export default function AstrologerPanelPage() {
       </div>
 
       {/* ------------------------------------------------ AVAILABILITY & CHANNELS COMMAND CENTER */}
-      <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-[0_16px_40px_rgba(20,25,45,0.05)] space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+      <div className="rounded-3xl border border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1d1a1c] p-6 sm:p-8 shadow-[0_16px_40px_rgba(110,60,50,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.4)] space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-stone-100 dark:border-stone-800">
           <div className="flex items-center gap-3">
             <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-[0_6px_16px_rgba(16,185,129,0.3)]">
               <Zap className="size-5 stroke-[2.2]" />
             </div>
             <div>
-              <h2 className="font-display text-lg font-bold text-slate-900">
+              <h2 className="font-display text-lg font-bold text-stone-900 dark:text-stone-100">
                 Consultation Availability & Live Channels
               </h2>
-              <p className="text-xs text-slate-500 font-medium">
-                Going online places your profile at the top of the Astra live astrologers directory.
+              <p className="text-xs text-stone-500 dark:text-stone-400 font-medium">
+                Going online places your profile at the top of the DivinLink live astrologers directory.
               </p>
             </div>
           </div>
@@ -602,8 +602,8 @@ export default function AstrologerPanelPage() {
             className={cn(
               "flex items-center gap-3 rounded-2xl px-5 py-2.5 text-xs font-bold transition-all cursor-pointer border shadow-xs",
               isOnline
-                ? "bg-emerald-50 text-emerald-900 border-emerald-300 shadow-[0_4px_16px_rgba(16,185,129,0.15)] hover:bg-emerald-100"
-                : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
+                ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700 shadow-[0_4px_16px_rgba(16,185,129,0.2)] hover:bg-emerald-100"
+                : "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 hover:bg-stone-200"
             )}
           >
             <span className="relative flex size-2.5">
@@ -613,7 +613,7 @@ export default function AstrologerPanelPage() {
               <span
                 className={cn(
                   "relative inline-flex size-2.5 rounded-full",
-                  isOnline ? "bg-emerald-500" : "bg-slate-400"
+                  isOnline ? "bg-emerald-500" : "bg-stone-400"
                 )}
               />
             </span>
@@ -635,8 +635,8 @@ export default function AstrologerPanelPage() {
             className={cn(
               "group relative flex items-center justify-between rounded-2xl border p-4.5 transition-all cursor-pointer",
               profile.availability.is_available_for_chat
-                ? "border-amber-300 bg-amber-50/40 shadow-xs"
-                : "border-slate-200 bg-slate-50/50 hover:bg-white hover:border-slate-300"
+                ? "border-amber-300 dark:border-amber-500/40 bg-amber-50/50 dark:bg-amber-950/30 shadow-xs"
+                : "border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-800/40 hover:bg-white dark:hover:bg-stone-800 hover:border-amber-300"
             )}
           >
             <div className="flex items-center gap-3">
@@ -644,15 +644,15 @@ export default function AstrologerPanelPage() {
                 className={cn(
                   "flex size-10 items-center justify-center rounded-xl transition-all",
                   profile.availability.is_available_for_chat
-                    ? "bg-amber-500 text-white shadow-xs"
-                    : "bg-slate-200 text-slate-500"
+                    ? "bg-gradient-to-tr from-amber-600 to-amber-500 text-white shadow-xs"
+                    : "bg-stone-200 dark:bg-stone-700 text-stone-500 dark:text-stone-400"
                 )}
               >
                 <MessageSquare className="size-5" />
               </div>
               <div className="space-y-0.5">
-                <p className="text-xs font-bold text-slate-900">Live Chat</p>
-                <p className="text-[11px] text-slate-500">Instant messaging</p>
+                <p className="text-xs font-bold text-stone-900 dark:text-stone-100">Live Chat</p>
+                <p className="text-[11px] text-stone-500 dark:text-stone-400">Instant messaging</p>
               </div>
             </div>
             <div
@@ -660,7 +660,7 @@ export default function AstrologerPanelPage() {
                 "size-5 rounded-full flex items-center justify-center border transition-all",
                 profile.availability.is_available_for_chat
                   ? "bg-amber-500 border-amber-500 text-white"
-                  : "border-slate-300 bg-white"
+                  : "border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800"
               )}
             >
               {profile.availability.is_available_for_chat && <Check className="size-3 stroke-[3]" />}
@@ -677,8 +677,8 @@ export default function AstrologerPanelPage() {
             className={cn(
               "group relative flex items-center justify-between rounded-2xl border p-4.5 transition-all cursor-pointer",
               profile.availability.is_available_for_call
-                ? "border-sky-300 bg-sky-50/40 shadow-xs"
-                : "border-slate-200 bg-slate-50/50 hover:bg-white hover:border-slate-300"
+                ? "border-sky-300 dark:border-sky-500/40 bg-sky-50/50 dark:bg-sky-950/30 shadow-xs"
+                : "border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-800/40 hover:bg-white dark:hover:bg-stone-800 hover:border-sky-300"
             )}
           >
             <div className="flex items-center gap-3">
@@ -687,14 +687,14 @@ export default function AstrologerPanelPage() {
                   "flex size-10 items-center justify-center rounded-xl transition-all",
                   profile.availability.is_available_for_call
                     ? "bg-sky-600 text-white shadow-xs"
-                    : "bg-slate-200 text-slate-500"
+                    : "bg-stone-200 dark:bg-stone-700 text-stone-500 dark:text-stone-400"
                 )}
               >
                 <PhoneCall className="size-5" />
               </div>
               <div className="space-y-0.5">
-                <p className="text-xs font-bold text-slate-900">Audio Call</p>
-                <p className="text-[11px] text-slate-500">Voice consultation</p>
+                <p className="text-xs font-bold text-stone-900 dark:text-stone-100">Audio Call</p>
+                <p className="text-[11px] text-stone-500 dark:text-stone-400">Voice consultation</p>
               </div>
             </div>
             <div
@@ -702,7 +702,7 @@ export default function AstrologerPanelPage() {
                 "size-5 rounded-full flex items-center justify-center border transition-all",
                 profile.availability.is_available_for_call
                   ? "bg-sky-600 border-sky-600 text-white"
-                  : "border-slate-300 bg-white"
+                  : "border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800"
               )}
             >
               {profile.availability.is_available_for_call && <Check className="size-3 stroke-[3]" />}
@@ -720,8 +720,8 @@ export default function AstrologerPanelPage() {
               className={cn(
                 "group relative flex items-center justify-between rounded-2xl border p-4.5 transition-all cursor-pointer",
                 profile.availability.is_available_for_video
-                  ? "border-indigo-300 bg-indigo-50/40 shadow-xs"
-                  : "border-slate-200 bg-slate-50/50 hover:bg-white hover:border-slate-300"
+                  ? "border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/50 dark:bg-indigo-950/30 shadow-xs"
+                  : "border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-800/40 hover:bg-white dark:hover:bg-stone-800 hover:border-indigo-300"
               )}
             >
               <div className="flex items-center gap-3">
@@ -730,14 +730,14 @@ export default function AstrologerPanelPage() {
                     "flex size-10 items-center justify-center rounded-xl transition-all",
                     profile.availability.is_available_for_video
                       ? "bg-indigo-600 text-white shadow-xs"
-                      : "bg-slate-200 text-slate-500"
+                      : "bg-stone-200 dark:bg-stone-700 text-stone-500 dark:text-stone-400"
                   )}
                 >
                   <Video className="size-5" />
                 </div>
                 <div className="space-y-0.5">
-                  <p className="text-xs font-bold text-slate-900">Video Call</p>
-                  <p className="text-[11px] text-slate-500">Live HD face-to-face</p>
+                  <p className="text-xs font-bold text-stone-900 dark:text-stone-100">Video Call</p>
+                  <p className="text-[11px] text-stone-500 dark:text-stone-400">Live HD face-to-face</p>
                 </div>
               </div>
               <div
@@ -745,7 +745,7 @@ export default function AstrologerPanelPage() {
                   "size-5 rounded-full flex items-center justify-center border transition-all",
                   profile.availability.is_available_for_video
                     ? "bg-indigo-600 border-indigo-600 text-white"
-                    : "border-slate-300 bg-white"
+                    : "border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800"
                 )}
               >
                 {profile.availability.is_available_for_video && <Check className="size-3 stroke-[3]" />}
@@ -756,23 +756,23 @@ export default function AstrologerPanelPage() {
       </div>
 
       {/* ------------------------------------------------ GALLERY STUDIO (UP TO 12 IMAGES) */}
-      <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-[0_16px_40px_rgba(20,25,45,0.05)] space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+      <div className="rounded-3xl border border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1d1a1c] p-6 sm:p-8 shadow-[0_16px_40px_rgba(110,60,50,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.4)] space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-stone-100 dark:border-stone-800">
           <div className="flex items-center gap-3">
             <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-600 to-orange-500 text-white shadow-[0_6px_16px_rgba(217,119,6,0.3)]">
               <ImagePlus className="size-5 stroke-[2.2]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-display text-lg font-bold text-slate-900">
-                  Astrologer Portfolio & Gallery
+                <h2 className="font-display text-lg font-bold text-stone-900 dark:text-stone-100">
+                  Astrologer Sanctuary Portfolio & Gallery
                 </h2>
-                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-700">
+                <span className="rounded-full bg-stone-100 dark:bg-stone-800 px-2.5 py-0.5 text-xs font-bold text-stone-700 dark:text-stone-300">
                   {profile.gallery.length} / 12 Photos
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">
-                Upload your puja ceremonies, certificates, consultation room, and astrological charts.
+              <p className="text-xs text-stone-500 dark:text-stone-400 font-medium">
+                Upload your sacred puja ceremonies, credentials, study altars, and astrological charts.
               </p>
             </div>
           </div>
@@ -789,7 +789,7 @@ export default function AstrologerPanelPage() {
             type="button"
             disabled={uploadingGallery || profile.gallery.length >= 12}
             onClick={() => galleryRef.current?.click()}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
+            className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#d97b0b] to-[#f39419] px-5 py-2.5 text-xs font-bold text-white hover:from-amber-600 hover:to-amber-500 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
           >
             <PlusIcon className="size-4" />
             <span>{uploadingGallery ? "Uploading Photo..." : profile.gallery.length >= 12 ? "Gallery Limit Reached" : "Upload New Image"}</span>
@@ -800,20 +800,20 @@ export default function AstrologerPanelPage() {
         {profile.gallery.length === 0 ? (
           <div
             onClick={() => galleryRef.current?.click()}
-            className="group rounded-3xl border-2 border-dashed border-slate-200 hover:border-amber-400 bg-slate-50/50 hover:bg-amber-50/30 p-10 text-center space-y-3 transition-all cursor-pointer"
+            className="group rounded-3xl border-2 border-dashed border-stone-200 dark:border-stone-700 hover:border-amber-400 bg-stone-50/50 dark:bg-stone-800/40 hover:bg-amber-50/30 p-10 text-center space-y-3 transition-all cursor-pointer"
           >
-            <div className="size-14 mx-auto rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="size-14 mx-auto rounded-2xl bg-white dark:bg-[#1d1a1c] border border-stone-200/80 dark:border-stone-700 shadow-xs flex items-center justify-center group-hover:scale-110 transition-transform">
               <ImagePlus className="size-7 text-amber-500" />
             </div>
             <div>
-              <p className="font-display text-sm font-bold text-slate-800">
+              <p className="font-display text-sm font-bold text-stone-800 dark:text-stone-200">
                 Your consultation photo gallery is empty
               </p>
-              <p className="mt-1 text-xs text-slate-400 max-w-md mx-auto">
+              <p className="mt-1 text-xs text-stone-400 dark:text-stone-500 max-w-md mx-auto">
                 Clients trust astrologers with verified photos of Vedic ceremonies, degree credentials, and study altars. Click here to upload your first image!
               </p>
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-bold text-amber-700 border border-amber-200 shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white dark:bg-stone-800 px-3 py-1 text-xs font-bold text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shadow-2xs">
               + Click to Select Image (Max 10MB)
             </span>
           </div>
@@ -822,7 +822,7 @@ export default function AstrologerPanelPage() {
             {profile.gallery.map((image, index) => (
               <div
                 key={image.public_id}
-                className="group relative aspect-square overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-xs transition-all hover:shadow-md hover:scale-[1.02]"
+                className="group relative aspect-square overflow-hidden rounded-2xl border border-stone-200/80 dark:border-stone-800 bg-stone-100 dark:bg-stone-800 shadow-xs transition-all hover:shadow-md hover:scale-[1.02]"
               >
                 <Image
                   src={image.url}
@@ -843,7 +843,7 @@ export default function AstrologerPanelPage() {
                   <button
                     type="button"
                     onClick={() => setActiveLightboxUrl(image.url)}
-                    className="flex size-8 items-center justify-center rounded-xl bg-white/90 text-slate-900 hover:bg-white hover:scale-110 transition-all cursor-pointer shadow-md"
+                    className="flex size-8 items-center justify-center rounded-xl bg-white/90 text-stone-900 hover:bg-white hover:scale-110 transition-all cursor-pointer shadow-md"
                     title="View full resolution"
                   >
                     <Maximize2 className="size-3.5" />
@@ -867,7 +867,7 @@ export default function AstrologerPanelPage() {
                 type="button"
                 disabled={uploadingGallery}
                 onClick={() => galleryRef.current?.click()}
-                className="aspect-square flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 hover:border-amber-400 bg-slate-50/60 hover:bg-amber-50/30 transition-all cursor-pointer text-slate-400 hover:text-amber-600 gap-1"
+                className="aspect-square flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-stone-200 dark:border-stone-700 hover:border-amber-400 bg-stone-50/60 dark:bg-stone-800/40 hover:bg-amber-50/30 transition-all cursor-pointer text-stone-400 dark:text-stone-500 hover:text-amber-600 gap-1"
               >
                 <PlusIcon className="size-5" />
                 <span className="text-[10px] font-bold">Add Photo</span>
@@ -879,19 +879,19 @@ export default function AstrologerPanelPage() {
 
       {/* ------------------------------------------------ DETAILS FORM (YOUR DETAILS) */}
       <form onSubmit={onSubmit} className="space-y-8">
-        <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-[0_16px_40px_rgba(20,25,45,0.05)] space-y-8">
+        <div className="rounded-3xl border border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1d1a1c] p-6 sm:p-8 shadow-[0_16px_40px_rgba(110,60,50,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.4)] space-y-8">
           {/* Section 1: Basic Identity */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-stone-100 dark:border-stone-800">
               <User className="size-5 text-amber-600" />
-              <h3 className="font-display text-base font-bold text-slate-900">
+              <h3 className="font-display text-base font-bold text-stone-900 dark:text-stone-100">
                 Personal Identity & Public Name
               </h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <label htmlFor="first_name" className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <label htmlFor="first_name" className="text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider">
                   First Name <span className="text-amber-500">*</span>
                 </label>
                 <input
@@ -900,28 +900,28 @@ export default function AstrologerPanelPage() {
                   value={form.first_name}
                   onChange={set("first_name")}
                   className={cn(
-                    "w-full rounded-2xl border bg-slate-50/70 px-4 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500",
-                    errors.first_name ? "border-rose-400" : "border-slate-200/90"
+                    "w-full rounded-2xl border bg-stone-50/70 dark:bg-stone-800/60 px-4 py-2.5 text-sm font-semibold text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:bg-white dark:focus:bg-stone-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500",
+                    errors.first_name ? "border-rose-400" : "border-stone-200/90 dark:border-stone-700"
                   )}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="last_name" className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <label htmlFor="last_name" className="text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider">
                   Last Name
                 </label>
                 <input
                   id="last_name"
                   value={form.last_name}
                   onChange={set("last_name")}
-                  className="w-full rounded-2xl border border-slate-200/90 bg-slate-50/70 px-4 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+                  className="w-full rounded-2xl border border-stone-200/90 dark:border-stone-700 bg-stone-50/70 dark:bg-stone-800/60 px-4 py-2.5 text-sm font-semibold text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:bg-white dark:focus:bg-stone-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="display_name" className="flex items-center justify-between text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <label htmlFor="display_name" className="flex items-center justify-between text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider">
                   <span>Display Name <span className="text-amber-500">*</span></span>
-                  <span className="text-[10px] text-amber-600 font-semibold lowercase">public on website</span>
+                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold lowercase">public on website</span>
                 </label>
                 <input
                   id="display_name"
@@ -929,12 +929,12 @@ export default function AstrologerPanelPage() {
                   value={form.display_name}
                   onChange={set("display_name")}
                   placeholder="e.g. Acharya Shreeman K."
-                  className="w-full rounded-2xl border border-slate-200/90 bg-slate-50/70 px-4 py-2.5 text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+                  className="w-full rounded-2xl border border-stone-200/90 dark:border-stone-700 bg-stone-50/70 dark:bg-stone-800/60 px-4 py-2.5 text-sm font-bold text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:bg-white dark:focus:bg-stone-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="phone" className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <label htmlFor="phone" className="text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider">
                   Phone Number
                 </label>
                 <input
@@ -942,12 +942,12 @@ export default function AstrologerPanelPage() {
                   value={form.phone}
                   onChange={set("phone")}
                   placeholder="+91 98765 43210"
-                  className="w-full rounded-2xl border border-slate-200/90 bg-slate-50/70 px-4 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+                  className="w-full rounded-2xl border border-stone-200/90 dark:border-stone-700 bg-stone-50/70 dark:bg-stone-800/60 px-4 py-2.5 text-sm font-semibold text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:bg-white dark:focus:bg-stone-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="exp" className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <label htmlFor="exp" className="text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider">
                   Years of Experience
                 </label>
                 <input
@@ -957,20 +957,20 @@ export default function AstrologerPanelPage() {
                   max={90}
                   value={form.experience_years}
                   onChange={set("experience_years")}
-                  className="w-full rounded-2xl border border-slate-200/90 bg-slate-50/70 px-4 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+                  className="w-full rounded-2xl border border-stone-200/90 dark:border-stone-700 bg-stone-50/70 dark:bg-stone-800/60 px-4 py-2.5 text-sm font-semibold text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:bg-white dark:focus:bg-stone-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="flex items-center justify-between text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <label className="flex items-center justify-between text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider">
                   <span>Registered Email</span>
-                  <span className="text-[10px] text-slate-400 font-semibold lowercase">read-only</span>
+                  <span className="text-[10px] text-stone-400 font-semibold lowercase">read-only</span>
                 </label>
                 <input
                   value={profile.email}
                   disabled
                   readOnly
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-100/80 px-4 py-2.5 text-sm font-semibold text-slate-500 cursor-not-allowed"
+                  className="w-full rounded-2xl border border-stone-200 dark:border-stone-700 bg-stone-100/80 dark:bg-stone-800/80 px-4 py-2.5 text-sm font-semibold text-stone-500 dark:text-stone-400 cursor-not-allowed"
                 />
               </div>
             </div>
@@ -978,32 +978,32 @@ export default function AstrologerPanelPage() {
 
           {/* Section 2: Editorial & Brand Persona */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-stone-100 dark:border-stone-800">
               <Sparkles className="size-5 text-amber-600" />
-              <h3 className="font-display text-base font-bold text-slate-900">
+              <h3 className="font-display text-base font-bold text-stone-900 dark:text-stone-100">
                 Editorial Brand & Biography
               </h3>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label htmlFor="tagline" className="flex items-center justify-between text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <label htmlFor="tagline" className="flex items-center justify-between text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider">
                   <span>Professional Tagline</span>
-                  <span className="text-[10px] text-slate-400 font-normal">Shown immediately below your name</span>
+                  <span className="text-[10px] text-stone-400 font-normal">Shown immediately below your name</span>
                 </label>
                 <input
                   id="tagline"
                   value={form.tagline}
                   onChange={set("tagline")}
                   placeholder="e.g. Renowned Vedic Astrologer, Kundli & Gemology Expert"
-                  className="w-full rounded-2xl border border-slate-200/90 bg-slate-50/70 px-4 py-2.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+                  className="w-full rounded-2xl border border-stone-200/90 dark:border-stone-700 bg-stone-50/70 dark:bg-stone-800/60 px-4 py-2.5 text-sm font-semibold text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:bg-white dark:focus:bg-stone-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="bio" className="flex items-center justify-between text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <label htmlFor="bio" className="flex items-center justify-between text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider">
                   <span>About You & Consultation Approach</span>
-                  <span className="text-[10px] text-slate-400 font-normal">Clients read this before booking</span>
+                  <span className="text-[10px] text-stone-400 font-normal">Clients read this before booking</span>
                 </label>
                 <textarea
                   id="bio"
@@ -1011,7 +1011,7 @@ export default function AstrologerPanelPage() {
                   value={form.bio}
                   onChange={set("bio")}
                   placeholder="Introduce your lineage, background, special techniques, and how you assist clients with relationship, career, and spiritual questions..."
-                  className="w-full rounded-2xl border border-slate-200/90 bg-slate-50/70 px-4 py-3 text-sm font-medium leading-relaxed text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+                  className="w-full rounded-2xl border border-stone-200/90 dark:border-stone-700 bg-stone-50/70 dark:bg-stone-800/60 px-4 py-3 text-sm font-medium leading-relaxed text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:bg-white dark:focus:bg-stone-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
                 />
               </div>
             </div>
@@ -1019,25 +1019,25 @@ export default function AstrologerPanelPage() {
 
           {/* Section 3: Specialities & Languages */}
           <div className="space-y-5">
-            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-stone-100 dark:border-stone-800">
               <BookOpen className="size-5 text-amber-600" />
-              <h3 className="font-display text-base font-bold text-slate-900">
+              <h3 className="font-display text-base font-bold text-stone-900 dark:text-stone-100">
                 Astrological Specialities & Credentials
               </h3>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <label className="text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider">
                 Astrological Specialities (Click to toggle)
               </label>
-              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/40 p-4">
+              <div className="rounded-2xl border border-stone-200/80 dark:border-stone-800 bg-stone-50/40 dark:bg-stone-800/40 p-4">
                 <SkillPicker value={skills} onChange={setSkills} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <label className="text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider">
                   Languages Spoken
                 </label>
                 <TagInput
@@ -1049,7 +1049,7 @@ export default function AstrologerPanelPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <label className="text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider">
                   Other Focus Areas
                 </label>
                 <TagInput
@@ -1060,7 +1060,7 @@ export default function AstrologerPanelPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <label className="text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider">
                   Degrees & Qualifications
                 </label>
                 <TagInput
@@ -1073,10 +1073,10 @@ export default function AstrologerPanelPage() {
           </div>
 
           {/* Form Action Footer */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-100">
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-stone-100 dark:border-stone-800">
+            <div className="flex items-center gap-2 text-xs font-medium text-stone-500 dark:text-stone-400">
               <Sparkles className="size-4 text-amber-500" />
-              <span>Changes reflect immediately across the public website directory.</span>
+              <span>Changes reflect immediately across the public DivinLink directory.</span>
             </div>
 
             <button
@@ -1084,7 +1084,7 @@ export default function AstrologerPanelPage() {
               disabled={save.isPending}
               className={cn(
                 "w-full sm:w-auto flex items-center justify-center gap-2 rounded-2xl py-3 px-8 text-sm font-bold text-white transition-all cursor-pointer",
-                "bg-gradient-to-r from-[#D97706] via-[#EA580C] to-[#F59E0B]",
+                "bg-gradient-to-r from-[#d97b0b] via-[#ea580c] to-[#f39419]",
                 "shadow-[0_10px_25px_-5px_rgba(217,119,6,0.5)] hover:shadow-[0_14px_30px_-5px_rgba(217,119,6,0.65)] hover:scale-[1.01] active:scale-[0.99]",
                 "disabled:opacity-50 disabled:pointer-events-none"
               )}

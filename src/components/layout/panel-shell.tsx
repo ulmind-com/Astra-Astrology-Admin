@@ -168,9 +168,9 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="space-y-1">
         {isIconOnly ? (
-          <div className="my-2.5 h-px w-6 mx-auto bg-slate-100" />
+          <div className="my-2.5 h-px w-6 mx-auto bg-stone-200/80 dark:bg-stone-800" />
         ) : (
-          <p className="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+          <p className="px-3 text-[10px] font-bold tracking-wider text-amber-800/70 dark:text-amber-400/70 uppercase">
             {title}
           </p>
         )}
@@ -201,15 +201,15 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                     className={cn(
                       "flex size-11 items-center justify-center rounded-2xl transition-all duration-200 relative",
                       isActive
-                        ? "bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white shadow-[0_8px_20px_-4px_rgba(245,158,11,0.5)] font-bold scale-[1.02]"
-                        : "text-slate-500 hover:bg-slate-100 hover:text-slate-900 active:scale-95"
+                        ? "bg-gradient-to-r from-[#d97b0b] via-[#f39419] to-[#ea580c] text-white shadow-[0_8px_20px_-4px_rgba(217,123,11,0.45)] font-bold scale-[1.02]"
+                        : "text-stone-500 hover:bg-amber-500/10 dark:hover:bg-amber-500/15 hover:text-amber-900 dark:hover:text-amber-200 active:scale-95"
                     )}
                     aria-label={item.label}
                   >
                     <item.icon
                       className={cn(
                         "size-5 stroke-[2] transition-transform group-hover:scale-110",
-                        isActive ? "text-white" : "text-slate-400"
+                        isActive ? "text-white" : "text-stone-400 dark:text-stone-500"
                       )}
                     />
                     {isActive && (
@@ -219,12 +219,12 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
 
                   {/* Floating Ultra-Pro Glass Tooltip */}
                   {hoveredNav === item.label && (
-                    <div className="absolute left-[54px] top-1/2 -translate-y-1/2 z-50 pointer-events-none whitespace-nowrap rounded-xl bg-[#0F172A] px-3 py-1.5 text-xs font-bold text-white shadow-[0_10px_25px_rgba(0,0,0,0.3)] border border-slate-700/60 animate-in fade-in zoom-in-95 duration-150 flex items-center gap-2">
+                    <div className="absolute left-[54px] top-1/2 -translate-y-1/2 z-50 pointer-events-none whitespace-nowrap rounded-xl bg-[#1d1a1c] px-3 py-1.5 text-xs font-bold text-white shadow-[0_10px_25px_rgba(0,0,0,0.3)] border border-amber-500/30 animate-in fade-in zoom-in-95 duration-150 flex items-center gap-2">
                       <span>{item.label}</span>
                       {isActive && (
                         <span className="size-1.5 rounded-full bg-amber-400" />
                       )}
-                      <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 bg-[#0F172A] border-l border-b border-slate-700/60" />
+                      <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 bg-[#1d1a1c] border-l border-b border-amber-500/30" />
                     </div>
                   )}
                 </div>
@@ -239,14 +239,14 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "flex items-center gap-3.5 rounded-2xl px-3.5 py-2.5 text-sm font-semibold transition-all duration-200 group",
                   isActive
-                    ? "bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white shadow-[0_8px_20px_-4px_rgba(245,158,11,0.5)] font-bold scale-[1.01]"
-                    : "text-slate-500 hover:bg-slate-100/70 hover:text-slate-900 active:scale-[0.98]"
+                    ? "bg-gradient-to-r from-[#d97b0b] via-[#f39419] to-[#ea580c] text-white shadow-[0_8px_20px_-4px_rgba(217,123,11,0.45)] font-bold scale-[1.01]"
+                    : "text-stone-600 dark:text-stone-300 hover:bg-amber-500/10 dark:hover:bg-amber-500/15 hover:text-amber-900 dark:hover:text-amber-200 active:scale-[0.98]"
                 )}
               >
                 <item.icon
                   className={cn(
                     "size-4.5 stroke-[2] transition-transform group-hover:scale-110",
-                    isActive ? "text-white" : "text-slate-400"
+                    isActive ? "text-white" : "text-stone-400 dark:text-stone-500"
                   )}
                 />
                 <span className="truncate">{item.label}</span>
@@ -275,7 +275,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
           {/* Brand Header */}
           <div
             className={cn(
-              "flex items-center justify-between pb-2 border-b border-slate-100 transition-all",
+              "flex items-center justify-between pb-3 border-b border-stone-200/60 dark:border-stone-800/80 transition-all",
               isIconOnly && "justify-center"
             )}
           >
@@ -287,7 +287,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
               >
                 <button
                   onClick={toggleCollapsed}
-                  className="relative flex size-11 items-center justify-center rounded-2xl overflow-hidden shadow-[0_4px_16px_rgba(217,119,6,0.3)] hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-transparent hover:ring-amber-200"
+                  className="relative flex size-11 items-center justify-center rounded-2xl overflow-hidden shadow-[0_4px_16px_rgba(217,119,6,0.3)] hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-transparent hover:ring-amber-300"
                   aria-label="Expand sidebar"
                   title="Click to expand sidebar"
                 >
@@ -306,9 +306,9 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                 </button>
 
                 {hoveredNav === "brand_logo" && (
-                  <div className="absolute left-[54px] top-1/2 -translate-y-1/2 z-50 pointer-events-none whitespace-nowrap rounded-xl bg-[#0F172A] px-3 py-1.5 text-xs font-bold text-white shadow-[0_10px_25px_rgba(0,0,0,0.3)] border border-slate-700/60 animate-in fade-in zoom-in-95 duration-150 flex items-center gap-1.5">
+                  <div className="absolute left-[54px] top-1/2 -translate-y-1/2 z-50 pointer-events-none whitespace-nowrap rounded-xl bg-[#1d1a1c] px-3 py-1.5 text-xs font-bold text-white shadow-[0_10px_25px_rgba(0,0,0,0.3)] border border-amber-500/30 animate-in fade-in zoom-in-95 duration-150 flex items-center gap-1.5">
                     <span>DivinLink • Click to expand</span>
-                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 bg-[#0F172A] border-l border-b border-slate-700/60" />
+                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 bg-[#1d1a1c] border-l border-b border-amber-500/30" />
                   </div>
                 )}
               </div>
@@ -318,7 +318,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                   onClick={!isMobile ? toggleCollapsed : undefined}
                   className={cn(
                     "group flex items-center gap-2.5 rounded-xl p-1 -m-1 text-left transition-all",
-                    !isMobile && "hover:bg-slate-50 cursor-pointer"
+                    !isMobile && "hover:bg-amber-500/10 dark:hover:bg-amber-500/15 cursor-pointer"
                   )}
                   title={!isMobile ? "Click to collapse sidebar" : undefined}
                 >
@@ -337,11 +337,11 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                     </span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-display text-lg font-black tracking-tight text-slate-900 leading-tight">
+                    <span className="font-display text-lg font-black tracking-tight text-stone-900 dark:text-stone-100 leading-tight">
                       DivinLink
                     </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-tight">
-                      {user?.role === "astrologer" ? "Astrologer" : "Super Admin"}
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 leading-tight">
+                      {user?.role === "astrologer" ? "Astrologer Sanctuary" : user?.role === "purohit" ? "Purohit Sanctuary" : "Super Admin"}
                     </span>
                   </div>
                 </button>
@@ -349,7 +349,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                 {!isMobile ? (
                   <button
                     onClick={toggleCollapsed}
-                    className="flex size-7 items-center justify-center rounded-lg text-slate-400 hover:text-[#D97706] hover:bg-amber-50 transition-colors cursor-pointer"
+                    className="flex size-7 items-center justify-center rounded-lg text-stone-400 hover:text-[#d97b0b] hover:bg-amber-500/10 dark:hover:bg-amber-500/15 transition-colors cursor-pointer"
                     aria-label="Collapse sidebar"
                     title="Collapse sidebar to icon-only"
                   >
@@ -358,7 +358,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                 ) : (
                   <button
                     onClick={() => setOpen(false)}
-                    className="rounded-lg p-1 text-slate-400 hover:text-slate-700"
+                    className="rounded-lg p-1 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
                     aria-label="Close sidebar"
                   >
                     <X className="size-5" />
@@ -403,10 +403,10 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
             >
               {user?.role === "astrologer" ? (
                 <div
-                  className="relative flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white shadow-md border border-slate-800"
+                  className="relative flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2a1d24] via-[#1d1a1c] to-[#25171e] dark:from-[#1d1a1c] dark:via-[#261d22] dark:to-[#1d1a1c] text-white shadow-md border border-amber-500/25"
                   aria-label="Live Cluster"
                 >
-                  <Zap className="size-5 text-emerald-400" />
+                  <Sparkles className="size-5 text-amber-400" />
                   <span className="absolute -top-0.5 -right-0.5 flex size-2.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
@@ -416,10 +416,10 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                 <Link
                   href="/astrologers/new"
                   onClick={() => playNavFeedback()}
-                  className="relative flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white shadow-md border border-slate-800 transition-all hover:scale-105 hover:border-slate-700 active:scale-95"
+                  className="relative flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2a1d24] via-[#1d1a1c] to-[#25171e] dark:from-[#1d1a1c] dark:via-[#261d22] dark:to-[#1d1a1c] text-white shadow-md border border-amber-500/25 transition-all hover:scale-105 active:scale-95"
                   aria-label="Add Astrologer"
                 >
-                  <Zap className="size-5 text-emerald-400" />
+                  <Sparkles className="size-5 text-amber-400" />
                   <span className="absolute -top-0.5 -right-0.5 flex size-2.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
@@ -428,45 +428,46 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
               )}
 
               {hoveredNav === "cluster_status" && (
-                <div className="absolute left-[54px] top-1/2 -translate-y-1/2 z-50 pointer-events-none whitespace-nowrap rounded-xl bg-[#0F172A] px-3 py-2 text-xs text-white shadow-[0_10px_25px_rgba(0,0,0,0.3)] border border-slate-700/60 animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-0.5">
+                <div className="absolute left-[54px] top-1/2 -translate-y-1/2 z-50 pointer-events-none whitespace-nowrap rounded-xl bg-[#1d1a1c] px-3 py-2 text-xs text-white shadow-[0_10px_25px_rgba(0,0,0,0.3)] border border-amber-500/30 animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-0.5">
                   <div className="flex items-center gap-1.5">
                     <span className="size-1.5 rounded-full bg-emerald-400" />
-                    <span className="font-bold text-white">Live Cluster v2.4</span>
+                    <span className="font-bold text-white">DivinLink Sanctuary v2.4</span>
                   </div>
                   {user?.role !== "astrologer" && (
-                    <span className="text-[10px] text-slate-400 font-medium">+ Add Astrologer</span>
+                    <span className="text-[10px] text-amber-400 font-medium">+ Add Astrologer</span>
                   )}
-                  <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 bg-[#0F172A] border-l border-b border-slate-700/60" />
+                  <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 bg-[#1d1a1c] border-l border-b border-amber-500/30" />
                 </div>
               )}
             </div>
           ) : (
-            <div className="relative overflow-hidden rounded-[22px] bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] p-4 text-white shadow-lg border border-slate-800">
+            <div className="relative overflow-hidden rounded-[22px] bg-gradient-to-br from-[#2a1d24] via-[#1d1a1c] to-[#25171e] dark:from-[#1d1a1c] dark:via-[#261d22] dark:to-[#1d1a1c] p-4 text-white shadow-lg border border-amber-500/25">
+              <div className="absolute -top-8 -right-8 size-20 rounded-full bg-amber-500/15 blur-xl pointer-events-none" />
               <div className="relative z-10 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                      Live Cluster
+                      Live Sanctuary
                     </span>
                   </div>
-                  <span className="rounded-full bg-slate-800/80 px-2 py-0.5 text-[10px] font-semibold text-slate-300">
+                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-amber-200">
                     v2.4
                   </span>
                 </div>
 
                 <div>
                   <h4 className="font-display text-xs font-bold text-white leading-tight">
-                    DivinLink Core
+                    DivinLink Sacred Core
                   </h4>
-                  <p className="mt-0.5 text-[10px] font-medium leading-relaxed text-slate-400">
-                    Voice, chat & palm reading engine connected
+                  <p className="mt-0.5 text-[10px] font-medium leading-relaxed text-stone-300">
+                    Voice, chat & astrology consultation engine connected
                   </p>
                 </div>
 
                 {user?.role !== "astrologer" && (
                   <Link href="/astrologers/new" onClick={() => playNavFeedback()} className="block pt-1">
-                    <button className="w-full rounded-xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] py-2 text-[11px] font-bold text-white shadow-md transition-all duration-200 hover:from-[#B45309] hover:to-[#D97706] active:scale-95 cursor-pointer">
+                    <button className="w-full rounded-xl bg-gradient-to-r from-[#d97b0b] to-[#f39419] py-2 text-[11px] font-bold text-white shadow-md transition-all duration-200 hover:from-[#b0610c] hover:to-[#d97b0b] active:scale-95 cursor-pointer">
                       + Add Astrologer
                     </button>
                   </Link>
@@ -480,12 +481,15 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-dvh bg-[#EEF1F8] p-3 sm:p-5 lg:p-7 font-sans text-slate-800 antialiased selection:bg-[#F59E0B] selection:text-slate-950">
-      <div className="flex min-h-[calc(100vh-2.5rem)] gap-6">
+    <div className="min-h-dvh bg-[#fdf0e7] dark:bg-[#141113] p-3 sm:p-5 lg:p-7 font-sans text-stone-800 dark:text-stone-100 antialiased selection:bg-amber-400 selection:text-stone-950 relative">
+      {/* Sacred ambient aura glow */}
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-200/25 via-orange-100/10 to-transparent dark:from-amber-900/10 dark:via-transparent dark:to-transparent z-0" />
+
+      <div className="flex min-h-[calc(100vh-2.5rem)] gap-6 relative z-10">
         {/* Desktop Sidebar */}
         <aside
           className={cn(
-            "hidden shrink-0 rounded-[28px] bg-white shadow-[0_10px_35px_rgba(20,25,45,0.03)] border border-slate-100 lg:block transition-[width] duration-300 ease-in-out relative z-30",
+            "hidden shrink-0 rounded-[28px] bg-white/95 dark:bg-[#1d1a1c]/95 shadow-[0_10px_35px_rgba(110,60,50,0.06)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.5)] border border-amber-900/8 dark:border-amber-500/15 backdrop-blur-md lg:block transition-[width] duration-300 ease-in-out relative z-30",
             collapsed ? "w-[84px]" : "w-[260px]"
           )}
         >
@@ -498,11 +502,11 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
         {open && (
           <div className="fixed inset-0 z-50 lg:hidden">
             <button
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-stone-900/50 backdrop-blur-sm"
               onClick={() => setOpen(false)}
               aria-label="Close menu"
             />
-            <aside className="absolute inset-y-0 left-0 w-[270px] bg-white shadow-2xl">
+            <aside className="absolute inset-y-0 left-0 w-[270px] bg-white dark:bg-[#1d1a1c] shadow-2xl border-r border-amber-900/8 dark:border-amber-500/15">
               {renderSidebarContent(true)}
             </aside>
           </div>
@@ -516,14 +520,14 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setOpen(true)}
-                className="lg:hidden flex size-10 items-center justify-center rounded-full bg-white shadow-sm border border-slate-100 text-slate-700"
+                className="lg:hidden flex size-10 items-center justify-center rounded-full bg-white dark:bg-[#1d1a1c] shadow-sm border border-stone-200/80 dark:border-stone-800 text-stone-700 dark:text-stone-300"
                 aria-label="Open sidebar"
               >
                 <Menu className="size-5" />
               </button>
 
               <div>
-                <h1 className="font-display text-2xl sm:text-[26px] font-black tracking-tight text-slate-900 leading-tight">
+                <h1 className="font-display text-2xl sm:text-[26px] font-black tracking-tight text-stone-900 dark:text-stone-100 leading-tight">
                   {pathname === "/dashboard"
                     ? "Platform Overview"
                     : pathname === "/purohit-dashboard"
@@ -550,7 +554,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                     ? "Certified Specialists"
                     : pathname.slice(1).replace("/", " - ").toUpperCase()}
                 </h1>
-                <p className="mt-0.5 text-xs font-semibold text-slate-400">
+                <p className="mt-0.5 text-xs font-semibold text-stone-500 dark:text-stone-400">
                   {currentDate}
                 </p>
               </div>
@@ -569,18 +573,18 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                     setSearchOpen(!searchOpen);
                   }}
                   aria-label="Search"
-                  className="flex size-11 items-center justify-center rounded-full bg-white shadow-[0_4px_16px_rgba(20,25,45,0.04)] border border-slate-100 text-slate-700 transition-all hover:bg-slate-50 hover:scale-105 active:scale-95 cursor-pointer"
+                  className="flex size-11 items-center justify-center rounded-full bg-white dark:bg-[#1d1a1c] shadow-[0_4px_16px_rgba(110,60,50,0.05)] border border-stone-200/80 dark:border-stone-800 text-stone-700 dark:text-stone-300 transition-all hover:bg-amber-50/50 dark:hover:bg-stone-800 hover:border-amber-400 hover:scale-105 active:scale-95 cursor-pointer"
                 >
-                  <Search className="size-4.5 text-slate-600" />
+                  <Search className="size-4.5 text-stone-600 dark:text-stone-400" />
                 </button>
 
                 {searchOpen && (
-                  <div className="absolute right-0 top-13 z-50 w-72 rounded-2xl bg-white p-3 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95">
+                  <div className="absolute right-0 top-13 z-50 w-72 rounded-2xl bg-white dark:bg-[#1d1a1c] p-3 shadow-2xl border border-stone-200/80 dark:border-stone-800 animate-in fade-in zoom-in-95">
                     <input
                       type="text"
                       placeholder="Search astrologers, wallets, reports..."
                       autoFocus
-                      className="w-full rounded-xl bg-slate-50 px-3.5 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F59E0B]"
+                      className="w-full rounded-xl bg-stone-50 dark:bg-stone-800/80 px-3.5 py-2 text-xs font-medium text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#f39419]"
                     />
                   </div>
                 )}
@@ -590,10 +594,10 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
               <button
                 onClick={() => playNavFeedback()}
                 aria-label="Notifications"
-                className="relative flex size-11 items-center justify-center rounded-full bg-white shadow-[0_4px_16px_rgba(20,25,45,0.04)] border border-slate-100 text-slate-700 transition-all hover:bg-slate-50 hover:scale-105 active:scale-95 cursor-pointer"
+                className="relative flex size-11 items-center justify-center rounded-full bg-white dark:bg-[#1d1a1c] shadow-[0_4px_16px_rgba(110,60,50,0.05)] border border-stone-200/80 dark:border-stone-800 text-stone-700 dark:text-stone-300 transition-all hover:bg-amber-50/50 dark:hover:bg-stone-800 hover:border-amber-400 hover:scale-105 active:scale-95 cursor-pointer"
               >
-                <Bell className="size-4.5 text-slate-600" />
-                <span className="absolute top-2.5 right-2.5 size-2 rounded-full bg-[#FF4D4D] ring-2 ring-white" />
+                <Bell className="size-4.5 text-stone-600 dark:text-stone-400" />
+                <span className="absolute top-2.5 right-2.5 size-2 rounded-full bg-[#ff4d5e] ring-2 ring-white dark:ring-[#1d1a1c]" />
               </button>
 
               {/* User Profile Pill */}
@@ -603,7 +607,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                     playNavFeedback();
                     setShowProfileMenu(!showProfileMenu);
                   }}
-                  className="flex items-center gap-3 rounded-full bg-white py-1.5 pl-1.5 pr-4 shadow-[0_4px_16px_rgba(20,25,45,0.04)] border border-slate-100 transition-all hover:bg-slate-50 cursor-pointer"
+                  className="flex items-center gap-3 rounded-full bg-white dark:bg-[#1d1a1c] py-1.5 pl-1.5 pr-4 shadow-[0_4px_16px_rgba(110,60,50,0.05)] border border-stone-200/80 dark:border-stone-800 hover:border-amber-400 transition-all cursor-pointer"
                 >
                   <Avatar
                     src={user?.avatar_url}
@@ -612,22 +616,22 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                     className="size-8 rounded-full object-cover"
                   />
                   <div className="text-left">
-                    <p className="text-xs font-extrabold text-slate-900 leading-none">
+                    <p className="text-xs font-extrabold text-stone-900 dark:text-stone-100 leading-none">
                       {user?.full_name || (user?.role === "astrologer" ? "Astrologer" : user?.role === "purohit" ? "Vedic Purohit" : "Super Admin")}
                     </p>
-                    <p className="mt-0.5 text-[10px] font-semibold text-slate-400 leading-none">
+                    <p className="mt-0.5 text-[10px] font-semibold text-stone-400 dark:text-stone-500 leading-none">
                       {user?.role === "astrologer" ? "Astrologer" : user?.role === "purohit" ? "Vedic Purohit" : "Super Admin"}
                     </p>
                   </div>
                 </button>
 
                 {showProfileMenu && (
-                  <div className="absolute right-0 top-13 z-50 w-52 rounded-2xl bg-white p-2 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95">
-                    <div className="px-3 py-2 border-b border-slate-100">
-                      <p className="text-xs font-bold text-slate-900 truncate">
+                  <div className="absolute right-0 top-13 z-50 w-52 rounded-2xl bg-white dark:bg-[#1d1a1c] p-2 shadow-2xl border border-stone-200/80 dark:border-stone-800 animate-in fade-in zoom-in-95">
+                    <div className="px-3 py-2 border-b border-stone-100 dark:border-stone-800">
+                      <p className="text-xs font-bold text-stone-900 dark:text-stone-100 truncate">
                         {user?.full_name || (user?.role === "purohit" ? "Vedic Purohit" : "Super Admin")}
                       </p>
-                      <p className="text-[10px] text-slate-400 truncate">
+                      <p className="text-[10px] text-stone-400 truncate">
                         {user?.email || "astroapp26@gmail.com"}
                       </p>
                     </div>
@@ -635,18 +639,18 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                     <Link
                       href={user?.role === "purohit" ? "/purohit-dashboard" : "/me"}
                       onClick={() => setShowProfileMenu(false)}
-                      className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                      className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-amber-500/10 dark:hover:bg-amber-500/15 transition-colors"
                     >
-                      <UserRound className="size-3.5 text-slate-500" />
+                      <UserRound className="size-3.5 text-amber-600" />
                       {user?.role === "purohit" ? "Purohit Dashboard" : "My Profile"}
                     </Link>
 
                     <Link
                       href="/me/passkeys"
                       onClick={() => setShowProfileMenu(false)}
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors"
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 dark:hover:bg-amber-500/15 transition-colors"
                     >
-                      <Fingerprint className="size-3.5 text-primary" />
+                      <Fingerprint className="size-3.5 text-amber-600" />
                       Passkeys & Biometrics
                     </Link>
 
@@ -655,7 +659,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                         playNavFeedback();
                         signOut();
                       }}
-                      className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer border-t border-slate-100 pt-2"
+                      className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-t border-stone-100 dark:border-stone-800 pt-2"
                     >
                       <LogOut className="size-3.5" />
                       Sign out

@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Geist_Mono, Poppins } from "next/font/google";
+import {
+  Cinzel,
+  Cormorant_Garamond,
+  Geist_Mono,
+  Gilda_Display,
+  Poppins,
+  Urbanist,
+} from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "sonner";
@@ -11,17 +18,26 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import "./globals.css";
 
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-// One family across the whole product. The weights are the ones the type
-// scale actually uses — 400 body, 500 headings and sub-heads, 600 labels and
-// display — so nothing is downloaded that never appears.
+const urbanist = Urbanist({
+  variable: "--font-urbanist",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+});
+const gildaDisplay = Gilda_Display({
+  variable: "--font-gilda",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+const cinzel = Cinzel({
+  variable: "--font-cinzel",
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+});
 const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
 });
-
-// An elegant high-contrast serif, used only for premium display moments
-// (the wordmark and the big "Login" heading on the auth screen).
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
   subsets: ["latin"],
@@ -29,8 +45,8 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: { default: "DivinLink — Admin", template: "%s · DivinLink Admin" },
-  description: "Admin and astrologer panel for DivinLink.",
+  title: { default: "DivinLink — Astrologer & Admin Sanctuary", template: "%s · DivinLink" },
+  description: "DivinLink Sacred Astrologer & Admin Management Portal.",
   robots: { index: false, follow: false },
   icons: {
     icon: [
@@ -47,7 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${poppins.variable} ${cormorant.variable} ${geistMono.variable} h-full`}
+      className={`${urbanist.variable} ${gildaDisplay.variable} ${cinzel.variable} ${poppins.variable} ${cormorant.variable} ${geistMono.variable} h-full`}
     >
       <head>
         {/* Apply the saved theme before first paint to avoid a flash. */}
