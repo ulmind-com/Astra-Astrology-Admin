@@ -30,6 +30,7 @@ import { Badge, Button, LoadingBlock } from "@/components/ui";
 import { purohitPortalApi, type PujaBookingData } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { useRequireAuth } from "@/providers/auth-provider";
+import { useRealtime } from "@/providers/realtime-provider";
 
 export default function PurohitPujaRoomPage() {
   const params = useParams<{ bookingId: string }>();
@@ -46,6 +47,8 @@ export default function PurohitPujaRoomPage() {
   const [showSankalpaDrawer, setShowSankalpaDrawer] = React.useState(true);
   const [vedicAudioMode, setVedicAudioMode] = React.useState(true);
   const [consecrateModalOpen, setConsecrateModalOpen] = React.useState(false);
+  const [remainingSeconds, setRemainingSeconds] = React.useState<number | null>(null);
+  const { onPujaEvent } = useRealtime();
 
   const { data: res, isLoading, error } = useQuery({
     queryKey: ["puja_room_token", bookingId],
@@ -66,6 +69,8 @@ export default function PurohitPujaRoomPage() {
       toast.success("✅ পবিত্র পূজা সফলভাবে সম্পন্ন ও প্রতিষ্ঠিত হিসেবে চিহ্নিত হয়েছে!");
       queryClient.invalidateQueries({ queryKey: ["puja_room_token", bookingId] });
       queryClient.invalidateQueries({ queryKey: ["purohit_me_bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_active_booking"] });
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
     },
     onError: (err) => {
       const msg = err instanceof ApiError ? err.message : "Failed to complete puja";
@@ -74,6 +79,37 @@ export default function PurohitPujaRoomPage() {
   });
 
   const booking = res;
+
+  // Countdown synced cleanly with backend `expires_at`
+  React.useEffect(() => {
+    if (!booking?.expires_at || booking.status === "completed") return;
+    const expiryMs = Date.parse(booking.expires_at);
+    if (Number.isNaN(expiryMs)) return;
+
+    const tick = () => {
+      const secs = Math.max(0, Math.floor((expiryMs - Date.now()) / 1000));
+      setRemainingSeconds(secs);
+      if (secs === 0 && !consecrateModalOpen) {
+        setConsecrateModalOpen(true);
+        queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
+        queryClient.invalidateQueries({ queryKey: ["purohit_me_bookings"] });
+        toast.info("নির্ধারিত পূজার সময় সম্পূর্ণ হয়েছে।");
+      }
+    };
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [booking?.expires_at, booking?.status, consecrateModalOpen, queryClient]);
+
+  React.useEffect(() => {
+    return onPujaEvent((msg) => {
+      if (String(msg.data.booking?.id) === bookingId && msg.data.event === "puja_ended") {
+        setConsecrateModalOpen(true);
+        queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
+        queryClient.invalidateQueries({ queryKey: ["purohit_me_bookings"] });
+      }
+    });
+  }, [bookingId, onPujaEvent, queryClient]);
 
   if (!ready || isLoading) {
     return (
@@ -145,6 +181,23 @@ export default function PurohitPujaRoomPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {remainingSeconds !== null && !isCompleted && (
+            <div
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-extrabold ${
+                remainingSeconds <= 120
+                  ? "bg-rose-500/20 border-rose-400/60 text-rose-200 animate-pulse"
+                  : "bg-emerald-500/20 border-emerald-400/40 text-emerald-200"
+              }`}
+              title="Remaining live puja room time"
+            >
+              <Clock className="size-3.5" />
+              <span>
+                {String(Math.floor(remainingSeconds / 60)).padStart(2, "0")}:
+                {String(remainingSeconds % 60).padStart(2, "0")}
+              </span>
+            </div>
+          )}
+
           {/* Vedic Audio Optimization Mode */}
           <button
             type="button"

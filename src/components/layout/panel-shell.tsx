@@ -46,6 +46,7 @@ import * as React from "react";
 
 import { AppointmentReminder } from "@/components/appointments/reminder";
 import { IncomingCallWatcher } from "@/components/call/incoming-call";
+import { IncomingPujaWatcher } from "@/components/purohit/incoming-puja-watcher";
 import { Avatar, Button } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UlmindCredit } from "@/components/ulmind-credit";
@@ -62,8 +63,7 @@ type NavItem = {
 const PUROHIT_NAV: NavItem[] = [
   { href: "/purohit-dashboard", label: "Purohit Dashboard", icon: Flame },
   { href: "/purohit-dashboard/pujas", label: "My Puja Catalog", icon: BookOpen },
-  { href: "/purohit-dashboard/availability", label: "Auspicious Slots & Schedule", icon: Calendar },
-  { href: "/purohit-dashboard/bookings", label: "Live Puja Bookings", icon: CalendarDays },
+  { href: "/purohit-dashboard/bookings", label: "Live Puja Sessions", icon: CalendarDays },
   { href: "/earnings", label: "Earnings & Payouts", icon: TrendingUp },
   { href: "/me/password", label: "Password", icon: Lock },
 ];
@@ -679,6 +679,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
           </footer>
 
           <IncomingCallWatcher />
+          <IncomingPujaWatcher />
           <AppointmentReminder />
         </div>
       </div>

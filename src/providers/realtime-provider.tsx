@@ -55,6 +55,13 @@ export type WhiteboardEvent =
 
 type WhiteboardListener = (event: WhiteboardEvent) => void;
 
+export type PujaEvent = {
+  type: "puja_event";
+  data: { event: string; booking: Record<string, any> };
+};
+
+type PujaListener = (event: PujaEvent) => void;
+
 type RealtimeValue = {
   astrologers: Map<string, LiveAstrologer>;
   platform: LivePlatform | null;
@@ -63,6 +70,8 @@ type RealtimeValue = {
   onChat: (listener: ChatListener) => () => void;
   /** Subscribe to cosmic whiteboard events & live frame streaming. */
   onWhiteboard: (listener: WhiteboardListener) => () => void;
+  /** Subscribe to live Purohit puja events. */
+  onPujaEvent: (listener: PujaListener) => () => void;
   /** Broadcast a payload over WebSocket. */
   sendLive: (data: string | object) => boolean;
 };
@@ -73,6 +82,7 @@ const RealtimeContext = React.createContext<RealtimeValue>({
   connected: false,
   onChat: () => () => {},
   onWhiteboard: () => () => {},
+  onPujaEvent: () => () => {},
   sendLive: () => false,
 });
 
@@ -234,6 +244,14 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const pujaListeners = React.useRef<Set<PujaListener>>(new Set());
+  const onPujaEvent = React.useCallback((listener: PujaListener) => {
+    pujaListeners.current.add(listener);
+    return () => {
+      pujaListeners.current.delete(listener);
+    };
+  }, []);
+
   const liveConnRef = React.useRef<LiveConnection | null>(null);
   const sendLive = React.useCallback((data: string | object) => {
     return liveConnRef.current?.send(data) ?? false;
@@ -297,6 +315,18 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           void queryClient.invalidateQueries({ queryKey: ["appointments", "windows"] });
           break;
 
+        case "purohit":
+          void queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
+          void queryClient.invalidateQueries({ queryKey: ["admin", "purohits"] });
+          break;
+
+        case "puja_event":
+          void queryClient.invalidateQueries({ queryKey: ["purohit_me_bookings"] });
+          void queryClient.invalidateQueries({ queryKey: ["purohit_me_active_booking"] });
+          void queryClient.invalidateQueries({ queryKey: ["puja_room_token"] });
+          pujaListeners.current.forEach((listener) => listener(message as PujaEvent));
+          break;
+
         case "chat_message":
         case "chat_read":
         case "chat_ended":
@@ -335,8 +365,8 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   }, [queryClient]);
 
   const value = React.useMemo(
-    () => ({ astrologers, platform, connected, onChat, onWhiteboard, sendLive }),
-    [astrologers, platform, connected, onChat, onWhiteboard, sendLive],
+    () => ({ astrologers, platform, connected, onChat, onWhiteboard, onPujaEvent, sendLive }),
+    [astrologers, platform, connected, onChat, onWhiteboard, onPujaEvent, sendLive],
   );
 
   return <RealtimeContext.Provider value={value}>{children}</RealtimeContext.Provider>;

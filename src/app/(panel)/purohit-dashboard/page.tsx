@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -38,6 +39,7 @@ import { ApiError } from "@/lib/api/client";
 import { useRequireAuth } from "@/providers/auth-provider";
 
 export default function PurohitDashboardPage() {
+  const router = useRouter();
   const { ready, user } = useRequireAuth({ roles: ["purohit"], signInPath: "/login" });
   const queryClient = useQueryClient();
 
@@ -94,6 +96,40 @@ export default function PurohitDashboardPage() {
     },
   });
 
+  // Accept Booking Mutation
+  const acceptMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const res = await purohitPortalApi.acceptBooking(bookingId);
+      return ((res as any)?.data !== undefined ? (res as any).data : res) as PujaBookingData;
+    },
+    onSuccess: (booking) => {
+      toast.success(`পূজা শুরু হয়েছে — ${booking.puja_duration_minutes} মিনিটের লাইভ রুম চালু হয়েছে!`);
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_active_booking"] });
+      refetchBookings();
+      router.push(`/purohit-dashboard/room/${booking.id}`);
+    },
+    onError: (err) => {
+      toast.error(err instanceof ApiError ? err.message : "Failed to accept puja");
+    },
+  });
+
+  // Decline Booking Mutation
+  const declineMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      return await purohitPortalApi.declineBooking(bookingId, "Purohit unavailable right now");
+    },
+    onSuccess: () => {
+      toast.info("পূজা অনুরোধ প্রত্যাখ্যান করা হয়েছে এবং ভক্তের টাকা অটো-রিফান্ড হয়েছে।");
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_active_booking"] });
+      refetchBookings();
+    },
+    onError: (err) => {
+      toast.error(err instanceof ApiError ? err.message : "Failed to decline puja");
+    },
+  });
+
   // Complete Booking Mutation
   const completeMutation = useMutation({
     mutationFn: async (bookingId: string) => {
@@ -101,6 +137,8 @@ export default function PurohitDashboardPage() {
     },
     onSuccess: () => {
       toast.success("পূজা সফলভাবে সম্পন্ন হিসেবে চিহ্নিত করা হয়েছে।");
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_active_booking"] });
       refetchBookings();
     },
     onError: (err) => {
@@ -131,15 +169,16 @@ export default function PurohitDashboardPage() {
   }
 
   const isOnline = profile?.is_online ?? false;
+  const isBusy = profile?.is_busy ?? false;
   const allPujas = profile?.pujas || [];
   const activePujas = allPujas.filter((p: PurohitPujaItem) => p.is_active);
   const pendingOrConfirmed = bookings.filter(
     (b: PujaBookingData) => b.status === "confirmed" || b.status === "in_progress"
   );
   const completedBookings = bookings.filter((b: PujaBookingData) => b.status === "completed");
-  const completedCount = (profile?.total_pujas_performed || 0) + completedBookings.length;
+  const completedCount = profile?.total_pujas_performed ?? completedBookings.length;
   const uniqueDevotees = new Set(
-    bookings.filter((b) => b.status === "completed" || b.status === "confirmed").map((b) => b.user_id)
+    bookings.filter((b) => b.status === "completed" || b.status === "confirmed" || b.status === "in_progress").map((b) => b.user_id)
   ).size;
   const totalDakshina = completedBookings.reduce((sum, b) => sum + (b.amount_inr || 0), 0);
   const hasRating = Boolean(profile?.rating && profile.rating > 0 && completedCount > 0);
@@ -148,7 +187,7 @@ export default function PurohitDashboardPage() {
     <div className="space-y-6">
       <PanelHeader
         title={`নমস্কার, ${profile?.display_name || user?.first_name}`}
-        description={`পবিত্র বৈদিক পুরোহিত ড্যাশবোর্ড — ${profile?.title || "Vedic Acharya"}`}
+        description={`লাইভ অন-ডিমান্ড পুরোহিত পোর্টাল — ড্যাশবোর্ড খোলা থাকলেই আপনি অনলাইন ও পূজার জন্য প্রস্তুত`}
         action={
           <div className="flex items-center gap-2">
             <input
@@ -171,16 +210,6 @@ export default function PurohitDashboardPage() {
               <UploadCloud className="size-4 mr-1.5 text-amber-600" />
               Update Avatar
             </Button>
-            <Link href="/purohit-dashboard/availability">
-              <Button
-                variant="outline"
-                size="sm"
-                className="font-bold text-xs border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-50/60"
-              >
-                <CalendarDays className="size-4 mr-1.5 text-amber-600" />
-                স্লট ও শুভ মুহূর্ত (Availability)
-              </Button>
-            </Link>
             <Link href="/purohit-dashboard/pujas">
               <Button variant="outline" size="sm" className="font-bold text-xs">
                 <BookOpen className="size-4 mr-1.5" />
@@ -224,44 +253,38 @@ export default function PurohitDashboardPage() {
             </div>
 
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span
                   className={`size-2.5 rounded-full ${
-                    isOnline ? "bg-emerald-500 animate-ping" : "bg-stone-400"
+                    isBusy ? "bg-amber-500 animate-pulse" : isOnline ? "bg-emerald-500 animate-ping" : "bg-stone-400"
                   }`}
                 />
                 <h3 className="text-base sm:text-lg font-bold text-stone-900 dark:text-white">
-                  {isOnline
-                    ? "🟢 আপনি এখন অনলাইন (পূজার জন্য উপলব্ধ)"
+                  {isBusy
+                    ? "🟡 আপনি এখন একটি লাইভ পূজায় ব্যস্ত আছেন"
+                    : isOnline
+                    ? "🟢 আপনি এখন অনলাইন (লাইভ পূজার জন্য উপলব্ধ)"
                     : "⚪ আপনি এখন অফলাইন"}
                 </h3>
               </div>
               <p className="text-xs text-stone-600 dark:text-stone-300 mt-1">
-                {isOnline
-                  ? "ভক্তরা আপনাকে সরাসরি অনলাইন দেখতে পাচ্ছেন এবং আপনার ক্যাটালগ থেকে যে কোনো পূজা বুক করতে পারেন।"
-                  : "টগলটি চালু করুন যাতে ভক্তরা আপনাকে অনলাইন দেখতে পান এবং তাৎক্ষণিক পূজা বুক করতে পারেন।"}
+                {isBusy
+                  ? "চলমান পূজা চলাকালীন নতুন সার্চ রেজাল্টে আপনাকে দেখানো হবে না। পূজা শেষ হলেই আপনি আবার অটোমেটিক উপলব্ধ হবেন।"
+                  : isOnline
+                  ? "ভক্তরা এখন সার্চ করলে আপনার ক্যাটালগের পূজা দেখতে পাবেন এবং সাথে সাথে বুক করে লাইভ ভিডিও রুমে যুক্ত হবেন। ওয়েবসাইট বন্ধ বা লগআউট করলে আপনি নিজে থেকেই অফলাইন হয়ে যাবেন।"
+                  : "টগলটি চালু করুন যাতে ভক্তরা আপনাকে অনলাইন দেখতে পান এবং তাৎক্ষণিক লাইভ পূজা বুক করতে পারেন।"}
               </p>
 
-              {/* Weekly Auspicious Slots summary badge */}
-              <div className="flex flex-wrap items-center gap-2 pt-2">
-                <span className="text-[11px] font-semibold text-stone-500">
-                  সাপ্তাহিক স্লট:
-                </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-[10px] font-bold text-stone-700 dark:text-stone-300">
-                  <CalendarDays className="size-3 text-amber-600" />
-                  {profile?.available_days?.length || 7} দিন উপলব্ধ
-                </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-[10px] font-bold text-stone-700 dark:text-stone-300">
-                  <Flame className="size-3 text-amber-600" />
-                  {profile?.available_slots?.length || 4} টি শুভ মুহূর্ত
-                </span>
-                <Link
-                  href="/purohit-dashboard/availability"
-                  className="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-1 ml-1"
-                >
-                  ক্যালেন্ডার ও মুহূর্ত পরিবর্তন করুন &rarr;
-                </Link>
-              </div>
+              {isBusy && profile?.busy_booking_id && (
+                <div className="pt-2">
+                  <Link href={`/purohit-dashboard/room/${profile.busy_booking_id}`}>
+                    <Button variant="primary" size="sm" className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold">
+                      <Video className="size-3.5 mr-1.5" />
+                      চলমান লাইভ পূজা রুমে ফিরে যান &rarr;
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
@@ -464,33 +487,59 @@ export default function PurohitDashboardPage() {
                   )}
                 </div>
 
-                {/* Action: Join Video Room */}
+                {/* Action: Accept/Decline or Join Video Room */}
                 <div className="flex items-center justify-between gap-2 pt-1">
-                  <Link href={`/purohit-dashboard/room/${booking.id}`} className="flex-1">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20"
-                    >
-                      <Video className="size-4 mr-1.5" />
-                      পূজার ভিডিও রুমে জয়েন করুন &rarr;
-                    </Button>
-                  </Link>
+                  {booking.status === "confirmed" ? (
+                    <>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        loading={acceptMutation.isPending}
+                        onClick={() => acceptMutation.mutate(booking.id)}
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20"
+                      >
+                        <Video className="size-4 mr-1.5" />
+                        গ্রহণ করে লাইভ রুম চালু করুন
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        loading={declineMutation.isPending}
+                        onClick={() => declineMutation.mutate(booking.id)}
+                        className="text-xs font-bold text-rose-600 border-rose-300 hover:bg-rose-50"
+                      >
+                        প্রত্যাখ্যান
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Link href={`/purohit-dashboard/room/${booking.id}`} className="flex-1">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20"
+                        >
+                          <Video className="size-4 mr-1.5" />
+                          পূজার ভিডিও রুমে জয়েন করুন &rarr;
+                        </Button>
+                      </Link>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (confirm("Are you sure this puja session is complete?")) {
-                        completeMutation.mutate(booking.id);
-                      }
-                    }}
-                    loading={completeMutation.isPending}
-                    className="text-xs font-bold"
-                  >
-                    <CheckCircle2 className="size-3.5 mr-1 text-emerald-600" />
-                    সম্পন্ন
-                  </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (confirm("Are you sure this puja session is complete?")) {
+                            completeMutation.mutate(booking.id);
+                          }
+                        }}
+                        loading={completeMutation.isPending}
+                        className="text-xs font-bold"
+                      >
+                        <CheckCircle2 className="size-3.5 mr-1 text-emerald-600" />
+                        সম্পন্ন
+                      </Button>
+                    </>
+                  )}
                 </div>
               </Card>
             ))}

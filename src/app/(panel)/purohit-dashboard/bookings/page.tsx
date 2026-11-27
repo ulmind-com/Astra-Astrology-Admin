@@ -12,6 +12,7 @@ import {
   Video,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -30,6 +31,7 @@ import { useRequireAuth } from "@/providers/auth-provider";
 export default function PurohitBookingsPage() {
   const { ready } = useRequireAuth({ roles: ["purohit"], signInPath: "/login" });
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const [filter, setFilter] = React.useState<"all" | "active" | "completed">("all");
 
@@ -46,6 +48,38 @@ export default function PurohitBookingsPage() {
     refetchOnWindowFocus: false,
   });
 
+  const acceptMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const res = await purohitPortalApi.acceptBooking(bookingId);
+      return ((res as any)?.data !== undefined ? (res as any).data : res) as PujaBookingData;
+    },
+    onSuccess: (booking) => {
+      toast.success(`লাইভ রুম চালু হয়েছে (${booking.puja_duration_minutes} মিনিট)।`);
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_active_booking"] });
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
+      router.push(`/purohit-dashboard/room/${booking.id}`);
+    },
+    onError: (err) => {
+      toast.error(err instanceof ApiError ? err.message : "Failed to accept puja");
+    },
+  });
+
+  const declineMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      return await purohitPortalApi.declineBooking(bookingId, "Purohit unavailable right now");
+    },
+    onSuccess: () => {
+      toast.info("অনুরোধ প্রত্যাখ্যান করা হয়েছে এবং ভক্তকে সম্পূর্ণ অর্থ ফেরত পাঠানো হয়েছে।");
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_active_booking"] });
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof ApiError ? err.message : "Failed to decline puja");
+    },
+  });
+
   const completeMutation = useMutation({
     mutationFn: async (bookingId: string) => {
       return await purohitPortalApi.completeBooking(bookingId);
@@ -53,6 +87,8 @@ export default function PurohitBookingsPage() {
     onSuccess: () => {
       toast.success("পূজা সম্পন্ন হিসেবে চিহ্নিত করা হয়েছে।");
       queryClient.invalidateQueries({ queryKey: ["purohit_me_bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_active_booking"] });
+      queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
     },
     onError: (err) => {
       const msg = err instanceof ApiError ? err.message : "Failed to complete puja";
@@ -174,7 +210,31 @@ export default function PurohitBookingsPage() {
 
               {/* Actions */}
               <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
-                {b.status !== "completed" && (
+                {b.status === "confirmed" && (
+                  <>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      loading={acceptMutation.isPending}
+                      onClick={() => acceptMutation.mutate(b.id)}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex-1 md:flex-initial"
+                    >
+                      <Video className="size-4 mr-1.5" />
+                      গ্রহণ করে রুম খুলুন
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      loading={declineMutation.isPending}
+                      onClick={() => declineMutation.mutate(b.id)}
+                      className="text-xs font-bold text-rose-600 border-rose-300 hover:bg-rose-50"
+                    >
+                      প্রত্যাখ্যান
+                    </Button>
+                  </>
+                )}
+
+                {b.status === "in_progress" && (
                   <>
                     <Link href={`/purohit-dashboard/room/${b.id}`} className="flex-1 md:flex-initial">
                       <Button
@@ -207,6 +267,12 @@ export default function PurohitBookingsPage() {
                 {b.status === "completed" && (
                   <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
                     <CheckCircle2 className="size-4" /> পূজা সম্পন্ন হয়েছে
+                  </span>
+                )}
+
+                {(b.status === "declined" || b.status === "cancelled" || b.status === "expired") && (
+                  <span className="text-xs font-bold text-rose-600">
+                    {b.payment_status === "refunded" ? "রিফান্ড সম্পন্ন" : "বাতিল / প্রত্যাখ্যাত"}
                   </span>
                 )}
               </div>

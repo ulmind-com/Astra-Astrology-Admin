@@ -1759,6 +1759,9 @@ export interface PurohitData {
   languages: string[];
   is_online: boolean;
   is_verified: boolean;
+  is_busy?: boolean;
+  last_seen_at?: string | null;
+  busy_booking_id?: string | null;
   available_days?: string[];
   available_slots?: string[];
   weekly_schedule?: Record<string, string[]>;
@@ -1793,10 +1796,16 @@ export interface PujaBookingData {
   room_id: string;
   zego_app_id?: number;
   zego_token?: string | null;
-  status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled";
+  status: "pending" | "confirmed" | "in_progress" | "completed" | "declined" | "cancelled" | "expired";
   payment_status: "pending" | "paid" | "failed" | "refunded";
   started_at?: string | null;
+  accepted_at?: string | null;
+  expires_at?: string | null;
   completed_at?: string | null;
+  declined_at?: string | null;
+  cancel_reason?: string | null;
+  refund_id?: string | null;
+  refunded_at?: string | null;
   created_at: string;
 }
 
@@ -1932,8 +1941,16 @@ export const purohitPortalApi = {
     api.delete<{ message: string }>(`/purohits/me/pujas/${pujaId}`),
   getMyBookings: () =>
     api.get<PujaBookingData[]>("/purohits/me/bookings"),
+  getActiveBooking: () =>
+    api.get<PujaBookingData | null>("/purohits/me/bookings/active"),
+  acceptBooking: (bookingId: string) =>
+    api.post<PujaBookingData>(`/purohits/bookings/${bookingId}/accept`),
+  declineBooking: (bookingId: string, reason?: string) =>
+    api.post<PujaBookingData>(`/purohits/bookings/${bookingId}/decline`, reason ? { reason } : {}),
   completeBooking: (bookingId: string) =>
     api.post<PujaBookingData>(`/purohits/bookings/${bookingId}/complete`),
   getRoomToken: (bookingId: string) =>
     api.get<PujaBookingData>(`/purohits/bookings/${bookingId}/token`),
+  goOffline: () =>
+    api.post<{ message: string }>("/purohits/me/presence/offline"),
 };

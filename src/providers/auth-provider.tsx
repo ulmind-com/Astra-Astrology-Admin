@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 
 import { authApi } from "@/lib/api";
-import { ApiError, onAuthExpired } from "@/lib/api/client";
+import { api, ApiError, onAuthExpired } from "@/lib/api/client";
 import { onSessionChange, session } from "@/lib/session";
 import type { AuthResult, UserPublic, UserRole } from "@/types";
 
@@ -33,6 +33,9 @@ export function AuthProvider({
 
   const signOut = React.useCallback(
     (options?: { redirectTo?: string }) => {
+      if (session.accessToken) {
+        void api.post("/auth/logout").catch(() => undefined);
+      }
       session.clear();
       setUser(null);
       router.replace(options?.redirectTo ?? signInPath);

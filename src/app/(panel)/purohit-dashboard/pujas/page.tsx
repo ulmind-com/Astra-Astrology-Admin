@@ -599,19 +599,37 @@ export default function PurohitPujaCatalogPage() {
 
             <Field
               label="সময়সীমা (মিনিট) *"
-              hint="আনুমানিক কত মিনিট সময় লাগবে"
+              hint="লাইভ পূজার রুম ঠিক এত মিনিটের জন্য খোলা থাকবে (যেমন 30 মি. বা 60 মি.)"
             >
-              <Input
-                type="number"
-                min={10}
-                max={480}
-                required
-                value={formData.duration_minutes}
-                onChange={(e) =>
-                  setFormData({ ...formData, duration_minutes: Number(e.target.value) || 45 })
-                }
-                placeholder="45"
-              />
+              <div className="space-y-1.5">
+                <Input
+                  type="number"
+                  min={10}
+                  max={480}
+                  required
+                  value={formData.duration_minutes}
+                  onChange={(e) =>
+                    setFormData({ ...formData, duration_minutes: Number(e.target.value) || 30 })
+                  }
+                  placeholder="30"
+                />
+                <div className="flex flex-wrap gap-1">
+                  {[15, 30, 45, 60, 90, 120].map((mins) => (
+                    <button
+                      key={mins}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, duration_minutes: mins })}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-colors ${
+                        formData.duration_minutes === mins
+                          ? "bg-amber-600 text-white border-amber-600"
+                          : "bg-stone-50 dark:bg-stone-900 border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:border-amber-400"
+                      }`}
+                    >
+                      {mins}m
+                    </button>
+                  ))}
+                </div>
+              </div>
             </Field>
           </div>
 
