@@ -22,6 +22,7 @@ export function CallRoom({
   className,
   audioOnly = false,
   group = false,
+  stayInRoomOnPeerLeave = false,
 }: {
   credentials: CallCredentials;
   onLeave: () => void;
@@ -36,9 +37,12 @@ export function CallRoom({
    * stops meaning the session is over.
    */
   group?: boolean;
+  /** Keep user inside room even if remote participant drops/refreshes. */
+  stayInRoomOnPeerLeave?: boolean;
 }) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [retryCount, setRetryCount] = React.useState(0);
 
   // Held in a ref so re-renders never re-join the room, and so the leave
   // handler can always see the latest callback.
@@ -49,9 +53,15 @@ export function CallRoom({
     let cancelled = false;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let instance: any = null;
+    const joinAttemptedAt = Date.now();
+    setError(null);
 
     (async () => {
       try {
+        if (!credentials.app_id || !credentials.token || !credentials.user_id) {
+          setError("Video room credentials are missing or incomplete.");
+          return;
+        }
         const { ZegoUIKitPrebuilt } = await import("@zegocloud/zego-uikit-prebuilt");
         if (cancelled || !containerRef.current) return;
 
@@ -74,23 +84,25 @@ export function CallRoom({
           showPreJoinView: false,
           showScreenSharingButton: false,
           showRoomDetailsButton: false,
-          // Worth having in a chamber, where knowing who has actually
-          // arrived is half the point.
           showUserList: group,
           showTextChat: false,
           turnOnCameraWhenJoining: !audioOnly,
           turnOnMicrophoneWhenJoining: true,
-          // On a voice call the camera button is hidden rather than merely
-          // off, so nobody turns their camera on by accident.
           showMyCameraToggleButton: !audioOnly,
           showAudioVideoSettingsButton: !audioOnly,
-          // Leaving the room is reported to our server too — the room is the
-          // pipe, but the session is ours.
-          onLeaveRoom: () => leaveRef.current(),
-          // In a 1:1 call the other person dropping out ends it. In a chamber
-          // it does not: a guardian hanging up must not close the
-          // consultation on everyone still in the room.
-          ...(group ? {} : { onUserLeave: () => leaveRef.current() }),
+          onLeaveRoom: () => {
+            if (cancelled) return;
+            // Immediate disconnect (<4s after join) means SDK login/auth/network failed,
+            // not the user intentionally clicking Leave — show error instead of silently redirecting out.
+            if (Date.now() - joinAttemptedAt < 4000) {
+              setError(
+                "ভিডিও রুমে সংযোগ করা যায়নি (ZEGOCLOUD auth/connection error অথবা ক্যামেরা পারমিশন ব্লক)।",
+              );
+              return;
+            }
+            leaveRef.current();
+          },
+          ...(group || stayInRoomOnPeerLeave ? {} : { onUserLeave: () => leaveRef.current() }),
         });
       } catch (e) {
         if (!cancelled) {
@@ -111,15 +123,38 @@ export function CallRoom({
         /* the SDK is already gone */
       }
     };
-    // Re-joining on a changed token would drop the live call, so this runs
-    // once per room.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [credentials.room_id, audioOnly, group]);
+    // Re-run only when room, user identity, token, mode, or explicit retry changes.
+  }, [
+    credentials.app_id,
+    credentials.room_id,
+    credentials.token,
+    credentials.user_id,
+    audioOnly,
+    group,
+    stayInRoomOnPeerLeave,
+    retryCount,
+  ]);
 
   if (error) {
     return (
-      <div className="flex h-full w-full items-center justify-center p-6 text-center">
-        <p className="max-w-sm text-sm text-danger">{error}</p>
+      <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-6 text-center text-white">
+        <p className="max-w-md text-sm font-medium text-rose-300">{error}</p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setRetryCount((c) => c + 1)}
+            className="rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-500 cursor-pointer"
+          >
+            পুনরায় চেষ্টা করুন (Retry)
+          </button>
+          <button
+            type="button"
+            onClick={() => leaveRef.current()}
+            className="rounded-xl border border-stone-600 px-4 py-2 text-xs font-bold text-stone-300 hover:bg-stone-800 cursor-pointer"
+          >
+            ফিরে যান
+          </button>
+        </div>
       </div>
     );
   }

@@ -119,7 +119,7 @@ export default function PurohitPujaRoomPage() {
     );
   }
 
-  if (error || !booking || !booking.zego_token) {
+  if (error || !booking || !booking.zego_token || !booking.zego_app_id || !user?.id) {
     return (
       <div className="p-10 text-center space-y-4 max-w-md mx-auto">
         <div className="size-14 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-500 flex items-center justify-center mx-auto">
@@ -144,11 +144,11 @@ export default function PurohitPujaRoomPage() {
   const isCompleted = booking.status === "completed";
 
   const credentials = {
-    app_id: booking.zego_app_id || 1318055627,
+    app_id: booking.zego_app_id,
     token: booking.zego_token,
     room_id: booking.room_id,
-    user_id: user?.id || "purohit",
-    user_name: user?.first_name ? `Purohit ${user.first_name}` : "Purohit Ji",
+    user_id: user.id,
+    user_name: user.first_name ? `Purohit ${user.first_name}` : "Purohit Ji",
   };
 
   return (
@@ -276,6 +276,7 @@ export default function PurohitPujaRoomPage() {
             className="w-full h-full"
             audioOnly={false}
             group={false}
+            stayInRoomOnPeerLeave={true}
           />
 
           {/* Top Left Floating Indicator */}
