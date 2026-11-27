@@ -98,7 +98,13 @@ export default function PurohitBookingsPage() {
 
   const filteredBookings = React.useMemo(() => {
     if (filter === "active") {
-      return bookings.filter((b: PujaBookingData) => b.status === "confirmed" || b.status === "in_progress");
+      return bookings.filter(
+        (b: PujaBookingData) =>
+          b.status === "awaiting_acceptance" ||
+          b.status === "awaiting_payment" ||
+          b.status === "confirmed" ||
+          b.status === "in_progress",
+      );
     }
     if (filter === "completed") {
       return bookings.filter((b: PujaBookingData) => b.status === "completed");
@@ -140,7 +146,7 @@ export default function PurohitBookingsPage() {
       <div className="flex items-center gap-2 border-b border-stone-200 dark:border-stone-800 pb-2">
         {[
           { id: "all", label: `All Bookings (${bookings.length})` },
-          { id: "active", label: `Active / Live Now (${bookings.filter((b: PujaBookingData) => b.status === "confirmed" || b.status === "in_progress").length})` },
+          { id: "active", label: `Active / Live Now (${bookings.filter((b: PujaBookingData) => b.status === "awaiting_acceptance" || b.status === "awaiting_payment" || b.status === "confirmed" || b.status === "in_progress").length})` },
           { id: "completed", label: `Completed (${bookings.filter((b: PujaBookingData) => b.status === "completed").length})` },
         ].map((tab) => (
           <button
@@ -210,7 +216,7 @@ export default function PurohitBookingsPage() {
 
               {/* Actions */}
               <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
-                {b.status === "confirmed" && (
+                {(b.status === "confirmed" || b.status === "awaiting_acceptance") && (
                   <>
                     <Button
                       variant="primary"
@@ -220,7 +226,7 @@ export default function PurohitBookingsPage() {
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex-1 md:flex-initial"
                     >
                       <Video className="size-4 mr-1.5" />
-                      গ্রহণ করে রুম খুলুন
+                      {b.status === "awaiting_acceptance" ? "গ্রহণ করুন (Pay অপেক্ষা)" : "গ্রহণ করে রুম খুলুন"}
                     </Button>
                     <Button
                       variant="outline"
@@ -232,6 +238,18 @@ export default function PurohitBookingsPage() {
                       প্রত্যাখ্যান
                     </Button>
                   </>
+                )}
+
+                {b.status === "awaiting_payment" && (
+                  <Link href={`/purohit-dashboard/room/${b.id}`} className="flex-1 md:flex-initial">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-amber-400 text-amber-700 hover:bg-amber-50 font-bold text-xs w-full"
+                    >
+                      ⏳ ভক্ত পেমেন্ট করছেন... (রুমে যান)
+                    </Button>
+                  </Link>
                 )}
 
                 {b.status === "in_progress" && (

@@ -1797,10 +1797,25 @@ export interface PujaBookingData {
   room_id: string;
   zego_app_id?: number;
   zego_token?: string | null;
-  status: "pending" | "confirmed" | "in_progress" | "completed" | "declined" | "cancelled" | "expired";
+  status:
+    | "pending"
+    | "awaiting_acceptance"
+    | "awaiting_payment"
+    | "confirmed"
+    | "in_progress"
+    | "completed"
+    | "declined"
+    | "cancelled"
+    | "expired";
   payment_status: "pending" | "paid" | "failed" | "refunded";
+  payment_method?: string;
   started_at?: string | null;
   accepted_at?: string | null;
+  accept_expires_at?: string | null;
+  payment_expires_at?: string | null;
+  purohit_join_deadline_at?: string | null;
+  purohit_joined_at?: string | null;
+  devotee_joined_at?: string | null;
   expires_at?: string | null;
   completed_at?: string | null;
   declined_at?: string | null;

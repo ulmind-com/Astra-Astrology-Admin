@@ -1,7 +1,7 @@
 "use client";
 
 import { Flame, PhoneOff, Sparkles, User, Video } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -15,14 +15,16 @@ import { useRealtime } from "@/providers/realtime-provider";
 
 /**
  * Watches for incoming live Puja bookings across ALL Purohit Sanctuary pages
- * (Uber-style request popup with looping ringtone + instant Accept / Decline).
+ * (45s Accept SLA popup with looping ringtone + Awaiting-Payment pill).
  */
 export function IncomingPujaWatcher() {
   const router = useRouter();
+  const pathname = usePathname();
   const queryClient = useQueryClient();
   const { user, isSignedIn } = useAuth();
   const { onPujaEvent } = useRealtime();
   const isPurohit = isSignedIn && user?.role === "purohit";
+  const [countdownSeconds, setCountdownSeconds] = React.useState<number | null>(null);
 
   const { data: activeBooking } = useQuery({
     queryKey: ["purohit_me_active_booking"],
@@ -31,7 +33,7 @@ export function IncomingPujaWatcher() {
       return ((res as any)?.data !== undefined ? (res as any).data : res) as PujaBookingData | null;
     },
     enabled: isPurohit,
-    refetchInterval: isPurohit ? 10_000 : false,
+    refetchInterval: isPurohit ? 8_000 : false,
     refetchOnWindowFocus: true,
   });
 
@@ -43,9 +45,32 @@ export function IncomingPujaWatcher() {
       queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
       if (msg.data.event === "puja_request") {
         toast.info(`নতুন পূজা অনুরোধ: ${msg.data.booking.puja_name} (${msg.data.booking.sankalpa_name})`);
+      } else if (msg.data.event === "puja_expired" || msg.data.event === "puja_declined") {
+        toast.info(msg.data.booking?.cancel_reason || "পূজা অনুরোধটি বাতিল হয়েছে।");
       }
     });
   }, [isPurohit, onPujaEvent, queryClient]);
+
+  React.useEffect(() => {
+    const deadlineIso =
+      activeBooking?.status === "awaiting_acceptance"
+        ? activeBooking.accept_expires_at
+        : activeBooking?.status === "awaiting_payment"
+        ? activeBooking.payment_expires_at
+        : null;
+    if (!deadlineIso) {
+      setCountdownSeconds(null);
+      return;
+    }
+    const deadlineMs = Date.parse(deadlineIso);
+    if (Number.isNaN(deadlineMs)) return;
+    const tick = () => {
+      setCountdownSeconds(Math.max(0, Math.floor((deadlineMs - Date.now()) / 1000)));
+    };
+    tick();
+    const t = window.setInterval(tick, 1000);
+    return () => window.clearInterval(t);
+  }, [activeBooking?.status, activeBooking?.accept_expires_at, activeBooking?.payment_expires_at]);
 
   const acceptMutation = useMutation({
     mutationFn: async (bookingId: string) => {
@@ -56,7 +81,11 @@ export function IncomingPujaWatcher() {
       queryClient.invalidateQueries({ queryKey: ["purohit_me_active_booking"] });
       queryClient.invalidateQueries({ queryKey: ["purohit_me_bookings"] });
       queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
-      toast.success(`পূজা শুরু হচ্ছে — ${booking.puja_duration_minutes} মিনিটের লাইভ রুম খুলছে!`);
+      toast.success(
+        booking.status === "awaiting_payment"
+          ? "অনুরোধ গৃহীত! ভক্ত ৯০ সেকেন্ডের মধ্যে পেমেন্ট করে রুমে প্রবেশ করবেন।"
+          : `পূজা শুরু হচ্ছে — ${booking.puja_duration_minutes} মিনিটের লাইভ রুম খুলছে!`,
+      );
       router.push(`/purohit-dashboard/room/${booking.id}`);
     },
     onError: (err) => {
@@ -72,15 +101,47 @@ export function IncomingPujaWatcher() {
       queryClient.invalidateQueries({ queryKey: ["purohit_me_active_booking"] });
       queryClient.invalidateQueries({ queryKey: ["purohit_me_bookings"] });
       queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
-      toast.info("অনুরোধ প্রত্যাখ্যান করা হয়েছে এবং ভক্তকে সম্পূর্ণ অর্থ ফেরত পাঠানো হয়েছে।");
+      toast.info("অনুরোধ প্রত্যাখ্যান করা হয়েছে।");
     },
     onError: (err) => {
       toast.error(err instanceof ApiError ? err.message : "Could not decline request");
     },
   });
 
-  const isRinging = Boolean(isPurohit && activeBooking && activeBooking.status === "confirmed");
+  const isRinging = Boolean(
+    isPurohit &&
+      activeBooking &&
+      (activeBooking.status === "awaiting_acceptance" || activeBooking.status === "confirmed"),
+  );
   useLoopingSound("ring", isRinging);
+
+  const isWaitingPayOutsideRoom = Boolean(
+    isPurohit &&
+      activeBooking?.status === "awaiting_payment" &&
+      !pathname?.includes(`/purohit-dashboard/room/${activeBooking.id}`),
+  );
+
+  if (isWaitingPayOutsideRoom && activeBooking) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50 w-80 rounded-2xl border border-amber-400/50 bg-stone-950/95 p-4 text-white shadow-2xl">
+        <div className="flex items-center justify-between text-xs font-bold text-amber-300">
+          <span>⏳ ভক্ত পেমেন্ট করছেন...</span>
+          <span className="font-mono">{countdownSeconds !== null ? `${countdownSeconds}s` : "90s"}</span>
+        </div>
+        <p className="mt-1 text-xs text-stone-300 truncate">
+          {activeBooking.puja_name} · {activeBooking.sankalpa_name}
+        </p>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => router.push(`/purohit-dashboard/room/${activeBooking.id}`)}
+          className="mt-2.5 w-full bg-emerald-600 hover:bg-emerald-500 text-xs font-bold"
+        >
+          ওয়েটিং রুমে প্রবেশ করুন &rarr;
+        </Button>
+      </div>
+    );
+  }
 
   if (!isRinging || !activeBooking) return null;
 
@@ -92,6 +153,11 @@ export function IncomingPujaWatcher() {
             <span className="flex items-center gap-1.5">
               <Flame className="size-4 animate-bounce text-yellow-200" />
               লাইভ পূজা অনুরোধ!
+              {countdownSeconds !== null && (
+                <span className="rounded bg-rose-950/70 px-1.5 py-0.5 font-mono text-[10px] text-amber-200">
+                  {countdownSeconds}s
+                </span>
+              )}
             </span>
             <span className="rounded-full bg-black/30 px-2.5 py-0.5 text-[11px] font-extrabold text-white">
               {activeBooking.puja_duration_minutes} মি. • ₹{activeBooking.amount_inr}
@@ -116,7 +182,9 @@ export function IncomingPujaWatcher() {
           )}
 
           <p className="text-[11px] text-stone-400">
-            গ্রহণ করলে <b>{activeBooking.puja_duration_minutes} মিনিটের</b> লাইভ ভিডিও পূজা রুম শুরু হবে। প্রত্যাখ্যান করলে ভক্তের টাকা অটোমেটিক রিফান্ড হবে।
+            {activeBooking.status === "awaiting_acceptance"
+              ? `গ্রহণ করলে ভক্ত ৯০ সেকেন্ডের মধ্যে পেমেন্ট করে আপনার ${activeBooking.puja_duration_minutes} মিনিটের লাইভ রুমে প্রবেশ করবেন।`
+              : `গ্রহণ করলে ${activeBooking.puja_duration_minutes} মিনিটের লাইভ ভিডিও পূজা রুম শুরু হবে।`}
           </p>
 
           <div className="flex gap-2">
@@ -138,7 +206,7 @@ export function IncomingPujaWatcher() {
               onClick={() => acceptMutation.mutate(activeBooking.id)}
             >
               <Video className="size-4" />
-              গ্রহণ করে রুমে ঢুকুন
+              {activeBooking.status === "awaiting_acceptance" ? "গ্রহণ করুন (Pay অপেক্ষা)" : "গ্রহণ করে রুমে ঢুকুন"}
             </Button>
           </div>
         </div>

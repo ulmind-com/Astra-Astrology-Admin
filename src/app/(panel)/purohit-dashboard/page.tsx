@@ -173,7 +173,11 @@ export default function PurohitDashboardPage() {
   const allPujas = profile?.pujas || [];
   const activePujas = allPujas.filter((p: PurohitPujaItem) => p.is_active);
   const pendingOrConfirmed = bookings.filter(
-    (b: PujaBookingData) => b.status === "confirmed" || b.status === "in_progress"
+    (b: PujaBookingData) =>
+      b.status === "awaiting_acceptance" ||
+      b.status === "awaiting_payment" ||
+      b.status === "confirmed" ||
+      b.status === "in_progress",
   );
   const completedBookings = bookings.filter((b: PujaBookingData) => b.status === "completed");
   const completedCount = profile?.total_pujas_performed ?? completedBookings.length;
@@ -460,8 +464,19 @@ export default function PurohitDashboardPage() {
                       Duration: {booking.puja_duration_minutes} mins | Dakshina: ₹{booking.amount_inr}
                     </p>
                   </div>
-                  <Badge tone="neutral" className="bg-emerald-100 text-emerald-900 border-emerald-300 font-bold">
-                    PAID (₹{booking.amount_inr})
+                  <Badge
+                    tone="neutral"
+                    className={
+                      booking.payment_status === "paid"
+                        ? "bg-emerald-100 text-emerald-900 border-emerald-300 font-bold"
+                        : "bg-amber-100 text-amber-900 border-amber-300 font-bold"
+                    }
+                  >
+                    {booking.payment_status === "paid"
+                      ? `PAID (₹${booking.amount_inr})`
+                      : booking.status === "awaiting_payment"
+                      ? `PAYMENT PENDING (₹${booking.amount_inr})`
+                      : `NEW REQUEST (₹${booking.amount_inr})`}
                   </Badge>
                 </div>
 
@@ -489,7 +504,7 @@ export default function PurohitDashboardPage() {
 
                 {/* Action: Accept/Decline or Join Video Room */}
                 <div className="flex items-center justify-between gap-2 pt-1">
-                  {booking.status === "confirmed" ? (
+                  {booking.status === "confirmed" || booking.status === "awaiting_acceptance" ? (
                     <>
                       <Button
                         variant="primary"
@@ -499,7 +514,9 @@ export default function PurohitDashboardPage() {
                         className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20"
                       >
                         <Video className="size-4 mr-1.5" />
-                        গ্রহণ করে লাইভ রুম চালু করুন
+                        {booking.status === "awaiting_acceptance"
+                          ? "গ্রহণ করুন (Pay অপেক্ষা)"
+                          : "গ্রহণ করে লাইভ রুম চালু করুন"}
                       </Button>
                       <Button
                         variant="outline"
@@ -511,6 +528,16 @@ export default function PurohitDashboardPage() {
                         প্রত্যাখ্যান
                       </Button>
                     </>
+                  ) : booking.status === "awaiting_payment" ? (
+                    <Link href={`/purohit-dashboard/room/${booking.id}`} className="flex-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-amber-400 text-amber-800 hover:bg-amber-50 font-bold text-xs"
+                      >
+                        ⏳ ভক্ত পেমেন্ট করছেন... ওয়েটিং রুমে যান &rarr;
+                      </Button>
+                    </Link>
                   ) : (
                     <>
                       <Link href={`/purohit-dashboard/room/${booking.id}`} className="flex-1">

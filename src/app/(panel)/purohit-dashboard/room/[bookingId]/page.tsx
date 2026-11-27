@@ -28,9 +28,10 @@ export default function PurohitPujaRoomPage() {
   const [showSankalpaDrawer, setShowSankalpaDrawer] = React.useState(false);
   const [consecrateModalOpen, setConsecrateModalOpen] = React.useState(false);
   const [remainingSeconds, setRemainingSeconds] = React.useState<number | null>(null);
+  const [payWaitSeconds, setPayWaitSeconds] = React.useState<number | null>(null);
   const { onPujaEvent } = useRealtime();
 
-  const { data: booking, isLoading, error } = useQuery({
+  const { data: booking, isLoading, error, refetch } = useQuery({
     queryKey: ["puja_room_token", bookingId],
     queryFn: async () => {
       const resp = await purohitPortalApi.getRoomToken(bookingId);
@@ -38,6 +39,32 @@ export default function PurohitPujaRoomPage() {
     },
     enabled: ready && Boolean(bookingId),
     refetchOnWindowFocus: false,
+    refetchInterval: (q) => {
+      const st = q.state.data?.status;
+      return st === "awaiting_acceptance" || st === "awaiting_payment" ? 3000 : false;
+    },
+  });
+
+  const acceptMutation = useMutation({
+    mutationFn: async () => purohitPortalApi.acceptBooking(bookingId),
+    onSuccess: () => {
+      toast.success("অনুরোধ গৃহীত! ভক্ত পেমেন্ট সম্পন্ন করলেই লাইভ ভিডিও রুম শুরু হবে।");
+      void refetch();
+    },
+    onError: (err) => {
+      toast.error(err instanceof ApiError ? err.message : "Could not accept request");
+    },
+  });
+
+  const declineMutation = useMutation({
+    mutationFn: async () => purohitPortalApi.declineBooking(bookingId, "Purohit unavailable right now"),
+    onSuccess: () => {
+      toast.info("অনুরোধ প্রত্যাখ্যান করা হয়েছে।");
+      router.push("/purohit-dashboard");
+    },
+    onError: (err) => {
+      toast.error(err instanceof ApiError ? err.message : "Failed to decline puja");
+    },
   });
 
   const completeMutation = useMutation({
@@ -80,13 +107,43 @@ export default function PurohitPujaRoomPage() {
 
   React.useEffect(() => {
     return onPujaEvent((msg) => {
-      if (String(msg.data.booking?.id) === bookingId && msg.data.event === "puja_ended") {
+      if (String(msg.data.booking?.id) !== bookingId) return;
+      if (msg.data.event === "puja_accepted") {
+        toast.success("ভক্ত পেমেন্ট সম্পন্ন করেছেন! লাইভ পূজা রুম শুরু হচ্ছে!");
+        void refetch();
+      } else if (msg.data.event === "puja_declined" || msg.data.event === "puja_expired") {
+        toast.error(msg.data.booking?.cancel_reason || "অনুরোধটি বাতিল বা সময়োত্তীর্ণ হয়েছে।");
+        void refetch();
+      } else if (msg.data.event === "puja_ended") {
         setConsecrateModalOpen(true);
         queryClient.invalidateQueries({ queryKey: ["purohit_me_profile"] });
         queryClient.invalidateQueries({ queryKey: ["purohit_me_bookings"] });
       }
     });
-  }, [bookingId, onPujaEvent, queryClient]);
+  }, [bookingId, onPujaEvent, queryClient, refetch]);
+
+  React.useEffect(() => {
+    const targetIso =
+      booking?.status === "awaiting_payment"
+        ? booking.payment_expires_at
+        : booking?.status === "awaiting_acceptance"
+        ? booking.accept_expires_at
+        : null;
+    if (!targetIso) {
+      setPayWaitSeconds(null);
+      return;
+    }
+    const ms = Date.parse(targetIso);
+    if (Number.isNaN(ms)) return;
+    const tick = () => {
+      const s = Math.max(0, Math.floor((ms - Date.now()) / 1000));
+      setPayWaitSeconds(s);
+      if (s === 0) void refetch();
+    };
+    tick();
+    const t = window.setInterval(tick, 1000);
+    return () => window.clearInterval(t);
+  }, [booking?.status, booking?.payment_expires_at, booking?.accept_expires_at, refetch]);
 
   if (!ready || isLoading) {
     return (
@@ -96,7 +153,10 @@ export default function PurohitPujaRoomPage() {
     );
   }
 
-  if (error || !booking || !booking.zego_token || !booking.zego_app_id || !user?.id) {
+  const awaitingGate =
+    booking?.status === "awaiting_acceptance" || booking?.status === "awaiting_payment";
+
+  if (error || !booking || (!awaitingGate && (!booking.zego_token || !booking.zego_app_id)) || !user?.id) {
     return (
       <div className="p-10 text-center space-y-4 max-w-md mx-auto">
         <div className="size-14 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-500 flex items-center justify-center mx-auto">
@@ -106,7 +166,9 @@ export default function PurohitPujaRoomPage() {
           ভার্চুয়াল পূজা রুম চালু করা যায়নি
         </h3>
         <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
-          রুমের টোকেনের মেয়াদ শেষ হয়েছে অথবা সংযোগে সমস্যা হয়েছে। দয়া করে ড্যাশবোর্ডে ফিরে যান।
+          {error instanceof Error
+            ? error.message
+            : "রুমের টোকেনের মেয়াদ শেষ হয়েছে অথবা অনুরোধটি বাতিল হয়েছে।"}
         </p>
         <Link href="/purohit-dashboard">
           <Button variant="outline" size="sm" className="font-bold">
@@ -118,10 +180,68 @@ export default function PurohitPujaRoomPage() {
     );
   }
 
+  if (awaitingGate) {
+    const devoteeLabel = booking.sankalpa_name || booking.user_name || "ভক্ত";
+    const mm = payWaitSeconds !== null ? String(Math.floor(payWaitSeconds / 60)).padStart(2, "0") : "01";
+    const ss = payWaitSeconds !== null ? String(payWaitSeconds % 60).padStart(2, "0") : "30";
+    return (
+      <div className="fixed inset-0 z-50 bg-[#061311] text-white flex items-center justify-center p-4">
+        <div className="max-w-md w-full rounded-3xl bg-[#0B1E1B] border border-[#1E3B36] p-7 text-center space-y-5 shadow-2xl">
+          <div className="size-16 rounded-full bg-emerald-500/15 border-2 border-emerald-400 flex items-center justify-center mx-auto text-emerald-300 animate-pulse">
+            <Flame className="size-8" />
+          </div>
+          <div className="space-y-2">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[#132E2A] border border-emerald-500/40 px-3 py-1 text-xs font-mono font-extrabold text-emerald-300">
+              {mm}:{ss} বাকি
+            </span>
+            <h2 className="text-xl font-bold font-serif text-emerald-200">
+              {booking.status === "awaiting_payment"
+                ? `ভক্ত (${devoteeLabel}) পেমেন্ট সম্পন্ন করছেন...`
+                : `নতুন পূজা অনুরোধ (${booking.puja_name})`}
+            </h2>
+            <p className="text-xs text-stone-300 leading-relaxed">
+              {booking.status === "awaiting_payment"
+                ? `ভক্ত ₹${booking.amount_inr} দক্ষিণা পেমেন্ট সম্পন্ন করলেই স্বয়ংক্রিয়ভাবে লাইভ ভিডিও পূজা রুম শুরু হয়ে যাবে। অনুগ্রহ করে এই স্ক্রিনটি খোলা রাখুন।`
+                : `অনুরোধটি গ্রহণ করলে ভক্ত ৯০ সেকেন্ডের মধ্যে পেমেন্ট করে রুমে যুক্ত হবেন।`}
+            </p>
+          </div>
+          <div className="p-3.5 rounded-2xl bg-[#0E2421] border border-[#1E3B36] text-xs text-stone-300 text-left space-y-1">
+            <div><span className="text-stone-400">পূজা:</span> <b>{booking.puja_name} ({booking.puja_duration_minutes} মি.)</b></div>
+            <div><span className="text-stone-400">সংকল্প নাম:</span> <b>{booking.sankalpa_name}</b></div>
+            <div><span className="text-stone-400">গোত্র:</span> <b>{booking.sankalpa_gotra || "Kashyapa"}</b></div>
+            <div><span className="text-stone-400">দক্ষিণা:</span> <b className="text-amber-300">₹{booking.amount_inr}</b></div>
+          </div>
+          <div className="flex items-center justify-center gap-2.5 pt-1">
+            {booking.status === "awaiting_acceptance" && (
+              <Button
+                variant="primary"
+                size="sm"
+                loading={acceptMutation.isPending}
+                onClick={() => acceptMutation.mutate()}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
+              >
+                অনুরোধ গ্রহণ করুন
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              loading={declineMutation.isPending}
+              onClick={() => declineMutation.mutate()}
+              className="border-rose-500/40 text-rose-300 hover:bg-rose-950/40 text-xs"
+            >
+              বাতিল করুন
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const isCompleted = booking.status === "completed";
   const credentials = {
-    app_id: booking.zego_app_id,
-    token: booking.zego_token,
+    app_id: booking.zego_app_id ?? 0,
+    token: booking.zego_token ?? "",
     room_id: booking.room_id,
     user_id: user.id,
     user_name: user.first_name ? `Purohit ${user.first_name}` : "Purohit Ji",
