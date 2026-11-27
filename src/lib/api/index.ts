@@ -1784,6 +1784,7 @@ export interface PujaBookingData {
   user_name: string;
   user_phone: string;
   purohit_id: string;
+  purohit_user_id?: string | null;
   purohit_name: string;
   puja_item_id: string;
   puja_name: string;

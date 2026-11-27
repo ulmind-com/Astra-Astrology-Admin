@@ -80,7 +80,8 @@ export type LiveMessage =
   | { type: "whiteboard_event"; data: Record<string, any> }
   | { type: "whiteboard_sync"; data: Record<string, any> }
   | { type: "whiteboard_live"; data: Record<string, any> }
-  | { type: "whiteboard_chart_reloaded"; data: Record<string, any> };
+  | { type: "whiteboard_chart_reloaded"; data: Record<string, any> }
+  | { type: "webrtc_signal"; from_user?: string; data: Record<string, any> };
 
 /**
  * Whether this astrologer is actually at their desk.

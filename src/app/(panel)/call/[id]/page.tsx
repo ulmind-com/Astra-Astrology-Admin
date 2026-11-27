@@ -6,7 +6,7 @@ import * as React from "react";
 import { toast } from "sonner";
 
 import { AstroCoPilot } from "@/components/call/astro-copilot";
-import { CallRoom } from "@/components/call/call-room";
+import { BentoVideoStudio } from "@/components/call/bento-video-studio";
 import { CosmicWhiteboard } from "@/components/call/cosmic-whiteboard";
 import { PreFlightDossierModal } from "@/components/appointments/preflight-dossier-modal";
 import { Alert, Avatar, Button, LoadingBlock, Modal } from "@/components/ui";
@@ -25,7 +25,7 @@ import {
 export default function AstrologerCallPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { ready } = useRequireAuth({ roles: ["astrologer"], signInPath: "/login" });
+  const { ready, user } = useRequireAuth({ roles: ["astrologer"], signInPath: "/login" });
 
   const { data, isLoading, error } = useCall(ready ? id : null);
   const { end } = useCallActions();
@@ -126,162 +126,140 @@ export default function AstrologerCallPage() {
       )}
     >
       {connected && data?.credentials ? (
-        <CallRoom
+        <BentoVideoStudio
           credentials={data.credentials}
-          onLeave={hangUp}
-          className="absolute inset-0"
-          audioOnly={!isVideo}
-        />
-      ) : (
-        <div className="absolute inset-0 bg-cosmos" />
-      )}
-
-      {/* Live Co-Pilot. Docked left, clear of the whiteboard on the right. */}
-      {connected && <AstroCoPilot callId={id} enabled />}
-
-      {connected && (
-        <CosmicWhiteboard
-          callId={id}
+          sessionId={id}
           peerUserId={call.user_id}
-          role="astrologer"
-          isOpen={whiteboardOpen}
-          onClose={() => {
-            setWhiteboardOpen(false);
-            void whiteboardApi.toggle(id);
-          }}
-          theme={theme}
-          onToggleTheme={toggleTheme}
-        />
-      )}
-
-      {connected && call.billing && (
-        <div className="absolute inset-x-0 top-16 z-10 px-3">
-          <BookedTime billing={call.billing} elapsedSeconds={seconds} onDark={isDark} />
-        </div>
-      )}
-
-      {connected ? (
-        <header
-          className={cn(
-            "pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-3 px-4 py-3 transition-colors",
-            isDark
-              ? "bg-gradient-to-b from-black/80 to-transparent text-white"
-              : "bg-gradient-to-b from-black/60 to-transparent text-white drop-shadow-xs",
-          )}
-        >
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-white">{call.peer?.name}</p>
-            <p className="flex items-center gap-1.5 text-xs text-white/80">
-              <span className="size-1.5 rounded-full bg-success" />
-              {formatDuration(seconds)}
-            </p>
-          </div>
-          <div className="pointer-events-auto flex items-center gap-2">
-            {/* Call Room Light / Dark Mode Toggle */}
-            <button
-              onClick={toggleTheme}
-              className={cn(
-                "flex size-8 items-center justify-center rounded-xl transition-all shadow-sm",
-                isDark
-                  ? "bg-white/10 hover:bg-white/20 text-amber-300 border border-white/10"
-                  : "bg-white/90 hover:bg-white text-amber-700 border border-amber-300 shadow-xs",
-              )}
-              title={isDark ? "Switch to Sacred Ivory Light Mode" : "Switch to Cosmic Night Dark Mode"}
-            >
-              {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </button>
-
-            <Button
-              size="sm"
-              onClick={() => {
-                setWhiteboardOpen((v) => !v);
-                void whiteboardApi.toggle(id);
-              }}
-              className={cn(
-                "text-xs font-bold transition-all shadow-sm",
-                whiteboardOpen
-                  ? "bg-amber-400 text-slate-950 border border-amber-300 ring-2 ring-amber-400/50"
-                  : isDark
-                    ? "bg-amber-950/70 hover:bg-amber-900 text-amber-200 border border-amber-500/40"
-                    : "bg-white hover:bg-amber-50 text-[#78350f] border border-amber-300 shadow-xs font-bold",
-              )}
-              title="Toggle live Kundali cosmic whiteboard"
-            >
-              <Sparkles className="size-3.5 mr-1 text-amber-400" />
-              Cosmic Whiteboard
-            </Button>
-
-            {call.appointment_id && (
+          peerName={call.peer?.name || "Client"}
+          peerRoleLabel="Seeker / Client"
+          peerAvatarUrl={call.peer?.avatar_url}
+          selfName={user?.first_name || "Astrologer"}
+          selfRoleLabel="Vedic Astrologer"
+          selfAvatarUrl={user?.avatar_url}
+          title={`Consultation with ${call.peer?.name || "Client"}`}
+          subtitle={isVideo ? "Live Video Consultation" : "Live Audio Consultation"}
+          timerText={
+            call.billing
+              ? `${formatDuration(seconds)} · ${call.billing.minutes_remaining}m left`
+              : formatDuration(seconds)
+          }
+          timerWarning={Boolean(call.billing && call.billing.minutes_remaining <= 1)}
+          audioOnly={!isVideo}
+          onLeave={hangUp}
+          checklistTitle="Consultation Checklist"
+          initialTasks={[
+            { id: "greet", label: "Warm Greeting & Birth Details Confirm", defaultDone: true },
+            { id: "chart", label: "Review Lagna, Navamsa & Active Dasha" },
+            { id: "query", label: "Address Core Question & Transit Effects" },
+            { id: "remedy", label: "Share Practical Vedic Remedies" },
+            { id: "summary", label: "Summarize Key Dates & Close" },
+          ]}
+          leftExtra={
+            call.billing ? (
+              <BookedTime billing={call.billing} elapsedSeconds={seconds} onDark={true} />
+            ) : undefined
+          }
+          headerActions={
+            <div className="flex flex-wrap items-center gap-1.5">
               <Button
                 size="sm"
-                onClick={() => setPreflightOpen(true)}
+                onClick={() => {
+                  setWhiteboardOpen((v) => !v);
+                  void whiteboardApi.toggle(id);
+                }}
                 className={cn(
-                  "text-xs font-bold transition-all shadow-sm",
-                  isDark
-                    ? "bg-linear-to-r from-amber-600 to-indigo-600 hover:from-amber-500 hover:to-indigo-500 text-white border border-amber-400/40"
-                    : "bg-linear-to-r from-amber-500 to-indigo-600 hover:from-amber-600 hover:to-indigo-700 text-white shadow-xs font-bold",
+                  "text-xs font-bold",
+                  whiteboardOpen
+                    ? "bg-emerald-500 text-[#061311]"
+                    : "bg-[#132E2A] hover:bg-[#193C37] text-emerald-200 border border-[#265048]",
                 )}
-                title="AI Pre-Flight Cosmic Dossier (1-Glance Kundli Briefing)"
               >
-                <Sparkles className="size-3.5 mr-1" />
-                AI কুণ্ডলী ডসিয়ার
+                <Sparkles className="size-3.5 mr-1 text-emerald-300" />
+                Whiteboard
               </Button>
-            )}
-
-            {call.appointment_id && (
-              <>
-                {call.extension_offer?.status === "pending" ? (
-                  <span className="flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-950/70 px-2.5 py-1 text-xs font-semibold text-amber-200 animate-pulse">
-                    <Clock className="size-3.5 text-amber-400" />
-                    Offer Sent (+{call.extension_offer.extra_minutes}m)...
-                  </span>
-                ) : call.extension_offer?.status === "accepted" ? (
-                  <span className="flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-950/70 px-2.5 py-1 text-xs font-semibold text-emerald-200">
-                    <Clock className="size-3.5 text-emerald-400" />
-                    Extended (+{call.extension_offer.extra_minutes}m)!
-                  </span>
-                ) : (
+              {call.appointment_id && (
+                <>
                   <Button
                     size="sm"
-                    onClick={() => setExtendOpen(true)}
-                    className="bg-amber-500 hover:bg-amber-400 text-slate-950 border border-amber-400 text-xs font-bold"
-                    title="Offer 10 or 15 mins extension to client"
+                    onClick={() => setPreflightOpen(true)}
+                    className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 text-xs font-bold"
                   >
-                    <Clock className="size-3.5 mr-1" />
-                    Offer Extension
+                    AI কুণ্ডলী ডসিয়ার
                   </Button>
-                )}
-                <Button
-                  size="sm"
-                  onClick={() => setVaultOpen(true)}
-                  className="bg-amber-950/70 hover:bg-amber-900 text-amber-200 border border-amber-500/40 text-xs font-bold shadow-sm"
-                  title="Open Confidential Astrologer Dossier Vault"
-                >
-                  <Lock className="size-3.5 mr-1 text-amber-300" />
-                  Private Vault
-                </Button>
-              </>
-            )}
-            <Button
-              size="sm"
-              onClick={() => setRedFlagOpen(true)}
-              className="bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-500/40 text-xs font-bold"
-              title="Terminate session and report client misconduct"
-            >
-              <Flag className="size-3.5 mr-1 text-rose-400" />
-              Red-Flag
-            </Button>
-            <Button
-              size="sm"
-              onClick={hangUp}
-              disabled={end.isPending}
-              className="bg-rose-600 text-white hover:bg-rose-500"
-            >
-              <PhoneOff className="size-4" />
-              End
-            </Button>
-          </div>
-        </header>
+                  {call.extension_offer?.status === "pending" ? (
+                    <span className="inline-flex items-center gap-1 rounded-xl border border-amber-500/40 bg-amber-950/70 px-2.5 py-1 text-xs font-semibold text-amber-200">
+                      <Clock className="size-3.5 text-amber-400" />
+                      +{call.extension_offer.extra_minutes}m Sent
+                    </span>
+                  ) : call.extension_offer?.status === "accepted" ? (
+                    <span className="inline-flex items-center gap-1 rounded-xl border border-emerald-500/40 bg-emerald-950/70 px-2.5 py-1 text-xs font-semibold text-emerald-200">
+                      <Clock className="size-3.5 text-emerald-400" />
+                      +{call.extension_offer.extra_minutes}m Extended
+                    </span>
+                  ) : (
+                    <Button
+                      size="sm"
+                      onClick={() => setExtendOpen(true)}
+                      className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold"
+                    >
+                      <Clock className="size-3.5 mr-1" />
+                      Extend
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={() => setVaultOpen(true)}
+                    className="bg-[#132E2A] hover:bg-[#193C37] text-emerald-200 border border-[#265048] text-xs font-bold"
+                  >
+                    <Lock className="size-3.5 mr-1" />
+                    Vault
+                  </Button>
+                </>
+              )}
+              <Button
+                size="sm"
+                onClick={() => setRedFlagOpen(true)}
+                className="bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-500/40 text-xs font-bold"
+              >
+                <Flag className="size-3.5 mr-1 text-rose-400" />
+                Red-Flag
+              </Button>
+            </div>
+          }
+          sideActions={[
+            {
+              id: "whiteboard",
+              icon: <Sparkles className="size-4" />,
+              title: "Cosmic Whiteboard",
+              active: whiteboardOpen,
+              onClick: () => {
+                setWhiteboardOpen((v) => !v);
+                void whiteboardApi.toggle(id);
+              },
+            },
+            ...(call.appointment_id
+              ? [
+                  {
+                    id: "vault",
+                    icon: <Lock className="size-4" />,
+                    title: "Private Vault Notes",
+                    active: vaultOpen,
+                    onClick: () => setVaultOpen(true),
+                  },
+                ]
+              : []),
+          ]}
+          onToggleToolsDrawer={() => {
+            setWhiteboardOpen((v) => !v);
+            void whiteboardApi.toggle(id);
+          }}
+          toolsDrawerActive={whiteboardOpen}
+          bottomBannerText={
+            call.billing
+              ? `Live encrypted chamber · ${call.billing.requested_minutes} mins booked (${call.billing.minutes_remaining} mins remaining). Use Cosmic Whiteboard & AI Co-Pilot side tools seamlessly.`
+              : "Live encrypted consultation room — use Cosmic Whiteboard & AI Co-Pilot without interrupting audio/video."
+          }
+        />
       ) : (
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-5 px-6 text-center">
           <Avatar src={call.peer?.avatar_url} name={call.peer?.name} size="xl" />
@@ -300,6 +278,25 @@ export default function AstrologerCallPage() {
           <Button variant="secondary" onClick={() => router.replace("/me")}>
             Back to my profile
           </Button>
+        </div>
+      )}
+
+      {/* Live Co-Pilot & Cosmic Whiteboard */}
+      {connected && (
+        <div className="relative z-[55]">
+          <AstroCoPilot callId={id} enabled />
+          <CosmicWhiteboard
+            callId={id}
+            peerUserId={call.user_id}
+            role="astrologer"
+            isOpen={whiteboardOpen}
+            onClose={() => {
+              setWhiteboardOpen(false);
+              void whiteboardApi.toggle(id);
+            }}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+          />
         </div>
       )}
 
