@@ -65,12 +65,29 @@ export interface BentoVideoStudioProps {
   rightDrawer?: React.ReactNode;
 }
 
-const RTC_CONFIG: RTCConfiguration = {
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" },
-  ],
-};
+const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "stun:stun.cloudflare.com:3478" },
+];
+
+function buildRtcConfig(): RTCConfiguration {
+  try {
+    const raw = process.env.NEXT_PUBLIC_ICE_SERVERS_JSON;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return { iceServers: [...parsed, ...DEFAULT_ICE_SERVERS], iceCandidatePoolSize: 4 };
+      }
+    }
+  } catch {
+    /* ignore malformed env ICE JSON */
+  }
+  return { iceServers: DEFAULT_ICE_SERVERS, iceCandidatePoolSize: 4 };
+}
+
+const RTC_CONFIG: RTCConfiguration = buildRtcConfig();
+const failedZegoAppIds = new Set<number>();
 
 /**
  * Forest-Emerald Bento Video Conference Studio.
@@ -108,13 +125,20 @@ export function BentoVideoStudio({
   stageOverlay,
   rightDrawer,
 }: BentoVideoStudioProps) {
-  const { sendLive, onWebrtcSignal } = useRealtime();
+  const { connected: wsConnected, sendLive, onWebrtcSignal } = useRealtime();
 
   const studioRef = React.useRef<HTMLDivElement>(null);
   const localVideoRef = React.useRef<HTMLVideoElement>(null);
   const remoteVideoRef = React.useRef<HTMLVideoElement>(null);
   const onLeaveRef = React.useRef(onLeave);
   onLeaveRef.current = onLeave;
+  const credentialsRef = React.useRef(credentials);
+  credentialsRef.current = credentials;
+  const sendLiveRef = React.useRef(sendLive);
+  sendLiveRef.current = sendLive;
+  const onWebrtcSignalRef = React.useRef(onWebrtcSignal);
+  onWebrtcSignalRef.current = onWebrtcSignal;
+  const announceReadyRef = React.useRef<(() => void) | null>(null);
 
   const [localStream, setLocalStream] = React.useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = React.useState<MediaStream | null>(null);
@@ -123,6 +147,7 @@ export function BentoVideoStudio({
   const [isMuted, setIsMuted] = React.useState(false);
   const [isCamOff, setIsCamOff] = React.useState(audioOnly);
   const [isSpeakerMuted, setIsSpeakerMuted] = React.useState(false);
+  const [autoplayBlocked, setAutoplayBlocked] = React.useState(false);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
   const [micLevel, setMicLevel] = React.useState(0.2);
   const [tasks, setTasks] = React.useState<Record<string, boolean>>(() =>
@@ -132,17 +157,37 @@ export function BentoVideoStudio({
 
   // Sync streams cleanly onto video elements whenever streams or toggle flags update
   React.useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
+    const vid = localVideoRef.current;
+    if (vid && localStream) {
+      if (vid.srcObject !== localStream) vid.srcObject = localStream;
+      void vid.play().catch(() => undefined);
     }
   }, [localStream, isCamOff]);
 
   React.useEffect(() => {
-    if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
-      remoteVideoRef.current.muted = isSpeakerMuted;
-    }
+    const vid = remoteVideoRef.current;
+    if (!vid || !remoteStream) return;
+    if (vid.srcObject !== remoteStream) vid.srcObject = remoteStream;
+    vid.muted = isSpeakerMuted;
+    void vid
+      .play()
+      .then(() => {
+        if (!isSpeakerMuted) setAutoplayBlocked(false);
+      })
+      .catch(() => {
+        if (!isSpeakerMuted) {
+          vid.muted = true;
+          setAutoplayBlocked(true);
+          void vid.play().catch(() => undefined);
+        }
+      });
   }, [remoteStream, isSpeakerMuted]);
+
+  React.useEffect(() => {
+    if (wsConnected) {
+      announceReadyRef.current?.();
+    }
+  }, [wsConnected]);
 
   // Live audio visualizer bars from local mic stream
   React.useEffect(() => {
@@ -177,14 +222,17 @@ export function BentoVideoStudio({
 
   // Core Media & Dual Transport Lifecycle (ZegoExpress primary -> WebRTC P2P relay fallback)
   React.useEffect(() => {
+    const activeCreds = credentialsRef.current;
     let cancelled = false;
     let streamRef: MediaStream | null = null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let zg: any = null;
     let pc: RTCPeerConnection | null = null;
     let p2pInterval: number | undefined;
+    let zegoTimeout: number | undefined;
     let fallbackStarted = false;
     let pendingIce: RTCIceCandidateInit[] = [];
+    announceReadyRef.current = null;
 
     const stopStream = (s: MediaStream | null) => {
       s?.getTracks().forEach((t) => {
@@ -197,6 +245,10 @@ export function BentoVideoStudio({
     };
 
     const startP2PFallback = (activeLocal: MediaStream | null) => {
+      if (zegoTimeout) {
+        window.clearTimeout(zegoTimeout);
+        zegoTimeout = undefined;
+      }
       if (cancelled || fallbackStarted || !peerUserId) {
         if (!peerUserId && !cancelled) {
           setTransportMode("error");
@@ -209,7 +261,7 @@ export function BentoVideoStudio({
       setStatusLabel("Live Direct Video প্রস্তুত — অপর পক্ষের অপেক্ষায়");
 
       try {
-        zg?.logoutRoom?.(credentials.room_id);
+        zg?.logoutRoom?.(activeCreds.room_id);
         zg?.destroyEngine?.();
       } catch {
         /* ignore */
@@ -219,6 +271,12 @@ export function BentoVideoStudio({
       pc = new RTCPeerConnection(RTC_CONFIG);
       const remoteBuf = new MediaStream();
 
+      const publishRemote = () => {
+        if (!cancelled) {
+          setRemoteStream(new MediaStream(remoteBuf.getTracks()));
+        }
+      };
+
       if (activeLocal) {
         activeLocal.getTracks().forEach((track) => {
           pc?.addTrack(track, activeLocal);
@@ -226,26 +284,68 @@ export function BentoVideoStudio({
       }
 
       pc.ontrack = (ev) => {
-        ev.streams[0]?.getTracks().forEach((t) => {
-          if (!remoteBuf.getTracks().some((x) => x.id === t.id)) remoteBuf.addTrack(t);
-        });
-        if (!ev.streams[0] && ev.track && !remoteBuf.getTracks().some((x) => x.id === ev.track.id)) {
-          remoteBuf.addTrack(ev.track);
+        const tracks = ev.streams[0]?.getTracks() ?? (ev.track ? [ev.track] : []);
+        for (const t of tracks) {
+          if (!remoteBuf.getTracks().some((x) => x.id === t.id)) {
+            remoteBuf.addTrack(t);
+          }
+          t.onunmute = publishRemote;
+          t.onended = publishRemote;
         }
+        publishRemote();
         if (!cancelled) {
-          setRemoteStream(new MediaStream(remoteBuf.getTracks()));
           setStatusLabel("লাইভ সরাসরি ভিডিও সংযুক্ত");
         }
       };
 
       pc.onicecandidate = (ev) => {
         if (ev.candidate && peerUserId) {
-          sendLive({
+          sendLiveRef.current({
             type: "webrtc_signal",
             to_user: peerUserId,
             call_id: sessionId,
-            data: { kind: "ice", candidate: ev.candidate.toJSON(), room_id: credentials.room_id },
+            data: { kind: "ice", candidate: ev.candidate.toJSON(), room_id: activeCreds.room_id },
           });
+        }
+      };
+
+      const isOfferer = String(activeCreds.user_id) < String(peerUserId);
+      let makingOffer = false;
+      let lastOfferSentAt = 0;
+
+      const sendOffer = async (forceRestart = false) => {
+        if (cancelled || !pc || makingOffer) return;
+        makingOffer = true;
+        try {
+          // Re-send pending offer if peer arrived late instead of stalling in have-local-offer.
+          if (pc.signalingState === "have-local-offer") {
+            if (!forceRestart && pc.localDescription && Date.now() - lastOfferSentAt < 6500) {
+              sendLiveRef.current({
+                type: "webrtc_signal",
+                to_user: peerUserId,
+                call_id: sessionId,
+                data: { kind: "offer", sdp: pc.localDescription, room_id: activeCreds.room_id },
+              });
+              return;
+            }
+            await pc.setLocalDescription({ type: "rollback" } as RTCSessionDescriptionInit);
+          }
+          if (pc.signalingState !== "stable") return;
+          const offer = await pc.createOffer({
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: !audioOnly,
+            iceRestart: forceRestart,
+          });
+          await pc.setLocalDescription(offer);
+          lastOfferSentAt = Date.now();
+          sendLiveRef.current({
+            type: "webrtc_signal",
+            to_user: peerUserId,
+            call_id: sessionId,
+            data: { kind: "offer", sdp: pc.localDescription, room_id: activeCreds.room_id },
+          });
+        } finally {
+          makingOffer = false;
         }
       };
 
@@ -255,24 +355,38 @@ export function BentoVideoStudio({
           setStatusLabel("লাইভ সরাসরি ভিডিও সংযুক্ত");
         } else if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
           setStatusLabel("সংযোগ পুনরুদ্ধার হচ্ছে...");
+          if (pc.connectionState === "failed") {
+            if (isOfferer) {
+              void sendOffer(true);
+            } else {
+              sendLiveRef.current({
+                type: "webrtc_signal",
+                to_user: peerUserId,
+                call_id: sessionId,
+                data: { kind: "need_offer", room_id: activeCreds.room_id },
+              });
+            }
+          }
         }
       };
 
-      const isOfferer = String(credentials.user_id) < String(peerUserId);
-
-      const sendOffer = async () => {
-        if (!pc || pc.signalingState !== "stable") return;
-        const offer = await pc.createOffer({
-          offerToReceiveAudio: true,
-          offerToReceiveVideo: !audioOnly,
-        });
-        await pc.setLocalDescription(offer);
-        sendLive({
-          type: "webrtc_signal",
-          to_user: peerUserId,
-          call_id: sessionId,
-          data: { kind: "offer", sdp: pc.localDescription, room_id: credentials.room_id },
-        });
+      pc.oniceconnectionstatechange = () => {
+        if (!pc || cancelled) return;
+        if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
+          setStatusLabel("লাইভ সরাসরি ভিডিও সংযুক্ত");
+        } else if (pc.iceConnectionState === "failed") {
+          setStatusLabel("সংযোগ পুনরুদ্ধার হচ্ছে...");
+          if (isOfferer) {
+            void sendOffer(true);
+          } else {
+            sendLiveRef.current({
+              type: "webrtc_signal",
+              to_user: peerUserId,
+              call_id: sessionId,
+              data: { kind: "need_offer", room_id: activeCreds.room_id },
+            });
+          }
+        }
       };
 
       const flushIce = async () => {
@@ -287,26 +401,32 @@ export function BentoVideoStudio({
         pendingIce = [];
       };
 
-      const unsubSignal = onWebrtcSignal(async (msg) => {
+      const unsubSignal = onWebrtcSignalRef.current(async (msg) => {
         if (cancelled || !pc) return;
-        if (msg.data?.room_id && msg.data.room_id !== credentials.room_id) return;
+        if (msg.data?.room_id && msg.data.room_id !== activeCreds.room_id) return;
         if (msg.from_user && String(msg.from_user) !== String(peerUserId)) return;
 
         const kind = msg.data?.kind;
+        const alreadyLive =
+          (pc.connectionState === "connected" ||
+            pc.iceConnectionState === "connected" ||
+            pc.iceConnectionState === "completed") &&
+          remoteBuf.getTracks().length > 0;
         try {
           if (kind === "ready") {
+            if (alreadyLive) return;
             if (isOfferer) {
-              await sendOffer();
+              await sendOffer(false);
             } else {
-              sendLive({
+              sendLiveRef.current({
                 type: "webrtc_signal",
                 to_user: peerUserId,
                 call_id: sessionId,
-                data: { kind: "need_offer", room_id: credentials.room_id },
+                data: { kind: "need_offer", room_id: activeCreds.room_id },
               });
             }
           } else if (kind === "need_offer" && isOfferer) {
-            await sendOffer();
+            await sendOffer(pc.iceConnectionState === "failed" || pc.connectionState === "failed");
           } else if (kind === "offer" && msg.data.sdp) {
             if (pc.signalingState !== "stable") {
               await pc.setLocalDescription({ type: "rollback" } as RTCSessionDescriptionInit);
@@ -315,15 +435,17 @@ export function BentoVideoStudio({
             await flushIce();
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-            sendLive({
+            sendLiveRef.current({
               type: "webrtc_signal",
               to_user: peerUserId,
               call_id: sessionId,
-              data: { kind: "answer", sdp: pc.localDescription, room_id: credentials.room_id },
+              data: { kind: "answer", sdp: pc.localDescription, room_id: activeCreds.room_id },
             });
           } else if (kind === "answer" && msg.data.sdp) {
-            await pc.setRemoteDescription(new RTCSessionDescription(msg.data.sdp));
-            await flushIce();
+            if (pc.signalingState === "have-local-offer") {
+              await pc.setRemoteDescription(new RTCSessionDescription(msg.data.sdp));
+              await flushIce();
+            }
           } else if (kind === "ice" && msg.data.candidate) {
             if (pc.remoteDescription) {
               await pc.addIceCandidate(new RTCIceCandidate(msg.data.candidate));
@@ -338,19 +460,33 @@ export function BentoVideoStudio({
 
       const announceReady = () => {
         if (cancelled) return;
-        sendLive({
+        sendLiveRef.current({
           type: "webrtc_signal",
           to_user: peerUserId,
           call_id: sessionId,
-          data: { kind: "ready", room_id: credentials.room_id },
+          data: { kind: "ready", room_id: activeCreds.room_id },
         });
       };
+      announceReadyRef.current = announceReady;
 
       announceReady();
       p2pInterval = window.setInterval(() => {
-        if (pc?.connectionState === "connected") return;
+        const isLive =
+          (pc?.connectionState === "connected" ||
+            pc?.iceConnectionState === "connected" ||
+            pc?.iceConnectionState === "completed") &&
+          remoteBuf.getTracks().length > 0;
+        if (isLive) return;
         announceReady();
-      }, 3000);
+        if (!isOfferer && pc?.signalingState === "stable" && !pc.currentRemoteDescription) {
+          sendLiveRef.current({
+            type: "webrtc_signal",
+            to_user: peerUserId,
+            call_id: sessionId,
+            data: { kind: "need_offer", room_id: activeCreds.room_id },
+          });
+        }
+      }, 2500);
 
       const originalClose = pc.close.bind(pc);
       pc.close = () => {
@@ -387,7 +523,12 @@ export function BentoVideoStudio({
       setLocalStream(streamRef);
 
       // 2. Try ZegoExpressEngine primary media server
-      if (!credentials.app_id || !credentials.token || !credentials.user_id) {
+      if (
+        !activeCreds.app_id ||
+        !activeCreds.token ||
+        !activeCreds.user_id ||
+        failedZegoAppIds.has(activeCreds.app_id)
+      ) {
         startP2PFallback(streamRef);
         return;
       }
@@ -397,21 +538,33 @@ export function BentoVideoStudio({
         if (cancelled) return;
         const ZegoExpressEngine = mod.ZegoExpressEngine;
         const serverUrl =
-          credentials.server_url || `wss://webliveroom${credentials.app_id}-api.coolzcloud.com/ws`;
-        zg = new ZegoExpressEngine(credentials.app_id, serverUrl);
+          activeCreds.server_url || `wss://webliveroom${activeCreds.app_id}-api.coolzcloud.com/ws`;
+        zg = new ZegoExpressEngine(activeCreds.app_id, serverUrl);
         zg.setLogConfig?.({ logLevel: "disable" });
 
         const remoteMediaBuf = new MediaStream();
         let connectedZego = false;
 
+        zegoTimeout = window.setTimeout(() => {
+          if (!connectedZego && !fallbackStarted && !cancelled) {
+            failedZegoAppIds.add(activeCreds.app_id);
+            startP2PFallback(streamRef);
+          }
+        }, 3500);
+
         zg.on("roomStateUpdate", (_roomID: string, state: string, errorCode: number) => {
           if (cancelled || fallbackStarted) return;
           if (state === "CONNECTED" && errorCode === 0) {
             connectedZego = true;
+            if (zegoTimeout) {
+              window.clearTimeout(zegoTimeout);
+              zegoTimeout = undefined;
+            }
             setTransportMode("zego");
             setStatusLabel("Zego HD সংযুক্ত");
           } else if (state === "DISCONNECTED" || errorCode !== 0) {
             if (!connectedZego) {
+              if (errorCode !== 0) failedZegoAppIds.add(activeCreds.app_id);
               startP2PFallback(streamRef);
             }
           }
@@ -445,28 +598,34 @@ export function BentoVideoStudio({
         );
 
         const ok = await zg.loginRoom(
-          credentials.room_id,
-          credentials.token,
-          { userID: credentials.user_id, userName: credentials.user_name },
+          activeCreds.room_id,
+          activeCreds.token,
+          { userID: activeCreds.user_id, userName: activeCreds.user_name },
           { userUpdate: true },
         );
 
         if (!ok || cancelled) {
-          if (!cancelled) startP2PFallback(streamRef);
+          if (!cancelled) {
+            failedZegoAppIds.add(activeCreds.app_id);
+            startP2PFallback(streamRef);
+          }
           return;
         }
 
         if (streamRef) {
-          const streamId = `${credentials.room_id}_${credentials.user_id}`;
+          const streamId = `${activeCreds.room_id}_${activeCreds.user_id}`;
           zg.startPublishingStream(streamId, streamRef);
         }
       } catch {
+        failedZegoAppIds.add(activeCreds.app_id);
         startP2PFallback(streamRef);
       }
     })();
 
     return () => {
       cancelled = true;
+      announceReadyRef.current = null;
+      if (zegoTimeout) window.clearTimeout(zegoTimeout);
       if (p2pInterval) window.clearInterval(p2pInterval);
       try {
         pc?.close();
@@ -474,7 +633,7 @@ export function BentoVideoStudio({
         /* ignore */
       }
       try {
-        zg?.logoutRoom?.(credentials.room_id);
+        zg?.logoutRoom?.(activeCreds.room_id);
         zg?.destroyEngine?.();
       } catch {
         /* ignore */
@@ -482,17 +641,11 @@ export function BentoVideoStudio({
       stopStream(streamRef);
     };
   }, [
-    credentials.app_id,
+    sessionId,
     credentials.room_id,
-    credentials.token,
     credentials.user_id,
-    credentials.user_name,
-    credentials.server_url,
     audioOnly,
     peerUserId,
-    sessionId,
-    sendLive,
-    onWebrtcSignal,
     retrySeed,
   ]);
 
@@ -515,7 +668,11 @@ export function BentoVideoStudio({
 
   const toggleSpeaker = () => {
     const next = !isSpeakerMuted;
-    if (remoteVideoRef.current) remoteVideoRef.current.muted = next;
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.muted = next;
+      if (!next) void remoteVideoRef.current.play().catch(() => undefined);
+    }
+    setAutoplayBlocked(false);
     setIsSpeakerMuted(next);
   };
 
@@ -757,6 +914,23 @@ export function BentoVideoStudio({
 
               {/* Custom overlays (e.g. Falling Pushpanjali Petals / Session Meter) */}
               {stageOverlay}
+
+              {autoplayBlocked && !isSpeakerMuted && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (remoteVideoRef.current) {
+                      remoteVideoRef.current.muted = false;
+                      void remoteVideoRef.current.play().catch(() => undefined);
+                    }
+                    setAutoplayBlocked(false);
+                  }}
+                  className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 rounded-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs px-4 py-2 shadow-xl animate-bounce cursor-pointer"
+                >
+                  <Volume2 className="size-4" />
+                  অডিও চালু করুন (Tap to Unmute)
+                </button>
+              )}
 
               {/* Bottom-Left Stage Nameplate */}
               <div className="absolute bottom-4 left-4 z-20 rounded-xl bg-black/50 backdrop-blur-md border border-white/10 px-3 py-1.5 pointer-events-none">
