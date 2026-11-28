@@ -337,7 +337,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
                     </span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-display text-lg font-black tracking-tight text-stone-900 dark:text-stone-100 leading-tight">
+                    <span className="font-brand-script text-[28px] font-normal tracking-[0.01em] text-stone-900 dark:text-stone-100 leading-none pt-0.5">
                       DivinLink
                     </span>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 leading-tight">

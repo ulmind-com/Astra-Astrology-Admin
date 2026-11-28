@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Italianno";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/italianno.woff2") format("woff2"),
+       url("https://fonts.gstatic.com/s/italianno/v18/dg4n_p3sv6gCJkwzT6RXiJwo.woff2") format("woff2");
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ==========================================================================
@@ -386,6 +395,14 @@
 
   .font-serif-display {
     font-family: var(--font-serif-display);
+  }
+
+  .font-brand-script,
+  .font-voyage {
+    font-family: "Italianno", Georgia, serif;
+    font-style: normal;
+    font-weight: 400;
+    letter-spacing: 0.01em;
   }
 
   .shimmer {

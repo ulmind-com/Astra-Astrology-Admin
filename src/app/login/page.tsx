@@ -356,10 +356,10 @@ function LoginForm() {
                 />
               </span>
               <div className="leading-tight">
-                <p className="font-serif-display text-lg font-semibold tracking-wide text-[#8a6a12]">
-                  DIVINLINK
+                <p className="font-brand-script text-[32px] font-normal tracking-[0.01em] text-[#8a6a12] leading-none pt-0.5">
+                  DivinLink
                 </p>
-                <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#B4871A]">
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#B4871A] mt-0.5">
                   Astrology & Consult
                 </p>
               </div>
@@ -402,7 +402,7 @@ function LoginForm() {
                   priority
                 />
               </span>
-              <span className="font-serif-display text-lg font-semibold tracking-wide text-white">
+              <span className="font-brand-script text-[28px] font-normal tracking-[0.01em] text-white leading-none pt-0.5">
                 DivinLink
               </span>
             </div>
