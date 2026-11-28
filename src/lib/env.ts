@@ -30,6 +30,15 @@ function getResolvedApiUrl(): string {
     DEPLOYED_API_URL,
   ).replace(/\/+$/, "");
 
+  const isProd =
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL === "1" ||
+    process.env.NEXT_PUBLIC_VERCEL_ENV === "production";
+
+  if (isProd && (configured.includes("localhost") || configured.includes("127.0.0.1"))) {
+    return DEPLOYED_API_URL;
+  }
+
   if (typeof window !== "undefined") {
     const host = window.location.hostname;
     const isLocalHost = host === "localhost" || host === "127.0.0.1" || host.endsWith(".local");

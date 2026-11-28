@@ -2,6 +2,7 @@
 
 import { api, apiFetch } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import { apiBase } from "@/lib/env";
 import type {
   Address,
   FaceRule,
@@ -840,7 +841,7 @@ export const appointmentApi = {
     }>(`/appointments/${id}/certificate`),
 
   getCertificateHtmlUrl: (id: string) =>
-    `${process.env.NEXT_PUBLIC_API_URL || "https://api.divinlink.com"}/api/v1/appointments/${id}/certificate/html`,
+    `${apiBase}/appointments/${id}/certificate/html`,
 
   reschedule: (id: string, new_starts_at: string, reason?: string) =>
     api.post<Appointment>(`/appointments/${id}/reschedule`, { new_starts_at, reason: reason ?? null }),

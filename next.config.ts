@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   // Disable Next.js dev indicators overlay badge (e.g. "N 1 Insight" button)
   devIndicators: false,
   turbopack: {
-    root: path.resolve(__dirname, ".."),
+    root: path.resolve(__dirname),
     rules: {
       "*.css": {
         loaders: ["@tailwindcss/turbopack"],
@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    unoptimized: true,
     // Profile pictures, course thumbnails, and galleries served from Cloudinary.
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" },

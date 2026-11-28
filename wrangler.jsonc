@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "divinlink-admin",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "divinlink-admin"
+    }
+  ],
+  "vars": {
+    "NEXT_PUBLIC_API_PREFIX": "/api/v1",
+    "NEXT_PUBLIC_API_URL": "https://astra-astrology-backend.onrender.com",
+    "NEXT_PUBLIC_APP_NAME": "DivinLink",
+    "NEXT_PUBLIC_FIREBASE_API_KEY": "AIzaSyBLE69rRtE8PlRGmmrYelWxEAeEP_QXVa4",
+    "NEXT_PUBLIC_FIREBASE_APP_ID": "1:92722724105:web:f5dd624d4ff472a0f967d8",
+    "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": "astra-astrology-1.firebaseapp.com",
+    "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "92722724105",
+    "NEXT_PUBLIC_FIREBASE_PROJECT_ID": "astra-astrology-1",
+    "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET": "astra-astrology-1.firebasestorage.app"
+  }
+}
